@@ -1,7 +1,7 @@
 {
   "version": 3,
   "targets": {
-    "net9.0": {
+    "net8.0": {
       "AutoMapper/12.0.1": {
         "type": "package",
         "dependencies": {
@@ -29,7 +29,7 @@
       },
       "CleanDemo.Domain/1.0.0": {
         "type": "project",
-        "framework": ".NETCoreApp,Version=v9.0",
+        "framework": ".NETCoreApp,Version=v8.0",
         "compile": {
           "bin/placeholder/CleanDemo.Domain.dll": {}
         },
@@ -131,38 +131,38 @@
     }
   },
   "projectFileDependencyGroups": {
-    "net9.0": [
+    "net8.0": [
       "AutoMapper >= 12.0.1",
       "CleanDemo.Domain >= 1.0.0"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Minh\\.nuget\\packages\\": {}
+    "C:\\Users\\Admin\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Minh\\Desktop\\FullStackWebAppLearningEnglish\\FullStackWebStudyEnglish\\Backend\\CleanDemo.Application\\CleanDemo.Application.csproj",
+      "projectUniqueName": "C:\\Users\\Admin\\Desktop\\APP English\\FullStackWebStudyEnglish\\backend\\CleanDemo.Application\\CleanDemo.Application.csproj",
       "projectName": "CleanDemo.Application",
-      "projectPath": "C:\\Users\\Minh\\Desktop\\FullStackWebAppLearningEnglish\\FullStackWebStudyEnglish\\Backend\\CleanDemo.Application\\CleanDemo.Application.csproj",
-      "packagesPath": "C:\\Users\\Minh\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Minh\\Desktop\\FullStackWebAppLearningEnglish\\FullStackWebStudyEnglish\\Backend\\CleanDemo.Application\\obj\\",
+      "projectPath": "C:\\Users\\Admin\\Desktop\\APP English\\FullStackWebStudyEnglish\\backend\\CleanDemo.Application\\CleanDemo.Application.csproj",
+      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Admin\\Desktop\\APP English\\FullStackWebStudyEnglish\\backend\\CleanDemo.Application\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Minh\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
-        "net9.0"
+        "net8.0"
       ],
       "sources": {
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
-        "net9.0": {
-          "targetAlias": "net9.0",
+        "net8.0": {
+          "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\Minh\\Desktop\\FullStackWebAppLearningEnglish\\FullStackWebStudyEnglish\\Backend\\CleanDemo.Domain\\CleanDemo.Domain.csproj": {
-              "projectPath": "C:\\Users\\Minh\\Desktop\\FullStackWebAppLearningEnglish\\FullStackWebStudyEnglish\\Backend\\CleanDemo.Domain\\CleanDemo.Domain.csproj"
+            "C:\\Users\\Admin\\Desktop\\APP English\\FullStackWebStudyEnglish\\backend\\CleanDemo.Domain\\CleanDemo.Domain.csproj": {
+              "projectPath": "C:\\Users\\Admin\\Desktop\\APP English\\FullStackWebStudyEnglish\\backend\\CleanDemo.Domain\\CleanDemo.Domain.csproj"
             }
           }
         }
@@ -176,12 +176,11 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      },
-      "SdkAnalysisLevel": "9.0.200"
+      }
     },
     "frameworks": {
-      "net9.0": {
-        "targetAlias": "net9.0",
+      "net8.0": {
+        "targetAlias": "net8.0",
         "dependencies": {
           "AutoMapper": {
             "target": "Package",
@@ -204,7 +203,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.408/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');/* Global Variables */
+
+:root {
+
+* {  --primary-color: #FFCB08;
+
+  margin: 0;  --text-color: black;
+
+  padding: 0;  --white-color: white;
+
+  box-sizing: border-box;  --font-family: "Quicksand", sans-serif;
+
+}}
+
+
+
+body {/* Google Fonts Import */
+
+  font-family: 'Quicksand', sans-serif;@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+
+  -webkit-font-smoothing: antialiased;
+
+  -moz-osx-font-smoothing: grayscale;/* Global Styles */
+
+  background-color: #f8f9fa;* {
+
+  color: #333;  margin: 0;
+
+}  padding: 0;
+
+  box-sizing: border-box;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+body {
+  font-family: var(--font-family);
+}

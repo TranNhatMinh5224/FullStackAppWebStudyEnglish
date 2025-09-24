@@ -1,0 +1,203 @@
+/* RegisterScreen - Màn hình đăng ký hiện đại */
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700;800&display=swap');
+
+.register-container {
+  background: linear-gradient(135deg, #FFCB08 0%, #FFA000 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Quicksand", sans-serif;
+  padding: 20px;
+}
+
+.register-form {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+
+.register-form h2 {
+  text-align: center;
+  color: #2d3748;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 30px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.register-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.register-form input {
+  padding: 16px 20px;
+  border: 2px solid rgba(102, 126, 234, 0.1);
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: "Quicksand", sans-serif;
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  color: #2d3748;
+}
+
+.register-form input::placeholder {
+  color: #a0aec0;
+}
+
+.register-form input:focus {
+  outline: none;
+  border-color: #23AC38;
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(35, 172, 56, 0.15);
+}
+
+.register-form button[type="submit"] {
+  padding: 16px;
+  background: linear-gradient(135deg, #23AC38 0%, #4CAF50 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: "Quicksand", sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  box-shadow: 0 8px 25px rgba(35, 172, 56, 0.3);
+}
+
+.register-form button[type="submit"]:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(35, 172, 56, 0.4);
+}
+
+.register-form p {
+  text-align: center;
+  margin-top: 20px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.register-form a {
+  color: #23AC38;
+  text-decoration: none;
+  font-weight: 700;
+  transition: color 0.3s ease;
+}
+
+.register-form a:hover {
+  color: #1E8E3E;
+  text-decoration: underline;
+}
+
+/* Back button */
+.back-button {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.back-button:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 1);
+}
+
+.back-button::before {
+  content: "←";
+  font-size: 20px;
+  font-weight: bold;
+  color: #23AC38;
+}
+
+/* Form back button style override */
+.register-form .back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(35, 172, 56, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #23AC38;
+}
+
+.register-form .back-btn:hover {
+  background: rgba(35, 172, 56, 0.2);
+  transform: scale(1.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .register-container {
+    padding: 15px;
+  }
+  
+  .register-form {
+    padding: 30px 25px;
+  }
+  
+  .register-form h2 {
+    font-size: 24px;
+  }
+  
+  .back-button {
+    top: 20px;
+    left: 20px;
+    width: 45px;
+    height: 45px;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-form {
+    padding: 25px 20px;
+  }
+  
+  .register-form h2 {
+    font-size: 22px;
+    margin-bottom: 25px;
+  }
+  
+  .register-form input {
+    padding: 14px 16px;
+    font-size: 15px;
+  }
+  
+  .register-form button[type="submit"] {
+    padding: 14px;
+    font-size: 16px;
+  }
+  
+  .register-form form {
+    gap: 16px;
+  }
+}
