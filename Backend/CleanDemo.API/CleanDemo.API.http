@@ -1,6 +1,0 @@
-@CleanDemo.API_HostAddress = http://localhost:5029
-
-GET {{CleanDemo.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
