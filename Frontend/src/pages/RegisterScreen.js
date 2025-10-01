@@ -12,34 +12,47 @@ const RegisterScreen = () => {
     password: "",
     confirmPassword: ""
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState("");
   
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, error, clearError } = useAuth();
 
   const handleChange = (e) => {
+    if (error) clearError(); // Clear auth context error
+    if (localError) setLocalError(""); // Clear local error
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    
     if (formData.password !== formData.confirmPassword) {
-      alert("Mật khẩu không khớp!");
+      setLocalError("Mật khẩu không khớp!");
+      setIsLoading(false);
       return;
     }
     
-    // Register user
-    const success = register({
-      name: formData.fullName,
-      email: formData.email,
-      password: formData.password
-    });
-    
-    if (success) {
-      alert("Đăng ký thành công! Vui lòng đăng nhập.");
-      navigate("/login");
+    try {
+      // Register user
+      const result = register({
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password
+      });
+      
+      if (result.success) {
+        alert("Đăng ký thành công! Vui lòng đăng nhập.");
+        navigate("/login");
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,6 +70,13 @@ const RegisterScreen = () => {
       />
       <div className="register-form">
         <h2>Đăng ký tài khoản</h2>
+        
+        {(error || localError) && (
+          <div className="error-message">
+            {error || localError}
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit}>
           <input
             type="text"
@@ -65,6 +85,7 @@ const RegisterScreen = () => {
             onChange={handleChange}
             placeholder="Họ và tên"
             required
+            disabled={isLoading}
           />
           <input
             type="email"
@@ -73,6 +94,7 @@ const RegisterScreen = () => {
             onChange={handleChange}
             placeholder="Email"
             required
+            disabled={isLoading}
           />
           <input
             type="password"
@@ -81,6 +103,7 @@ const RegisterScreen = () => {
             onChange={handleChange}
             placeholder="Mật khẩu"
             required
+            disabled={isLoading}
           />
           <input
             type="password"
@@ -89,8 +112,15 @@ const RegisterScreen = () => {
             onChange={handleChange}
             placeholder="Xác nhận mật khẩu"
             required
+            disabled={isLoading}
           />
-          <button type="submit">Đăng ký</button>
+          <button 
+            type="submit"
+            disabled={isLoading}
+            className={isLoading ? 'loading' : ''}
+          >
+            {isLoading ? 'Đang đăng ký...' : 'Đăng ký'}
+          </button>
         </form>
         <p>
           Đã có tài khoản? <Link to="/login">Đăng nhập ngay</Link>

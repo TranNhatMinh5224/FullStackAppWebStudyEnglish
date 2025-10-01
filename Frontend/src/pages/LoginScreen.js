@@ -10,35 +10,39 @@ const LoginScreen = () => {
     email: "",
     password: ""
   });
+  const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, validateLogin, error, clearError } = useAuth();
 
   const handleChange = (e) => {
+    if (error) clearError(); // Clear error when user starts typing
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    // Check if user exists (from registration)
-    const registeredUser = localStorage.getItem('registeredUser');
-    
-    if (registeredUser) {
-      const user = JSON.parse(registeredUser);
+    try {
+      // Validate login credentials
+      const validation = validateLogin(formData.email, formData.password);
       
-      // Simple validation
-      if (formData.email === user.email && formData.password === user.password) {
-        login(user);
-        navigate("/home");
-      } else {
-        alert("Email hoặc mật khẩu không đúng!");
+      if (validation.success) {
+        // Proceed with login
+        const loginResult = login(validation.user);
+        
+        if (loginResult.success) {
+          navigate("/home");
+        }
       }
-    } else {
-      alert("Tài khoản không tồn tại. Vui lòng đăng ký trước!");
+    } catch (err) {
+      console.error('Login error:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -56,6 +60,13 @@ const LoginScreen = () => {
       />
       <div className="login-form">
         <h2>Đăng nhập</h2>
+        
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit}>
           <input
             type="email"
@@ -64,6 +75,7 @@ const LoginScreen = () => {
             onChange={handleChange}
             placeholder="Email"
             required
+            disabled={isLoading}
           />
           <input
             type="password"
@@ -72,8 +84,15 @@ const LoginScreen = () => {
             onChange={handleChange}
             placeholder="Mật khẩu"
             required
+            disabled={isLoading}
           />
-          <button type="submit">Đăng nhập</button>
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            className={isLoading ? 'loading' : ''}
+          >
+            {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          </button>
         </form>
         <p>
           Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>

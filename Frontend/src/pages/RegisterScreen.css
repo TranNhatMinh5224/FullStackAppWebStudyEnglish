@@ -201,3 +201,34 @@
     gap: 16px;
   }
 }
+
+/* Error message styles */
+.error-message {
+  background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+  color: #c53030;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #e53e3e;
+  margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(229, 62, 62, 0.1);
+}
+
+/* Loading state styles */
+.register-form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.register-form button.loading {
+  background: linear-gradient(135deg, #a0a0a0 0%, #c0c0c0 100%);
+  box-shadow: 0 4px 15px rgba(160, 160, 160, 0.3);
+}
+
+.register-form input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.5);
+}

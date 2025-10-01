@@ -1,41 +1,85 @@
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');/* Global Variables */
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
 
+/* Global Variables */
 :root {
+  --primary-color: #FFCB08;
+  --secondary-color: #FF8A08;
+  --text-color: #333333;
+  --text-light: #666666;
+  --white-color: #ffffff;
+  --background-color: #f8f9fa;
+  --border-color: #e1e5e9;
+  --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --border-radius: 8px;
+  --border-radius-lg: 12px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --font-family: "Quicksand", sans-serif;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-xxl: 32px;
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.3s ease;
+}
 
-* {  --primary-color: #FFCB08;
-
-  margin: 0;  --text-color: black;
-
-  padding: 0;  --white-color: white;
-
-  box-sizing: border-box;  --font-family: "Quicksand", sans-serif;
-
-}}
-
-
-
-body {/* Google Fonts Import */
-
-  font-family: 'Quicksand', sans-serif;@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
-
-  -webkit-font-smoothing: antialiased;
-
-  -moz-osx-font-smoothing: grayscale;/* Global Styles */
-
-  background-color: #f8f9fa;* {
-
-  color: #333;  margin: 0;
-
-}  padding: 0;
-
+/* Global Reset */
+* {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
+/* Global Styles */
 body {
   font-family: var(--font-family);
+  color: var(--text-color);
+  background-color: var(--background-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Button Base Styles */
+button {
+  font-family: var(--font-family);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-medium);
+  border-radius: var(--border-radius);
+}
+
+/* Input Base Styles */
+input {
+  font-family: var(--font-family);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  transition: var(--transition-fast);
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(255, 203, 8, 0.2);
+}
+
+/* Link Base Styles */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+a:hover {
+  opacity: 0.8;
 }
