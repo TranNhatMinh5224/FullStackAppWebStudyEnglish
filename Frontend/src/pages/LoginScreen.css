@@ -37,6 +37,12 @@
   gap: 20px;
 }
 
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
 .login-form input {
   padding: 16px 20px;
   border: 2px solid rgba(102, 126, 234, 0.1);
@@ -47,6 +53,24 @@
   background: rgba(255, 255, 255, 0.8);
   transition: all 0.3s ease;
   color: #2d3748;
+}
+
+.login-form input.error {
+  border-color: #e53e3e;
+  background: rgba(254, 226, 226, 0.8);
+}
+
+.login-form input.error:focus {
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+}
+
+.field-error {
+  color: #e53e3e;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 2px;
+  margin-left: 4px;
 }
 
 .login-form input::placeholder {
@@ -76,9 +100,41 @@
   box-shadow: 0 8px 25px rgba(35, 172, 56, 0.3);
 }
 
-.login-form button:hover {
+.login-form button:hover:not(:disabled) {
   transform: translateY(-3px);
   box-shadow: 0 12px 35px rgba(35, 172, 56, 0.4);
+}
+
+.login-form button:disabled {
+  background: #cbd5e0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.login-form button.loading {
+  position: relative;
+  color: transparent;
+}
+
+.login-form button.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
 .login-form p {

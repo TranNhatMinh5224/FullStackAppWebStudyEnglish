@@ -38,9 +38,10 @@ const ForgotPasswordScreen = () => {
       const result = await sendPasswordResetEmail(email);
       
       if (result.success) {
-        setIsEmailSent(true);
-        // In real app, this would trigger SMTP email sending
-        console.log('Password reset email would be sent to:', email);
+        // Navigate to OTP verification screen
+        navigate("/otp-verification", { 
+          state: { email: email } 
+        });
       }
     } catch (err) {
       console.error('Forgot password error:', err);

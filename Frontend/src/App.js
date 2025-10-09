@@ -8,6 +8,7 @@ import LoginScreen from "./pages/LoginScreen";
 import RegisterScreen from "./pages/RegisterScreen";
 import UpdateProfileScreen from "./pages/UpdateProfileScreen";
 import ForgotPasswordScreen from "./pages/ForgotPasswordScreen";
+import OTPVerificationScreen from "./pages/OTPVerificationScreen";
 import ResetPasswordScreen from "./pages/ResetPasswordScreen";
 
 // Loading component
@@ -52,6 +53,7 @@ const AppContent = () => {
         <Route path="/register" element={<RegisterScreen />} />
         <Route path="/profile/update" element={<UpdateProfileScreen />} />
         <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+        <Route path="/otp-verification" element={<OTPVerificationScreen />} />
         <Route path="/reset-password" element={<ResetPasswordScreen />} />
       </Routes>
     </Router>

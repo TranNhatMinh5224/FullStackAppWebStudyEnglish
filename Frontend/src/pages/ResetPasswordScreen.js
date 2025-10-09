@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "./ResetPasswordScreen.css";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { images } from "../assets/images";
 import { Cloud } from "../components";
 
 const ResetPasswordScreen = () => {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     newPassword: "",
     confirmPassword: ""
@@ -21,33 +21,21 @@ const ResetPasswordScreen = () => {
   });
   
   const navigate = useNavigate();
-  const { resetPassword, validateResetToken, error, clearError } = useAuth();
+  const { resetPassword, error, clearError } = useAuth();
   
-  // Get token and email from URL parameters
-  const token = searchParams.get('token');
-  const email = searchParams.get('email');
+  // Get data from navigation state (from OTP verification)
+  const email = location.state?.email;
+  const otpCode = location.state?.otpCode;
+  const verified = location.state?.verified;
 
   useEffect(() => {
-    // Validate token when component mounts
-    const validateToken = async () => {
-      if (!token || !email) {
-        setIsTokenValid(false);
-        return;
-      }
-
-      try {
-        const result = await validateResetToken(token, email);
-        if (!result.success) {
-          setIsTokenValid(false);
-        }
-      } catch (err) {
-        console.error('Token validation error:', err);
-        setIsTokenValid(false);
-      }
-    };
-
-    validateToken();
-  }, [token, email, validateResetToken]);
+    // Check if user came from OTP verification
+    if (!email || !otpCode || !verified) {
+      setIsTokenValid(false);
+      // Redirect back to forgot password if not properly verified
+      navigate("/forgot-password");
+    }
+  }, [email, otpCode, verified, navigate]);
 
   const calculatePasswordStrength = (password) => {
     let score = 0;
@@ -124,10 +112,10 @@ const ResetPasswordScreen = () => {
         return;
       }
 
-      // Reset password
+      // Reset password with OTP
       const result = await resetPassword({
-        token,
         email,
+        otpCode,
         newPassword: formData.newPassword
       });
       
@@ -146,7 +134,7 @@ const ResetPasswordScreen = () => {
     }
   };
 
-  // Invalid token or expired link
+  // Invalid access or not verified
   if (!isTokenValid) {
     return (
       <div className="reset-password-container">
@@ -159,16 +147,16 @@ const ResetPasswordScreen = () => {
             <div className="icon-container">
               <div className="error-icon">❌</div>
             </div>
-            <h2>Link không hợp lệ</h2>
+            <h2>Truy cập không hợp lệ</h2>
             <p className="form-description">
-              Link đặt lại mật khẩu đã hết hạn hoặc không hợp lệ. 
-              Vui lòng yêu cầu gửi lại email đặt lại mật khẩu.
+              Bạn cần xác thực OTP trước khi đặt lại mật khẩu. 
+              Vui lòng quay lại và thực hiện đúng quy trình.
             </p>
           </div>
 
           <div className="action-buttons">
             <Link to="/forgot-password" className="primary-btn">
-              Yêu cầu link mới
+              Quên mật khẩu
             </Link>
             <Link to="/login" className="secondary-btn">
               Quay lại đăng nhập

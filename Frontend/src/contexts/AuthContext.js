@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { AuthAPI, TokenManager } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -17,50 +18,70 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load auth state from localStorage on app start
+  // Initialize auth state from tokens
   useEffect(() => {
-    try {
-      const storedAuth = localStorage.getItem('isLoggedIn');
-      const storedUser = localStorage.getItem('user');
-      const storedGuest = localStorage.getItem('isGuest');
+    const initializeAuth = async () => {
+      setLoading(true);
       
-      if (storedAuth === 'true' && storedUser) {
-        const userData = JSON.parse(storedUser);
-        setIsLoggedIn(true);
-        setUser(userData);
-      } else if (storedGuest === 'true') {
-        setIsGuest(true);
+      try {
+        const accessToken = TokenManager.getAccessToken();
+        const storedUser = localStorage.getItem('user');
+        
+        if (accessToken && !TokenManager.isTokenExpired(accessToken) && storedUser) {
+          // Token exists and is valid, get fresh profile data
+          const profileResult = await AuthAPI.getProfile();
+          
+          if (profileResult.success) {
+            setUser(profileResult.data);
+            setIsLoggedIn(true);
+            localStorage.setItem('user', JSON.stringify(profileResult.data));
+          } else {
+            // Token might be invalid, clear everything
+            TokenManager.clearTokens();
+            setUser(null);
+            setIsLoggedIn(false);
+          }
+        } else {
+          // No valid token, check for guest mode
+          const storedGuest = localStorage.getItem('isGuest');
+          if (storedGuest === 'true') {
+            setIsGuest(true);
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        TokenManager.clearTokens();
+        setUser(null);
+        setIsLoggedIn(false);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error loading auth state:', err);
-      setError('Có lỗi khi tải thông tin đăng nhập');
-      // Clear potentially corrupted data
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('user');
-      localStorage.removeItem('isGuest');
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    initializeAuth();
   }, []);
 
   const clearError = () => setError(null);
 
-  const login = (userData) => {
+  const login = async (credentials) => {
     try {
       clearError();
       
-      if (!userData || !userData.email) {
-        throw new Error('Thông tin đăng nhập không hợp lệ');
+      if (!credentials || !credentials.email || !credentials.password) {
+        throw new Error('Vui lòng điền đầy đủ email và mật khẩu');
       }
 
-      setIsLoggedIn(true);
-      setIsGuest(false);
-      setUser(userData);
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.removeItem('isGuest');
+      const result = await AuthAPI.login(credentials);
       
-      return { success: true };
+      if (result.success) {
+        setIsLoggedIn(true);
+        setIsGuest(false);
+        setUser(result.data.user);
+        localStorage.removeItem('isGuest');
+        return { success: true, user: result.data.user };
+      } else {
+        throw new Error(result.error || 'Đăng nhập thất bại');
+      }
     } catch (err) {
       const errorMessage = err.message || 'Có lỗi xảy ra khi đăng nhập';
       setError(errorMessage);
@@ -71,11 +92,10 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     try {
       clearError();
+      AuthAPI.logout(); // This clears tokens
       setIsLoggedIn(false);
       setIsGuest(false);
       setUser(null);
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('user');
       localStorage.removeItem('isGuest');
       
       return { success: true };
@@ -104,12 +124,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = (userData) => {
+  const register = async (userData) => {
     try {
       clearError();
       
       // Validation
-      if (!userData || !userData.email || !userData.password || !userData.name) {
+      if (!userData || !userData.email || !userData.password || !userData.firstName || !userData.lastName) {
         throw new Error('Vui lòng điền đầy đủ thông tin');
       }
 
@@ -122,19 +142,13 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Email không hợp lệ');
       }
 
-      // Check if user already exists
-      const existingUser = localStorage.getItem('registeredUser');
-      if (existingUser) {
-        const existing = JSON.parse(existingUser);
-        if (existing.email === userData.email) {
-          throw new Error('Email này đã được đăng ký');
-        }
-      }
-
-      // Save user data for future login
-      localStorage.setItem('registeredUser', JSON.stringify(userData));
+      const result = await AuthAPI.register(userData);
       
-      return { success: true };
+      if (result.success) {
+        return { success: true, message: 'Đăng ký thành công! Vui lòng đăng nhập.' };
+      } else {
+        throw new Error(result.error || 'Đăng ký thất bại');
+      }
     } catch (err) {
       const errorMessage = err.message || 'Có lỗi xảy ra khi đăng ký';
       setError(errorMessage);
@@ -142,82 +156,64 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const validateLogin = (email, password) => {
+  const updateProfile = async (updateData) => {
     try {
       clearError();
-      
-      if (!email || !password) {
-        throw new Error('Vui lòng điền đầy đủ email và mật khẩu');
-      }
-
-      // Check if user exists (from registration)
-      const registeredUser = localStorage.getItem('registeredUser');
-      
-      if (!registeredUser) {
-        throw new Error('Tài khoản không tồn tại. Vui lòng đăng ký trước!');
-      }
-
-      const user = JSON.parse(registeredUser);
-      
-      // Simple validation
-      if (email !== user.email || password !== user.password) {
-        throw new Error('Email hoặc mật khẩu không đúng!');
-      }
-
-      return { success: true, user };
-    } catch (err) {
-      const errorMessage = err.message || 'Có lỗi xảy ra khi xác thực';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    }
-  };
-
-  const updateProfile = (updateData) => {
-    try {
-      clearError();
+      console.log('AuthContext updateProfile called with:', updateData);
       
       // Validation
       if (!updateData || !updateData.firstName || !updateData.lastName) {
         throw new Error('Vui lòng điền đầy đủ thông tin');
       }
 
-      // Get current user data
-      const registeredUser = localStorage.getItem('registeredUser');
-      if (!registeredUser) {
-        throw new Error('Không tìm thấy thông tin tài khoản');
-      }
-
-      const currentUser = JSON.parse(registeredUser);
-
-      // Validate current password if changing password
-      if (updateData.password && updateData.currentPassword) {
-        if (currentUser.password !== updateData.currentPassword) {
-          throw new Error('Mật khẩu hiện tại không đúng');
-        }
-      }
-
-      // Update user data (keep existing email)
-      const updatedUser = {
-        ...currentUser,
-        firstName: updateData.firstName,
-        lastName: updateData.lastName,
-        name: updateData.name,
-        email: currentUser.email, // Keep existing email unchanged
-        phoneNumber: updateData.phoneNumber,
-        avatar: updateData.avatar || currentUser.avatar,
-        password: updateData.password || currentUser.password
-      };
-
-      // Save updated data
-      localStorage.setItem('registeredUser', JSON.stringify(updatedUser));
+      // Update profile information first
+      console.log('Updating profile...');
+      const result = await AuthAPI.updateProfile(updateData);
+      console.log('Profile update result:', result);
       
-      // Update current user state
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      
-      return { success: true };
+      if (result.success) {
+        setUser(result.data);
+        return { success: true };
+      } else {
+        throw new Error(result.error || 'Cập nhật thất bại');
+      }
     } catch (err) {
+      console.error('Update profile error in AuthContext:', err);
       const errorMessage = err.message || 'Có lỗi xảy ra khi cập nhật thông tin';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const changePassword = async (passwordData) => {
+    try {
+      clearError();
+      console.log('AuthContext changePassword called');
+      
+      if (!passwordData.currentPassword || !passwordData.newPassword) {
+        throw new Error('Vui lòng điền đầy đủ thông tin mật khẩu');
+      }
+
+      const result = await AuthAPI.changePassword(passwordData);
+      console.log('Change password result:', result);
+      
+      if (result.success) {
+        // Password changed successfully, but tokens are now invalid
+        // Force logout and redirect to login
+        TokenManager.clearTokens();
+        setIsLoggedIn(false);
+        setUser(null);
+        return { 
+          success: true, 
+          message: 'Đổi mật khẩu thành công! Vui lòng đăng nhập lại.',
+          requireRelogin: true 
+        };
+      } else {
+        throw new Error(result.error || 'Không thể đổi mật khẩu');
+      }
+    } catch (err) {
+      console.error('Change password error in AuthContext:', err);
+      const errorMessage = err.message || 'Có lỗi xảy ra khi đổi mật khẩu';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -226,46 +222,23 @@ export const AuthProvider = ({ children }) => {
   const sendPasswordResetEmail = async (email) => {
     try {
       clearError();
+      console.log('AuthContext sendPasswordResetEmail called with:', email);
       
       if (!email) {
         throw new Error('Vui lòng nhập email');
       }
 
-      // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         throw new Error('Email không hợp lệ');
       }
 
-      // Check if user exists
-      const registeredUser = localStorage.getItem('registeredUser');
-      if (!registeredUser) {
-        throw new Error('Email này chưa được đăng ký');
-      }
-
-      const user = JSON.parse(registeredUser);
-      if (user.email !== email) {
-        throw new Error('Email này chưa được đăng ký');
-      }
-
-      // Generate reset token (in real app, this would be done by backend)
-      const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      const resetExpiry = Date.now() + 15 * 60 * 1000; // 15 minutes
-
-      // Save reset token
-      localStorage.setItem('passwordResetToken', JSON.stringify({
-        token: resetToken,
-        email: email,
-        expiry: resetExpiry
-      }));
-
-      // In real app, you would send SMTP email here
-      console.log('SMTP Email would be sent with reset link:', 
-        `${window.location.origin}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`
-      );
-
-      return { success: true, resetToken };
+      console.log('Calling AuthAPI.forgotPassword...');
+      const result = await AuthAPI.forgotPassword(email);
+      console.log('Forgot password result:', result);
+      return result;
     } catch (err) {
+      console.error('Send password reset email error in AuthContext:', err);
       const errorMessage = err.message || 'Có lỗi xảy ra khi gửi email';
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -280,23 +253,8 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Token hoặc email không hợp lệ');
       }
 
-      const resetData = localStorage.getItem('passwordResetToken');
-      if (!resetData) {
-        throw new Error('Token không tồn tại');
-      }
-
-      const { token: savedToken, email: savedEmail, expiry } = JSON.parse(resetData);
-
-      if (token !== savedToken || email !== savedEmail) {
-        throw new Error('Token không hợp lệ');
-      }
-
-      if (Date.now() > expiry) {
-        // Clean up expired token
-        localStorage.removeItem('passwordResetToken');
-        throw new Error('Token đã hết hạn');
-      }
-
+      // For now, we'll just return success
+      // Backend will validate when actually resetting password
       return { success: true };
     } catch (err) {
       const errorMessage = err.message || 'Token không hợp lệ';
@@ -305,12 +263,63 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const resetPassword = async ({ token, email, newPassword }) => {
+  const verifyOTP = async (email, otpCode) => {
     try {
       clearError();
       
-      // Validate inputs
-      if (!token || !email || !newPassword) {
+      if (!email || !otpCode) {
+        throw new Error('Thiếu thông tin email hoặc mã OTP');
+      }
+
+      if (otpCode.length !== 6) {
+        throw new Error('Mã OTP phải có 6 số');
+      }
+
+      // For now, just validate format - actual verification happens in resetPassword
+      console.log('OTP verification for:', email, 'with code:', otpCode);
+      
+      return { 
+        success: true, 
+        message: 'Mã OTP hợp lệ' 
+      };
+    } catch (err) {
+      console.error('Verify OTP error:', err);
+      const errorMessage = err.message || 'Mã OTP không hợp lệ';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const resendOTP = async (email) => {
+    try {
+      clearError();
+      
+      if (!email) {
+        throw new Error('Thiếu địa chỉ email');
+      }
+
+      // Call the same forgot password API to resend OTP
+      const result = await AuthAPI.forgotPassword(email);
+      
+      console.log('AuthContext resendOTP result:', result);
+      
+      return { 
+        success: true, 
+        message: 'Mã OTP mới đã được gửi đến email của bạn!' 
+      };
+    } catch (err) {
+      console.error('Resend OTP error:', err);
+      const errorMessage = err.message || 'Không thể gửi lại mã OTP';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const resetPassword = async ({ email, otpCode, newPassword }) => {
+    try {
+      clearError();
+      
+      if (!email || !otpCode || !newPassword) {
         throw new Error('Thiếu thông tin cần thiết');
       }
 
@@ -318,36 +327,13 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Mật khẩu phải có ít nhất 6 ký tự');
       }
 
-      // Validate token first
-      const tokenValidation = await validateResetToken(token, email);
-      if (!tokenValidation.success) {
-        throw new Error(tokenValidation.error);
-      }
+      const result = await AuthAPI.resetPassword({
+        email,
+        otpCode,
+        newPassword
+      });
 
-      // Get and update user data
-      const registeredUser = localStorage.getItem('registeredUser');
-      if (!registeredUser) {
-        throw new Error('Không tìm thấy thông tin tài khoản');
-      }
-
-      const user = JSON.parse(registeredUser);
-      if (user.email !== email) {
-        throw new Error('Email không khớp với tài khoản');
-      }
-
-      // Update password
-      const updatedUser = {
-        ...user,
-        password: newPassword
-      };
-
-      // Save updated user
-      localStorage.setItem('registeredUser', JSON.stringify(updatedUser));
-
-      // Clean up reset token
-      localStorage.removeItem('passwordResetToken');
-
-      return { success: true };
+      return result;
     } catch (err) {
       const errorMessage = err.message || 'Có lỗi xảy ra khi đặt lại mật khẩu';
       setError(errorMessage);
@@ -365,10 +351,11 @@ export const AuthProvider = ({ children }) => {
     logout,
     register,
     enterAsGuest,
-    validateLogin,
     updateProfile,
+    changePassword,
     sendPasswordResetEmail,
-    validateResetToken,
+    verifyOTP,
+    resendOTP,
     resetPassword,
     clearError
   };

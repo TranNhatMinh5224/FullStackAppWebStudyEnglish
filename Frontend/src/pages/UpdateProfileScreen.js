@@ -6,7 +6,7 @@ import { images } from "../assets/images";
 import { Cloud } from "../components";
 
 const UpdateProfileScreen = () => {
-  const { user, updateProfile, error, clearError } = useAuth();
+  const { user, updateProfile, changePassword, error, clearError } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
@@ -100,7 +100,7 @@ const UpdateProfileScreen = () => {
         return;
       }
 
-      // Prepare update data
+      // Prepare update data (without password)
       const updateData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -110,31 +110,55 @@ const UpdateProfileScreen = () => {
         avatar: avatar
       };
 
-      // Add password if changing
-      if (formData.newPassword) {
-        updateData.currentPassword = formData.currentPassword;
-        updateData.password = formData.newPassword;
-      }
-
       // Simulate avatar upload if new file selected
       if (avatarFile) {
         // In real app, you would upload to server here
         updateData.avatar = avatar;
       }
 
-      const result = await updateProfile(updateData);
+      // Update profile first
+      const profileResult = await updateProfile(updateData);
 
-      if (result.success) {
-        setSuccessMessage("Cập nhật thông tin thành công!");
-        // Clear password fields
-        setFormData({
-          ...formData,
-          currentPassword: "",
-          newPassword: "",
-          confirmNewPassword: ""
+      if (!profileResult.success) {
+        setLocalError(profileResult.error || "Không thể cập nhật thông tin!");
+        setIsLoading(false);
+        return;
+      }
+
+      // Handle password change separately if provided
+      if (formData.newPassword) {
+        const passwordResult = await changePassword({
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword
         });
-        
-        // Redirect after success
+
+        if (passwordResult.success) {
+          if (passwordResult.requireRelogin) {
+            // Password changed, need to re-login
+            alert("Đổi mật khẩu thành công! Vui lòng đăng nhập lại với mật khẩu mới.");
+            navigate("/login");
+            return;
+          }
+        } else {
+          setLocalError(passwordResult.error || "Không thể đổi mật khẩu!");
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // If we get here, profile updated successfully (and password if provided)
+      setSuccessMessage("Cập nhật thông tin thành công!");
+      
+      // Clear password fields
+      setFormData({
+        ...formData,
+        currentPassword: "",
+        newPassword: "",
+        confirmNewPassword: ""
+      });
+      
+      // Redirect after success (only if no password change)
+      if (!formData.newPassword) {
         setTimeout(() => {
           navigate("/home");
         }, 2000);

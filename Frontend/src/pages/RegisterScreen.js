@@ -48,11 +48,11 @@ const RegisterScreen = () => {
     }
     
     try {
-      // Register user
-      const result = register({
-        name: `${formData.firstName} ${formData.lastName}`,
+      // Register user with API
+      const result = await register({
         firstName: formData.firstName,
         lastName: formData.lastName,
+        name: `${formData.firstName} ${formData.lastName}`,
         phoneNumber: formData.phoneNumber,
         email: formData.email,
         password: formData.password
@@ -62,6 +62,7 @@ const RegisterScreen = () => {
         alert("Đăng ký thành công! Vui lòng đăng nhập.");
         navigate("/login");
       }
+      // Error will be handled by AuthContext and shown via error state
     } catch (err) {
       console.error('Registration error:', err);
     } finally {
