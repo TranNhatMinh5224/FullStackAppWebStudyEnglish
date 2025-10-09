@@ -94,6 +94,11 @@ const LoginScreen = () => {
             {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>
         </form>
+        
+        <div className="forgot-password-link">
+          <Link to="/forgot-password">Quên mật khẩu?</Link>
+        </div>
+        
         <p>
           Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
         </p>

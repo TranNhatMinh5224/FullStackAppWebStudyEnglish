@@ -40,6 +40,11 @@ const HomeScreen = () => {
     }
   };
 
+  const handleUpdateProfile = () => {
+    setShowUserDropdown(false);
+    navigate("/profile/update");
+  };
+
   // Don't render anything if not logged in or guest (will redirect anyway)
   if (!isLoggedIn && !isGuest) {
     return null;
@@ -81,6 +86,9 @@ const HomeScreen = () => {
                         <div className="user-email">{user.email}</div>
                       </div>
                       <hr className="dropdown-divider" />
+                      <button className="dropdown-item profile-btn" onClick={handleUpdateProfile}>
+                        Cập nhật thông tin
+                      </button>
                       <button className="dropdown-item logout-btn" onClick={handleLogout}>
                         Đăng xuất
                       </button>

@@ -6,6 +6,9 @@ import IntroScreen from "./pages/IntroScreen";
 import HomeScreen from "./pages/HomeScreen";
 import LoginScreen from "./pages/LoginScreen";
 import RegisterScreen from "./pages/RegisterScreen";
+import UpdateProfileScreen from "./pages/UpdateProfileScreen";
+import ForgotPasswordScreen from "./pages/ForgotPasswordScreen";
+import ResetPasswordScreen from "./pages/ResetPasswordScreen";
 
 // Loading component
 const LoadingSpinner = () => (
@@ -47,6 +50,9 @@ const AppContent = () => {
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/register" element={<RegisterScreen />} />
+        <Route path="/profile/update" element={<UpdateProfileScreen />} />
+        <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+        <Route path="/reset-password" element={<ResetPasswordScreen />} />
       </Routes>
     </Router>
   );

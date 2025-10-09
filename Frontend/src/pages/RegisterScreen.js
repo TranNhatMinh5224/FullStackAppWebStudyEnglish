@@ -7,7 +7,9 @@ import { Cloud } from "../components";
 
 const RegisterScreen = () => {
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
+    phoneNumber: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -37,10 +39,21 @@ const RegisterScreen = () => {
       return;
     }
     
+    // Validate phone number (basic Vietnamese phone number validation)
+    const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+    if (!phoneRegex.test(formData.phoneNumber)) {
+      setLocalError("Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10 chữ số bắt đầu bằng 03, 05, 07, 08, hoặc 09.");
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       // Register user
       const result = register({
-        name: formData.fullName,
+        name: `${formData.firstName} ${formData.lastName}`,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phoneNumber: formData.phoneNumber,
         email: formData.email,
         password: formData.password
       });
@@ -80,10 +93,28 @@ const RegisterScreen = () => {
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            name="fullName"
-            value={formData.fullName}
+            name="firstName"
+            value={formData.firstName}
             onChange={handleChange}
-            placeholder="Họ và tên"
+            placeholder="Nhập vào họ của bạn"
+            required
+            disabled={isLoading}
+          />
+          <input
+            type="text"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            placeholder="Nhập vào tên của bạn"
+            required
+            disabled={isLoading}
+          />
+          <input
+            type="tel"
+            name="phoneNumber"
+            value={formData.phoneNumber}
+            onChange={handleChange}
+            placeholder="Số điện thoại"
             required
             disabled={isLoading}
           />

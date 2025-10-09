@@ -195,6 +195,16 @@
   color: #c53030;
 }
 
+.profile-btn {
+  color: #667eea !important;
+  font-weight: 500;
+}
+
+.profile-btn:hover {
+  background: rgba(102, 126, 234, 0.1) !important;
+  color: #4c63d2 !important;
+}
+
 /* Main Layout */
 .main-layout {
   max-width: 1200px;
