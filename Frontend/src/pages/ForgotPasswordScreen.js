@@ -8,7 +8,6 @@ import { Cloud } from "../components";
 const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isEmailSent, setIsEmailSent] = useState(false);
   const [localError, setLocalError] = useState("");
   
   const navigate = useNavigate();
@@ -34,7 +33,7 @@ const ForgotPasswordScreen = () => {
         return;
       }
 
-      // Send password reset email
+      // Send OTP to email
       const result = await sendPasswordResetEmail(email);
       
       if (result.success) {
@@ -42,6 +41,8 @@ const ForgotPasswordScreen = () => {
         navigate("/otp-verification", { 
           state: { email: email } 
         });
+      } else {
+        setLocalError(result.error || "Có lỗi xảy ra. Vui lòng thử lại!");
       }
     } catch (err) {
       console.error('Forgot password error:', err);
@@ -51,19 +52,7 @@ const ForgotPasswordScreen = () => {
     }
   };
 
-  const handleResendEmail = async () => {
-    setIsLoading(true);
-    try {
-      const result = await sendPasswordResetEmail(email);
-      if (result.success) {
-        console.log('Password reset email resent to:', email);
-      }
-    } catch (err) {
-      console.error('Resend email error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   return (
     <div className="forgot-password-container">
@@ -79,91 +68,53 @@ const ForgotPasswordScreen = () => {
       />
 
       <div className="forgot-password-form">
-        {!isEmailSent ? (
-          <>
-            <div className="form-header">
-              <div className="icon-container">
-                <div className="forgot-icon">🔒</div>
-              </div>
-              <h2>Quên mật khẩu?</h2>
-              <p className="form-description">
-                Đừng lo lắng! Hãy nhập email của bạn và chúng tôi sẽ gửi 
-                hướng dẫn đặt lại mật khẩu cho bạn.
-              </p>
-            </div>
-            
-            {(error || localError) && (
-              <div className="error-message">
-                {error || localError}
-              </div>
-            )}
-            
-            <form onSubmit={handleSubmit}>
-              <div className="input-group">
-                <label htmlFor="email">Địa chỉ email</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={email}
-                  onChange={handleChange}
-                  placeholder="Nhập email của bạn"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              
-              <button 
-                type="submit" 
-                disabled={isLoading || !email.trim()}
-                className={`submit-btn ${isLoading ? 'loading' : ''}`}
-              >
-                {isLoading ? (
-                  <>
-                    <span className="loading-spinner"></span>
-                    Đang gửi...
-                  </>
-                ) : (
-                  'Gửi email đặt lại mật khẩu'
-                )}
-              </button>
-            </form>
-          </>
-        ) : (
-          <>
-            <div className="form-header success">
-              <div className="icon-container">
-                <div className="success-icon">📧</div>
-              </div>
-              <h2>Email đã được gửi!</h2>
-              <p className="form-description">
-                Chúng tôi đã gửi hướng dẫn đặt lại mật khẩu đến email:
-              </p>
-              <div className="email-display">{email}</div>
-              <p className="instruction-text">
-                Vui lòng kiểm tra hộp thư đến (và cả thư mục spam) của bạn. 
-                Link đặt lại mật khẩu sẽ hết hạn sau 15 phút.
-              </p>
-            </div>
-
-            <div className="action-buttons">
-              <button 
-                className="resend-btn"
-                onClick={handleResendEmail}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Đang gửi lại...' : 'Gửi lại email'}
-              </button>
-              
-              <button 
-                className="back-to-login-btn"
-                onClick={() => navigate("/login")}
-              >
-                Quay lại đăng nhập
-              </button>
-            </div>
-          </>
+        <div className="form-header">
+          <div className="icon-container">
+            <div className="forgot-icon">🔒</div>
+          </div>
+          <h2>Quên mật khẩu?</h2>
+          <p className="form-description">
+            Đừng lo lắng! Hãy nhập email của bạn và chúng tôi sẽ gửi 
+            mã OTP để đặt lại mật khẩu cho bạn.
+          </p>
+        </div>
+        
+        {(error || localError) && (
+          <div className="error-message">
+            {error || localError}
+          </div>
         )}
+            
+        <form onSubmit={handleSubmit}>
+          <div className="input-group">
+            <label htmlFor="email">Địa chỉ email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={email}
+              onChange={handleChange}
+              placeholder="Nhập email của bạn"
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            disabled={isLoading || !email.trim()}
+            className={`submit-btn ${isLoading ? 'loading' : ''}`}
+          >
+            {isLoading ? (
+              <>
+                <span className="loading-spinner"></span>
+                Đang gửi...
+              </>
+            ) : (
+              'Gửi mã OTP'
+            )}
+          </button>
+        </form>
 
         <div className="form-footer">
           <p>

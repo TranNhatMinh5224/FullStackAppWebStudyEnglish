@@ -9,7 +9,7 @@ const OTPVerificationScreen = () => {
   const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState("");
-  const [timer, setTimer] = useState(900); // 15 minutes in seconds
+  const [timer, setTimer] = useState(300); // 5 minutes in seconds
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -125,7 +125,7 @@ const OTPVerificationScreen = () => {
       const result = await resendOTP(email);
       if (result.success) {
         setOtpCode(["", "", "", "", "", ""]);
-        setTimer(900); // Reset timer to 15 minutes
+        setTimer(300); // Reset timer to 5 minutes
         inputRefs.current[0]?.focus();
         console.log('New OTP sent to:', email);
       }

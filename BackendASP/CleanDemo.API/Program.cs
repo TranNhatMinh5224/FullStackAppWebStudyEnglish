@@ -3,6 +3,7 @@ using CleanDemo.Application.Interface;
 using CleanDemo.Application.Service;
 using CleanDemo.Infrastructure.Data;
 using CleanDemo.Infrastructure.Repositories;
+using CleanDemo.Infrastructure.Services;
 using CleanDemo.Application.Validators;
 using CleanDemo.Application.Mappings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -99,6 +100,7 @@ builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 
 // Register Validators
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();
