@@ -1,10 +1,13 @@
-namespace CleanDemo.Domain.Domain;
+namespace CleanDemo.Domain.Entities;
 
 public class Question
 {
     public int QuestionId { get; set; }
-    public int QuizId { get; set; }
-    public Quiz? Quiz { get; set; }
     public string Text { get; set; } = string.Empty;
-    public List<Answer> Answers { get; set; } = new List<Answer>();
+
+    public int MiniTestId { get; set; }
+    
+    // Navigation Properties
+    public MiniTest? MiniTest { get; set; }
+    public List<AnswerOption> Options { get; set; } = new();
 }

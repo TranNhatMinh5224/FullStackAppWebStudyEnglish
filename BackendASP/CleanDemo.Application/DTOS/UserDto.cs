@@ -1,26 +1,17 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace CleanDemo.Application.DTOs
 {
     public class RegisterUserDto
     {
-        [Required]
         public string SureName { get; set; } = string.Empty;
-        [Required]
         public string LastName { get; set; } = string.Empty;
-        [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
-        [Required, MinLength(6)]
         public string Password { get; set; } = string.Empty;
-        [Required]
         public string PhoneNumber { get; set; } = string.Empty;
     }
 
     public class LoginUserDto
     {
-        [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
-        [Required]
         public string Password { get; set; } = string.Empty;
     }
 
@@ -49,42 +40,29 @@ namespace CleanDemo.Application.DTOs
 
     public class ChangePasswordDto
     {
-        [Required]
         public string CurrentPassword { get; set; } = string.Empty;
-        [Required, MinLength(6)]
         public string NewPassword { get; set; } = string.Empty;
     }
 
     public class ForgotPasswordDto
     {
-        [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
     }
 
     public class RefreshTokenDto
     {
-        [Required]
         public string RefreshToken { get; set; } = string.Empty;
     }
 
     public class UpdateUserRoleDto
     {
-        [Required]
         public string RoleName { get; set; } = string.Empty;
     }
 
     public class ResetPasswordDto
     {
-        [Required]
-        [EmailAddress]
         public string Email { get; set; } = string.Empty;
-        
-        [Required]
-        [StringLength(6, MinimumLength = 6, ErrorMessage = "OTP code must be exactly 6 digits")]
-        [RegularExpression(@"^\d{6}$", ErrorMessage = "OTP code must contain only digits")]
         public string OtpCode { get; set; } = string.Empty;
-        
-        [Required, MinLength(6)]
         public string NewPassword { get; set; } = string.Empty;
     }
 }

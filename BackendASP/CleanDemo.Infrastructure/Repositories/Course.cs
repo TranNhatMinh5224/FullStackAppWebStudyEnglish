@@ -1,5 +1,6 @@
+using CleanDemo.Domain.Entities;
+using CleanDemo.Domain.Enums;
 using CleanDemo.Application.Interface;
-using CleanDemo.Domain.Domain;
 using CleanDemo.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,49 +9,221 @@ namespace CleanDemo.Infrastructure.Repositories
     public class CourseRepository : ICourseRepository
     {
         private readonly AppDbContext _context;
-
+        
         public CourseRepository(AppDbContext context)
         {
             _context = context;
         }
 
-        public async Task<IEnumerable<Course>> GetAllCoursesAsync()
+        // === CRUD CƠ BẢN ===
+        
+        /// <summary>
+        /// Thêm mới khóa học
+        /// </summary>
+        public async Task AddCourse(Course course)
+        {
+            await _context.Courses.AddAsync(course);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Lấy khóa học theo ID (bao gồm Teacher, Lessons, UserCourses)
+        /// </summary>
+        public async Task<Course?> GetCourseById(int courseId)
         {
             return await _context.Courses
+                .Include(c => c.Teacher)
+                .Include(c => c.Lessons)
+                .Include(c => c.UserCourses)
+                .FirstOrDefaultAsync(c => c.CourseId == courseId);
+        }
+
+        /// <summary>
+        /// Lấy khóa học với đầy đủ thông tin
+        /// </summary>
+        public async Task<Course?> GetCourseWithDetails(int courseId)
+        {
+            return await _context.Courses
+                .Include(c => c.Teacher)
+                .Include(c => c.Lessons)
+                    .ThenInclude(l => l.Vocabularies)
+                .Include(c => c.Lessons)
+                    .ThenInclude(l => l.MiniTests)
+                .Include(c => c.UserCourses)
+                .FirstOrDefaultAsync(c => c.CourseId == courseId);
+        }
+
+        /// <summary>
+        /// Cập nhật khóa học
+        /// </summary>
+        public async Task UpdateCourse(Course course)
+        {
+            _context.Courses.Update(course);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Xóa khóa học
+        /// </summary>
+        public async Task DeleteCourse(int courseId)
+        {
+            var course = await _context.Courses.FindAsync(courseId);
+            if (course != null)
+            {
+                _context.Courses.Remove(course);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // === LẤY DANH SÁCH KHÓA HỌC ===
+        
+        /// <summary>
+        /// Lấy TẤT CẢ khóa học (Admin)
+        /// </summary>
+        public async Task<IEnumerable<Course>> GetAllCourses()
+        {
+            return await _context.Courses
+                .Include(c => c.Teacher)
+                .Include(c => c.Lessons)
+                .Include(c => c.UserCourses)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Lấy khóa học hệ thống (User trang chủ)
+        /// </summary>
+        public async Task<IEnumerable<Course>> GetAllCourseSystem()
+        {
+            return await _context.Courses
+                .Where(c => c.Type == CourseType.System)
+                .Include(c => c.Teacher)
                 .Include(c => c.Lessons)
                 .ToListAsync();
         }
 
-        public async Task<Course?> GetCourseByIdAsync(int id)
+        /// <summary>
+        /// Lấy khóa học do teacher tạo
+        /// </summary>
+        public async Task<IEnumerable<Course>> GetAllCoursesByTeacherId(int teacherId)
         {
             return await _context.Courses
+                .Where(c => c.TeacherId == teacherId && c.Type == CourseType.Teacher)
+                .Include(c => c.Teacher)
                 .Include(c => c.Lessons)
-                .FirstOrDefaultAsync(c => c.CourseId == id);
+                .Include(c => c.UserCourses)
+                .ToListAsync();
         }
 
-        public async Task AddCourseAsync(Course course)
+        /// <summary>
+        /// Lấy khóa học user đã đăng ký
+        /// </summary>
+        public async Task<IEnumerable<Course>> GetEnrolledCoursesByUserId(int userId)
         {
-            await _context.Courses.AddAsync(course);
+            return await _context.UserCourses
+                .Where(uc => uc.UserId == userId)
+                .Include(uc => uc.Course)
+                    .ThenInclude(c => c!.Teacher)
+                .Include(uc => uc.Course)
+                    .ThenInclude(c => c!.Lessons)
+                .Select(uc => uc.Course!)
+                .ToListAsync();
         }
 
-        public Task UpdateCourseAsync(Course course)
+        /// <summary>
+        /// Lấy khóa học teacher mà user đã tham gia
+        /// </summary>
+        public async Task<IEnumerable<Course>> GetEnrolledTeacherCoursesByUserId(int userId)
         {
-            _context.Courses.Update(course);
-            return Task.CompletedTask;
+            return await _context.UserCourses
+                .Where(uc => uc.UserId == userId && uc.Course!.Type == CourseType.Teacher)
+                .Include(uc => uc.Course)
+                    .ThenInclude(c => c!.Teacher)
+                .Include(uc => uc.Course)
+                    .ThenInclude(c => c!.Lessons)
+                .Select(uc => uc.Course!)
+                .ToListAsync();
         }
 
-        public async Task DeleteCourseAsync(int id)
+        // === KIỂM TRA & ĐĂNG KÝ ===
+        
+        /// <summary>
+        /// Kiểm tra user đã đăng ký khóa học chưa
+        /// </summary>
+        public async Task<bool> IsUserEnrolledInCourse(int userId, int courseId)
         {
-            var course = await _context.Courses.FindAsync(id);
-            if (course != null)
+            return await _context.UserCourses
+                .AnyAsync(uc => uc.UserId == userId && uc.CourseId == courseId);
+        }
+
+        /// <summary>
+        /// Đăng ký user vào khóa học
+        /// </summary>
+        public async Task EnrollUserInCourse(int userId, int courseId)
+        {
+            var exists = await IsUserEnrolledInCourse(userId, courseId);
+            if (exists)
             {
-                _context.Courses.Remove(course);
+                throw new InvalidOperationException("User already enrolled in this course");
+            }
+
+            var enrollment = new UserCourse
+            {
+                UserId = userId,
+                CourseId = courseId,
+                JoinedAt = DateTime.UtcNow
+            };
+
+            await _context.UserCourses.AddAsync(enrollment);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Hủy đăng ký khóa học
+        /// </summary>
+        public async Task UnenrollUserFromCourse(int userId, int courseId)
+        {
+            var enrollment = await _context.UserCourses
+                .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.CourseId == courseId);
+
+            if (enrollment != null)
+            {
+                _context.UserCourses.Remove(enrollment);
+                await _context.SaveChangesAsync();
             }
         }
 
-        public async Task<int> SaveChangesAsync()
+        // === THỐNG KÊ ===
+        
+        /// <summary>
+        /// Đếm số lượng bài học
+        /// </summary>
+        public async Task<int> CountLessons(int courseId)
         {
-            return await _context.SaveChangesAsync();
+            return await _context.Lessons
+                .Where(l => l.CourseId == courseId)
+                .CountAsync();
+        }
+
+        /// <summary>
+        /// Đếm số user đã đăng ký
+        /// </summary>
+        public async Task<int> CountEnrolledUsers(int courseId)
+        {
+            return await _context.UserCourses
+                .Where(uc => uc.CourseId == courseId)
+                .CountAsync();
+        }
+
+        /// <summary>
+        /// Lấy danh sách user đã đăng ký
+        /// </summary>
+        public async Task<IEnumerable<User>> GetEnrolledUsers(int courseId)
+        {
+            return await _context.UserCourses
+                .Where(uc => uc.CourseId == courseId)
+                .Include(uc => uc.User)
+                .Select(uc => uc.User!)
+                .ToListAsync();
         }
     }
 }

@@ -1,7 +1,7 @@
 using CleanDemo.Application.DTOs;
 using CleanDemo.Application.Interface;
 using CleanDemo.Application.Common;
-using CleanDemo.Domain.Domain;
+using CleanDemo.Domain.Entities;
 using AutoMapper;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -95,7 +95,7 @@ namespace CleanDemo.Application.Service
             var response = new ServiceResponse<UserDto>();
             try
             {
-                var user = await _userRepository.GetUserByIdAsync(userId);
+                var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null)
                 {
                     response.Success = false;
@@ -118,7 +118,7 @@ namespace CleanDemo.Application.Service
             var response = new ServiceResponse<UserDto>();
             try
             {
-                var user = await _userRepository.GetUserByIdAsync(userId);
+                var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null)
                 {
                     response.Success = false;
@@ -146,7 +146,7 @@ namespace CleanDemo.Application.Service
             var response = new ServiceResponse<bool>();
             try
             {
-                var user = await _userRepository.GetUserByIdAsync(userId);
+                var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null || !user.VerifyPassword(dto.CurrentPassword))
                 {
                     // Log failed attempt for security monitoring
@@ -362,7 +362,7 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
-                var user = await _userRepository.GetUserByIdAsync(storedToken.UserId);
+                var user = await _userRepository.GetByIdAsync(storedToken.UserId);
                 if (user == null)
                 {
                     response.Success = false;
@@ -437,7 +437,7 @@ namespace CleanDemo.Application.Service
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.Name, user.SureName + " " + user.LastName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

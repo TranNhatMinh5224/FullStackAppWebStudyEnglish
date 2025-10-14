@@ -1,4 +1,4 @@
-using CleanDemo.Domain.Domain;
+using CleanDemo.Domain.Entities;
 
 namespace CleanDemo.Application.Interface
 {

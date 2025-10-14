@@ -1,5 +1,5 @@
 // API configuration and base setup
-const BASE_URL = 'http://localhost:5029/api';
+const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5029/api';
 
 // API Endpoints
 const API_ENDPOINTS = {

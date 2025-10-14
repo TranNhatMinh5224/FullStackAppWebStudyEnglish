@@ -1,5 +1,5 @@
 using CleanDemo.Application.Interface;
-using CleanDemo.Domain.Domain;
+using CleanDemo.Domain.Entities; // Sửa namespace
 using CleanDemo.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +11,7 @@ namespace CleanDemo.Infrastructure.Repositories
 
         public UserRepository(AppDbContext context) => _context = context;
 
-        public async Task<User?> GetUserByIdAsync(int id) =>
+        public async Task<User?> GetByIdAsync(int id) => // Sửa tên method
             await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.UserId == id);
 
         public async Task<User?> GetUserByEmailAsync(string email) =>
@@ -30,7 +30,7 @@ namespace CleanDemo.Infrastructure.Repositories
 
         public async Task DeleteUserAsync(int id)
         {
-            var user = await GetUserByIdAsync(id);
+            var user = await GetByIdAsync(id); // Sửa tên method call
             if (user != null) _context.Users.Remove(user);
         }
 

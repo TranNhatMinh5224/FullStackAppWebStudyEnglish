@@ -1,7 +1,7 @@
 using CleanDemo.Application.DTOs;
 using CleanDemo.Application.Common;
 using CleanDemo.Application.Interface;
-using CleanDemo.Domain.Domain;
+using CleanDemo.Domain.Entities;
 using AutoMapper;
 
 namespace CleanDemo.Application.Service.Auth.Register

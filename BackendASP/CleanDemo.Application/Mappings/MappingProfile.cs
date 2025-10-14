@@ -1,6 +1,6 @@
 using AutoMapper;
+using CleanDemo.Domain.Entities;
 using CleanDemo.Application.DTOs;
-using CleanDemo.Domain.Domain;
 
 namespace CleanDemo.Application.Mappings
 {
@@ -8,19 +8,33 @@ namespace CleanDemo.Application.Mappings
     {
         public MappingProfile()
         {
+            // Course mappings
+            CreateMap<Course, CourseDto>()
+                .ForMember(dest => dest.TeacherName, opt => opt.Ignore()) // Sẽ set trong service
+                .ForMember(dest => dest.LessonCount, opt => opt.Ignore()) // Sẽ set trong service
+                .ForMember(dest => dest.StudentCount, opt => opt.Ignore()); // Sẽ set trong service
+
+            CreateMap<CreateCourseDto, Course>();
+
+            CreateMap<Course, UserCourseDto>()
+                .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore()); // Sẽ set trong service
+
+            CreateMap<Course, ListMyCourseTeacherDto>()
+                .ForMember(dest => dest.StudentCount, opt => opt.Ignore()); // Sẽ set trong service
+
+            CreateMap<Course, ListMyCourseStudentDto>()
+                .ForMember(dest => dest.TeacherName, opt => opt.Ignore()); // Sẽ set trong service
+
+            CreateMap<Course, CourseDetailDto>()
+                .ForMember(dest => dest.TeacherName, opt => opt.Ignore()) // Sẽ set trong service
+                .ForMember(dest => dest.LessonCount, opt => opt.Ignore()) // Sẽ set trong service
+                .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore()) // Sẽ set trong service
+                .ForMember(dest => dest.Lessons, opt => opt.Ignore()); // Sẽ set trong service
+
             // Lesson mappings
             CreateMap<Lesson, LessonDto>();
-            CreateMap<CreateLessonDto, Lesson>();
-            CreateMap<UpdateLessonDto, Lesson>()
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            // Course mappings
-            CreateMap<Course, CourseDto>();
-            CreateMap<CreateCourseDto, Course>();
-            CreateMap<UpdateCourseDto, Course>()
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-
-            // User mappings
+            // User mappings (nếu chưa có)
             CreateMap<User, UserDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
             CreateMap<RegisterUserDto, User>();

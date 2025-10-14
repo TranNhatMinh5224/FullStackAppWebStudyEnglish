@@ -1,5 +1,5 @@
-using CleanDemo.Domain.Domain;
 using CleanDemo.Application.Interface;
+using CleanDemo.Domain.Entities;
 using CleanDemo.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,49 +17,53 @@ namespace CleanDemo.Infrastructure.Repositories
         public async Task<PasswordResetToken?> GetByTokenAsync(string token)
         {
             return await _context.PasswordResetTokens
-                .Include(t => t.User)
-                .FirstOrDefaultAsync(t => t.Token == token && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
+                .Include(prt => prt.User)
+                .FirstOrDefaultAsync(prt => prt.Token == token);
         }
 
         public async Task<PasswordResetToken?> GetActiveTokenByUserIdAsync(int userId)
         {
             return await _context.PasswordResetTokens
-                .Include(t => t.User)
-                .Where(t => t.UserId == userId && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow)
-                .OrderByDescending(t => t.CreatedAt) // Get most recent token
+                .Where(prt => prt.UserId == userId && 
+                             prt.ExpiresAt > DateTime.UtcNow && 
+                             !prt.IsUsed)
+                .OrderByDescending(prt => prt.CreatedAt)
                 .FirstOrDefaultAsync();
         }
 
         public async Task<List<PasswordResetToken>> GetActiveTokensByUserIdAsync(int userId)
         {
             return await _context.PasswordResetTokens
-                .Include(t => t.User)
-                .Where(t => t.UserId == userId && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow)
+                .Where(prt => prt.UserId == userId && 
+                             prt.ExpiresAt > DateTime.UtcNow && 
+                             !prt.IsUsed)
                 .ToListAsync();
         }
 
-        public async Task AddAsync(PasswordResetToken resetToken)
+        public async Task AddAsync(PasswordResetToken passwordResetToken)
         {
-            await _context.PasswordResetTokens.AddAsync(resetToken);
+            await _context.PasswordResetTokens.AddAsync(passwordResetToken);
+            await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(PasswordResetToken resetToken)
+        public async Task UpdateAsync(PasswordResetToken passwordResetToken)
         {
-            _context.PasswordResetTokens.Update(resetToken);
-            await Task.CompletedTask;
+            _context.PasswordResetTokens.Update(passwordResetToken);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteExpiredTokensAsync()
         {
             var expiredTokens = await _context.PasswordResetTokens
-                .Where(t => t.ExpiresAt <= DateTime.UtcNow || t.IsUsed)
+                .Where(prt => prt.ExpiresAt < DateTime.UtcNow || prt.IsUsed)
                 .ToListAsync();
-            
-            _context.PasswordResetTokens.RemoveRange(expiredTokens);
-        }
 
-        public async Task SaveChangesAsync()
-        {
+            _context.PasswordResetTokens.RemoveRange(expiredTokens);
             await _context.SaveChangesAsync();
         }
     }

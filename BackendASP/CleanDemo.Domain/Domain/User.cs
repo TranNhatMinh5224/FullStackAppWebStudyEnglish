@@ -1,26 +1,31 @@
-namespace CleanDemo.Domain.Domain;
+using CleanDemo.Domain.Enums;
 
-public enum StatusAccount
-{
-    Active,
-    Inactive,
-    Suspended
-}
+namespace CleanDemo.Domain.Entities;
 
 public class User
 {
     public int UserId { get; set; }
     public string SureName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
-    public string Name => $"{SureName} {LastName}".Trim(); // Computed property
     public string Email { get; set; } = string.Empty;
-    public string PasswordHash { get; set; } = string.Empty; // Đổi tên và public
+    public string PasswordHash { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
+    
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public StatusAccount Status { get; set; } = StatusAccount.Active;
-    public List<Role> Roles { get; set; } = new List<Role>();
 
+    // Navigation Properties
+    public List<Role> Roles { get; set; } = new List<Role>();
+    public List<UserCourse> UserCourses { get; set; } = new();
+    public List<Course> CreatedCourses { get; set; } = new(); // Courses created by teacher
+    public TeacherPackage? CurrentPackage { get; set; }
+    public List<RefreshToken> RefreshTokens { get; set; } = new();
+    public List<PasswordResetToken> PasswordResetTokens { get; set; } = new();
+    public List<Progress> ProgressRecords { get; set; } = new();
+    public List<ReviewWord> ReviewWords { get; set; } = new();
+    public List<PronunciationScore> PronunciationScores { get; set; } = new();
+    public List<Payment> Payments { get; set; } = new();
 
     public void SetPassword(string password)
     {

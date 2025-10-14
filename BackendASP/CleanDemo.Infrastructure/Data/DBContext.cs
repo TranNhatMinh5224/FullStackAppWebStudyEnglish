@@ -1,168 +1,305 @@
 using Microsoft.EntityFrameworkCore;
-using CleanDemo.Domain.Domain;
-namespace CleanDemo.Infrastructure.Data
+using CleanDemo.Domain.Entities;
 
+namespace CleanDemo.Infrastructure.Data;
+
+public class AppDbContext : DbContext
 {
-    public class AppDbContext : DbContext
+  public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+  {
+  }
+
+  // DbSets
+  public DbSet<User> Users { get; set; }
+  public DbSet<Role> Roles { get; set; }
+  public DbSet<Course> Courses { get; set; }
+  public DbSet<Lesson> Lessons { get; set; }
+  public DbSet<Vocabulary> Vocabularies { get; set; }
+  public DbSet<MiniTest> MiniTests { get; set; }
+  public DbSet<Question> Questions { get; set; }
+  public DbSet<AnswerOption> AnswerOptions { get; set; }
+  public DbSet<UserCourse> UserCourses { get; set; }
+  public DbSet<TeacherPackage> TeacherPackages { get; set; }
+  public DbSet<TeacherSubscription> TeacherSubscriptions { get; set; }
+  public DbSet<RefreshToken> RefreshTokens { get; set; }
+  public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+  public DbSet<Progress> ProgressRecords { get; set; }
+  public DbSet<ReviewWord> ReviewWords { get; set; }
+  public DbSet<PronunciationScore> PronunciationScores { get; set; }
+  public DbSet<Payment> Payments { get; set; }
+  public DbSet<UserRole> UserRoles { get; set; }
+
+  protected override void OnModelCreating(ModelBuilder modelBuilder)
+  {
+    base.OnModelCreating(modelBuilder);
+
+    // User Configuration
+    modelBuilder.Entity<User>(entity =>
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-        {
-        }
-        public DbSet<Course> Courses { get; set; }
-        public DbSet<Lesson> Lessons { get; set; }
-        public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<Enrollment> Enrollments { get; set; }
-        public DbSet<UserProgress> UserProgresses { get; set; }
-        public DbSet<Quiz> Quizzes { get; set; }
-        public DbSet<Question> Questions { get; set; }
-        public DbSet<Answer> Answers { get; set; }
-        public DbSet<UserVocab> UserVocabs { get; set; }
-        public DbSet<AuditLog> AuditLogs { get; set; }
-        public DbSet<Vocab> Vocabs { get; set; }
-        public DbSet<Topic> Topics { get; set; }
-        public DbSet<ExampleVocabulary> ExampleVocabularies { get; set; }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+      entity.ToTable("Users");
+      entity.HasIndex(u => u.Email).IsUnique();
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
+      // User-Role Many-to-Many (sử dụng entity UserRole)
+      entity.HasMany(u => u.Roles)
+                    .WithMany(r => r.Users)
+                    .UsingEntity<UserRole>(
+                        j => j.HasOne(ur => ur.Role).WithMany().HasForeignKey(ur => ur.RolesRoleId),
+                        j => j.HasOne(ur => ur.User).WithMany().HasForeignKey(ur => ur.UsersUserId)
+                    );
+    });
 
-            modelBuilder.Entity<Course>()
-                .ToTable("Courses")
-                .HasMany(c => c.Lessons)
-                .WithOne(l => l.Course)
+    // Role Configuration
+    modelBuilder.Entity<Role>(entity =>
+    {
+      entity.ToTable("Roles");
+    });
+
+    // UserRole Configuration
+    modelBuilder.Entity<UserRole>(entity =>
+    {
+      entity.ToTable("UserRoles");
+      entity.HasKey(ur => new { ur.UsersUserId, ur.RolesRoleId });
+    });
+
+    // Course Configuration
+    modelBuilder.Entity<Course>(entity =>
+    {
+      entity.ToTable("Courses");
+
+      entity.Property(c => c.Price)
+                .HasPrecision(10, 2); // 10 digits total, 2 decimal places
+
+      entity.HasOne(c => c.Teacher)
+                .WithMany(u => u.CreatedCourses)
+                .HasForeignKey(c => c.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+    });
+
+    // Lesson Configuration
+    modelBuilder.Entity<Lesson>(entity =>
+    {
+      entity.ToTable("Lessons");
+
+      // Lesson thuộc về Course (không còn Topic)
+      entity.HasOne(l => l.Course)
+                .WithMany(c => c.Lessons)
                 .HasForeignKey(l => l.CourseId)
                 .OnDelete(DeleteBehavior.Cascade);
+    });
 
-            modelBuilder.Entity<Lesson>()
-                .ToTable("Lessons");
+    // Vocabulary Configuration
+    modelBuilder.Entity<Vocabulary>(entity =>
+    {
+      entity.ToTable("Vocabularies");
 
-            modelBuilder.Entity<Enrollment>()
-                .ToTable("Enrollments")
-                .HasOne(e => e.User)
-                .WithMany()
-                .HasForeignKey(e => e.UserId);
+      entity.HasOne(v => v.Lesson)
+                .WithMany(l => l.Vocabularies)
+                .HasForeignKey(v => v.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
+    });
 
-            modelBuilder.Entity<Enrollment>()
-                .HasOne(e => e.Course)
-                .WithMany()
-                .HasForeignKey(e => e.CourseId);
+    // MiniTest Configuration
+    modelBuilder.Entity<MiniTest>(entity =>
+    {
+      entity.ToTable("MiniTests");
 
-            modelBuilder.Entity<UserProgress>()
-                .ToTable("UserProgresses")
-                .HasOne(p => p.User)
-                .WithMany()
-                .HasForeignKey(p => p.UserId);
+      entity.HasOne(mt => mt.Lesson)
+                .WithMany(l => l.MiniTests)
+                .HasForeignKey(mt => mt.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
+    });
 
-            modelBuilder.Entity<UserProgress>()
-                .HasOne(p => p.Lesson)
-                .WithMany()
-                .HasForeignKey(p => p.LessonId);
+    // Question Configuration
+    modelBuilder.Entity<Question>(entity =>
+    {
+      entity.ToTable("Questions");
 
-            modelBuilder.Entity<Quiz>()
-                .ToTable("Quizzes")
-                .HasOne(q => q.Lesson)
-                .WithMany()
-                .HasForeignKey(q => q.LessonId);
+      entity.HasOne(q => q.MiniTest)
+                .WithMany(mt => mt.Questions)
+                .HasForeignKey(q => q.MiniTestId)
+                .OnDelete(DeleteBehavior.Cascade);
+    });
 
-            modelBuilder.Entity<Question>()
-                .ToTable("Questions")
-                .HasOne(q => q.Quiz)
-                .WithMany(qz => qz.Questions)
-                .HasForeignKey(q => q.QuizId)
+    // AnswerOption Configuration
+    modelBuilder.Entity<AnswerOption>(entity =>
+    {
+      entity.ToTable("AnswerOptions");
+
+      entity.HasOne(ao => ao.Question)
+                .WithMany(q => q.Options)
+                .HasForeignKey(ao => ao.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    // UserCourse Configuration
+    modelBuilder.Entity<UserCourse>(entity =>
+    {
+      entity.ToTable("UserCourses");
+
+      entity.HasOne(uc => uc.User)
+                .WithMany(u => u.UserCourses)
+                .HasForeignKey(uc => uc.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Answer>()
-                .ToTable("Answers")
-                .HasOne(a => a.Question)
-                .WithMany(q => q.Answers)
-                .HasForeignKey(a => a.QuestionId)
+      entity.HasOne(uc => uc.Course)
+                .WithMany(c => c.UserCourses)
+                .HasForeignKey(uc => uc.CourseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<UserVocab>()
-                .ToTable("UserVocabs")
-                .HasOne(uv => uv.User)
+      // Unique constraint: One user can only enroll in a course once
+      entity.HasIndex(uc => new { uc.UserId, uc.CourseId }).IsUnique();
+    });
+
+    // TeacherPackage Configuration
+    modelBuilder.Entity<TeacherPackage>(entity =>
+    {
+      entity.ToTable("TeacherPackages");
+
+      entity.HasOne(tp => tp.Teacher)
+                .WithOne(u => u.CurrentPackage)
+                .HasForeignKey<TeacherPackage>(tp => tp.TeacherId)
+                .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    // TeacherSubscription Configuration
+    modelBuilder.Entity<TeacherSubscription>(entity =>
+    {
+      entity.ToTable("TeacherSubscriptions");
+
+      entity.HasOne(ts => ts.Teacher)
                 .WithMany()
-                .HasForeignKey(uv => uv.UserId);
+                .HasForeignKey(ts => ts.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<UserVocab>()
-                .HasOne(uv => uv.Vocab)
+      entity.HasOne(ts => ts.TeacherPackage)
                 .WithMany()
-                .HasForeignKey(uv => uv.VocabId);
+                .HasForeignKey(ts => ts.TeacherPackageId)
+                .OnDelete(DeleteBehavior.Restrict);
+    });
 
-            modelBuilder.Entity<User>()
-                .ToTable("Users")
-                .HasIndex(u => u.Email)
-                .IsUnique();
+    // RefreshToken Configuration
+    modelBuilder.Entity<RefreshToken>(entity =>
+    {
+      entity.ToTable("RefreshTokens");
 
-            modelBuilder.Entity<Role>()
-                .ToTable("Roles");
+      entity.HasOne(rt => rt.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+    });
 
-            modelBuilder.Entity<Vocab>()
-                .ToTable("Vocabs");
+    // PasswordResetToken Configuration
+    modelBuilder.Entity<PasswordResetToken>(entity =>
+    {
+      entity.ToTable("PasswordResetTokens");
 
-            modelBuilder.Entity<AuditLog>()
-                .ToTable("AuditLogs");
+      entity.HasOne(prt => prt.User)
+                .WithMany(u => u.PasswordResetTokens)
+                .HasForeignKey(prt => prt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+    });
 
-            modelBuilder.Entity<Topic>()
-                .ToTable("Topics");
+    // Progress Configuration
+    modelBuilder.Entity<Progress>(entity =>
+    {
+      entity.ToTable("Progress");
 
-            modelBuilder.Entity<ExampleVocabulary>()
-                .ToTable("ExampleVocabularies");
+      entity.HasOne(p => p.User)
+                .WithMany(u => u.ProgressRecords)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Additional relationships
-            modelBuilder.Entity<Vocab>()
-                .HasOne(v => v.Topic)
-                .WithMany(t => t.Vocabs)
-                .HasForeignKey(v => v.TopicId);
+      entity.HasOne(p => p.Lesson)
+                .WithMany(l => l.ProgressRecords)
+                .HasForeignKey(p => p.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
+    });
 
-            modelBuilder.Entity<ExampleVocabulary>()
-                .HasOne(ev => ev.Vocab)
-                .WithMany(v => v.ExampleVocabularies)
-                .HasForeignKey(ev => ev.VocabId);
+    // ReviewWord Configuration
+    modelBuilder.Entity<ReviewWord>(entity =>
+    {
+      entity.ToTable("ReviewWords");
 
-            modelBuilder.Entity<User>()
-                .HasMany(u => u.Roles)
-                .WithMany(r => r.Users)
-                .UsingEntity(j => j.ToTable("UserRoles"));
+      entity.HasOne(rw => rw.User)
+                .WithMany(u => u.ReviewWords)
+                .HasForeignKey(rw => rw.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<RefreshToken>()
-                .ToTable("RefreshTokens")
-                .HasOne(rt => rt.User)
+      entity.HasOne(rw => rw.Vocabulary)
+                .WithMany(v => v.ReviewWords)
+                .HasForeignKey(rw => rw.VocabularyId)
+                .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    // PronunciationScore Configuration
+    modelBuilder.Entity<PronunciationScore>(entity =>
+    {
+      entity.ToTable("PronunciationScores");
+
+      entity.HasOne(ps => ps.User)
+                .WithMany(u => u.PronunciationScores)
+                .HasForeignKey(ps => ps.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+      entity.HasOne(ps => ps.Vocabulary)
+                .WithMany(v => v.PronunciationScores)
+                .HasForeignKey(ps => ps.VocabularyId)
+                .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    // Payment Configuration
+    modelBuilder.Entity<Payment>(entity =>
+    {
+      entity.ToTable("Payments");
+
+      entity.Property(p => p.Amount)
+                .HasPrecision(10, 2); // 10 digits total, 2 decimal places
+
+      entity.HasOne(p => p.User)
+                .WithMany(u => u.Payments)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+      entity.HasOne(p => p.Course)
                 .WithMany()
-                .HasForeignKey(rt => rt.UserId);
+                .HasForeignKey(p => p.CourseId)
+                .OnDelete(DeleteBehavior.SetNull);
+    });
 
-            // Seed data
-            modelBuilder.Entity<Role>().HasData(
-                new Role { RoleId = 1, Name = "Admin" },
-                new Role { RoleId = 2, Name = "User" }
-            );
+    // Seed Data
+    SeedData(modelBuilder);
+  }
 
-            modelBuilder.Entity<User>().HasData(
-                new User
-                {
-                    UserId = 1,
-                    SureName = "Admin",
-                    LastName = "System",
-                    Email = "admin@studyenglish.com",
-                    PasswordHash = "$2a$11$example.hash.for.admin", // Will be replaced with actual hash
-                    PhoneNumber = "1234567890",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    Status = StatusAccount.Active
-                }
-            );
+  private void SeedData(ModelBuilder modelBuilder)
+  {
+    // Seed Roles
+    modelBuilder.Entity<Role>().HasData(
+        new Role { RoleId = 1, Name = "Admin" },
+        new Role { RoleId = 2, Name = "Teacher" },
+        new Role { RoleId = 3, Name = "Student" }
+    );
 
-            // Seed User-Role relationship for admin
-            modelBuilder.Entity<User>()
-                .HasMany(u => u.Roles)
-                .WithMany(r => r.Users)
-                .UsingEntity(j => j
-                    .HasData(new { UsersUserId = 1, RolesRoleId = 1 }) // Admin user has Admin role
-                );
+    // Seed Admin User
+    var adminPasswordHash = BCrypt.Net.BCrypt.HashPassword("123456789"); // Thay đổi mật khẩu mặc định nếu cần
+    modelBuilder.Entity<User>().HasData(
+        new User
+        {
+          UserId = 1,
+          SureName = "Admin",
+          LastName = "System",
+          Email = "admin@example.com", // Thay đổi email nếu cần
+          PasswordHash = adminPasswordHash,
+          PhoneNumber = "",
+          CreatedAt = DateTime.UtcNow,
+          UpdatedAt = DateTime.UtcNow,
+          Status = CleanDemo.Domain.Enums.StatusAccount.Active
         }
+    );
 
-    }
+    // Seed UserRoles for Admin
+    modelBuilder.Entity<UserRole>().HasData(
+        new UserRole { UsersUserId = 1, RolesRoleId = 1 } // Gán user ID 1 với role ID 1 (Admin)
+    );
+  }
 }
+

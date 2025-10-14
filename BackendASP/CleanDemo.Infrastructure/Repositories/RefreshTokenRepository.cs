@@ -1,5 +1,5 @@
 using CleanDemo.Application.Interface;
-using CleanDemo.Domain.Domain;
+using CleanDemo.Domain.Entities;
 using CleanDemo.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,38 +16,52 @@ namespace CleanDemo.Infrastructure.Repositories
 
         public async Task<RefreshToken?> GetByTokenAsync(string token)
         {
-            return await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
+            return await _context.RefreshTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.Token == token);
         }
 
         public async Task<List<RefreshToken>> GetTokensByUserIdAsync(int userId)
         {
             return await _context.RefreshTokens
-                .Where(rt => rt.UserId == userId && !rt.IsRevoked)
+                .Where(rt => rt.UserId == userId)
                 .ToListAsync();
         }
 
         public async Task AddAsync(RefreshToken refreshToken)
         {
             await _context.RefreshTokens.AddAsync(refreshToken);
+            await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(RefreshToken refreshToken)
         {
             _context.RefreshTokens.Update(refreshToken);
-            await Task.CompletedTask;
+            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(string token)
         {
-            var tokenEntity = await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
-            if (tokenEntity != null)
+            var refreshToken = await GetByTokenAsync(token);
+            if (refreshToken != null)
             {
-                _context.RefreshTokens.Remove(tokenEntity);
+                _context.RefreshTokens.Remove(refreshToken);
+                await _context.SaveChangesAsync();
             }
         }
 
         public async Task SaveChangesAsync()
         {
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteExpiredTokensAsync()
+        {
+            var expiredTokens = await _context.RefreshTokens
+                .Where(rt => rt.ExpiresAt < DateTime.UtcNow)
+                .ToListAsync();
+
+            _context.RefreshTokens.RemoveRange(expiredTokens);
             await _context.SaveChangesAsync();
         }
     }
