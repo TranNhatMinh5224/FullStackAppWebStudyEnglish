@@ -27,20 +27,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // Add CORS
-var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") 
-                  ?? builder.Configuration["Frontend:BaseUrl"] 
-                  ?? "http://localhost:3000";
+// var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") 
+//                   ?? builder.Configuration["Frontend:BaseUrl"] 
+//                   ?? "http://localhost:3000";
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.WithOrigins(frontendUrl)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("AllowFrontend", policy =>
+//     {
+//         policy.WithOrigins(frontendUrl)
+//               .AllowAnyHeader()
+//               .AllowAnyMethod()
+//               .AllowCredentials();
+//     });
+// });
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
