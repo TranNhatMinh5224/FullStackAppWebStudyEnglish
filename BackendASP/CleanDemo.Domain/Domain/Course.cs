@@ -10,7 +10,9 @@ public class Course
     public string? Img { get; set; }
     public CourseType Type { get; set; } = CourseType.System;
     public decimal? Price { get; set; }
-    public int TeacherId { get; set; }
+    public int? TeacherId { get; set; } // Cho phép null
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
 
     // Navigation Properties
     public User? Teacher { get; set; }

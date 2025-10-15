@@ -1,0 +1,124 @@
+@CleanDemo.API_HostAddress = http://localhost:5029
+
+# === ADMIN ENDPOINTS ===
+
+### Admin - Lấy tất cả khóa học
+GET {{CleanDemo.API_HostAddress}}/api/admin/all
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+Accept: application/json
+
+###
+
+### Admin - Tạo khóa học mới
+POST {{CleanDemo.API_HostAddress}}/api/admin/create
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "title": "1000 Từ Vựng Cơ Bản",
+  "description": "Dành cho người mới bắt đầu",
+  "img": "string",
+  "type": 0
+}
+
+###
+
+### Admin - Xóa khóa học (thay {courseId} bằng ID thực tế)
+DELETE {{CleanDemo.API_HostAddress}}/api/admin/{courseId}
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+Accept: application/json
+
+###
+
+# === TEACHER ENDPOINTS ===
+
+### Teacher - Tạo khóa học mới
+POST {{CleanDemo.API_HostAddress}}/api/teacher/create
+Authorization: Bearer YOUR_TEACHER_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "title": "Khóa học Tiếng Anh Cơ Bản",
+  "description": "Khóa học dành cho người mới bắt đầu học tiếng Anh",
+  "img": "https://example.com/course-image.jpg",
+  "type": 1,
+  "price": 50000
+}
+
+###
+
+### Teacher - Lấy danh sách khóa học của mình
+GET {{CleanDemo.API_HostAddress}}/api/teacher/my-courses
+Authorization: Bearer YOUR_TEACHER_JWT_TOKEN_HERE
+Accept: application/json
+
+###
+
+### Teacher - Cập nhật khóa học (thay {courseId} bằng ID thực tế)
+PUT {{CleanDemo.API_HostAddress}}/api/teacher/{courseId}
+Authorization: Bearer YOUR_TEACHER_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "title": "Khóa học Tiếng Anh Cơ Bản - Cập Nhật",
+  "description": "Mô tả cập nhật cho khóa học",
+  "img": "https://example.com/updated-course-image.jpg",
+  "type": 1,
+  "price": 60000
+}
+
+###
+
+### Teacher - Tham gia khóa học của teacher khác
+POST {{CleanDemo.API_HostAddress}}/api/teacher/join-course
+Authorization: Bearer YOUR_TEACHER_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "courseId": 2
+}
+
+###
+
+# === SHARED ENDPOINTS ===
+
+### Lấy chi tiết khóa học (thay {courseId} bằng ID thực tế)
+GET {{CleanDemo.API_HostAddress}}/api/course/{courseId}
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Accept: application/json
+
+###
+
+# === USER/STUDENT ENDPOINTS ===
+
+### User - Lấy danh sách khóa học System
+GET {{CleanDemo.API_HostAddress}}/api/user/courses/system
+Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
+Accept: application/json
+
+###
+
+### User - Lấy danh sách khóa học đã đăng ký
+GET {{CleanDemo.API_HostAddress}}/api/user/courses/enrolled
+Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
+Accept: application/json
+
+###
+
+### User - Đăng ký khóa học
+POST {{CleanDemo.API_HostAddress}}/api/user/courses/enroll
+Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "courseId": 1
+}
+
+###
+
+### User - Hủy đăng ký khóa học
+DELETE {{CleanDemo.API_HostAddress}}/api/user/courses/{courseId}/unenroll
+Authorization: Bearer YOUR_USER_JWT_TOKEN_HERE
+Accept: application/json
+
+###

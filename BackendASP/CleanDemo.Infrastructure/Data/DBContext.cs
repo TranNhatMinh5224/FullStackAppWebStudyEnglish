@@ -67,12 +67,13 @@ public class AppDbContext : DbContext
       entity.ToTable("Courses");
 
       entity.Property(c => c.Price)
-                .HasPrecision(10, 2); // 10 digits total, 2 decimal places
+            .HasPrecision(10, 2); // 10 digits total, 2 decimal places
 
       entity.HasOne(c => c.Teacher)
-                .WithMany(u => u.CreatedCourses)
-                .HasForeignKey(c => c.TeacherId)
-                .OnDelete(DeleteBehavior.Restrict);
+            .WithMany(u => u.CreatedCourses)
+            .HasForeignKey(c => c.TeacherId)
+            .IsRequired(false) // Cho phép null
+            .OnDelete(DeleteBehavior.SetNull); // Set null khi xóa Teacher
     });
 
     // Lesson Configuration

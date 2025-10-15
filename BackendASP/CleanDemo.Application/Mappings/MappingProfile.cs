@@ -8,31 +8,38 @@ namespace CleanDemo.Application.Mappings
     {
         public MappingProfile()
         {
-            // Course mappings
-            CreateMap<Course, CourseDto>()
-                .ForMember(dest => dest.TeacherName, opt => opt.Ignore()) // Sẽ set trong service
-                .ForMember(dest => dest.LessonCount, opt => opt.Ignore()) // Sẽ set trong service
-                .ForMember(dest => dest.StudentCount, opt => opt.Ignore()); // Sẽ set trong service
+            // Course mappings - Request DTOs to Entity
+            CreateMap<AdminCreateCourseRequestDto, Course>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
-            CreateMap<CreateCourseDto, Course>();
+            CreateMap<TeacherCreateCourseRequestDto, Course>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
-            CreateMap<Course, UserCourseDto>()
+            // Course mappings - Entity to Response DTOs
+            CreateMap<Course, CourseResponseDto>()
+                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.SureName} {src.Teacher.LastName}" : string.Empty))
+                .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
+                .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
+
+            CreateMap<Course, AdminCourseListResponseDto>()
+                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.SureName} {src.Teacher.LastName}" : string.Empty))
+                .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
+                .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
+
+            CreateMap<Course, UserCourseListResponseDto>()
+                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.SureName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore()); // Sẽ set trong service
 
-            CreateMap<Course, ListMyCourseTeacherDto>()
-                .ForMember(dest => dest.StudentCount, opt => opt.Ignore()); // Sẽ set trong service
-
-            CreateMap<Course, ListMyCourseStudentDto>()
-                .ForMember(dest => dest.TeacherName, opt => opt.Ignore()); // Sẽ set trong service
-
-            CreateMap<Course, CourseDetailDto>()
-                .ForMember(dest => dest.TeacherName, opt => opt.Ignore()) // Sẽ set trong service
-                .ForMember(dest => dest.LessonCount, opt => opt.Ignore()) // Sẽ set trong service
+            CreateMap<Course, CourseDetailResponseDto>()
+                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.SureName} {src.Teacher.LastName}" : string.Empty))
+                .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore()) // Sẽ set trong service
                 .ForMember(dest => dest.Lessons, opt => opt.Ignore()); // Sẽ set trong service
 
             // Lesson mappings
-            CreateMap<Lesson, LessonDto>();
+            CreateMap<Lesson, LessonResponseDto>();
 
             // User mappings (nếu chưa có)
             CreateMap<User, UserDto>()

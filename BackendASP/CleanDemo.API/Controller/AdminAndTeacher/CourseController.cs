@@ -7,8 +7,8 @@ using System.Security.Claims;
 namespace CleanDemo.API.Controller.AdminAndTeacher
 {
     [ApiController]
-    [Route("api/admin-teacher/[controller]")]
-    [Authorize] // Require authentication
+    [Route("api/")]
+    [Authorize]
     public class CourseController : ControllerBase
     {
         private readonly ICourseService _courseService;
@@ -32,7 +32,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             try
             {
                 var result = await _courseService.GetAllCoursesAsync();
-                
+
                 if (!result.Success)
                 {
                     return BadRequest(result);
@@ -57,7 +57,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             try
             {
                 var result = await _courseService.DeleteCourseAsync(courseId);
-                
+
                 if (!result.Success)
                 {
                     return BadRequest(result);
@@ -72,6 +72,36 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
+        /// <summary>
+        /// Admin - Tạo khóa học mới
+        /// </summary>
+        [HttpPost("admin/create")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminCreateCourse([FromBody] AdminCreateCourseRequestDto requestDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var result = await _courseService.AdminCreateCourseAsync(requestDto);
+
+                if (!result.Success)
+                {
+                    return BadRequest(result);
+                }
+
+                return CreatedAtAction(nameof(GetCourseDetail), new { courseId = result.Data?.CourseId }, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in AdminCreateCourse endpoint");
+                return StatusCode(500, new { message = "Internal server error" });
+            }
+        }
+
         // === TEACHER ENDPOINTS ===
 
         /// <summary>
@@ -79,7 +109,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         /// </summary>
         [HttpPost("teacher/create")]
         [Authorize(Roles = "Teacher")]
-        public async Task<IActionResult> CreateCourse([FromBody] CreateCourseDto courseDto)
+        public async Task<IActionResult> CreateCourse([FromBody] TeacherCreateCourseRequestDto requestDto)
         {
             try
             {
@@ -95,10 +125,8 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                     return Unauthorized(new { message = "Invalid teacher credentials" });
                 }
 
-                courseDto.TeacherId = teacherId; // Set TeacherId từ token
+                var result = await _courseService.CreateCourseAsync(requestDto, teacherId);
 
-                var result = await _courseService.CreateCourseAsync(courseDto);
-                
                 if (!result.Success)
                 {
                     return BadRequest(result);
@@ -130,7 +158,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                 }
 
                 var result = await _courseService.GetMyCoursesByTeacherAsync(teacherId);
-                
+
                 if (!result.Success)
                 {
                     return BadRequest(result);
@@ -167,7 +195,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                 }
 
                 var result = await _courseService.JoinCourseAsTeacherAsync(joinDto, teacherId);
-                
+
                 if (!result.Success)
                 {
                     return BadRequest(result);
@@ -187,7 +215,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         /// </summary>
         [HttpPut("teacher/{courseId}")]
         [Authorize(Roles = "Teacher")]
-        public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] CreateCourseDto courseDto)
+        public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] TeacherCreateCourseRequestDto courseDto)
         {
             try
             {
@@ -210,8 +238,8 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                     return Forbid("You don't have permission to update this course");
                 }
 
-                var result = await _courseService.UpdateCourseAsync(courseId, courseDto);
-                
+                var result = await _courseService.UpdateCourseAsync(courseId, courseDto, teacherId);
+
                 if (!result.Success)
                 {
                     return BadRequest(result);
@@ -242,7 +270,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                 int? userId = int.TryParse(userIdClaim, out int parsedUserId) ? parsedUserId : null;
 
                 var result = await _courseService.GetCourseDetailAsync(courseId, userId);
-                
+
                 if (!result.Success)
                 {
                     return BadRequest(result);

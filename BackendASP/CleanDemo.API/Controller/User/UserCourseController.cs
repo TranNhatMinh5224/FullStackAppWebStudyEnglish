@@ -7,7 +7,7 @@ using System.Security.Claims;
 namespace CleanDemo.API.Controller.User
 {
     [ApiController]
-    [Route("api/user/[controller]")]
+    [Route("api/user/courses")]
     public class UserCourseController : ControllerBase
     {
         private readonly ICourseService _courseService;
@@ -40,7 +40,7 @@ namespace CleanDemo.API.Controller.User
                 }
 
                 var result = await _courseService.GetSystemCoursesAsync(userId);
-                
+
                 if (!result.Success)
                 {
                     return BadRequest(result);
@@ -76,7 +76,7 @@ namespace CleanDemo.API.Controller.User
                 }
 
                 var result = await _courseService.GetCourseDetailAsync(courseId, userId);
-                
+
                 if (!result.Success)
                 {
                     return BadRequest(result);
@@ -113,7 +113,7 @@ namespace CleanDemo.API.Controller.User
                 }
 
                 var result = await _courseService.EnrollInCourseAsync(enrollDto, userId);
-                
+
                 if (!result.Success)
                 {
                     return BadRequest(result);
@@ -145,7 +145,7 @@ namespace CleanDemo.API.Controller.User
                 }
 
                 var result = await _courseService.UnenrollFromCourseAsync(courseId, userId);
-                
+
                 if (!result.Success)
                 {
                     return BadRequest(result);
@@ -177,7 +177,7 @@ namespace CleanDemo.API.Controller.User
                 }
 
                 var result = await _courseService.GetMyEnrolledCoursesAsync(userId);
-                
+
                 if (!result.Success)
                 {
                     return BadRequest(result);

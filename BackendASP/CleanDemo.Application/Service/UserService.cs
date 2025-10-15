@@ -9,6 +9,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 
+
 namespace CleanDemo.Application.Service
 {
     public class UserService : IUserService
@@ -45,8 +46,17 @@ namespace CleanDemo.Application.Service
 
                 var user = _mapper.Map<User>(dto);
                 user.SetPassword(dto.Password);
-                // Assign default role
-                user.Roles = new List<Role> { new Role { Name = "User" } };
+
+                // Lấy role "Student" từ DB thay vì tạo mới
+                var studentRole = await _userRepository.GetRoleByNameAsync("Student");
+                if (studentRole == null)
+                {
+                    response.Success = false;
+                    response.Message = "Default role 'Student' not found in database";
+                    return response;
+                }
+
+                user.Roles = new List<Role> { studentRole };
 
                 await _userRepository.AddUserAsync(user);
                 await _userRepository.SaveChangesAsync();

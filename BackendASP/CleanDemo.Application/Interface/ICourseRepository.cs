@@ -6,6 +6,7 @@ namespace CleanDemo.Application.Interface
     {
         // === CRUD CƠ BẢN ===
         Task<Course?> GetCourseById(int courseId);
+        Task<Course?> GetByIdAsync(int courseId);
         Task<Course?> GetCourseWithDetails(int courseId);
         Task AddCourse(Course course);
         Task UpdateCourse(Course course);
@@ -13,15 +14,14 @@ namespace CleanDemo.Application.Interface
 
         // === LẤY DANH SÁCH KHÓA HỌC ===
         Task<IEnumerable<Course>> GetAllCourses(); // Admin xem tất cả
-        Task<IEnumerable<Course>> GetAllCourseSystem(); // User xem khóa học hệ thống
-        Task<IEnumerable<Course>> GetAllCoursesByTeacherId(int teacherId); // Khóa học của teacher
-        Task<IEnumerable<Course>> GetEnrolledCoursesByUserId(int userId); // Khóa học user đã đăng ký
-        Task<IEnumerable<Course>> GetEnrolledTeacherCoursesByUserId(int userId); // Khóa học teacher user đã tham gia
+        Task<IEnumerable<Course>> GetSystemCourses(); // User xem khóa học hệ thống
+        Task<IEnumerable<Course>> GetCoursesByTeacher(int teacherId); // Khóa học của teacher
+        Task<IEnumerable<Course>> GetEnrolledCoursesByUser(int userId); // Khóa học user đã đăng ký
 
         // === KIỂM TRA & ĐĂNG KÝ ===
-        Task<bool> IsUserEnrolledInCourse(int userId, int courseId);
-        Task EnrollUserInCourse(int userId, int courseId);
-        Task UnenrollUserFromCourse(int userId, int courseId);
+        Task<bool> IsUserEnrolled(int courseId, int userId);
+        Task EnrollUserInCourse(int courseId, int userId);
+        Task UnenrollUserFromCourse(int courseId, int userId);
 
         // === THỐNG KÊ ===
         Task<int> CountLessons(int courseId);

@@ -225,5 +225,45 @@ namespace CleanDemo.Infrastructure.Repositories
                 .Select(uc => uc.User!)
                 .ToListAsync();
         }
+
+        /// <summary>
+        /// Lấy khóa học theo ID (alias cho GetCourseById)
+        /// </summary>
+        public async Task<Course?> GetByIdAsync(int courseId)
+        {
+            return await GetCourseById(courseId);
+        }
+
+        /// <summary>
+        /// Lấy khóa học hệ thống (User trang chủ) - alias cho GetAllCourseSystem
+        /// </summary>
+        public async Task<IEnumerable<Course>> GetSystemCourses()
+        {
+            return await GetAllCourseSystem();
+        }
+
+        /// <summary>
+        /// Lấy khóa học do teacher tạo - alias cho GetAllCoursesByTeacherId
+        /// </summary>
+        public async Task<IEnumerable<Course>> GetCoursesByTeacher(int teacherId)
+        {
+            return await GetAllCoursesByTeacherId(teacherId);
+        }
+
+        /// <summary>
+        /// Lấy khóa học user đã đăng ký - alias cho GetEnrolledCoursesByUserId
+        /// </summary>
+        public async Task<IEnumerable<Course>> GetEnrolledCoursesByUser(int userId)
+        {
+            return await GetEnrolledCoursesByUserId(userId);
+        }
+
+        /// <summary>
+        /// Kiểm tra user đã đăng ký khóa học chưa - alias cho IsUserEnrolledInCourse
+        /// </summary>
+        public async Task<bool> IsUserEnrolled(int courseId, int userId)
+        {
+            return await IsUserEnrolledInCourse(userId, courseId);
+        }
     }
 }
