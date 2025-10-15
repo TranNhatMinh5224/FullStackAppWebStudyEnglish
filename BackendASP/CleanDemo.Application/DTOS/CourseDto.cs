@@ -2,7 +2,7 @@ using CleanDemo.Domain.Enums;
 
 namespace CleanDemo.Application.DTOs
 {
-    // === REQUEST DTOs ===
+
 
     // DTO tạo khóa học mới (Admin) - Request
     public class AdminCreateCourseRequestDto
@@ -95,8 +95,7 @@ namespace CleanDemo.Application.DTOs
         public int Order { get; set; }
     }
 
-    // === LEGACY DTOs (có thể xóa sau) ===
-    // Giữ lại để tương thích ngược, nhưng nên migrate dần
+
 
     // DTO hiển thị tất cả khóa học quản lý dành cho admin 
     public class CourseDto
@@ -141,10 +140,10 @@ namespace CleanDemo.Application.DTOs
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
         public decimal? Price { get; set; }
-        public bool IsEnrolled { get; set; } 
+        public bool IsEnrolled { get; set; }
     }
 
-    // === REQUEST DTOs FOR EXISTING FUNCTIONALITY ===
+
 
     // DTO tham gia khóa học Teacher
     public class JoinCourseTeacherDto
