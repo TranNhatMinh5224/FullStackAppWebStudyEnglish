@@ -4,12 +4,14 @@ namespace CleanDemo.Application.Interface
 {
     public interface ILessonRepository
     {
-        // CRUD cơ bản 
-        Task<Lesson> GetListLessonByCourseId(int CourseId);
-        Task<Lesson?> GetByIdAsync(int lessonId);
+
+        Task<List<Lesson>> GetListLessonByCourseId(int CourseId);
+        Task<Lesson?> GetLessonById(int lessonId);
         Task AddLesson(Lesson lesson);
         Task UpdateLesson(Lesson lesson);
         Task DeleteLesson(int lessonId);
+        // Kiểm tra sự tồn tại của lesson trong Course chưa
+        Task<bool> LessonIncourse(string newtitle, int courseId);
 
 
     }

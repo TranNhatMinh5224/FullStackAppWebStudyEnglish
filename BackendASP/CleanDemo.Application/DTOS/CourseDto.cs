@@ -113,12 +113,12 @@ namespace CleanDemo.Application.DTOs
     }
 
     // DTO tạo khóa học mới
-    public class CreateCourseDto
+    public class TeacherCreateCourseDto
     {
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
-        public CourseType Type { get; set; } = CourseType.System;
+        public CourseType Type { get; set; } = CourseType.Teacher;
         public decimal? Price { get; set; }
         public int TeacherId { get; set; }
     }
@@ -129,6 +129,7 @@ namespace CleanDemo.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public decimal? Price { get; set; }
         public CourseType Type { get; set; } = CourseType.System; // Mặc định là System (Admin)
     }
 

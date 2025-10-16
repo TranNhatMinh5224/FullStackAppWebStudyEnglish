@@ -442,7 +442,7 @@ namespace CleanDemo.Application.Service
 
         private string GenerateJwtToken(User user)
         {
-            var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? "default-key-change-in-production";
+            var jwtKey = _configuration["Jwt:Key"] ?? "default-key-change-in-production";
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),

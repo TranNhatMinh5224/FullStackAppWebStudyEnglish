@@ -9,26 +9,24 @@ namespace CleanDemo.Infrastructure.Repositories
     public class CourseRepository : ICourseRepository
     {
         private readonly AppDbContext _context;
-        
+
         public CourseRepository(AppDbContext context)
         {
             _context = context;
         }
 
-        // === CRUD CƠ BẢN ===
-        
-        /// <summary>
-        /// Thêm mới khóa học
-        /// </summary>
+
+        // Thêm mới khóa học
+
         public async Task AddCourse(Course course)
         {
             await _context.Courses.AddAsync(course);
             await _context.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// Lấy khóa học theo ID (bao gồm Teacher, Lessons, UserCourses)
-        /// </summary>
+
+        // Lấy khóa học theo ID (bao gồm Teacher, Lessons, UserCourses)
+
         public async Task<Course?> GetCourseById(int courseId)
         {
             return await _context.Courses
@@ -38,9 +36,9 @@ namespace CleanDemo.Infrastructure.Repositories
                 .FirstOrDefaultAsync(c => c.CourseId == courseId);
         }
 
-        /// <summary>
-        /// Lấy khóa học với đầy đủ thông tin
-        /// </summary>
+
+        //Lấy khóa học với đầy đủ thông tin
+
         public async Task<Course?> GetCourseWithDetails(int courseId)
         {
             return await _context.Courses
@@ -53,18 +51,18 @@ namespace CleanDemo.Infrastructure.Repositories
                 .FirstOrDefaultAsync(c => c.CourseId == courseId);
         }
 
-        /// <summary>
-        /// Cập nhật khóa học
-        /// </summary>
+
+        // Cập nhật khóa học
+
         public async Task UpdateCourse(Course course)
         {
             _context.Courses.Update(course);
             await _context.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// Xóa khóa học
-        /// </summary>
+
+        // Xóa khóa học
+
         public async Task DeleteCourse(int courseId)
         {
             var course = await _context.Courses.FindAsync(courseId);
@@ -75,11 +73,11 @@ namespace CleanDemo.Infrastructure.Repositories
             }
         }
 
-        // === LẤY DANH SÁCH KHÓA HỌC ===
-        
-        /// <summary>
-        /// Lấy TẤT CẢ khóa học (Admin)
-        /// </summary>
+
+
+
+        //Lấy TẤT CẢ khóa học (Admin)
+
         public async Task<IEnumerable<Course>> GetAllCourses()
         {
             return await _context.Courses
@@ -89,9 +87,9 @@ namespace CleanDemo.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        /// <summary>
-        /// Lấy khóa học hệ thống (User trang chủ)
-        /// </summary>
+
+        // Lấy khóa học hệ thống (User trang chủ)
+
         public async Task<IEnumerable<Course>> GetAllCourseSystem()
         {
             return await _context.Courses
@@ -101,9 +99,9 @@ namespace CleanDemo.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        /// <summary>
+
         /// Lấy khóa học do teacher tạo
-        /// </summary>
+
         public async Task<IEnumerable<Course>> GetAllCoursesByTeacherId(int teacherId)
         {
             return await _context.Courses
@@ -114,9 +112,9 @@ namespace CleanDemo.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        /// <summary>
+
         /// Lấy khóa học user đã đăng ký
-        /// </summary>
+
         public async Task<IEnumerable<Course>> GetEnrolledCoursesByUserId(int userId)
         {
             return await _context.UserCourses
@@ -129,9 +127,9 @@ namespace CleanDemo.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        /// <summary>
-        /// Lấy khóa học teacher mà user đã tham gia
-        /// </summary>
+
+        //Lấy khóa học teacher mà user đã tham gia
+
         public async Task<IEnumerable<Course>> GetEnrolledTeacherCoursesByUserId(int userId)
         {
             return await _context.UserCourses
@@ -144,20 +142,20 @@ namespace CleanDemo.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        // === KIỂM TRA & ĐĂNG KÝ ===
-        
-        /// <summary>
-        /// Kiểm tra user đã đăng ký khóa học chưa
-        /// </summary>
+
+
+
+        //Kiểm tra user đã đăng ký khóa học chưa
+
         public async Task<bool> IsUserEnrolledInCourse(int userId, int courseId)
         {
             return await _context.UserCourses
                 .AnyAsync(uc => uc.UserId == userId && uc.CourseId == courseId);
         }
 
-        /// <summary>
-        /// Đăng ký user vào khóa học
-        /// </summary>
+
+        // Đăng ký user vào khóa học
+
         public async Task EnrollUserInCourse(int userId, int courseId)
         {
             var exists = await IsUserEnrolledInCourse(userId, courseId);
@@ -177,9 +175,9 @@ namespace CleanDemo.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// Hủy đăng ký khóa học
-        /// </summary>
+
+        //Hủy đăng ký khóa học
+
         public async Task UnenrollUserFromCourse(int userId, int courseId)
         {
             var enrollment = await _context.UserCourses
@@ -192,11 +190,11 @@ namespace CleanDemo.Infrastructure.Repositories
             }
         }
 
-        // === THỐNG KÊ ===
-        
-        /// <summary>
-        /// Đếm số lượng bài học
-        /// </summary>
+
+
+
+        // Đếm số lượng bài học
+
         public async Task<int> CountLessons(int courseId)
         {
             return await _context.Lessons
@@ -204,9 +202,8 @@ namespace CleanDemo.Infrastructure.Repositories
                 .CountAsync();
         }
 
-        /// <summary>
-        /// Đếm số user đã đăng ký
-        /// </summary>
+        // Đếm số user đã đăng ký
+
         public async Task<int> CountEnrolledUsers(int courseId)
         {
             return await _context.UserCourses
@@ -214,9 +211,8 @@ namespace CleanDemo.Infrastructure.Repositories
                 .CountAsync();
         }
 
-        /// <summary>
-        /// Lấy danh sách user đã đăng ký
-        /// </summary>
+        // Lấy danh sách user đã đăng ký
+
         public async Task<IEnumerable<User>> GetEnrolledUsers(int courseId)
         {
             return await _context.UserCourses
@@ -226,44 +222,45 @@ namespace CleanDemo.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        /// <summary>
-        /// Lấy khóa học theo ID (alias cho GetCourseById)
-        /// </summary>
+
+        // Lấy khóa học theo ID (alias cho GetCourseById)
+
         public async Task<Course?> GetByIdAsync(int courseId)
         {
             return await GetCourseById(courseId);
         }
 
-        /// <summary>
-        /// Lấy khóa học hệ thống (User trang chủ) - alias cho GetAllCourseSystem
-        /// </summary>
+
+        // Lấy khóa học hệ thống (User trang chủ) - alias cho GetAllCourseSystem
+
         public async Task<IEnumerable<Course>> GetSystemCourses()
         {
             return await GetAllCourseSystem();
         }
 
-        /// <summary>
-        /// Lấy khóa học do teacher tạo - alias cho GetAllCoursesByTeacherId
-        /// </summary>
+
+        // Lấy khóa học do teacher tạo - alias cho GetAllCoursesByTeacherId
+
         public async Task<IEnumerable<Course>> GetCoursesByTeacher(int teacherId)
         {
             return await GetAllCoursesByTeacherId(teacherId);
         }
 
-        /// <summary>
-        /// Lấy khóa học user đã đăng ký - alias cho GetEnrolledCoursesByUserId
-        /// </summary>
+
+        // Lấy khóa học user đã đăng ký - alias cho GetEnrolledCoursesByUserId
+
         public async Task<IEnumerable<Course>> GetEnrolledCoursesByUser(int userId)
         {
             return await GetEnrolledCoursesByUserId(userId);
         }
 
-        /// <summary>
-        /// Kiểm tra user đã đăng ký khóa học chưa - alias cho IsUserEnrolledInCourse
-        /// </summary>
+
+        // Kiểm tra user đã đăng ký khóa học chưa - alias cho IsUserEnrolledInCourse
+
         public async Task<bool> IsUserEnrolled(int courseId, int userId)
         {
             return await IsUserEnrolledInCourse(userId, courseId);
         }
+
     }
 }

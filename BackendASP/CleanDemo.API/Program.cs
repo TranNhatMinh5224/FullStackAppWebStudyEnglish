@@ -27,9 +27,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // Add CORS
-var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") 
-                  ?? builder.Configuration["Frontend:BaseUrl"] 
-                  ?? "http://localhost:3000";
+var frontendUrl = builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
 
 builder.Services.AddCors(options =>
 {
@@ -82,22 +80,17 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Database Configuration
-var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") 
-                       ?? builder.Configuration.GetConnectionString("MyConnection");
+var connectionString = builder.Configuration.GetConnectionString("MyConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // JWT Authentication
-var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") 
-             ?? builder.Configuration["Jwt:Key"] 
-             ?? throw new InvalidOperationException("JWT Key not configured");
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
 
-var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") 
-                ?? builder.Configuration["Jwt:Issuer"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 
-var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") 
-                  ?? builder.Configuration["Jwt:Audience"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

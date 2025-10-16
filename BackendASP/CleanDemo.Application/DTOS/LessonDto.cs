@@ -1,5 +1,12 @@
 namespace CleanDemo.Application.DTOs
+
 {
+    public class LessonDto
+    {
+        public int LessonId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+    }
     public class ListLessonDto
     {
         public int LessonId { get; set; }
@@ -12,6 +19,7 @@ namespace CleanDemo.Application.DTOs
     {
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
+
         public int CourseId { get; set; }
 
     }
@@ -19,6 +27,7 @@ namespace CleanDemo.Application.DTOs
     {
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
+
         public int CourseId { get; set; }
 
     }
