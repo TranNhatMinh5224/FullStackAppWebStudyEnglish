@@ -29,8 +29,5 @@ namespace CleanDemo.Application.DTOs
     {
         public int TeacherPackageId { get; set; }
     }
-    public class DeleteTeacherPackageDto
-    {
-        public int TeacherPackageId { get; set; }
-    }
+
 }

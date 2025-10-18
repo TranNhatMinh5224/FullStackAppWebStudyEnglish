@@ -11,16 +11,22 @@ namespace CleanDemo.Application.Service
     {
         private readonly ILessonRepository _lessonRepository;
         private readonly IMapper _mapper;
-
         private readonly ICourseRepository _courseRepository;
         private readonly ILogger<LessonService> _logger;
+        private readonly ITeacherPackageRepository _teacherPackageRepository;
 
-        public LessonService(ILessonRepository lessonRepository, IMapper mapper, ILogger<LessonService> logger, ICourseRepository courseRepository)
+        public LessonService(
+            ILessonRepository lessonRepository, 
+            IMapper mapper, 
+            ILogger<LessonService> logger, 
+            ICourseRepository courseRepository,
+            ITeacherPackageRepository teacherPackageRepository)
         {
             _lessonRepository = lessonRepository;
             _mapper = mapper;
             _logger = logger;
             _courseRepository = courseRepository;
+            _teacherPackageRepository = teacherPackageRepository;
         }
 
         // admin Thêm Lesson vào Course 
@@ -36,14 +42,16 @@ namespace CleanDemo.Application.Service
                     response.Message = "Course not found";
                     return response;
                 }
-                var TestCourse = await _courseRepository.GetCourseById(dto.CourseId);
-                if (TestCourse == null || TestCourse.Type == Domain.Enums.CourseType.System)
+
+                // Admin có thể thêm vào System course (không giới hạn)
+                if (course.Type != CourseType.System)
                 {
                     response.Success = false;
-                    response.Message = "Cannot add lesson to this course type";
+                    response.Message = "Admin can only add lessons to System courses";
                     return response;
                 }
-                // check tên Lesson đã tồn  tại trong Course chưa
+
+                // check tên Lesson đã tồn tại trong Course chưa
                 var lessons = await _lessonRepository.LessonIncourse(dto.Title, dto.CourseId);
                 if (lessons)
                 {
@@ -69,7 +77,8 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        // teacher thêm course 
+        // teacher thêm lesson
+
         public async Task<ServiceResponse<LessonDto>> TeacherAddLesson(TeacherCreateLessonDto dto)
         {
             var response = new ServiceResponse<LessonDto>();
@@ -82,14 +91,38 @@ namespace CleanDemo.Application.Service
                     response.Message = "Course not found";
                     return response;
                 }
-                var TestCourse = await _courseRepository.GetCourseById(dto.CourseId);
-                if (TestCourse == null || TestCourse.Type == CourseType.System)
+
+                // Chỉ teacher course mới được thêm
+                if (course.Type != CourseType.Teacher)
                 {
                     response.Success = false;
-                    response.Message = "Cannot add lesson to this course type";
+                    response.Message = "Can only add lessons to Teacher courses";
                     return response;
                 }
-                // check tên Lesson đã tồn  tại trong Course chưa
+
+                // Kiểm tra giới hạn số lượng lesson
+                if (course.TeacherId.HasValue)
+                {
+                    var teacherPackage = await _teacherPackageRepository.GetInformationTeacherpackage(course.TeacherId.Value);
+                    if (teacherPackage == null)
+                    {
+                        response.Success = false;
+                        response.Message = "Teacher does not have an active subscription";
+                        return response;
+                    }
+
+                    int currentLessonCount = await _courseRepository.CountLessons(dto.CourseId);
+                    int maxLessons = teacherPackage.MaxLessons;
+
+                    if (currentLessonCount >= maxLessons)
+                    {
+                        response.Success = false;
+                        response.Message = $"Maximum lessons reached ({currentLessonCount}/{maxLessons}). Please upgrade your package.";
+                        return response;
+                    }
+                }
+
+                // check tên Lesson đã tồn tại trong Course chưa
                 var lessons = await _lessonRepository.LessonIncourse(dto.Title, dto.CourseId);
                 if (lessons)
                 {
@@ -97,6 +130,7 @@ namespace CleanDemo.Application.Service
                     response.Message = "Lesson already exists in this course";
                     return response;
                 }
+
                 var lesson = new Lesson
                 {
                     Title = dto.Title,

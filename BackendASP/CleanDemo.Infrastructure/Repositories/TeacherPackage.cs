@@ -50,5 +50,40 @@ namespace CleanDemo.Infrastructure.Repositories
         {
             await _context.SaveChangesAsync();
         }
+
+        /// <summary>
+        /// Lấy TeacherPackage của teacher tại thời điểm date (có subscription active)
+        /// </summary>
+        public async Task<TeacherPackage?> GetInformationTeacherpackageAsync(int teacherId, DateTime date)
+        {
+            var result = await (from tp in _context.TeacherPackages
+                         join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
+                         where ts.UserId == teacherId 
+                               && ts.StartDate <= date 
+                               && ts.EndDate >= date
+                               && ts.Status == SubscriptionStatus.Active
+                         orderby ts.EndDate descending
+                         select tp).FirstOrDefaultAsync();
+            
+            return result;
+        }
+
+        /// <summary>
+        /// Lấy TeacherPackage hiện tại của teacher (subscription active)
+        /// </summary>
+        public async Task<TeacherPackage?> GetInformationTeacherpackage(int teacherId)
+        {
+            var now = DateTime.UtcNow;
+            var result = await (from tp in _context.TeacherPackages
+                         join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
+                         where ts.UserId == teacherId 
+                               && ts.StartDate <= now 
+                               && ts.EndDate >= now
+                               && ts.Status == SubscriptionStatus.Active
+                         orderby ts.EndDate descending
+                         select tp).FirstOrDefaultAsync();
+            
+            return result;
+        }
     }
 }

@@ -14,17 +14,21 @@ namespace CleanDemo.Application.Service
         private readonly IPaymentRepository _paymentRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<EnrollCourseService> _logger;
+        private readonly ITeacherPackageRepository _teacherPackageRepository;
 
         public EnrollCourseService(
             ICourseRepository courseRepository,
             IPaymentRepository paymentRepository,
+            ITeacherPackageRepository teacherPackageRepository,
             IMapper mapper,
+
             ILogger<EnrollCourseService> logger)
         {
             _courseRepository = courseRepository;
             _paymentRepository = paymentRepository;
             _mapper = mapper;
             _logger = logger;
+            _teacherPackageRepository = teacherPackageRepository;
         }
 
         /// <summary>
@@ -103,6 +107,7 @@ namespace CleanDemo.Application.Service
         {
             var response = new ServiceResponse<bool>();
 
+
             try
             {
                 if (courseId <= 0)
@@ -176,13 +181,14 @@ namespace CleanDemo.Application.Service
         }
 
         /// <summary>
-        /// Teacher - Tham gia khóa học của teacher khác
+        /// Teacher - User Tham gia khóa học của teacher khác
         /// </summary>
-        public async Task<ServiceResponse<bool>> JoinCourseAsTeacherAsync(JoinCourseTeacherDto joinDto, int teacherId)
+        public async Task<ServiceResponse<bool>> JoinCourseAsTeacherAsync(JoinCourseTeacherDto joinDto, int userId)
         {
             var response = new ServiceResponse<bool>();
 
             try
+
             {
                 if (joinDto == null || joinDto.CourseId <= 0)
                 {
@@ -208,18 +214,57 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
-                // Logic tham gia course (có thể implement sau)
+                // Kiểm tra teacher đã tham gia chưa
+                if (await _courseRepository.IsUserEnrolled(joinDto.CourseId, userId))
+                {
+                    response.Success = false;
+                    response.Message = "You have already joined this course";
+                    return response;
+                }
+
+                // Kiểm tra course có teacherId không
+                if (!course.TeacherId.HasValue)
+                {
+                    response.Success = false;
+                    response.Message = "Course does not have a teacher assigned";
+                    return response;
+                }
+
+                // Lấy thông tin package của chủ khóa học
+                var courseOwnerPackage = await _teacherPackageRepository.GetInformationTeacherpackage(course.TeacherId.Value);
+                
+                if (courseOwnerPackage == null)
+                {
+                    response.Success = false;
+                    response.Message = "Course owner does not have an active subscription";
+                    return response;
+                }
+
+                // Kiểm tra số lượng học viên hiện tại
+                int currentStudentCount = await _courseRepository.CountEnrolledUsers(joinDto.CourseId);
+                int maxStudents = courseOwnerPackage.MaxStudents;
+
+                if (currentStudentCount >= maxStudents)
+                {
+                    response.Success = false;
+                    response.Message = $"Course is full ({currentStudentCount}/{maxStudents} students)";
+                    return response;
+                }
+
+                // Đăng ký teacher vào course - ĐÃ SỬA THỨ TỰ THAM SỐ
+                await _courseRepository.EnrollUserInCourse(joinDto.CourseId, userId);
+                
                 response.Success = true;
                 response.Data = true;
-                response.Message = "Successfully joined course as teacher";
+                response.Message = "Successfully joined course";
 
-                _logger.LogInformation("Teacher {TeacherId} joined course {CourseId}", teacherId, joinDto.CourseId);
+                _logger.LogInformation("User {UserId} joined course {CourseId}", userId, joinDto.CourseId);
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.Message = $"Error joining course: {ex.Message}";
-                _logger.LogError(ex, "Error in JoinCourseAsTeacherAsync for TeacherId: {TeacherId}, CourseId: {CourseId}", teacherId, joinDto.CourseId);
+                _logger.LogError(ex, "Error in JoinCourseAsTeacherAsync for UserId: {UserId}, CourseId: {CourseId}", userId, joinDto.CourseId);
             }
 
             return response;

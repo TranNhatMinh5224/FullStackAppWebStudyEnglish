@@ -18,16 +18,23 @@ using CleanDemo.Application.Validators.User;
 using Microsoft.OpenApi.Models;
 using DotNetEnv;
 
-// Load environment variables from .env file
+// Load environment variables from .env
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Gộp .env vào Configuration 
+builder.Configuration.AddEnvironmentVariables();
+
 // Add services to the container
 builder.Services.AddControllers();
 
-// Add CORS
-var frontendUrl = builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+// ==================
+// 🔹 CORS CONFIG
+// ==================
+var frontendUrl = Environment.GetEnvironmentVariable("Frontend__BaseUrl")
+                  ?? builder.Configuration["Frontend:BaseUrl"]
+                  ?? "http://localhost:3000";
 
 builder.Services.AddCors(options =>
 {
@@ -40,19 +47,23 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add AutoMapper
+// ==================
+// 🔹 AUTOMAPPER
+// ==================
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
+// ==================
+// 🔹 SWAGGER
+// ==================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo 
-    { 
-        Title = "FullStack English Learning API", 
-        Version = "v1" 
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "FullStack English Learning API",
+        Version = "v1"
     });
-    
-    // Add JWT Authentication to Swagger
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {
         Name = "Authorization",
@@ -60,9 +71,9 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\"",
+        Description = "Enter 'Bearer {token}'"
     });
-    
+
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -79,18 +90,28 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Database Configuration
-var connectionString = builder.Configuration.GetConnectionString("MyConnection");
+// ==================
+// 🔹 DATABASE
+// ==================
+var dbServer = Environment.GetEnvironmentVariable("DB__Server");
+var dbName = Environment.GetEnvironmentVariable("DB__Name");
+var trusted = Environment.GetEnvironmentVariable("DB__Trusted_Connection");
+var encrypt = Environment.GetEnvironmentVariable("DB__Encrypt");
+
+var connectionString = $"Server={dbServer};Database={dbName};Trusted_Connection={trusted};Encrypt={encrypt};";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+// ==================
+// 🔹 JWT AUTH
+// ==================
+var jwtKey = Environment.GetEnvironmentVariable("Jwt__Key")
+             ?? builder.Configuration["Jwt:Key"]
+             ?? throw new InvalidOperationException("JWT Key not configured");
 
-var jwtIssuer = builder.Configuration["Jwt:Issuer"];
-
-var jwtAudience = builder.Configuration["Jwt:Audience"];
+var jwtIssuer = Environment.GetEnvironmentVariable("Jwt__Issuer") ?? builder.Configuration["Jwt:Issuer"];
+var jwtAudience = Environment.GetEnvironmentVariable("Jwt__Audience") ?? builder.Configuration["Jwt:Audience"];
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -109,19 +130,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Dependency Injection
-
+// ==================
+// 🔹 DEPENDENCY INJECTION
+// ==================
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
-// Register Validators
+builder.Services.AddScoped<ITeacherPackageRepository, TeacherPackageRepository>();
+builder.Services.AddScoped<ITeacherPackageService, TeacherPackageService>();
+
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();
+builder.Services.AddValidatorsFromAssembly(typeof(CourseService).Assembly);
 builder.Services.AddFluentValidationAutoValidation();
-
-
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
@@ -129,14 +152,15 @@ builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<EmailService>();
 
-// Services
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IEnrollCourseService, EnrollCourseService>();
 
+// ==================
+// 🔹 BUILD APP
+// ==================
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -144,20 +168,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// Use CORS
 app.UseCors("AllowFrontend");
-
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();
 
-// Make Program class accessible for integration testing
 public partial class Program { }
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using CleanDemo.Application.Interface;
 using CleanDemo.Application.DTOs;
-using System.Security.Claims;
+
 
 namespace CleanDemo.API.Controller.AdminAndTeacher
 {

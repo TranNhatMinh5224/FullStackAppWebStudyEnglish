@@ -10,5 +10,7 @@ namespace CleanDemo.Application.Interface
         Task UpdateTeacherPackageAsync(TeacherPackage teacherPackage);
         Task DeleteTeacherPackageAsync(int id);
         Task SaveChangesAsync();
+        Task<TeacherPackage?> GetInformationTeacherpackageAsync(int teacherId, DateTime date);
+        Task<TeacherPackage?> GetInformationTeacherpackage(int teacherId);
     }
 }

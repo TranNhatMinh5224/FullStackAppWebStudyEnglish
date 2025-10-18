@@ -14,17 +14,20 @@ namespace CleanDemo.Application.Service
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<CourseService> _logger;
+        private readonly ITeacherPackageRepository _teacherPackageRepository;
 
         public CourseService(
             ICourseRepository courseRepository,
             IUserRepository userRepository,
             IMapper mapper,
-            ILogger<CourseService> logger)
+            ILogger<CourseService> logger,
+            ITeacherPackageRepository teacherPackageRepository)
         {
             _courseRepository = courseRepository;
             _userRepository = userRepository;
             _mapper = mapper;
             _logger = logger;
+            _teacherPackageRepository = teacherPackageRepository;
         }
 
         // === ADMIN METHODS ===
@@ -235,8 +238,27 @@ namespace CleanDemo.Application.Service
                     response.Message = "Teacher not found";
                     return response;
                 }
-                // Kiểm Tra xem teacher còn được tạo course không
-                
+
+                // Kiểm tra teacher có subscription active không
+                var teacherPackage = await _teacherPackageRepository.GetInformationTeacherpackage(teacherId);
+                if (teacherPackage == null)
+                {
+                    response.Success = false;
+                    response.Message = "You need an active subscription to create courses";
+                    return response;
+                }
+
+                // Kiểm tra số lượng course hiện tại
+                var teacherCourses = await _courseRepository.GetCoursesByTeacher(teacherId);
+                int currentCourseCount = teacherCourses.Count();
+                int maxCourses = teacherPackage.MaxCourses;
+
+                if (currentCourseCount >= maxCourses)
+                {
+                    response.Success = false;
+                    response.Message = $"You have reached the maximum number of courses ({currentCourseCount}/{maxCourses}). Please upgrade your package.";
+                    return response;
+                }
 
                 // Tạo course entity
                 var course = new Course
@@ -258,7 +280,7 @@ namespace CleanDemo.Application.Service
                 courseResponseDto.StudentCount = 0;
 
                 response.Data = courseResponseDto;
-                response.Message = "Course created successfully by Teacher";
+                response.Message = $"Course created successfully ({currentCourseCount + 1}/{maxCourses} courses)";
 
                 _logger.LogInformation("Teacher {TeacherId} created course: {CourseTitle} (ID: {CourseId})", teacherId, requestDto.Title, course.CourseId);
             }
