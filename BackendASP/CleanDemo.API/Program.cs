@@ -143,18 +143,28 @@ builder.Services.AddScoped<ITeacherPackageRepository, TeacherPackageRepository>(
 builder.Services.AddScoped<ITeacherPackageService, TeacherPackageService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();
-builder.Services.AddValidatorsFromAssembly(typeof(CourseService).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(AdminCourseService).Assembly);
 builder.Services.AddFluentValidationAutoValidation();
 
-builder.Services.AddScoped<IUserService, UserService>();
+// Refactored UserService into three separate services for SOLID compliance
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<IPasswordService, PasswordService>();
+
 builder.Services.AddScoped<IRegisterService, RegisterService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<EmailService>();
 
-builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
-builder.Services.AddScoped<IEnrollCourseService, EnrollCourseService>();
+builder.Services.AddScoped<IUserEnrollmentService, UserEnrollmentService>();
+builder.Services.AddScoped<IEnrollmentQueryService, EnrollmentQueryService>();
+
+// Refactored CourseService into four separate services for SOLID compliance
+builder.Services.AddScoped<IAdminCourseService, AdminCourseService>();
+builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
+builder.Services.AddScoped<IUserCourseService, UserCourseService>();
+builder.Services.AddScoped<ICourseQueryService, CourseQueryService>();
 
 // ==================
 // 🔹 BUILD APP

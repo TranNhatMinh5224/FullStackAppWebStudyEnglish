@@ -11,14 +11,23 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
     [Authorize]
     public class CourseController : ControllerBase
     {
-        private readonly ICourseService _courseService;
-        private readonly IEnrollCourseService _enrollCourseService;
+        private readonly IAdminCourseService _adminCourseService;
+        private readonly ITeacherCourseService _teacherCourseService;
+        private readonly ICourseQueryService _courseQueryService;
+        private readonly IUserEnrollmentService _userEnrollmentService;
         private readonly ILogger<CourseController> _logger;
 
-        public CourseController(ICourseService courseService, IEnrollCourseService enrollCourseService, ILogger<CourseController> logger)
+        public CourseController(
+            IAdminCourseService adminCourseService,
+            ITeacherCourseService teacherCourseService,
+            ICourseQueryService courseQueryService,
+            IUserEnrollmentService userEnrollmentService,
+            ILogger<CourseController> logger)
         {
-            _courseService = courseService;
-            _enrollCourseService = enrollCourseService;
+            _adminCourseService = adminCourseService;
+            _teacherCourseService = teacherCourseService;
+            _courseQueryService = courseQueryService;
+            _userEnrollmentService = userEnrollmentService;
             _logger = logger;
         }
 
@@ -33,7 +42,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         {
             try
             {
-                var result = await _courseService.GetAllCoursesAsync();
+                var result = await _adminCourseService.GetAllCoursesAsync();
 
                 if (!result.Success)
                 {
@@ -58,7 +67,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         {
             try
             {
-                var result = await _courseService.DeleteCourseAsync(courseId);
+                var result = await _adminCourseService.DeleteCourseAsync(courseId);
 
                 if (!result.Success)
                 {
@@ -88,7 +97,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                     return BadRequest(ModelState);
                 }
 
-                var result = await _courseService.AdminCreateCourseAsync(requestDto);
+                var result = await _adminCourseService.AdminCreateCourseAsync(requestDto);
 
                 if (!result.Success)
                 {
@@ -127,7 +136,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                     return Unauthorized(new { message = "Invalid teacher credentials" });
                 }
 
-                var result = await _courseService.CreateCourseAsync(requestDto, teacherId);
+                var result = await _teacherCourseService.CreateCourseAsync(requestDto, teacherId);
 
                 if (!result.Success)
                 {
@@ -159,7 +168,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                     return Unauthorized(new { message = "Invalid teacher credentials" });
                 }
 
-                var result = await _courseService.GetMyCoursesByTeacherAsync(teacherId);
+                var result = await _teacherCourseService.GetMyCoursesByTeacherAsync(teacherId);
 
                 if (!result.Success)
                 {
@@ -196,7 +205,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                     return Unauthorized(new { message = "Invalid teacher credentials" });
                 }
 
-                var result = await _enrollCourseService.JoinCourseAsTeacherAsync(joinDto, teacherId);
+                var result = await _userEnrollmentService.JoinTeacherCourseAsync(joinDto, teacherId);
 
                 if (!result.Success)
                 {
@@ -234,13 +243,13 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                 }
 
                 // Kiểm tra teacher có quyền cập nhật khóa học này không
-                var courseDetail = await _courseService.GetCourseDetailAsync(courseId);
+                var courseDetail = await _courseQueryService.GetCourseDetailAsync(courseId);
                 if (!courseDetail.Success || courseDetail.Data?.TeacherId != teacherId)
                 {
                     return Forbid("You don't have permission to update this course");
                 }
 
-                var result = await _courseService.UpdateCourseAsync(courseId, courseDto, teacherId);
+                var result = await _teacherCourseService.UpdateCourseAsync(courseId, courseDto, teacherId);
 
                 if (!result.Success)
                 {
@@ -271,7 +280,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 int? userId = int.TryParse(userIdClaim, out int parsedUserId) ? parsedUserId : null;
 
-                var result = await _courseService.GetCourseDetailAsync(courseId, userId);
+                var result = await _courseQueryService.GetCourseDetailAsync(courseId, userId);
 
                 if (!result.Success)
                 {

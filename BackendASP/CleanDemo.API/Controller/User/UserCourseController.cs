@@ -10,12 +10,14 @@ namespace CleanDemo.API.Controller.User
     [Route("api/user/courses")]
     public class UserCourseController : ControllerBase
     {
-        private readonly ICourseService _courseService;
+        private readonly IUserCourseService _userCourseService;
+        private readonly ICourseQueryService _courseQueryService;
         private readonly ILogger<UserCourseController> _logger;
 
-        public UserCourseController(ICourseService courseService, ILogger<UserCourseController> logger)
+        public UserCourseController(IUserCourseService userCourseService, ICourseQueryService courseQueryService, ILogger<UserCourseController> logger)
         {
-            _courseService = courseService;
+            _userCourseService = userCourseService;
+            _courseQueryService = courseQueryService;
             _logger = logger;
         }
 
@@ -39,7 +41,7 @@ namespace CleanDemo.API.Controller.User
                     }
                 }
 
-                var result = await _courseService.GetSystemCoursesAsync(userId);
+                var result = await _userCourseService.GetSystemCoursesAsync(userId);
 
                 if (!result.Success)
                 {
@@ -75,7 +77,7 @@ namespace CleanDemo.API.Controller.User
                     }
                 }
 
-                var result = await _courseService.GetCourseDetailAsync(courseId, userId);
+                var result = await _courseQueryService.GetCourseDetailAsync(courseId, userId);
 
                 if (!result.Success)
                 {

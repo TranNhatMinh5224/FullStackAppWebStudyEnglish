@@ -10,17 +10,17 @@ namespace CleanDemo.API.Controllers.Admin
     [Authorize(Policy = "AdminOnly")]
     public class AdminAuthController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IUserManagementService _userManagementService;
 
-        public AdminAuthController(IUserService userService)
+        public AdminAuthController(IUserManagementService userManagementService)
         {
-            _userService = userService;
+            _userManagementService = userManagementService;
         }
 
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
         {
-            var result = await _userService.GetAllUsersAsync();
+            var result = await _userManagementService.GetAllUsersAsync();
             if (!result.Success) return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }

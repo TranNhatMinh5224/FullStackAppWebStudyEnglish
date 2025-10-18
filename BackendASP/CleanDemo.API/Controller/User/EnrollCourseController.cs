@@ -12,12 +12,17 @@ namespace CleanDemo.API.Controller.User
     [Authorize(Roles = "Student,User")]
     public class EnrollCourseController : ControllerBase
     {
-        private readonly IEnrollCourseService _enrollCourseService;
+        private readonly IUserEnrollmentService _userEnrollmentService;
+        private readonly IEnrollmentQueryService _enrollmentQueryService;
         private readonly ILogger<EnrollCourseController> _logger;
 
-        public EnrollCourseController(IEnrollCourseService enrollCourseService, ILogger<EnrollCourseController> logger)
+        public EnrollCourseController(
+            IUserEnrollmentService userEnrollmentService,
+            IEnrollmentQueryService enrollmentQueryService,
+            ILogger<EnrollCourseController> logger)
         {
-            _enrollCourseService = enrollCourseService;
+            _userEnrollmentService = userEnrollmentService;
+            _enrollmentQueryService = enrollmentQueryService;
             _logger = logger;
         }
 
@@ -41,7 +46,7 @@ namespace CleanDemo.API.Controller.User
                     return Unauthorized(new { message = "Invalid user credentials" });
                 }
 
-                var result = await _enrollCourseService.EnrollInCourseAsync(enrollDto, userId);
+                var result = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, userId);
 
                 if (!result.Success)
                 {
@@ -72,7 +77,7 @@ namespace CleanDemo.API.Controller.User
                     return Unauthorized(new { message = "Invalid user credentials" });
                 }
 
-                var result = await _enrollCourseService.UnenrollFromCourseAsync(courseId, userId);
+                var result = await _userEnrollmentService.UnenrollFromCourseAsync(courseId, userId);
 
                 if (!result.Success)
                 {
@@ -103,7 +108,7 @@ namespace CleanDemo.API.Controller.User
                     return Unauthorized(new { message = "Invalid user credentials" });
                 }
 
-                var result = await _enrollCourseService.GetMyEnrolledCoursesAsync(userId);
+                var result = await _enrollmentQueryService.GetMyEnrolledCoursesAsync(userId);
 
                 if (!result.Success)
                 {

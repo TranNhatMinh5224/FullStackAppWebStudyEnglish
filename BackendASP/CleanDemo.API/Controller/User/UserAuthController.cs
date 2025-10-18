@@ -15,13 +15,17 @@ namespace CleanDemo.API.Controllers.User
     {
         private readonly IRegisterService _registerService;
         private readonly ILoginService _loginService;
-        private readonly IUserService _userService;
+        private readonly IAuthenticationService _authenticationService;
+        private readonly IUserManagementService _userManagementService;
+        private readonly IPasswordService _passwordService;
 
-        public UserAuthController(IRegisterService registerService, ILoginService loginService, IUserService userService)
+        public UserAuthController(IRegisterService registerService, ILoginService loginService, IAuthenticationService authenticationService, IUserManagementService userManagementService, IPasswordService passwordService)
         {
             _registerService = registerService;
             _loginService = loginService;
-            _userService = userService;
+            _authenticationService = authenticationService;
+            _userManagementService = userManagementService;
+            _passwordService = passwordService;
         }
 
         [HttpPost("register")]
@@ -59,7 +63,7 @@ namespace CleanDemo.API.Controllers.User
                 return Unauthorized(new { message = "Invalid token" });
             }
 
-            var result = await _userService.GetUserProfileAsync(userId);
+            var result = await _userManagementService.GetUserProfileAsync(userId);
             if (!result.Success) return NotFound(new { message = result.Message });
             return Ok(result.Data);
         }
@@ -87,7 +91,7 @@ namespace CleanDemo.API.Controllers.User
             }
 
             Console.WriteLine($"Parsed userId: {userId}");
-            var result = await _userService.UpdateUserProfileAsync(userId, dto);
+            var result = await _userManagementService.UpdateUserProfileAsync(userId, dto);
             if (!result.Success) return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
@@ -101,7 +105,7 @@ namespace CleanDemo.API.Controllers.User
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
                 return Unauthorized(new { message = "Invalid token" });
 
-            var result = await _userService.ChangePasswordAsync(userId, dto);
+            var result = await _passwordService.ChangePasswordAsync(userId, dto);
             if (!result.Success) return BadRequest(new { message = result.Message });
             return Ok(new { message = "Password changed successfully" });
         }
@@ -109,7 +113,7 @@ namespace CleanDemo.API.Controllers.User
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
         {
-            var result = await _userService.ForgotPasswordAsync(dto.Email);
+            var result = await _passwordService.ForgotPasswordAsync(dto.Email);
             if (!result.Success) return BadRequest(new { message = result.Message });
             return Ok(new { message = result.Message });
         }
@@ -125,7 +129,7 @@ namespace CleanDemo.API.Controllers.User
                 return BadRequest(new { message = "Invalid request data" });
             }
             
-            var result = await _userService.ResetPasswordAsync(dto);
+            var result = await _passwordService.ResetPasswordAsync(dto);
             Console.WriteLine($"[DEBUG] Controller ResetPassword result - Success: {result.Success}, Message: {result.Message}");
             
             if (!result.Success) return BadRequest(new { message = result.Message });
