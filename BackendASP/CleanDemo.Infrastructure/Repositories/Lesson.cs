@@ -59,5 +59,10 @@ namespace CleanDemo.Infrastructure.Repositories
         {
             return await _context.Lessons.AnyAsync(l => l.Title == newtitle && l.CourseId == courseId);
         }
+        /// Đếm số lesson trong course
+        public async Task<int> CountLessonInCourse(int courseId)
+        {
+            return await _context.Lessons.CountAsync(l => l.CourseId == courseId);
+        }
     }
 }

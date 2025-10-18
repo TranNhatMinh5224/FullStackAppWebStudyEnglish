@@ -12,11 +12,13 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
     public class CourseController : ControllerBase
     {
         private readonly ICourseService _courseService;
+        private readonly IEnrollCourseService _enrollCourseService;
         private readonly ILogger<CourseController> _logger;
 
-        public CourseController(ICourseService courseService, ILogger<CourseController> logger)
+        public CourseController(ICourseService courseService, IEnrollCourseService enrollCourseService, ILogger<CourseController> logger)
         {
             _courseService = courseService;
+            _enrollCourseService = enrollCourseService;
             _logger = logger;
         }
 
@@ -194,7 +196,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                     return Unauthorized(new { message = "Invalid teacher credentials" });
                 }
 
-                var result = await _courseService.JoinCourseAsTeacherAsync(joinDto, teacherId);
+                var result = await _enrollCourseService.JoinCourseAsTeacherAsync(joinDto, teacherId);
 
                 if (!result.Success)
                 {

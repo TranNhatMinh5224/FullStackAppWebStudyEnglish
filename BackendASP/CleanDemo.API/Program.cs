@@ -115,6 +115,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
 // Register Validators
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserDtoValidator>();
@@ -131,6 +132,7 @@ builder.Services.AddScoped<EmailService>();
 // Services
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+builder.Services.AddScoped<IEnrollCourseService, EnrollCourseService>();
 
 var app = builder.Build();
 

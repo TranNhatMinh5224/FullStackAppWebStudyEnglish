@@ -202,12 +202,12 @@ namespace CleanDemo.Application.Service
         private bool IsPasswordStrong(string password)
         {
             if (password.Length < 8) return false;
-            
+
             var hasUpper = password.Any(char.IsUpper);
             var hasLower = password.Any(char.IsLower);
             var hasNumber = password.Any(char.IsDigit);
             var hasSpecial = password.Any(ch => !char.IsLetterOrDigit(ch));
-            
+
             return hasUpper && hasLower && hasNumber && hasSpecial;
         }
 
@@ -217,7 +217,7 @@ namespace CleanDemo.Application.Service
             try
             {
                 Console.WriteLine($"[DEBUG] ForgotPassword - Email: {email}");
-                
+
                 var user = await _userRepository.GetUserByEmailAsync(email);
                 if (user == null)
                 {
@@ -258,7 +258,7 @@ namespace CleanDemo.Application.Service
                 await _passwordResetTokenRepository.SaveChangesAsync();
 
                 // Send OTP email via EmailService
-                await _emailService.SendOTPEmailAsync(email, otpCode, user.SureName);
+                await _emailService.SendOTPEmailAsync(email, otpCode, user.FirstName);
 
                 Console.WriteLine($"[DEBUG] OTP email sent successfully");
 
@@ -280,7 +280,7 @@ namespace CleanDemo.Application.Service
             try
             {
                 Console.WriteLine($"[DEBUG] ResetPassword - Email: {dto.Email}, OTP: {dto.OtpCode}");
-                
+
                 // Find user by email
                 var user = await _userRepository.GetUserByEmailAsync(dto.Email);
                 if (user == null)
@@ -447,7 +447,7 @@ namespace CleanDemo.Application.Service
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.SureName + " " + user.LastName),
+                new Claim(ClaimTypes.Name, user.FirstName + " " + user.LastName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

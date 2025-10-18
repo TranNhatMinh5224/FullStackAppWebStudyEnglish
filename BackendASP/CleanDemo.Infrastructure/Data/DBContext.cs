@@ -155,11 +155,6 @@ public class AppDbContext : DbContext
     modelBuilder.Entity<TeacherPackage>(entity =>
     {
       entity.ToTable("TeacherPackages");
-
-      entity.HasOne(tp => tp.Teacher)
-                .WithOne(u => u.CurrentPackage)
-                .HasForeignKey<TeacherPackage>(tp => tp.TeacherId)
-                .OnDelete(DeleteBehavior.Cascade);
     });
 
     // TeacherSubscription Configuration
@@ -167,9 +162,9 @@ public class AppDbContext : DbContext
     {
       entity.ToTable("TeacherSubscriptions");
 
-      entity.HasOne(ts => ts.Teacher)
+      entity.HasOne(ts => ts.User)
                 .WithMany()
-                .HasForeignKey(ts => ts.TeacherId)
+                .HasForeignKey(ts => ts.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
       entity.HasOne(ts => ts.TeacherPackage)
@@ -286,7 +281,7 @@ public class AppDbContext : DbContext
         new User
         {
           UserId = 1,
-          SureName = "Admin",
+          FirstName = "Admin",
           LastName = "System",
           Email = "admin@example.com", // Thay đổi email nếu cần
           PasswordHash = adminPasswordHash,

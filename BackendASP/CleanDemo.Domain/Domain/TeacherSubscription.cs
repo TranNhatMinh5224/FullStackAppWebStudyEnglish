@@ -1,15 +1,21 @@
+using CleanDemo.Domain.Enums;
+
 namespace CleanDemo.Domain.Entities;
 
 public class TeacherSubscription
 {
     public int TeacherSubscriptionId { get; set; }
-    public int TeacherId { get; set; }
+    public int UserId { get; set; }
     public int TeacherPackageId { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public bool IsActive { get; set; } = true;
+    public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Pending;
+    public bool? AutoRenew { get; set; } = false;
+    public int? PaymentId { get; set; }
 
-    // Navigation Properties
-    public User Teacher { get; set; } = null!;
+
+
+    public User User { get; set; } = null!;
     public TeacherPackage TeacherPackage { get; set; } = null!;
+    public Payment? Payment { get; set; }
 }

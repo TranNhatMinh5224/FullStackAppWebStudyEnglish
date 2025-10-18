@@ -10,13 +10,14 @@ public class Course
     public string? Img { get; set; }
     public CourseType Type { get; set; } = CourseType.System;
     public decimal? Price { get; set; }
-    public int? TeacherId { get; set; } // Cho phép null
+    public int? TeacherId { get; set; }
+    public string? ClassCode { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
     // Navigation Properties
     public User? Teacher { get; set; }
-    public List<Lesson> Lessons { get; set; } = new(); 
+    public List<Lesson> Lessons { get; set; } = new();
     public List<UserCourse> UserCourses { get; set; } = new();
 }
 

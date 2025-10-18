@@ -23,7 +23,7 @@ namespace CleanDemo.Application.Service.Auth.Token
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.SureName + " " + user.LastName),
+                new Claim(ClaimTypes.Name, user.FirstName + " " + user.LastName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

@@ -5,21 +5,27 @@ namespace CleanDemo.Domain.Entities;
 public class User
 {
     public int UserId { get; set; }
-    public string SureName { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
-    
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public StatusAccount Status { get; set; } = StatusAccount.Active;
 
-    // Navigation Properties
-    public List<Role> Roles { get; set; } = new List<Role>();
+    // Navigation
+    public List<Role> Roles { get; set; } = new();
     public List<UserCourse> UserCourses { get; set; } = new();
-    public List<Course> CreatedCourses { get; set; } = new(); // Courses created by teacher
-    public TeacherPackage? CurrentPackage { get; set; }
+    public List<Course> CreatedCourses { get; set; } = new(); 
+
+    // Subscription
+    public List<TeacherSubscription> TeacherSubscriptions { get; set; } = new();
+    public int? CurrentTeacherSubscriptionId { get; set; }
+    public TeacherSubscription? CurrentTeacherSubscription { get; set; }
+
+    // Tokens, progress, payments...
     public List<RefreshToken> RefreshTokens { get; set; } = new();
     public List<PasswordResetToken> PasswordResetTokens { get; set; } = new();
     public List<Progress> ProgressRecords { get; set; } = new();

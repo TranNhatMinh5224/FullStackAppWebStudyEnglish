@@ -12,6 +12,8 @@ namespace CleanDemo.Application.Interface
         Task DeleteLesson(int lessonId);
         // Kiểm tra sự tồn tại của lesson trong Course chưa
         Task<bool> LessonIncourse(string newtitle, int courseId);
+        // đếm số lesson trong course 
+        Task<int> CountLessonInCourse(int courseId);
 
 
     }
