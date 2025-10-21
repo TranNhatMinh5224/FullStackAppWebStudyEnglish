@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "R6pUAvICR9U=",
+  "dgSpecHash": "yqCl5xWt0Vo=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Minh\\Desktop\\project\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj",
+  "projectFilePath": "C:\\Users\\Minh\\Desktop\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Minh\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
     "C:\\Users\\Minh\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",

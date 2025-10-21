@@ -38,5 +38,31 @@ namespace CleanDemo.Infrastructure.Repositories
 
         public async Task<Role?> GetRoleByNameAsync(string roleName) =>
             await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+        public async Task<bool> UpdateRoleTeacher(int userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            // Check if user already has Teacher role (RoleId=3)
+            var existingUserRole = await _context.UserRoles
+                .FirstOrDefaultAsync(ur => ur.UsersUserId == userId && ur.RolesRoleId == 3);
+            if (existingUserRole != null)
+            {
+                // Already has the role, no need to add
+                return true;
+            }
+
+            UserRole userRole = new UserRole
+            {
+                UsersUserId = userId,
+                RolesRoleId = 3
+            };
+            _context.UserRoles.Add(userRole);
+            await _context.SaveChangesAsync();  // Save changes
+            return true;
+        }
     }
 }

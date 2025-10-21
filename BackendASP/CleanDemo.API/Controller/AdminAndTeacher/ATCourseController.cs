@@ -13,20 +13,17 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
     {
         private readonly IAdminCourseService _adminCourseService;
         private readonly ITeacherCourseService _teacherCourseService;
-        private readonly ICourseQueryService _courseQueryService;
         private readonly IUserEnrollmentService _userEnrollmentService;
         private readonly ILogger<CourseController> _logger;
 
         public CourseController(
             IAdminCourseService adminCourseService,
             ITeacherCourseService teacherCourseService,
-            ICourseQueryService courseQueryService,
             IUserEnrollmentService userEnrollmentService,
             ILogger<CourseController> logger)
         {
             _adminCourseService = adminCourseService;
             _teacherCourseService = teacherCourseService;
-            _courseQueryService = courseQueryService;
             _userEnrollmentService = userEnrollmentService;
             _logger = logger;
         }
@@ -104,7 +101,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                     return BadRequest(result);
                 }
 
-                return CreatedAtAction(nameof(GetCourseDetail), new { courseId = result.Data?.CourseId }, result);
+                return CreatedAtAction(null, new { courseId = result.Data?.CourseId }, result);
             }
             catch (Exception ex)
             {
@@ -143,7 +140,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                     return BadRequest(result);
                 }
 
-                return CreatedAtAction(nameof(GetCourseDetail), new { courseId = result.Data?.CourseId }, result);
+                return CreatedAtAction(null, new { courseId = result.Data?.CourseId }, result);
             }
             catch (Exception ex)
             {
@@ -221,80 +218,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Teacher - Cập nhật khóa học
-        /// </summary>
-        [HttpPut("teacher/{courseId}")]
-        [Authorize(Roles = "Teacher")]
-        public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] TeacherCreateCourseRequestDto courseDto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                // Lấy TeacherId từ JWT token để kiểm tra quyền sở hữu
-                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(teacherIdClaim, out int teacherId))
-                {
-                    return Unauthorized(new { message = "Invalid teacher credentials" });
-                }
-
-                // Kiểm tra teacher có quyền cập nhật khóa học này không
-                var courseDetail = await _courseQueryService.GetCourseDetailAsync(courseId);
-                if (!courseDetail.Success || courseDetail.Data?.TeacherId != teacherId)
-                {
-                    return Forbid("You don't have permission to update this course");
-                }
-
-                var result = await _teacherCourseService.UpdateCourseAsync(courseId, courseDto, teacherId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in UpdateCourse endpoint for CourseId: {CourseId}", courseId);
-                return StatusCode(500, new { message = "Internal server error" });
-            }
-        }
-
         // === SHARED ENDPOINTS (Admin & Teacher) ===
-
-        /// <summary>
-        /// Admin & Teacher - Lấy chi tiết khóa học
-        /// </summary>
-        [HttpGet("{courseId}")]
-        [Authorize(Roles = "Admin,Teacher")]
-        public async Task<IActionResult> GetCourseDetail(int courseId)
-        {
-            try
-            {
-                // Lấy UserId từ JWT token
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                int? userId = int.TryParse(userIdClaim, out int parsedUserId) ? parsedUserId : null;
-
-                var result = await _courseQueryService.GetCourseDetailAsync(courseId, userId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetCourseDetail endpoint for CourseId: {CourseId}", courseId);
-                return StatusCode(500, new { message = "Internal server error" });
-            }
-        }
     }
 }
 

@@ -94,8 +94,6 @@ namespace CleanDemo.Infrastructure.Repositories
         {
             return await _context.Courses
                 .Where(c => c.Type == CourseType.System)
-                .Include(c => c.Teacher)
-                .Include(c => c.Lessons)
                 .ToListAsync();
         }
 

@@ -123,5 +123,41 @@ namespace CleanDemo.API.Controller.User
                 return StatusCode(500, new { message = "Internal server error" });
             }
         }
+
+        /// <summary>
+        /// Tham gia khóa học do teacher tạo
+        /// </summary>
+        [HttpPost("join-teacher-course")]
+        public async Task<IActionResult> JoinTeacherCourse([FromBody] JoinCourseTeacherDto joinDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Lấy UserId từ JWT token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid user credentials" });
+                }
+
+                var result = await _userEnrollmentService.JoinTeacherCourseAsync(joinDto, userId);
+
+                if (!result.Success)
+                {
+                    return BadRequest(result);
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in JoinTeacherCourse endpoint");
+                return StatusCode(500, new { message = "Internal server error" });
+            }
+        }
     }
 }

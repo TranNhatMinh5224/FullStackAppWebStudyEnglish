@@ -11,11 +11,12 @@ public class TeacherSubscription
     public DateTime EndDate { get; set; }
     public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Pending;
     public bool? AutoRenew { get; set; } = false;
+
+
     public int? PaymentId { get; set; }
-
-
+    public Payment? Payment { get; set; }
 
     public User User { get; set; } = null!;
     public TeacherPackage TeacherPackage { get; set; } = null!;
-    public Payment? Payment { get; set; }
+
 }

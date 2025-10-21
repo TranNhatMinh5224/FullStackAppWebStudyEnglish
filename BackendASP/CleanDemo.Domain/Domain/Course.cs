@@ -19,5 +19,11 @@ public class Course
     public User? Teacher { get; set; }
     public List<Lesson> Lessons { get; set; } = new();
     public List<UserCourse> UserCourses { get; set; } = new();
+    public bool IsFree()
+    {
+        return Price == null || Price == 0;
+    }
+
 }
+
 

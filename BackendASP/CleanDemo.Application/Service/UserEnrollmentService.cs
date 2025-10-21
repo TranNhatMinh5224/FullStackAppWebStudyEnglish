@@ -36,13 +36,6 @@ namespace CleanDemo.Application.Service
 
             try
             {
-                if (enrollDto == null || enrollDto.CourseId <= 0)
-                {
-                    response.Success = false;
-                    response.Message = "Invalid course ID";
-                    return response;
-                }
-
                 // Kiểm tra course tồn tại
                 var course = await _courseRepository.GetByIdAsync(enrollDto.CourseId);
                 if (course == null)
@@ -51,31 +44,30 @@ namespace CleanDemo.Application.Service
                     response.Message = "Course not found";
                     return response;
                 }
-
-                // Kiểm tra user đã đăng ký chưa
+                // Kiểm tra xem user đã đăng ký chưa
                 if (await _courseRepository.IsUserEnrolled(enrollDto.CourseId, userId))
                 {
-                    response.Success = false;
-                    response.Message = "User already enrolled in this course";
+                    if (course.Price > 0)
+                    {
+                        // Kiểm tra xem đã thanh toán chưa
+                        var payment = await _paymentRepository.GetSuccessfulPaymentByUserAndCourseAsync(userId, enrollDto.CourseId);
+                        if (payment == null)
+                        {
+                            response.Success = false;
+                            response.Message = "hãy thanh toán khóa học trước khi đăng ký";
+                            return response;
+                        }
+                    }
+                    else
+                    {
+                        response.Success = false;
+                        response.Message = "User already enrolled in this course";
+                    }
                     return response;
                 }
 
-                // Kiểm tra giá khóa học
-                if (course.Price.HasValue && course.Price.Value > 0)
-                {
-                    // Tạo payment record (giả định thanh toán ngay lập tức thành công)
-                    var payment = new Payment
-                    {
-                        UserId = userId,
-                        CourseId = enrollDto.CourseId,
-                        Amount = course.Price.Value,
-                        Status = PaymentStatus.Completed  // Giả định thanh toán thành công
-                    };
 
-                    await _paymentRepository.AddPaymentAsync(payment);
 
-                    _logger.LogInformation("Payment created for User {UserId} enrolling in Course {CourseId} with Amount {Amount}", userId, enrollDto.CourseId, course.Price.Value);
-                }
 
                 // Đăng ký user vào course
                 await _courseRepository.EnrollUserInCourse(enrollDto.CourseId, userId);
@@ -105,69 +97,21 @@ namespace CleanDemo.Application.Service
 
             try
             {
-                if (joinDto == null || joinDto.CourseId <= 0)
-                {
-                    response.Success = false;
-                    response.Message = "Invalid course ID";
-                    return response;
-                }
+
 
                 // Kiểm tra course tồn tại
                 var course = await _courseRepository.GetByIdAsync(joinDto.CourseId);
-                if (course == null)
-                {
-                    response.Success = false;
-                    response.Message = "Course not found";
-                    return response;
-                }
+                // kiểm tra xem user đã đăng ký chưa 
 
-                // Kiểm tra course có phải Teacher course không
-                if (course.Type != Domain.Enums.CourseType.Teacher)
-                {
-                    response.Success = false;
-                    response.Message = "Can only join Teacher courses";
-                    return response;
-                }
-
-                // Kiểm tra user đã tham gia chưa
+                // Kiểm tra xem user đã đăng ký chưa
                 if (await _courseRepository.IsUserEnrolled(joinDto.CourseId, userId))
                 {
                     response.Success = false;
-                    response.Message = "You have already joined this course";
+                    response.Message = "User already enrolled in this course";
                     return response;
                 }
 
-                // Kiểm tra course có teacherId không
-                if (!course.TeacherId.HasValue)
-                {
-                    response.Success = false;
-                    response.Message = "Course does not have a teacher assigned";
-                    return response;
-                }
 
-                // Lấy thông tin package của chủ khóa học
-                var courseOwnerPackage = await _teacherPackageRepository.GetInformationTeacherpackage(course.TeacherId.Value);
-
-                if (courseOwnerPackage == null)
-                {
-                    response.Success = false;
-                    response.Message = "Course owner does not have an active subscription";
-                    return response;
-                }
-
-                // Kiểm tra số lượng học viên hiện tại
-                int currentStudentCount = await _courseRepository.CountEnrolledUsers(joinDto.CourseId);
-                int maxStudents = courseOwnerPackage.MaxStudents;
-
-                if (currentStudentCount >= maxStudents)
-                {
-                    response.Success = false;
-                    response.Message = $"Course is full ({currentStudentCount}/{maxStudents} students)";
-                    return response;
-                }
-
-                // Đăng ký user vào course
-                await _courseRepository.EnrollUserInCourse(joinDto.CourseId, userId);
 
                 response.Success = true;
                 response.Data = true;
@@ -194,13 +138,6 @@ namespace CleanDemo.Application.Service
 
             try
             {
-                if (courseId <= 0)
-                {
-                    response.Success = false;
-                    response.Message = "Invalid course ID";
-                    return response;
-                }
-
                 // Kiểm tra user đã đăng ký chưa
                 if (!await _courseRepository.IsUserEnrolled(courseId, userId))
                 {

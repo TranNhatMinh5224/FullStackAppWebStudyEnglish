@@ -8,6 +8,8 @@ namespace CleanDemo.Application.Interface
         Task AddPaymentAsync(Payment payment);
         Task<Payment?> GetPaymentByIdAsync(int paymentId);
         Task<IEnumerable<Payment>> GetPaymentsByUserAsync(int userId);
-        Task UpdatePaymentStatusAsync(int paymentId, PaymentStatus status);
+        Task<Payment?> GetSuccessfulPaymentByUserAndCourseAsync(int userId, int courseId);
+        Task UpdatePaymentStatusAsync(Payment payment);
+        Task<int> SaveChangesAsync();
     }
 }

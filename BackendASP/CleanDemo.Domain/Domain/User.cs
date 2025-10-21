@@ -16,9 +16,11 @@ public class User
     public StatusAccount Status { get; set; } = StatusAccount.Active;
 
     // Navigation
-    public List<Role> Roles { get; set; } = new();
+    public List<UserRole> UserRoles { get; set; } = new();
+    public ICollection<Role> Roles { get; set; } = new List<Role>();
+
     public List<UserCourse> UserCourses { get; set; } = new();
-    public List<Course> CreatedCourses { get; set; } = new(); 
+    public List<Course> CreatedCourses { get; set; } = new();
 
     // Subscription
     public List<TeacherSubscription> TeacherSubscriptions { get; set; } = new();

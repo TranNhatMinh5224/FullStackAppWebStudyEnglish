@@ -65,12 +65,6 @@ namespace CleanDemo.Application.Service
 
             try
             {
-                if (requestDto == null)
-                {
-                    response.Success = false;
-                    response.Message = "Course data is required";
-                    return response;
-                }
 
                 // Tạo course entity
                 var course = new Course
@@ -112,12 +106,6 @@ namespace CleanDemo.Application.Service
 
             try
             {
-                if (courseId <= 0)
-                {
-                    response.Success = false;
-                    response.Message = "Invalid course ID";
-                    return response;
-                }
 
                 var course = await _courseRepository.GetByIdAsync(courseId);
                 if (course == null)

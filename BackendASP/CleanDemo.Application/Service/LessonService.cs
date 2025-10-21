@@ -16,9 +16,9 @@ namespace CleanDemo.Application.Service
         private readonly ITeacherPackageRepository _teacherPackageRepository;
 
         public LessonService(
-            ILessonRepository lessonRepository, 
-            IMapper mapper, 
-            ILogger<LessonService> logger, 
+            ILessonRepository lessonRepository,
+            IMapper mapper,
+            ILogger<LessonService> logger,
             ICourseRepository courseRepository,
             ITeacherPackageRepository teacherPackageRepository)
         {

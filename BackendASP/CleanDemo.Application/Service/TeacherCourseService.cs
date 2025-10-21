@@ -106,12 +106,7 @@ namespace CleanDemo.Application.Service
 
             try
             {
-                if (courseId <= 0)
-                {
-                    response.Success = false;
-                    response.Message = "Invalid course ID";
-                    return response;
-                }
+
 
                 var course = await _courseRepository.GetByIdAsync(courseId);
                 if (course == null)
