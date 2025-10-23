@@ -21,11 +21,11 @@ namespace CleanDemo.Infrastructure.Data
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
             // Read PostgreSQL connection info from environment variables
-            var dbServer = Environment.GetEnvironmentVariable("DB__Server") ?? "localhost";
-            var dbPort = Environment.GetEnvironmentVariable("DB__Port") ?? "5432";
-            var dbName = Environment.GetEnvironmentVariable("DB__Name") ?? "Elearning";
-            var dbUser = Environment.GetEnvironmentVariable("DB__User") ?? "postgres";
-            var dbPassword = Environment.GetEnvironmentVariable("DB__Password") ?? "05022004";
+            var dbServer = Environment.GetEnvironmentVariable("DB__Server_ASPELEARNING") ?? "localhost";
+            var dbPort = Environment.GetEnvironmentVariable("DB__Port_ASPELEARNING") ?? "5432";
+            var dbName = Environment.GetEnvironmentVariable("DB__Name_ASPELEARNING") ?? "Elearning";
+            var dbUser = Environment.GetEnvironmentVariable("DB__User_ASPELEARNING") ?? "postgres";
+            var dbPassword = Environment.GetEnvironmentVariable("DB__Password_ASPELEARNING") ?? "12122004";
 
             var connectionString = $"Host={dbServer};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};";
 

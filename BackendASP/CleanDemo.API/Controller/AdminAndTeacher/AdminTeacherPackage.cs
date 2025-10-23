@@ -54,25 +54,45 @@ namespace CleanDemo.API.Controllers.Admin
             return Ok(result.Data);
         }
 
-        [HttpPut("{id}")]
+        // [HttpPut("{id}")]
+        // [Authorize(Roles = "Admin")]
+        // public async Task<IActionResult> UpdateTeacherPackage(int id, [FromBody] UpdateTeacherPackageDto updateDto)
+        // {
+        //     if (!ModelState.IsValid)
+        //         return BadRequest(ModelState);
+
+        //     if (id <= 0)
+        //         return BadRequest(new { message = "Invalid ID provided." });
+
+        //     // Đảm bảo ID trong DTO khớp với ID trong URL
+        //     updateDto.TeacherPackageId = id;
+
+        //     var result = await _teacherPackageService.UpdateTeacherPackageAsync(updateDto);
+        //     if (!result.Success)
+        //         return BadRequest(new { message = result.Message });
+        //     return Ok(result.Data);
+        // }
+        [HttpPut("admin/Update-Teacher-Package")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateTeacherPackage(int id, [FromBody] UpdateTeacherPackageDto updateDto)
+        public async Task<IActionResult> UpdateTeacherPackage([FromBody] UpdateTeacherPackageDto teacherPackageDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
 
-            if (id <= 0)
-                return BadRequest(new { message = "Invalid ID provided." });
+                var result = await _teacherPackageService.UpdateTeacherPackageAsync(teacherPackageDto);
 
-            // Đảm bảo ID trong DTO khớp với ID trong URL
-            updateDto.TeacherPackageId = id;
+                if (!result.Success)
+                    return BadRequest(new { Message = result.Message });
 
-            var result = await _teacherPackageService.UpdateTeacherPackageAsync(updateDto);
-            if (!result.Success)
-                return BadRequest(new { message = result.Message });
-            return Ok(result.Data);
+                return Ok(new { Message = "Teacher package updated successfully.", Data = result.Data });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "Internal server error", Detail = ex.Message });
+            }
         }
-
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteTeacherPackage(int id)

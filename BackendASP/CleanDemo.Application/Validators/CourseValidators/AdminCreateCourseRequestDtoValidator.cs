@@ -1,26 +1,15 @@
 using CleanDemo.Application.DTOs;
 using FluentValidation;
-using CleanDemo.Application.Interface;
 
 namespace CleanDemo.Application.Validators.CourseValidators
 {
     public class AdminCreateCourseRequestDtoValidator : AbstractValidator<AdminCreateCourseRequestDto>
     {
-        private readonly ICourseRepository _courseRepository;
-
-        public AdminCreateCourseRequestDtoValidator(ICourseRepository courseRepository)
+        public AdminCreateCourseRequestDtoValidator()
         {
-            _courseRepository = courseRepository;
-
             RuleFor(x => x.Title)
                 .NotEmpty().WithMessage("Course title is required")
-                .MaximumLength(200).WithMessage("Course title must not exceed 200 characters")
-                .MustAsync(async (title, cancellation) =>
-                {
-                    if (string.IsNullOrWhiteSpace(title)) return true; // other rule will catch emptiness
-                    var existing = await _courseRepository.GetSystemCourses();
-                    return !existing.Any(c => string.Equals(c.Title?.Trim(), title.Trim(), StringComparison.OrdinalIgnoreCase));
-                }).WithMessage("A system course with this title already exists");
+                .MaximumLength(200).WithMessage("Course title must not exceed 200 characters");
 
             RuleFor(x => x.Description)
                 .NotEmpty().WithMessage("Course description is required")

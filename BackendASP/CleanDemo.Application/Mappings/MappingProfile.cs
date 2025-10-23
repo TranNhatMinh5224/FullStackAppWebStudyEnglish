@@ -40,6 +40,7 @@ namespace CleanDemo.Application.Mappings
 
             // Lesson mappings
             CreateMap<Lesson, LessonDto>();
+            CreateMap<Lesson, ListLessonDto>();
 
             // User mappings
             CreateMap<User, UserDto>()

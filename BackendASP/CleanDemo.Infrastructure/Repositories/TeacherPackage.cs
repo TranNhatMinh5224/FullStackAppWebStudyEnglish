@@ -32,7 +32,7 @@ namespace CleanDemo.Infrastructure.Repositories
 
         public async Task UpdateTeacherPackageAsync(TeacherPackage teacherPackage)
         {
-            _context.TeacherPackages.Update(teacherPackage);
+            // _context.TeacherPackages.Update(teacherPackage);
             await _context.SaveChangesAsync();
         }
 

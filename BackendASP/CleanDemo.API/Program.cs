@@ -122,7 +122,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Repositories & Services (giữ nguyên của bạn)
+// Repositories & Services 
 builder.Services.AddScoped<CleanDemo.Application.Interface.ICourseRepository, CleanDemo.Infrastructure.Repositories.CourseRepository>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IUserRepository, CleanDemo.Infrastructure.Repositories.UserRepository>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.ILessonRepository, CleanDemo.Infrastructure.Repositories.LessonRepository>();
@@ -149,7 +149,7 @@ builder.Services.AddScoped<CleanDemo.Application.Interface.ILoginService, CleanD
 builder.Services.AddScoped<CleanDemo.Application.Interface.ITokenService, CleanDemo.Application.Service.TokenService>();
 builder.Services.AddScoped<CleanDemo.Application.Service.EmailService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IEmailTemplateService, CleanDemo.Infrastructure.Services.EmailTemplateService>();
-
+builder.Services.AddScoped<CleanDemo.Application.Interface.IUserCourseService, CleanDemo.Application.Services.UserCourseService>();
 // =====================================
 // 5) Pipeline
 // =====================================
