@@ -25,13 +25,7 @@ namespace CleanDemo.API.Controllers.Admin
             return Ok(result.Data);
         }
 
-        // [HttpPut("users/{id}/role")]
-        // public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UpdateUserRoleDto dto)
-        // {
-
-        //     await Task.CompletedTask;
-        //     return Ok(new { message = "Role updated" });
-        // }
+    
 
 
     }
