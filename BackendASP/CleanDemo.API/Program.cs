@@ -10,49 +10,55 @@ using Microsoft.OpenApi.Models;
 using CleanDemo.Infrastructure.Data;
 using CleanDemo.Application.Mappings;
 
-// 0) Load ENV file (early)
-Env.Load();
-
+// =====================================
+// 0) Builder
+// =====================================
 var builder = WebApplication.CreateBuilder(args);
 
-// 1) Configuration sources (ENV -> Configuration)
-builder.Configuration.AddEnvironmentVariables();
+// 1) Load .env SỚM bằng ContentRoot (đúng hơn CurrentDirectory)
+var envPath = Path.Combine(builder.Environment.ContentRootPath, ".env");
+if (File.Exists(envPath)) Env.Load(envPath);
 
-// 2) App constants & ENV reads
-var frontendUrl = Environment.GetEnvironmentVariable("Frontend__BaseUrl")
-                  ?? builder.Configuration["Frontend:BaseUrl"]
-                  ?? "http://localhost:3000";
+// 2) Hợp nhất cấu hình (JSON -> ENV)
+//    (ENV sẽ override JSON nếu trùng key)
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
-var dbServer = Environment.GetEnvironmentVariable("DB__Server");
-var dbName = Environment.GetEnvironmentVariable("DB__Name");
-var trusted = Environment.GetEnvironmentVariable("DB__Trusted_Connection") ?? "True";
-var encrypt = Environment.GetEnvironmentVariable("DB__Encrypt") ?? "True";
+// =====================================
+// 3) Đọc biến môi trường (đã có hậu tố _ASPELEARNING như bạn dùng)
+// =====================================
+string dbHost = Environment.GetEnvironmentVariable("DB__Server_ASPELEARNING") ?? "localhost";
+string dbPort = Environment.GetEnvironmentVariable("DB__Port_ASPELEARNING") ?? "5432";
+string dbName = Environment.GetEnvironmentVariable("DB__Name_ASPELEARNING") ?? "Elearning";
+string dbUser = Environment.GetEnvironmentVariable("DB__User_ASPELEARNING") ?? "postgres";
+string dbPassword = Environment.GetEnvironmentVariable("DB__Password_ASPELEARNING") ?? "";
+string sslMode = Environment.GetEnvironmentVariable("DB__SslMode_ASPELEARNING") ?? "Disable";
+string trustCert = Environment.GetEnvironmentVariable("DB__TrustServerCertificate_ASPELEARNING") ?? "true";
 
-if (string.IsNullOrWhiteSpace(dbServer) || string.IsNullOrWhiteSpace(dbName))
-    throw new InvalidOperationException("DB__Server hoặc DB__Name chưa cấu hình.");
+string? jwtKey = Environment.GetEnvironmentVariable("Jwt__Key_ASPELEARNING");
 
-var useTrusted = bool.TryParse(trusted, out var t) ? t : true;
-var useEncrypt = bool.TryParse(encrypt, out var e) ? e : true;
+string? jwtIssuer = Environment.GetEnvironmentVariable("Jwt__Issuer_ASPELEARNING");
+string? jwtAudience = Environment.GetEnvironmentVariable("Jwt__Audience_ASPELEARNING");
 
-var jwtKey = Environment.GetEnvironmentVariable("Jwt__Key")
-             ?? builder.Configuration["Jwt:Key"]
-             ?? throw new InvalidOperationException("Jwt__Key chưa cấu hình.");
+string frontendUrl = Environment.GetEnvironmentVariable("Frontend__BaseUrl") ?? "http://localhost:3000";
 
-var jwtIssuer = Environment.GetEnvironmentVariable("Jwt__Issuer")
-               ?? builder.Configuration["Jwt:Issuer"]
-               ?? throw new InvalidOperationException("Jwt__Issuer chưa cấu hình.");
+// Fail-fast: kiểm tra JWT config
+if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
+    throw new InvalidOperationException("Jwt__Key_ASPELEARNING is missing or too short (>=32 chars).");
+if (string.IsNullOrWhiteSpace(jwtIssuer))
+    throw new InvalidOperationException("Jwt__Issuer_ASPELEARNING is missing.");
+if (string.IsNullOrWhiteSpace(jwtAudience))
+    throw new InvalidOperationException("Jwt__Audience_ASPELEARNING is missing.");
 
-var jwtAudience = Environment.GetEnvironmentVariable("Jwt__Audience")
-                 ?? builder.Configuration["Jwt:Audience"]
-                 ?? throw new InvalidOperationException("Jwt__Audience chưa cấu hình.");
-
-
-// ===================== SERVICES (DI) =====================
-// 3) Core framework services
+// =====================================
+// 4) Services
+// =====================================
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// 4) Swagger + Security (đăng ký trước dùng ở pipeline Dev)
+// Swagger + JWT
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "FullStack English Learning API", Version = "v1" });
@@ -65,13 +71,13 @@ builder.Services.AddSwaggerGen(c =>
         In = ParameterLocation.Header,
         Description = "Enter 'Bearer {token}'"
     });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
-        { new OpenApiSecurityScheme { Reference = new OpenApiReference {
-            Type = ReferenceType.SecurityScheme, Id = "Bearer"}}, Array.Empty<string>() }
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }, Array.Empty<string>() }
     });
 });
 
-// 5) CORS (đặt sớm, dùng trong pipeline trước Auth)
+// CORS (BẬT lại, khớp với UseCors phía dưới)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", p =>
@@ -81,28 +87,24 @@ builder.Services.AddCors(options =>
          .AllowCredentials());
 });
 
-// 6) FluentValidation
+// FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<CleanDemo.Application.Validators.CourseValidators.AdminCreateCourseRequestDtoValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CleanDemo.Application.Validators.Payment.RequestPaymentValidator>();
 
-// 7) AutoMapper
+// AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// 8) Database (DbContext) — đăng ký trước Auth/Services để sẵn sàng migrate
-string connectionString = builder.Environment.IsDevelopment()
-    ? @"Server=(localdb)\mssqllocaldb;Database=ELearning_English;Trusted_Connection=True;Encrypt=False;TrustServerCertificate=True;"
-    : useTrusted
-        ? $"Server={dbServer};Database={dbName};Trusted_Connection=True;Encrypt={useEncrypt};TrustServerCertificate=True;"
-        : $"Server={dbServer};Database={dbName};User ID={Environment.GetEnvironmentVariable("DB__User")};Password={Environment.GetEnvironmentVariable("DB__Password")};Encrypt={useEncrypt};TrustServerCertificate=True;";
+// Database (PostgreSQL) — dùng biến môi trường
+var npgConnection =
+    $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode={sslMode};Trust Server Certificate={trustCert};";
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure()));
+    opt.UseNpgsql(npgConnection, npgsql => npgsql.EnableRetryOnFailure()));
 
-// 9) AuthN & AuthZ (đăng ký sau DbContext, trước App services)
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+// JWT Authentication — dùng key đã validate
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -113,12 +115,14 @@ builder.Services
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!)),
+            ClockSkew = TimeSpan.FromMinutes(2) // optional
         };
     });
+
 builder.Services.AddAuthorization();
 
-// 10) Repositories (Infrastructure)
+// Repositories & Services (giữ nguyên của bạn)
 builder.Services.AddScoped<CleanDemo.Application.Interface.ICourseRepository, CleanDemo.Infrastructure.Repositories.CourseRepository>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IUserRepository, CleanDemo.Infrastructure.Repositories.UserRepository>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.ILessonRepository, CleanDemo.Infrastructure.Repositories.LessonRepository>();
@@ -129,7 +133,6 @@ builder.Services.AddScoped<CleanDemo.Application.Interface.ITeacherPackageReposi
 builder.Services.AddScoped<CleanDemo.Application.Interface.ITeacherSubscriptionRepository, CleanDemo.Infrastructure.Repositories.TeacherSubscriptionRepository>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IUnitOfWork, CleanDemo.Infrastructure.Repositories.UnitOfWork>();
 
-// 11) Services (Application)
 builder.Services.AddScoped<CleanDemo.Application.Interface.IAdminCourseService, CleanDemo.Application.Service.AdminCourseService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IAuthenticationService, CleanDemo.Application.Service.AuthenticationService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.ILessonService, CleanDemo.Application.Service.LessonService>();
@@ -141,51 +144,34 @@ builder.Services.AddScoped<CleanDemo.Application.Interface.ITeacherSubscriptionS
 builder.Services.AddScoped<CleanDemo.Application.Interface.IUserEnrollmentService, CleanDemo.Application.Service.UserEnrollmentService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IUserManagementService, CleanDemo.Application.Service.UserManagementService>();
 
-// 12) Auth sub-services
-builder.Services.AddScoped<CleanDemo.Application.Service.Auth.Register.IRegisterService, CleanDemo.Application.Service.Auth.Register.RegisterService>();
-builder.Services.AddScoped<CleanDemo.Application.Service.Auth.Login.ILoginService, CleanDemo.Application.Service.Auth.Login.LoginService>();
-builder.Services.AddScoped<CleanDemo.Application.Service.Auth.Token.ITokenService, CleanDemo.Application.Service.Auth.Token.TokenService>();
-
-// 13) Infrastructure services (mail, template, ...)
+builder.Services.AddScoped<CleanDemo.Application.Interface.IRegisterService, CleanDemo.Application.Service.RegisterService>();
+builder.Services.AddScoped<CleanDemo.Application.Interface.ILoginService, CleanDemo.Application.Service.LoginService>();
+builder.Services.AddScoped<CleanDemo.Application.Interface.ITokenService, CleanDemo.Application.Service.TokenService>();
 builder.Services.AddScoped<CleanDemo.Application.Service.EmailService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IEmailTemplateService, CleanDemo.Infrastructure.Services.EmailTemplateService>();
 
-
-// ===================== APP PIPELINE =====================
+// =====================================
+// 5) Pipeline
+// =====================================
 var app = builder.Build();
 
-// (A) Dev tooling
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-// (B) Security & infra middlewares – thứ tự quan trọng
-app.UseHttpsRedirection();
-
-// Nếu dùng proxy/nginx phía trước: bật ForwardedHeaders trước Routing
-// app.UseForwardedHeaders(new ForwardedHeadersOptions {
-//     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-// });
+else
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseRouting();
-
-// CORS phải nằm giữa UseRouting và UseAuthentication/UseAuthorization
 app.UseCors("AllowFrontend");
-
 app.UseAuthentication();
 app.UseAuthorization();
-
-// (C) Endpoints mapping – đặt cuối pipeline sau AuthZ
 app.MapControllers();
-
-// (D) DB migration khi khởi động
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await dbContext.Database.MigrateAsync();
-}
 
 app.Run();
 
+// Cho test integration
 public partial class Program { }

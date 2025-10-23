@@ -8,40 +8,34 @@ namespace CleanDemo.Infrastructure.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         // DbSets
-        public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<UserRole> UserRoles { get; set; }
-        public DbSet<Course> Courses { get; set; }
-        public DbSet<Lesson> Lessons { get; set; }
-        public DbSet<Vocabulary> Vocabularies { get; set; }
-        public DbSet<MiniTest> MiniTests { get; set; }
-        public DbSet<Question> Questions { get; set; }
-        public DbSet<AnswerOption> AnswerOptions { get; set; }
-        public DbSet<UserCourse> UserCourses { get; set; }
-        public DbSet<TeacherPackage> TeacherPackages { get; set; }
-        public DbSet<TeacherSubscription> TeacherSubscriptions { get; set; }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
-        public DbSet<Progress> ProgressRecords { get; set; }
-        public DbSet<ReviewWord> ReviewWords { get; set; }
-        public DbSet<PronunciationScore> PronunciationScores { get; set; }
-        public DbSet<Payment> Payments { get; set; }
+        public DbSet<User> Users => Set<User>();
+        public DbSet<Role> Roles => Set<Role>();
+        public DbSet<UserRole> UserRoles => Set<UserRole>();
+        public DbSet<Course> Courses => Set<Course>();
+        public DbSet<Lesson> Lessons => Set<Lesson>();
+        public DbSet<Vocabulary> Vocabularies => Set<Vocabulary>();
+        public DbSet<MiniTest> MiniTests => Set<MiniTest>();
+        public DbSet<Question> Questions => Set<Question>();
+        public DbSet<AnswerOption> AnswerOptions => Set<AnswerOption>();
+        public DbSet<UserCourse> UserCourses => Set<UserCourse>();
+        public DbSet<TeacherPackage> TeacherPackages => Set<TeacherPackage>();
+        public DbSet<TeacherSubscription> TeacherSubscriptions => Set<TeacherSubscription>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+        public DbSet<Progress> ProgressRecords => Set<Progress>();
+        public DbSet<ReviewWord> ReviewWords => Set<ReviewWord>();
+        public DbSet<PronunciationScore> PronunciationScores => Set<PronunciationScore>();
+        public DbSet<Payment> Payments => Set<Payment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // User
+            // ===== User =====
             modelBuilder.Entity<User>(e =>
             {
                 e.ToTable("Users");
                 e.HasIndex(u => u.Email).IsUnique();
-
-                // User - UserRole (1-n)
-                e.HasMany(u => u.UserRoles)
-                 .WithOne(ur => ur.User)
-                 .HasForeignKey(ur => ur.UsersUserId)
-                 .OnDelete(DeleteBehavior.Cascade);
 
                 // CurrentTeacherSubscription (nullable)
                 e.HasOne(u => u.CurrentTeacherSubscription)
@@ -51,35 +45,56 @@ namespace CleanDemo.Infrastructure.Data
                  .OnDelete(DeleteBehavior.SetNull);
             });
 
-            // Role
+            // ===== Role =====
             modelBuilder.Entity<Role>(e =>
             {
                 e.ToTable("Roles");
-                e.HasIndex(r => r.Name).IsUnique(); // tránh trùng tên role
-
-                // Role - UserRole (1-n)
-                e.HasMany(r => r.UserRoles)
-                 .WithOne(ur => ur.Role)
-                 .HasForeignKey(ur => ur.RolesRoleId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(r => r.Name).IsUnique();
             });
 
-            // UserRole (join entity)
+            // ===== UserRole (JOIN) =====
             modelBuilder.Entity<UserRole>(e =>
             {
                 e.ToTable("UserRoles");
-                e.HasKey(ur => new { ur.UsersUserId, ur.RolesRoleId });
+
+                // Composite PK
+                e.HasKey(ur => new { ur.UserId, ur.RoleId });
+
+                // FK: UserRole -> User
+                e.HasOne(ur => ur.User)
+                 .WithMany(u => u.UserRoles)
+                 .HasForeignKey(ur => ur.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                // FK: UserRole -> Role
+                e.HasOne(ur => ur.Role)
+                 .WithMany(r => r.UserRoles)
+                 .HasForeignKey(ur => ur.RoleId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(ur => ur.RoleId);
             });
 
+            // ===== Skip navigations Users <-> Roles thông qua UserRole =====
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Roles)
+                .WithMany(r => r.Users)
+                .UsingEntity<UserRole>(
+                    j => j.HasOne(ur => ur.Role)
+                          .WithMany(r => r.UserRoles)
+                          .HasForeignKey(ur => ur.RoleId),
+                    j => j.HasOne(ur => ur.User)
+                          .WithMany(u => u.UserRoles)
+                          .HasForeignKey(ur => ur.UserId),
+                    j => j.ToTable("UserRoles")
+                );
+
+            // ===== Các cấu hình khác giữ nguyên của bạn (Course, Lesson, ...) =====
             // Course
             modelBuilder.Entity<Course>(e =>
             {
                 e.ToTable("Courses");
-
-                // tiền tệ
                 e.Property(c => c.Price).HasPrecision(18, 2);
-
-                // Course -> Teacher (nullable)
                 e.HasOne(c => c.Teacher)
                  .WithMany(u => u.CreatedCourses)
                  .HasForeignKey(c => c.TeacherId)
@@ -141,21 +156,15 @@ namespace CleanDemo.Infrastructure.Data
             modelBuilder.Entity<UserCourse>(e =>
             {
                 e.ToTable("UserCourses");
-
-                // mỗi user chỉ tham gia 1 lần / 1 course
                 e.HasIndex(uc => new { uc.UserId, uc.CourseId }).IsUnique();
-
                 e.HasOne(uc => uc.User)
                  .WithMany(u => u.UserCourses)
                  .HasForeignKey(uc => uc.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
-
                 e.HasOne(uc => uc.Course)
                  .WithMany(c => c.UserCourses)
                  .HasForeignKey(uc => uc.CourseId)
                  .OnDelete(DeleteBehavior.Cascade);
-
-                // link tới Payment (nullable)
                 e.HasOne(uc => uc.Payment)
                  .WithMany()
                  .HasForeignKey(uc => uc.PaymentId)
@@ -173,18 +182,14 @@ namespace CleanDemo.Infrastructure.Data
             modelBuilder.Entity<TeacherSubscription>(e =>
             {
                 e.ToTable("TeacherSubscriptions");
-
                 e.HasOne(ts => ts.User)
                  .WithMany(u => u.TeacherSubscriptions)
                  .HasForeignKey(ts => ts.UserId)
                  .OnDelete(DeleteBehavior.Restrict);
-
                 e.HasOne(ts => ts.TeacherPackage)
                  .WithMany(tp => tp.Subscriptions)
                  .HasForeignKey(ts => ts.TeacherPackageId)
                  .OnDelete(DeleteBehavior.Restrict);
-
-                // link tới Payment (nullable)
                 e.HasOne(ts => ts.Payment)
                  .WithMany()
                  .HasForeignKey(ts => ts.PaymentId)
@@ -219,7 +224,6 @@ namespace CleanDemo.Infrastructure.Data
                  .WithMany(u => u.ProgressRecords)
                  .HasForeignKey(p => p.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
-
                 e.HasOne(p => p.Lesson)
                  .WithMany(l => l.ProgressRecords)
                  .HasForeignKey(p => p.LessonId)
@@ -234,7 +238,6 @@ namespace CleanDemo.Infrastructure.Data
                  .WithMany(u => u.ReviewWords)
                  .HasForeignKey(rw => rw.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
-
                 e.HasOne(rw => rw.Vocabulary)
                  .WithMany(v => v.ReviewWords)
                  .HasForeignKey(rw => rw.VocabularyId)
@@ -249,7 +252,6 @@ namespace CleanDemo.Infrastructure.Data
                  .WithMany(u => u.PronunciationScores)
                  .HasForeignKey(ps => ps.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
-
                 e.HasOne(ps => ps.Vocabulary)
                  .WithMany(v => v.PronunciationScores)
                  .HasForeignKey(ps => ps.VocabularyId)
@@ -260,21 +262,15 @@ namespace CleanDemo.Infrastructure.Data
             modelBuilder.Entity<Payment>(e =>
             {
                 e.ToTable("Payments");
-
-                // tiền tệ
                 e.Property(p => p.Amount).HasPrecision(18, 2);
-
                 e.HasOne(p => p.User)
                  .WithMany(u => u.Payments)
                  .HasForeignKey(p => p.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
-
-                // index hỗ trợ truy vấn
                 e.HasIndex(p => new { p.UserId, p.Status });
                 e.HasIndex(p => new { p.ProductType, p.ProductId });
             });
 
-            // Seed
             SeedData(modelBuilder);
         }
 
@@ -287,7 +283,10 @@ namespace CleanDemo.Infrastructure.Data
                 new Role { RoleId = 3, Name = "Student" }
             );
 
-            // Admin user (chú ý: seed thời gian bằng giá trị cố định nếu bạn dùng migration snapshot)
+            // Dùng thời gian cố định để tránh thay đổi snapshot migration mỗi lần build
+            var fixedCreated = new DateTime(2025, 01, 01, 0, 0, 0, DateTimeKind.Utc);
+
+            // Admin user
             var adminPasswordHash = BCrypt.Net.BCrypt.HashPassword("05022004");
             modelBuilder.Entity<User>().HasData(
                 new User
@@ -298,15 +297,15 @@ namespace CleanDemo.Infrastructure.Data
                     Email = "minhxoandev@gmail.com",
                     PasswordHash = adminPasswordHash,
                     PhoneNumber = "0257554479",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
+                    CreatedAt = fixedCreated,
+                    UpdatedAt = fixedCreated,
                     Status = CleanDemo.Domain.Enums.StatusAccount.Active
                 }
             );
 
             // Gán role Admin cho user 1
             modelBuilder.Entity<UserRole>().HasData(
-                new UserRole { UsersUserId = 1, RolesRoleId = 1 }
+                new UserRole { UserId = 1, RoleId = 1 }
             );
         }
     }

@@ -45,6 +45,7 @@ namespace CleanDemo.Infrastructure.Repositories
 
         {
             _context.Payments.Update(payment);
+            await Task.CompletedTask;
 
         }
         public async Task<int> SaveChangesAsync()

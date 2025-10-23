@@ -35,16 +35,20 @@ namespace CleanDemo.Application.Mappings
             CreateMap<Course, CourseDetailResponseDto>()
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
-                .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore()) // Sẽ set trong service
-                .ForMember(dest => dest.Lessons, opt => opt.Ignore()); // Sẽ set trong service
+                .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore()) 
+                .ForMember(dest => dest.Lessons, opt => opt.Ignore()); 
 
             // Lesson mappings
             CreateMap<Lesson, LessonDto>();
 
-            // User mappings (nếu chưa có)
+            // User mappings
             CreateMap<User, UserDto>()
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
-            CreateMap<RegisterUserDto, User>();
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));  // Sửa SureName thành LastName
+
+            CreateMap<RegisterUserDto, User>()
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));  // Sửa SureName thành LastName, và dest.FirstName thành dest.LastName nếu cần
+
             CreateMap<UpdateUserDto, User>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 

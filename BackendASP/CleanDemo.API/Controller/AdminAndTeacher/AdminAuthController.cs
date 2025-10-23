@@ -7,7 +7,7 @@ namespace CleanDemo.API.Controllers.Admin
 {
     [ApiController]
     [Route("api/admin/auth")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Roles = "Admin")]
     public class AdminAuthController : ControllerBase
     {
         private readonly IUserManagementService _userManagementService;
@@ -25,14 +25,14 @@ namespace CleanDemo.API.Controllers.Admin
             return Ok(result.Data);
         }
 
-        [HttpPut("users/{id}/role")]
-        public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UpdateUserRoleDto dto)
-        {
-            // Implement update role logic
-            await Task.CompletedTask;
-            return Ok(new { message = "Role updated" });
-        }
+        // [HttpPut("users/{id}/role")]
+        // public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UpdateUserRoleDto dto)
+        // {
 
-        // Add more admin endpoints
+        //     await Task.CompletedTask;
+        //     return Ok(new { message = "Role updated" });
+        // }
+
+
     }
 }

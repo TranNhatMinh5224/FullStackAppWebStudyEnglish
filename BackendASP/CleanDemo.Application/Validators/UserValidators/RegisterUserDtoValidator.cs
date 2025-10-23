@@ -7,9 +7,6 @@ namespace CleanDemo.Application.Validators.User
     {
         public RegisterUserDtoValidator()
         {
-            RuleFor(x => x.SureName)
-                .NotEmpty().WithMessage("Sure name is required");
-
             RuleFor(x => x.LastName)
                 .NotEmpty().WithMessage("Last name is required");
 

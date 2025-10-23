@@ -1,7 +1,7 @@
 using CleanDemo.Application.DTOs;
 using CleanDemo.Application.Common;
 
-namespace CleanDemo.Application.Service.Auth.Login
+namespace CleanDemo.Application.Interface
 {
     public interface ILoginService
     {

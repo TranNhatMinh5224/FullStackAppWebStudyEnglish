@@ -4,8 +4,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-
-namespace CleanDemo.Application.Service.Auth.Token
+using CleanDemo.Application.Interface;
+namespace CleanDemo.Application.Service
 {
     public class TokenService : ITokenService
     {
@@ -18,7 +18,10 @@ namespace CleanDemo.Application.Service.Auth.Token
 
         public string GenerateAccessToken(User user)
         {
-            var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+            var jwtKey = Environment.GetEnvironmentVariable("Jwt__Key_ASPELEARNING") ?? throw new InvalidOperationException("JWT Key not configured");
+            var jwtIssuer = Environment.GetEnvironmentVariable("Jwt__Issuer_ASPELEARNING") ?? "default-issuer";
+            var jwtAudience = Environment.GetEnvironmentVariable("Jwt__Audience_ASPELEARNING") ?? "default-audience";
+
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
@@ -37,8 +40,8 @@ namespace CleanDemo.Application.Service.Auth.Token
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
+                issuer: jwtIssuer,
+                audience: jwtAudience,
                 claims: claims,
                 expires: DateTime.Now.AddHours(8),
                 signingCredentials: creds);

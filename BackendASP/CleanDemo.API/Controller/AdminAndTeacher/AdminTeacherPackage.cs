@@ -7,6 +7,8 @@ namespace CleanDemo.API.Controllers.Admin
 {
     [ApiController]
     [Route("api/admin/teacher-packages")]
+
+    [Authorize(Roles = "Admin")]
     public class AdminTeacherPackageController : ControllerBase
     {
         private readonly ITeacherPackageService _teacherPackageService;
@@ -21,7 +23,7 @@ namespace CleanDemo.API.Controllers.Admin
         public async Task<IActionResult> GetAllTeacherPackages()
         {
             var result = await _teacherPackageService.GetAllTeacherPackagesAsync();
-            if (!result.Success) 
+            if (!result.Success)
                 return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
@@ -34,7 +36,7 @@ namespace CleanDemo.API.Controllers.Admin
                 return BadRequest(new { message = "Invalid ID provided." });
 
             var result = await _teacherPackageService.GetTeacherPackageByIdAsync(id);
-            if (!result.Success) 
+            if (!result.Success)
                 return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
@@ -43,11 +45,11 @@ namespace CleanDemo.API.Controllers.Admin
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateTeacherPackage([FromBody] CreateTeacherPackageDto createDto)
         {
-            if (!ModelState.IsValid) 
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var result = await _teacherPackageService.CreateTeacherPackageAsync(createDto);
-            if (!result.Success) 
+            if (!result.Success)
                 return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
@@ -56,7 +58,7 @@ namespace CleanDemo.API.Controllers.Admin
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateTeacherPackage(int id, [FromBody] UpdateTeacherPackageDto updateDto)
         {
-            if (!ModelState.IsValid) 
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             if (id <= 0)
@@ -66,7 +68,7 @@ namespace CleanDemo.API.Controllers.Admin
             updateDto.TeacherPackageId = id;
 
             var result = await _teacherPackageService.UpdateTeacherPackageAsync(updateDto);
-            if (!result.Success) 
+            if (!result.Success)
                 return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
@@ -79,7 +81,7 @@ namespace CleanDemo.API.Controllers.Admin
                 return BadRequest(new { message = "Invalid ID provided." });
 
             var result = await _teacherPackageService.DeleteTeacherPackageAsync(id);
-            if (!result.Success) 
+            if (!result.Success)
                 return BadRequest(new { message = result.Message });
             return NoContent();
         }

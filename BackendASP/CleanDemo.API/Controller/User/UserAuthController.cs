@@ -1,12 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using CleanDemo.Application.DTOs;
-using CleanDemo.Application.Service.Auth.Register;
-using CleanDemo.Application.Service.Auth.Login;
 using Microsoft.AspNetCore.Authorization;
 using CleanDemo.Application.Interface;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-
 namespace CleanDemo.API.Controllers.User
 {
     [ApiController]
@@ -48,15 +45,12 @@ namespace CleanDemo.API.Controllers.User
         [HttpGet("profile")]
         public async Task<IActionResult> GetProfile()
         {
-            // Debug: Check if user is authenticated
-            Console.WriteLine($"User authenticated: {User?.Identity?.IsAuthenticated ?? false}");
-            Console.WriteLine($"Authentication type: {User?.Identity?.AuthenticationType ?? "None"}");
-            
+
             // Try both Sub and NameIdentifier claim types
-            var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value 
+            var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
                             ?? User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            Console.WriteLine($"Sub claim value: {userIdClaim}");
-            
+
+
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             {
                 Console.WriteLine("Failed to parse userId from Sub claim");
@@ -79,11 +73,9 @@ namespace CleanDemo.API.Controllers.User
             {
                 Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
             }
-            
-            var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value 
+
+            var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
                             ?? User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            Console.WriteLine($"Sub claim value: {userIdClaim}");
-            
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             {
                 Console.WriteLine("Failed to parse userId from Sub claim");
@@ -100,7 +92,7 @@ namespace CleanDemo.API.Controllers.User
         [HttpPut("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
         {
-            var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value 
+            var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
                             ?? User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
                 return Unauthorized(new { message = "Invalid token" });
@@ -122,16 +114,16 @@ namespace CleanDemo.API.Controllers.User
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
         {
             Console.WriteLine($"[DEBUG] Controller ResetPassword - Email: {dto?.Email}, OTP: {dto?.OtpCode}, Password Length: {dto?.NewPassword?.Length}");
-            
+
             if (dto == null)
             {
                 Console.WriteLine($"[DEBUG] DTO is null");
                 return BadRequest(new { message = "Invalid request data" });
             }
-            
+
             var result = await _passwordService.ResetPasswordAsync(dto);
             Console.WriteLine($"[DEBUG] Controller ResetPassword result - Success: {result.Success}, Message: {result.Message}");
-            
+
             if (!result.Success) return BadRequest(new { message = result.Message });
             return Ok(new { message = result.Message });
         }

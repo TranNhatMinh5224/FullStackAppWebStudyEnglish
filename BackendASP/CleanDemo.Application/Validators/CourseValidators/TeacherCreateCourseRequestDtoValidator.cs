@@ -16,7 +16,7 @@ namespace CleanDemo.Application.Validators.CourseValidators
             RuleFor(x => x.Title)
                 .NotEmpty().WithMessage("Course title is required")
                 .MaximumLength(200).WithMessage("Course title must not exceed 200 characters")
-                .MustAsync(async (dto, title, cancellation) =>
+                .Must((dto, title) =>
                 {
                     if (string.IsNullOrWhiteSpace(title)) return true;
                     // No direct teacherId in validator, so skip uniqueness here; service will handle per-teacher uniqueness.

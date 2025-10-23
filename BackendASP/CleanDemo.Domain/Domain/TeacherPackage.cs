@@ -10,7 +10,7 @@ public class TeacherPackage
     public PackageLevel Level { get; set; }
     public decimal Price { get; set; }
 
-    // Duration: chọn 1 trong 2 cách; ví dụ dùng tháng:
+ 
     public int DurationMonths { get; set; } = 12;
 
     // Limits

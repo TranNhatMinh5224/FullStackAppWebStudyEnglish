@@ -8,7 +8,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/")]
-    [Authorize]
+    [Authorize(Roles = "Admin, Teacher")]
     public class CourseController : ControllerBase
     {
         private readonly IAdminCourseService _adminCourseService;

@@ -1,3 +1,4 @@
+// User.cs
 using CleanDemo.Domain.Enums;
 
 namespace CleanDemo.Domain.Entities;
@@ -15,19 +16,18 @@ public class User
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public StatusAccount Status { get; set; } = StatusAccount.Active;
 
-    // Navigation
-    public List<UserRole> UserRoles { get; set; } = new();
+    // Many-to-many
+    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<Role> Roles { get; set; } = new List<Role>();
 
+    // Các nav khác…
     public List<UserCourse> UserCourses { get; set; } = new();
     public List<Course> CreatedCourses { get; set; } = new();
 
-    // Subscription
     public List<TeacherSubscription> TeacherSubscriptions { get; set; } = new();
     public int? CurrentTeacherSubscriptionId { get; set; }
     public TeacherSubscription? CurrentTeacherSubscription { get; set; }
 
-    // Tokens, progress, payments...
     public List<RefreshToken> RefreshTokens { get; set; } = new();
     public List<PasswordResetToken> PasswordResetTokens { get; set; } = new();
     public List<Progress> ProgressRecords { get; set; } = new();
@@ -35,13 +35,9 @@ public class User
     public List<PronunciationScore> PronunciationScores { get; set; } = new();
     public List<Payment> Payments { get; set; } = new();
 
-    public void SetPassword(string password)
-    {
+    public void SetPassword(string password) =>
         PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
-    }
 
-    public bool VerifyPassword(string password)
-    {
-        return BCrypt.Net.BCrypt.Verify(password, PasswordHash);
-    }
+    public bool VerifyPassword(string password) =>
+        BCrypt.Net.BCrypt.Verify(password, PasswordHash);
 }

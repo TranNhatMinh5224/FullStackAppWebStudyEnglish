@@ -1,6 +1,6 @@
 using CleanDemo.Domain.Entities;
 
-namespace CleanDemo.Application.Service.Auth.Token
+namespace CleanDemo.Application.Interface
 {
     public interface ITokenService
     {

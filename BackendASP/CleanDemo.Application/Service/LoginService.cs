@@ -4,9 +4,8 @@ using CleanDemo.Application.Interface;
 using CleanDemo.Domain.Entities;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
-using CleanDemo.Application.Service.Auth.Token;
 
-namespace CleanDemo.Application.Service.Auth.Login
+namespace CleanDemo.Application.Service
 {
     public class LoginService : ILoginService
     {

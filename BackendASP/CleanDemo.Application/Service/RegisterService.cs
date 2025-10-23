@@ -4,7 +4,8 @@ using CleanDemo.Application.Interface;
 using CleanDemo.Domain.Entities;
 using AutoMapper;
 
-namespace CleanDemo.Application.Service.Auth.Register
+
+namespace CleanDemo.Application.Service
 {
     public class RegisterService : IRegisterService
     {
@@ -33,7 +34,7 @@ namespace CleanDemo.Application.Service.Auth.Register
                 var user = _mapper.Map<User>(dto);
                 user.SetPassword(dto.Password);
 
-                // Lấy role "Student" từ DB thay vì tạo mới
+                
                 var studentRole = await _userRepository.GetRoleByNameAsync("Student");
                 if (studentRole == null)
                 {

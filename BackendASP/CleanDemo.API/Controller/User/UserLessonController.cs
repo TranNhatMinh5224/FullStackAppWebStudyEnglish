@@ -8,11 +8,11 @@ namespace CleanDemo.API.Controller.User
 {
     [ApiController]
     [Route("api/user/lessons/")]
-    [Authorize]  // Thay đổi từ AllowAnonymous thành Authorize để yêu cầu đăng nhập
+    [Authorize]
     public class UserLessonController : ControllerBase
     {
         private readonly ILessonService _lessonService;
-        private readonly ICourseRepository _courseRepository;  // Thêm để check enroll
+        private readonly ICourseRepository _courseRepository;
         private readonly ILogger<UserLessonController> _logger;
 
         public UserLessonController(ILessonService lessonService, ICourseRepository courseRepository, ILogger<UserLessonController> logger)
@@ -59,7 +59,7 @@ namespace CleanDemo.API.Controller.User
             try
             {
                 var response = await _lessonService.GetLessonById(lessonId);
-                if (!response.Success) return NotFound(response);  // Sửa: 404 nếu không tìm thấy
+                if (!response.Success) return NotFound(response);
                 return Ok(response);
             }
             catch (Exception ex)
