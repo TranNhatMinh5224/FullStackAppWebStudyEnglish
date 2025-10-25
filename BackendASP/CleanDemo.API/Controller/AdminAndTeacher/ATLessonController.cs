@@ -78,8 +78,8 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             try
             {
                 if (!ModelState.IsValid) return BadRequest(ModelState);
-                dto.LessonId = lessonId;  // Gán ID từ URL
-                var response = await _lessonService.UpdateLesson(dto);
+
+                var response = await _lessonService.UpdateLesson(lessonId, dto);
                 if (!response.Success) return BadRequest(response);
                 return Ok(response);
             }

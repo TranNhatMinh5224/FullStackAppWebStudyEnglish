@@ -10,7 +10,7 @@ namespace CleanDemo.Application.Interface
         Task<ServiceResponse<LessonDto>> GetLessonById(int lessonId);
         Task<ServiceResponse<LessonDto>> AdminAddLesson(AdminCreateLessonDto dto);
         Task<ServiceResponse<LessonDto>> TeacherAddLesson(TeacherCreateLessonDto dto);
-        Task<ServiceResponse<LessonDto>> UpdateLesson(UpdateLessonDto dto);
+        Task<ServiceResponse<LessonDto>> UpdateLesson(int lessonId, UpdateLessonDto dto);
         Task<ServiceResponse<bool>> DeleteLesson(DeleteLessonDto dto);
     }
 }

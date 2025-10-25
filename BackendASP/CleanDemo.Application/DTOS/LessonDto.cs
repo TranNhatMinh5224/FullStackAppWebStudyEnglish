@@ -38,9 +38,8 @@ namespace CleanDemo.Application.DTOs
     }
     public class UpdateLessonDto
     {
-        public int LessonId { get; set; }
+
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public int CourseId { get; set; }
     }
 }

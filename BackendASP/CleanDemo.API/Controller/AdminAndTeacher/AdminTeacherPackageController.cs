@@ -54,34 +54,16 @@ namespace CleanDemo.API.Controllers.Admin
             return Ok(result.Data);
         }
 
-        // [HttpPut("{id}")]
-        // [Authorize(Roles = "Admin")]
-        // public async Task<IActionResult> UpdateTeacherPackage(int id, [FromBody] UpdateTeacherPackageDto updateDto)
-        // {
-        //     if (!ModelState.IsValid)
-        //         return BadRequest(ModelState);
-
-        //     if (id <= 0)
-        //         return BadRequest(new { message = "Invalid ID provided." });
-
-        //     // Đảm bảo ID trong DTO khớp với ID trong URL
-        //     updateDto.TeacherPackageId = id;
-
-        //     var result = await _teacherPackageService.UpdateTeacherPackageAsync(updateDto);
-        //     if (!result.Success)
-        //         return BadRequest(new { message = result.Message });
-        //     return Ok(result.Data);
-        // }
-        [HttpPut("admin/Update-Teacher-Package")]
+        [HttpPut("admin/Update-Teacher-Package{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateTeacherPackage([FromBody] UpdateTeacherPackageDto teacherPackageDto)
+        public async Task<IActionResult> UpdateTeacherPackage(int id, [FromBody] UpdateTeacherPackageDto teacherPackageDto)
         {
             try
             {
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                var result = await _teacherPackageService.UpdateTeacherPackageAsync(teacherPackageDto);
+                var result = await _teacherPackageService.UpdateTeacherPackageAsync(id, teacherPackageDto);
 
                 if (!result.Success)
                     return BadRequest(new { Message = result.Message });

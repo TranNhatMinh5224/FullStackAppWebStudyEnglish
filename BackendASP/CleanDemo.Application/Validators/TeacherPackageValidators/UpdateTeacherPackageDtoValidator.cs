@@ -7,8 +7,7 @@ namespace CleanDemo.Application.Validators.TeacherPackageValidators
     {
         public UpdateTeacherPackageDtoValidator()
         {
-            RuleFor(x => x.TeacherPackageId)
-                .GreaterThan(0).WithMessage("Package ID must be greater than 0");
+
 
             RuleFor(x => x.PackageName)
                 .NotEmpty().WithMessage("Package name is required")

@@ -27,7 +27,7 @@ namespace CleanDemo.Application.DTOs
     }
     public class UpdateTeacherPackageDto : CreateTeacherPackageDto
     {
-        public int TeacherPackageId { get; set; }
+
     }
 
 }

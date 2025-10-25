@@ -191,23 +191,24 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        public async Task<ServiceResponse<LessonDto>> UpdateLesson(UpdateLessonDto dto)
+        public async Task<ServiceResponse<LessonDto>> UpdateLesson(int lessonId, UpdateLessonDto dto)
         {
             var response = new ServiceResponse<LessonDto>();
             try
             {
-                var lesson = await _lessonRepository.GetLessonById(dto.LessonId);
+                var lesson = await _lessonRepository.GetLessonById(lessonId);
                 if (lesson == null)
                 {
                     response.Success = false;
                     response.Message = "Lesson not found";
                     return response;
                 }
-                lesson.Title = dto.Title;
-                lesson.Description = dto.Description;
-                lesson.CourseId = dto.CourseId;
-                await _lessonRepository.UpdateLesson(lesson);
-                response.Data = _mapper.Map<LessonDto>(lesson);
+
+                var newlesson = _mapper.Map<Lesson>(dto);
+                newlesson.LessonId = lessonId;
+                newlesson.CourseId = lesson.CourseId;
+                await _lessonRepository.UpdateLesson(newlesson);
+                response.Data = _mapper.Map<LessonDto>(newlesson);
             }
             catch (Exception ex)
             {

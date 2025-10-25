@@ -8,7 +8,7 @@ namespace CleanDemo.Application.Interface
         Task<ServiceResponse<List<TeacherPackageDto>>> GetAllTeacherPackagesAsync();
         Task<ServiceResponse<TeacherPackageDto>> GetTeacherPackageByIdAsync(int id);
         Task<ServiceResponse<TeacherPackageDto>> CreateTeacherPackageAsync(CreateTeacherPackageDto dto);
-        Task<ServiceResponse<TeacherPackageDto>> UpdateTeacherPackageAsync(UpdateTeacherPackageDto dto);
+        Task<ServiceResponse<TeacherPackageDto>> UpdateTeacherPackageAsync(int id, UpdateTeacherPackageDto dto);
         Task<ServiceResponse<bool>> DeleteTeacherPackageAsync(int id);
     }
 }

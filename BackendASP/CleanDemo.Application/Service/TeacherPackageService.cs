@@ -90,13 +90,13 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        public async Task<ServiceResponse<TeacherPackageDto>> UpdateTeacherPackageAsync(UpdateTeacherPackageDto dto)
+        public async Task<ServiceResponse<TeacherPackageDto>> UpdateTeacherPackageAsync(int id, UpdateTeacherPackageDto dto)
         {
             var response = new ServiceResponse<TeacherPackageDto>();
             try
             {
                 // Kiểm tra xem gói giáo viên có tồn tại không
-                var existingPackage = await _teacherPackageRepository.GetTeacherPackageByIdAsync(dto.TeacherPackageId);
+                var existingPackage = await _teacherPackageRepository.GetTeacherPackageByIdAsync(id);
                 if (existingPackage == null)
                 {
                     response.Success = false;
@@ -106,7 +106,7 @@ namespace CleanDemo.Application.Service
 
                 // Kiểm tra trùng lặp tên, loại trừ bản ghi hiện tại
                 var allPackages = await _teacherPackageRepository.GetAllTeacherPackagesAsync();
-                if (allPackages.Any(p => p.PackageName == dto.PackageName && p.TeacherPackageId != dto.TeacherPackageId))
+                if (allPackages.Any(p => p.PackageName == dto.PackageName && p.TeacherPackageId != id))
                 {
                     response.Success = false;
                     response.Message = "Teacher package with the same name already exists.";
@@ -114,6 +114,7 @@ namespace CleanDemo.Application.Service
                 }
 
                 var teacherPackage = _mapper.Map<TeacherPackage>(dto);
+                teacherPackage.TeacherPackageId = id;
                 await _teacherPackageRepository.UpdateTeacherPackageAsync(teacherPackage);
                 response.Data = _mapper.Map<TeacherPackageDto>(teacherPackage);
                 response.Success = true;
