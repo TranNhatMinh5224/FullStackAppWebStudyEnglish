@@ -14,6 +14,8 @@ public class Course
     public string? ClassCode { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+    public int EnrollmentCount { get; set; } = 0;
+    public int MaxStudent { get; set; } = 0;
 
     // Navigation Properties
     public User? Teacher { get; set; }
@@ -23,6 +25,29 @@ public class Course
     {
         return Price == null || Price == 0;
     }
+    public bool CanJoin()
+    {
+        return MaxStudent == 0 || EnrollmentCount < MaxStudent;
+    }
+    public void EnrollStudent()
+    {
+        if (CanJoin())
+        {
+            EnrollmentCount++;
+        }
+        else
+        {
+            throw new InvalidOperationException("Cannot enroll more students, maximum capacity reached.");
+        }
+    }
+    public void UnenrollStudent()
+    {
+        if (EnrollmentCount > 0)
+        {
+            EnrollmentCount--;
+        }
+    }
+
 
 }
 

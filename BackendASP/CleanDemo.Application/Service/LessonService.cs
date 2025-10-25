@@ -205,10 +205,10 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
-                // Cập nhật trực tiếp entity đã tồn tại thay vì tạo mới
+                // Cập nhật trực tiếp entity đã tồn tại 
                 lesson.Title = dto.Title;
                 lesson.Description = dto.Description;
-                
+
                 await _lessonRepository.UpdateLesson(lesson);
                 response.Data = _mapper.Map<LessonDto>(lesson);
             }

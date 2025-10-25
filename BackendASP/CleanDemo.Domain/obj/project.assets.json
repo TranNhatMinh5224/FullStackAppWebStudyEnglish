@@ -56,19 +56,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Admin\\.nuget\\packages\\": {}
+    "C:\\Users\\Minh\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Admin\\Desktop\\APP English\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj",
+      "projectUniqueName": "C:\\Users\\Minh\\Desktop\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj",
       "projectName": "CleanDemo.Domain",
-      "projectPath": "C:\\Users\\Admin\\Desktop\\APP English\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj",
-      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Admin\\Desktop\\APP English\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\obj\\",
+      "projectPath": "C:\\Users\\Minh\\Desktop\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj",
+      "packagesPath": "C:\\Users\\Minh\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Minh\\Desktop\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Minh\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -118,7 +118,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.408/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.414/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

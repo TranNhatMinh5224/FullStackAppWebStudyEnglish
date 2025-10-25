@@ -637,19 +637,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Admin\\.nuget\\packages\\": {}
+    "C:\\Users\\Minh\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Admin\\Desktop\\APP English\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj",
+      "projectUniqueName": "C:\\Users\\Minh\\Desktop\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj",
       "projectName": "CleanDemo.Application",
-      "projectPath": "C:\\Users\\Admin\\Desktop\\APP English\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj",
-      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Admin\\Desktop\\APP English\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\obj\\",
+      "projectPath": "C:\\Users\\Minh\\Desktop\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj",
+      "packagesPath": "C:\\Users\\Minh\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Minh\\Desktop\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Minh\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -661,8 +661,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\Admin\\Desktop\\APP English\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj": {
-              "projectPath": "C:\\Users\\Admin\\Desktop\\APP English\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj"
+            "C:\\Users\\Minh\\Desktop\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj": {
+              "projectPath": "C:\\Users\\Minh\\Desktop\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj"
             }
           }
         }
@@ -715,7 +715,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.408/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.414/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
