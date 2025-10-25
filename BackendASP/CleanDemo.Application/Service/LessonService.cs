@@ -205,11 +205,12 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
-                var newlesson = _mapper.Map<Lesson>(dto);
-                newlesson.LessonId = lessonId;
-                newlesson.CourseId = lesson.CourseId;
-                await _lessonRepository.UpdateLesson(newlesson);
-                response.Data = _mapper.Map<LessonDto>(newlesson);
+                // Cập nhật trực tiếp entity đã tồn tại thay vì tạo mới
+                lesson.Title = dto.Title;
+                lesson.Description = dto.Description;
+                
+                await _lessonRepository.UpdateLesson(lesson);
+                response.Data = _mapper.Map<LessonDto>(lesson);
             }
             catch (Exception ex)
             {
