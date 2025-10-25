@@ -96,7 +96,6 @@ namespace CleanDemo.Application.Service
             var response = new ServiceResponse<TeacherPackageDto>();
             try
             {
-                // Kiểm tra xem gói giáo viên có tồn tại không
                 var existingPackage = await _teacherPackageRepository.GetTeacherPackageByIdAsync(id);
                 if (existingPackage == null)
                 {
@@ -105,20 +104,22 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
-                // Kiểm tra trùng lặp tên, loại trừ bản ghi hiện tại
-                var allPackages = await _teacherPackageRepository.GetAllTeacherPackagesAsync();
-                if (allPackages.Any(p => p.PackageName == dto.PackageName && p.TeacherPackageId != id))
-                {
-                    response.Success = false;
-                    response.Message = "Teacher package with the same name already exists.";
-                    return response;
-                }
+                // Cập nhật trực tiếp entity đã tồn tại thay vì tạo mới
+                existingPackage.PackageName = dto.PackageName;
+                existingPackage.Level = dto.Level;
+                existingPackage.Price = dto.Price;
+                existingPackage.MaxCourses = dto.MaxCourses;
+                existingPackage.MaxLessons = dto.MaxLessons;
+                existingPackage.MaxStudents = dto.MaxStudents;
 
-                var teacherPackage = _mapper.Map<TeacherPackage>(dto);
-                teacherPackage.TeacherPackageId = id;
-                await _teacherPackageRepository.UpdateTeacherPackageAsync(teacherPackage);
-                response.Data = _mapper.Map<TeacherPackageDto>(teacherPackage);
-                response.Success = true;
+                await _teacherPackageRepository.UpdateTeacherPackageAsync(existingPackage);
+
+                var result = _mapper.Map<TeacherPackageDto>(existingPackage);
+                return new ServiceResponse<TeacherPackageDto>
+                {
+                    Data = result,
+                    Success = true
+                };
             }
             catch (Exception ex)
             {
