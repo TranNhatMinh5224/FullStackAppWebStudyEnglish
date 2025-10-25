@@ -4,7 +4,7 @@ using CleanDemo.Application.DTOs;
 using CleanDemo.Application.Interface;
 using Microsoft.Extensions.Logging;
 
-namespace CleanDemo.Application.Services
+namespace CleanDemo.Application.Service
 {
     public class UserCourseService : IUserCourseService
     {

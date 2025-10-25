@@ -23,6 +23,9 @@ namespace CleanDemo.Application.Validators.CourseValidators
                 .GreaterThanOrEqualTo(0).WithMessage("Price must be greater than or equal to 0")
                 .When(x => x.Price.HasValue);
 
+            RuleFor(x => x.MaxStudent)
+                .GreaterThanOrEqualTo(0).WithMessage("MaxStudent must be greater than or equal to 0 (0 means unlimited)");
+
             RuleFor(x => x.Type)
                 .IsInEnum().WithMessage("Invalid course type");
         }

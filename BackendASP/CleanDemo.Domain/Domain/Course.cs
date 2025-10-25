@@ -16,6 +16,7 @@ public class Course
     public DateTime? UpdatedAt { get; set; }
     public int EnrollmentCount { get; set; } = 0;
     public int MaxStudent { get; set; } = 0;
+    public bool IsFeatured { get; set; } = false;
 
     // Navigation Properties
     public User? Teacher { get; set; }

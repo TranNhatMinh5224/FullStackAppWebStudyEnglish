@@ -65,7 +65,6 @@ namespace CleanDemo.Application.Service
 
             try
             {
-
                 // Tạo course entity
                 var course = new Course
                 {
@@ -74,7 +73,10 @@ namespace CleanDemo.Application.Service
                     Img = requestDto.Img,
                     Type = requestDto.Type,
                     Price = requestDto.Price,
-                    TeacherId = null
+                    TeacherId = null,
+                    MaxStudent = requestDto.MaxStudent,
+                    IsFeatured = requestDto.IsFeatured,
+                    EnrollmentCount = 0
                 };
 
                 await _courseRepository.AddCourse(course);

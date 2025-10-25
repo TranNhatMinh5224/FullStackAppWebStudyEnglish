@@ -153,7 +153,6 @@ namespace CleanDemo.Infrastructure.Repositories
 
 
         // Đăng ký user vào khóa học
-
         public async Task EnrollUserInCourse(int userId, int courseId)
         {
             var exists = await IsUserEnrolledInCourse(userId, courseId);
@@ -161,6 +160,16 @@ namespace CleanDemo.Infrastructure.Repositories
             {
                 throw new InvalidOperationException("User already enrolled in this course");
             }
+
+            // Lấy course để kiểm tra và cập nhật EnrollmentCount
+            var course = await _context.Courses.FindAsync(courseId);
+            if (course == null)
+            {
+                throw new InvalidOperationException("Course not found");
+            }
+
+            // Sử dụng business logic từ Entity
+            course.EnrollStudent();
 
             var enrollment = new UserCourse
             {
@@ -175,7 +184,6 @@ namespace CleanDemo.Infrastructure.Repositories
 
 
         //Hủy đăng ký khóa học
-
         public async Task UnenrollUserFromCourse(int userId, int courseId)
         {
             var enrollment = await _context.UserCourses
@@ -183,6 +191,14 @@ namespace CleanDemo.Infrastructure.Repositories
 
             if (enrollment != null)
             {
+                // Lấy course để cập nhật EnrollmentCount
+                var course = await _context.Courses.FindAsync(courseId);
+                if (course != null)
+                {
+                    // Sử dụng business logic từ Entity
+                    course.UnenrollStudent();
+                }
+
                 _context.UserCourses.Remove(enrollment);
                 await _context.SaveChangesAsync();
             }
@@ -218,6 +234,14 @@ namespace CleanDemo.Infrastructure.Repositories
                 .Include(uc => uc.User)
                 .Select(uc => uc.User!)
                 .ToListAsync();
+        }
+
+        // Lấy tổng số students của teacher (tối ưu - chỉ sum EnrollmentCount)
+        public async Task<int> GetTotalStudentsByTeacher(int teacherId)
+        {
+            return await _context.Courses
+                .Where(c => c.TeacherId == teacherId)
+                .SumAsync(c => c.EnrollmentCount);
         }
 
 

@@ -11,7 +11,8 @@ namespace CleanDemo.Application.DTOs
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
         public decimal? Price { get; set; }
-
+        public int MaxStudent { get; set; } = 0; // 0 = không giới hạn
+        public bool IsFeatured { get; set; } = false;
         public CourseType Type { get; set; } = CourseType.System;
     }
 
@@ -21,8 +22,8 @@ namespace CleanDemo.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public int MaxStudent { get; set; } = 0; // 0 = không giới hạn
         public CourseType Type { get; set; } = CourseType.Teacher;
-
     }
 
     // DTO tham gia khóa học Teacher
@@ -48,6 +49,10 @@ namespace CleanDemo.Application.DTOs
         public int StudentCount { get; set; }
         public string? ClassCode { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int EnrollmentCount { get; set; }
+        public int MaxStudent { get; set; }
+        public bool IsFeatured { get; set; }
+
     }
 
     // DTO danh sách khóa học cho Admin
@@ -63,6 +68,9 @@ namespace CleanDemo.Application.DTOs
         public string TeacherName { get; set; } = string.Empty;
         public int LessonCount { get; set; }
         public int StudentCount { get; set; }
+        public int EnrollmentCount { get; set; }
+        public int MaxStudent { get; set; }
+        public bool IsFeatured { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 
@@ -76,6 +84,10 @@ namespace CleanDemo.Application.DTOs
         public CourseType Type { get; set; }
         public decimal? Price { get; set; }
         public bool IsEnrolled { get; set; }
+        public int EnrollmentCount { get; set; }
+        public int MaxStudent { get; set; }
+        public bool IsFeatured { get; set; }
+        public bool CanJoin { get; set; }
         public string TeacherName { get; set; } = string.Empty;
     }
 
@@ -117,6 +129,8 @@ namespace CleanDemo.Application.DTOs
         public string ClassCode { get; set; } = string.Empty;
         public int LessonCount { get; set; }
         public int StudentCount { get; set; }
+        public int EnrollmentCount { get; set; }
+        public int MaxStudent { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 

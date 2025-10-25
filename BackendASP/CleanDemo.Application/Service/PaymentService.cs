@@ -154,12 +154,18 @@ namespace CleanDemo.Application.Service
 
                 await _paymentRepository.UpdatePaymentStatusAsync(existingPayment);
 
-                // Enroll dựa trên loại sản phẩm
+                // Xử lý sau khi thanh toán thành công
                 switch (existingPayment.ProductType)
                 {
                     case TypeProduct.Course:
-                        await _courseRepository.EnrollUserInCourse(existingPayment.UserId, existingPayment.ProductId);
-                        _logger.LogInformation("User {UserId} enrolled in Course {CourseId}", existingPayment.UserId, existingPayment.ProductId);
+                        // Payment chỉ xác nhận thanh toán thành công
+                        // User cần gọi POST /api/user/enroll/course để enroll (có đầy đủ validation)
+                        // Điều này đảm bảo:
+                        // - Kiểm tra course.CanJoin() (MaxStudent)
+                        // - Kiểm tra Teacher Package limit (MaxStudents)
+                        // - Logic enrollment tập trung tại UserEnrollmentService
+                        _logger.LogInformation("Payment completed for Course {CourseId}. User {UserId} can now enroll via /api/user/enroll/course", 
+                            existingPayment.ProductId, existingPayment.UserId);
                         break;
 
                     case TypeProduct.TeacherPackage:

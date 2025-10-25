@@ -27,7 +27,9 @@ namespace CleanDemo.API.Controller.User
         }
 
         /// <summary>
-        /// Đăng ký khóa học
+        /// Đăng ký khóa học (hỗ trợ cả course hệ thống và teacher course)
+        /// - Course hệ thống: Kiểm tra thanh toán nếu có phí
+        /// - Course Teacher: Miễn phí, tự động kiểm tra giới hạn học viên
         /// </summary>
         [HttpPost("course")]
         public async Task<IActionResult> EnrollInCourse([FromBody] EnrollCourseDto enrollDto)
@@ -120,42 +122,6 @@ namespace CleanDemo.API.Controller.User
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in GetMyEnrolledCourses endpoint");
-                return StatusCode(500, new { message = "Internal server error" });
-            }
-        }
-
-        /// <summary>
-        /// Tham gia khóa học do teacher tạo
-        /// </summary>
-        [HttpPost("join-teacher-course")]
-        public async Task<IActionResult> JoinTeacherCourse([FromBody] JoinCourseTeacherDto joinDto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                // Lấy UserId từ JWT token
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new { message = "Invalid user credentials" });
-                }
-
-                var result = await _userEnrollmentService.JoinTeacherCourseAsync(joinDto, userId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in JoinTeacherCourse endpoint");
                 return StatusCode(500, new { message = "Internal server error" });
             }
         }

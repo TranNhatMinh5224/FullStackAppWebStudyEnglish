@@ -89,7 +89,7 @@ namespace CleanDemo.Infrastructure.Data
                     j => j.ToTable("UserRoles")
                 );
 
-            // ===== Các cấu hình khác giữ nguyên của bạn (Course, Lesson, ...) =====
+            
             // Course
             modelBuilder.Entity<Course>(e =>
             {

@@ -15,12 +15,11 @@ using CleanDemo.Application.Mappings;
 // =====================================
 var builder = WebApplication.CreateBuilder(args);
 
-// 1) Load .env SỚM bằng ContentRoot (đúng hơn CurrentDirectory)
+// 1) Load .env 
 var envPath = Path.Combine(builder.Environment.ContentRootPath, ".env");
 if (File.Exists(envPath)) Env.Load(envPath);
 
-// 2) Hợp nhất cấu hình (JSON -> ENV)
-//    (ENV sẽ override JSON nếu trùng key)
+
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
@@ -33,7 +32,7 @@ string dbHost = Environment.GetEnvironmentVariable("DB__Server_ASPELEARNING") ??
 string dbPort = Environment.GetEnvironmentVariable("DB__Port_ASPELEARNING") ?? "5432";
 string dbName = Environment.GetEnvironmentVariable("DB__Name_ASPELEARNING") ?? "Elearning";
 string dbUser = Environment.GetEnvironmentVariable("DB__User_ASPELEARNING") ?? "postgres";
-string dbPassword = Environment.GetEnvironmentVariable("DB__Password_ASPELEARNING") ?? "";
+string dbPassword = Environment.GetEnvironmentVariable("DB__Password_ASPELEARNING") ?? "05022004";
 string sslMode = Environment.GetEnvironmentVariable("DB__SslMode_ASPELEARNING") ?? "Disable";
 string trustCert = Environment.GetEnvironmentVariable("DB__TrustServerCertificate_ASPELEARNING") ?? "true";
 
@@ -149,7 +148,9 @@ builder.Services.AddScoped<CleanDemo.Application.Interface.ILoginService, CleanD
 builder.Services.AddScoped<CleanDemo.Application.Interface.ITokenService, CleanDemo.Application.Service.TokenService>();
 builder.Services.AddScoped<CleanDemo.Application.Service.EmailService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IEmailTemplateService, CleanDemo.Infrastructure.Services.EmailTemplateService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IUserCourseService, CleanDemo.Application.Services.UserCourseService>();
+builder.Services.AddScoped<CleanDemo.Application.Interface.IUserCourseService, CleanDemo.Application.Service.UserCourseService>();
+builder.Services.AddScoped<CleanDemo.Application.Interface.IEnrollmentQueryService, CleanDemo.Application.Service.EnrollmentQueryService>();
+builder.Services.AddScoped<CleanDemo.Application.Interface.IProgressService, CleanDemo.Application.Service.ProgressService>();
 // =====================================
 // 5) Pipeline
 // =====================================

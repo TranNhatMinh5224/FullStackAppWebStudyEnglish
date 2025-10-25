@@ -25,7 +25,7 @@ namespace CleanDemo.Infrastructure.Data
             var dbPort = Environment.GetEnvironmentVariable("DB__Port_ASPELEARNING") ?? "5432";
             var dbName = Environment.GetEnvironmentVariable("DB__Name_ASPELEARNING") ?? "Elearning";
             var dbUser = Environment.GetEnvironmentVariable("DB__User_ASPELEARNING") ?? "postgres";
-            var dbPassword = Environment.GetEnvironmentVariable("DB__Password_ASPELEARNING") ?? "12122004";
+            var dbPassword = Environment.GetEnvironmentVariable("DB__Password_ASPELEARNING");
 
             var connectionString = $"Host={dbServer};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};";
 

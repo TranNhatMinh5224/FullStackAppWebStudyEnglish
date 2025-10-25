@@ -202,7 +202,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                     return Unauthorized(new { message = "Invalid teacher credentials" });
                 }
 
-                var result = await _userEnrollmentService.JoinTeacherCourseAsync(joinDto, teacherId);
+                // Convert JoinCourseTeacherDto to EnrollCourseDto
+                var enrollDto = new EnrollCourseDto { CourseId = joinDto.CourseId };
+                var result = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, teacherId);
 
                 if (!result.Success)
                 {

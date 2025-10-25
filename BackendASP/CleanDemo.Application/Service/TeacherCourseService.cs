@@ -67,6 +67,17 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
+                // Kiểm tra MaxStudent của course không vượt quá giới hạn package
+                if (requestDto.MaxStudent > 0 && requestDto.MaxStudent > teacherPackage.MaxStudents)
+                {
+                    response.Success = false;
+                    response.Message = $"MaxStudent ({requestDto.MaxStudent}) cannot exceed your package limit ({teacherPackage.MaxStudents}). Please upgrade your package.";
+                    return response;
+                }
+
+                // Nếu teacher không set MaxStudent (0), tự động set = MaxStudents của package
+                int courseMaxStudent = requestDto.MaxStudent > 0 ? requestDto.MaxStudent : teacherPackage.MaxStudents;
+
                 // Tạo course entity
                 var course = new Course
                 {
@@ -75,7 +86,10 @@ namespace CleanDemo.Application.Service
                     Img = requestDto.Img,
                     Type = requestDto.Type,
                     TeacherId = teacherId,
-                    ClassCode = classCode
+                    ClassCode = classCode,
+                    MaxStudent = courseMaxStudent,
+                    EnrollmentCount = 0,
+                    IsFeatured = false
                 };
 
                 await _courseRepository.AddCourse(course);
@@ -106,8 +120,6 @@ namespace CleanDemo.Application.Service
 
             try
             {
-
-
                 var course = await _courseRepository.GetByIdAsync(courseId);
                 if (course == null)
                 {
@@ -124,11 +136,37 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
+                // Kiểm tra package limit khi update MaxStudent
+                var teacherPackage = await _teacherPackageRepository.GetInformationTeacherpackage(teacherId);
+                if (teacherPackage == null)
+                {
+                    response.Success = false;
+                    response.Message = "Active subscription not found";
+                    return response;
+                }
+
+                // Kiểm tra MaxStudent không vượt quá package limit
+                if (requestDto.MaxStudent > 0 && requestDto.MaxStudent > teacherPackage.MaxStudents)
+                {
+                    response.Success = false;
+                    response.Message = $"MaxStudent ({requestDto.MaxStudent}) cannot exceed your package limit ({teacherPackage.MaxStudents})";
+                    return response;
+                }
+
+                // Nếu đã có students enrolled, không cho phép giảm MaxStudent xuống dưới EnrollmentCount
+                if (requestDto.MaxStudent > 0 && requestDto.MaxStudent < course.EnrollmentCount)
+                {
+                    response.Success = false;
+                    response.Message = $"Cannot set MaxStudent ({requestDto.MaxStudent}) below current enrollment ({course.EnrollmentCount})";
+                    return response;
+                }
+
                 // Cập nhật course
                 course.Title = requestDto.Title;
                 course.Description = requestDto.Description;
                 course.Img = requestDto.Img;
                 course.Type = requestDto.Type;
+                course.MaxStudent = requestDto.MaxStudent > 0 ? requestDto.MaxStudent : teacherPackage.MaxStudents;
 
                 await _courseRepository.UpdateCourse(course);
 

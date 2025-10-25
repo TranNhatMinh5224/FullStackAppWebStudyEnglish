@@ -31,6 +31,9 @@ namespace CleanDemo.Application.Validators.CourseValidators
                 .MaximumLength(500).WithMessage("Image URL must not exceed 500 characters")
                 .When(x => !string.IsNullOrEmpty(x.Img));
 
+            RuleFor(x => x.MaxStudent)
+                .GreaterThanOrEqualTo(0).WithMessage("MaxStudent must be greater than or equal to 0 (0 means unlimited)");
+
             // Teacher courses không có price (miễn phí)
             RuleFor(x => x.Type)
                 .Equal(CourseType.Teacher).WithMessage("Teacher can only create Teacher type courses");
