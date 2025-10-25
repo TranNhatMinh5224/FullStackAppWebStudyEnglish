@@ -15,6 +15,7 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public StatusAccount Status { get; set; } = StatusAccount.Active;
+    public int? CurrentTeacherSubscriptionId { get; set; }
 
     // Many-to-many
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
@@ -25,7 +26,7 @@ public class User
     public List<Course> CreatedCourses { get; set; } = new();
 
     public List<TeacherSubscription> TeacherSubscriptions { get; set; } = new();
-    public int? CurrentTeacherSubscriptionId { get; set; }
+
     public TeacherSubscription? CurrentTeacherSubscription { get; set; }
 
     public List<RefreshToken> RefreshTokens { get; set; } = new();
