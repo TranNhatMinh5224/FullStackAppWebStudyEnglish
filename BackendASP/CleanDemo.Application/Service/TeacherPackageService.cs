@@ -90,6 +90,7 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
+        // cập nhật gói teacher
         public async Task<ServiceResponse<TeacherPackageDto>> UpdateTeacherPackageAsync(int id, UpdateTeacherPackageDto dto)
         {
             var response = new ServiceResponse<TeacherPackageDto>();
