@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using CleanDemo.Application.Interface;
 using CleanDemo.Application.DTOs;
-
+using System.Security.Claims;
 
 namespace CleanDemo.API.Controller.AdminAndTeacher
 {
@@ -57,36 +57,87 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         }
 
         [HttpDelete("delete/{lessonId}")]
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> DeleteLesson(int lessonId)
         {
             try
             {
-                var response = await _lessonService.DeleteLesson(new DeleteLessonDto { LessonId = lessonId });
-                if (!response.Success) return BadRequest(response);
+                // Extract user information from JWT
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { Message = "Invalid user credentials" });
+                }
+
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                if (string.IsNullOrEmpty(userRole))
+                {
+                    return Unauthorized(new { Message = "User role not found" });
+                }
+
+                // Call service method with authorization
+                var response = await _lessonService.DeleteLessonWithAuthorizationAsync(lessonId, userId, userRole);
+                
+                if (!response.Success)
+                {
+                    var message = response.Message ?? "Operation failed";
+                    if (message.Contains("not found"))
+                        return NotFound(new { Message = message });
+                    if (message.Contains("permission") || message.Contains("own courses"))
+                        return StatusCode(403, new { Message = message });
+                    return BadRequest(new { Message = message });
+                }
+
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting lesson {LessonId}", lessonId);
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error deleting lesson {LessonId} by user {UserId}", lessonId, User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                return StatusCode(500, new { Message = "Internal server error" });
             }
         }
 
         [HttpPut("update/{lessonId}")]
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> UpdateLesson(int lessonId, [FromBody] UpdateLessonDto dto)
         {
             try
             {
-                if (!ModelState.IsValid) return BadRequest(ModelState);
+                if (!ModelState.IsValid) 
+                    return BadRequest(ModelState);
 
-                var response = await _lessonService.UpdateLesson(lessonId, dto);
-                if (!response.Success) return BadRequest(response);
+                // Extract user information from JWT
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { Message = "Invalid user credentials" });
+                }
+
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                if (string.IsNullOrEmpty(userRole))
+                {
+                    return Unauthorized(new { Message = "User role not found" });
+                }
+
+                // Call service method with authorization
+                var response = await _lessonService.UpdateLessonWithAuthorizationAsync(lessonId, dto, userId, userRole);
+                
+                if (!response.Success)
+                {
+                    var message = response.Message ?? "Operation failed";
+                    if (message.Contains("not found"))
+                        return NotFound(new { Message = message });
+                    if (message.Contains("permission") || message.Contains("own courses"))
+                        return StatusCode(403, new { Message = message });
+                    return BadRequest(new { Message = message });
+                }
+
                 return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating lesson {LessonId}", lessonId);
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, new { Message = "Internal server error" });
             }
         }
 
@@ -121,5 +172,6 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                 return StatusCode(500, "Internal server error");
             }
         }
+       
     }
-}
+    }

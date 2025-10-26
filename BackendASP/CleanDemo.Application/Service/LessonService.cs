@@ -221,12 +221,13 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        public async Task<ServiceResponse<bool>> DeleteLesson(DeleteLessonDto dto)
+        public async Task<ServiceResponse<bool>> DeleteLesson(int lessonId)
         {
             var response = new ServiceResponse<bool>();
             try
             {
-                var lesson = await _lessonRepository.GetLessonById(dto.LessonId);
+                var lesson = await _lessonRepository.GetLessonById(lessonId);
+
                 if (lesson == null)
                 {
                     response.Success = false;
@@ -234,18 +235,171 @@ namespace CleanDemo.Application.Service
                     response.Data = false;
                     return response;
                 }
-                await _lessonRepository.DeleteLesson(dto.LessonId);
+                var courseId = lesson.CourseId;
+                var course = await _courseRepository.GetCourseById(courseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.Message = "Course not found";
+                    response.Data = false;
+                    return response;
+                }
+                switch (course.Type)
+                {
+                    case CourseType.System:
+                        // Admin mới được xóa lesson trong System course
+                        response.Success = false;
+                        response.Message = "Only admin can delete lessons from System courses";
+                        response.Data = false;
+                        return response;
+                    case CourseType.Teacher:
+                        // Teacher mới được xóa lesson trong Teacher course
+                        // Giới hạn số lượng lesson không áp dụng khi xóa
+                        break;
+                    default:
+                        response.Success = false;
+                        response.Message = "Invalid course type";
+                        response.Data = false;
+                        return response;
+                }
+
+                await _lessonRepository.DeleteLesson(lessonId);
                 response.Data = true;
             }
-            catch (Exception ex)
+            catch (Exception ex) 
             {
-                _logger.LogError(ex, "Error deleting lesson");
+                _logger.LogError(ex, "Error deleting lesson {LessonId}", lessonId);
                 response.Success = false;
                 response.Message = "Error deleting lesson";
                 response.Data = false;
                 return response;
             }
             return response;
+        }
+        public async Task<bool> CheckTeacherLessonPermission(int lessonId, int teacherId)
+        {
+            var lesson = await _lessonRepository.GetLessonById(lessonId);
+            if (lesson == null)
+            {
+                return false;
+            }
+
+            var course = await _courseRepository.GetCourseById(lesson.CourseId);
+            if (course == null || course.Type != CourseType.Teacher || course.TeacherId != teacherId)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public async Task<ServiceResponse<bool>> DeleteLesson(DeleteLessonDto dto)
+        {
+            return await DeleteLesson(dto.LessonId);
+        }
+
+        public async Task<ServiceResponse<bool>> DeleteLessonWithAuthorizationAsync(int lessonId, int userId, string userRole)
+        {
+            var response = new ServiceResponse<bool>();
+            try
+            {
+                // Get lesson first to check if it exists
+                var lessonResponse = await GetLessonById(lessonId);
+                if (!lessonResponse.Success || lessonResponse.Data == null)
+                {
+                    response.Success = false;
+                    response.Message = "Lesson not found";
+                    response.Data = false;
+                    return response;
+                }
+
+                // Admin can delete any lesson
+                if (userRole == "Admin")
+                {
+                    _logger.LogInformation("Admin {UserId} is deleting lesson {LessonId}", userId, lessonId);
+                    return await DeleteLesson(lessonId);
+                }
+
+                // Teacher can only delete lessons from their own courses
+                if (userRole == "Teacher")
+                {
+                    var hasPermission = await CheckTeacherLessonPermission(lessonId, userId);
+                    if (!hasPermission)
+                    {
+                        _logger.LogWarning("Teacher {UserId} attempted to delete lesson {LessonId} without permission", userId, lessonId);
+                        response.Success = false;
+                        response.Message = "You can only delete lessons from your own courses";
+                        response.Data = false;
+                        return response;
+                    }
+
+                    _logger.LogInformation("Teacher {UserId} is deleting lesson {LessonId} from course {CourseId}", userId, lessonId, lessonResponse.Data.CourseId);
+                    return await DeleteLesson(lessonId);
+                }
+
+                response.Success = false;
+                response.Message = "Insufficient permissions";
+                response.Data = false;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in DeleteLessonWithAuthorizationAsync for lesson {LessonId} by user {UserId}", lessonId, userId);
+                response.Success = false;
+                response.Message = "Internal server error";
+                response.Data = false;
+                return response;
+            }
+        }
+
+        public async Task<ServiceResponse<LessonDto>> UpdateLessonWithAuthorizationAsync(int lessonId, UpdateLessonDto dto, int userId, string userRole)
+        {
+            var response = new ServiceResponse<LessonDto>();
+            try
+            {
+                // Get lesson first to check if it exists
+                var lessonResponse = await GetLessonById(lessonId);
+                if (!lessonResponse.Success || lessonResponse.Data == null)
+                {
+                    response.Success = false;
+                    response.Message = "Lesson not found";
+                    return response;
+                }
+
+                // Admin can update any lesson
+                if (userRole == "Admin")
+                {
+                    _logger.LogInformation("Admin {UserId} is updating lesson {LessonId}", userId, lessonId);
+                    return await UpdateLesson(lessonId, dto);
+                }
+
+                // Teacher can only update lessons from their own courses
+                if (userRole == "Teacher")
+                {
+                    var hasPermission = await CheckTeacherLessonPermission(lessonId, userId);
+                    if (!hasPermission)
+                    {
+                        _logger.LogWarning("Teacher {UserId} attempted to update lesson {LessonId} without permission", userId, lessonId);
+                        response.Success = false;
+                        response.Message = "You can only update lessons from your own courses";
+                        return response;
+                    }
+
+                    _logger.LogInformation("Teacher {UserId} is updating lesson {LessonId} from course {CourseId}", userId, lessonId, lessonResponse.Data.CourseId);
+                    return await UpdateLesson(lessonId, dto);
+                }
+
+                response.Success = false;
+                response.Message = "Insufficient permissions";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in UpdateLessonWithAuthorizationAsync for lesson {LessonId} by user {UserId}", lessonId, userId);
+                response.Success = false;
+                response.Message = "Internal server error";
+                return response;
+            }
         }
 
 
