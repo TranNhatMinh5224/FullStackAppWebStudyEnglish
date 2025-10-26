@@ -41,6 +41,12 @@ namespace CleanDemo.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.UserId == userId && p.ProductId == courseId && p.ProductType == TypeProduct.Course && p.Status == PaymentStatus.Completed);
         }
 
+        public async Task<Payment?> GetSuccessfulPaymentByUserAndProductAsync(int userId, int productId, TypeProduct productType)
+        {
+            return await _context.Payments
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.ProductId == productId && p.ProductType == productType && p.Status == PaymentStatus.Completed);
+        }
+
         public async Task UpdatePaymentStatusAsync(Payment payment)
 
         {

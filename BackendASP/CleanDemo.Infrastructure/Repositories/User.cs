@@ -48,7 +48,7 @@ namespace CleanDemo.Infrastructure.Repositories
 
             // Check if user already has Teacher role (RoleId=3)
             var existingUserRole = await _context.UserRoles
-                .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == 3);
+                .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == 2);
             if (existingUserRole != null)
             {
                 // Already has the role, no need to add
@@ -58,7 +58,7 @@ namespace CleanDemo.Infrastructure.Repositories
             UserRole userRole = new UserRole
             {
                 UserId = userId,
-                RoleId = 3
+                RoleId = 2
             };
             _context.UserRoles.Add(userRole);
             await _context.SaveChangesAsync();  // Save changes

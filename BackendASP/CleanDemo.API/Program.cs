@@ -100,7 +100,12 @@ var npgConnection =
     $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode={sslMode};Trust Server Certificate={trustCert};";
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseNpgsql(npgConnection, npgsql => npgsql.EnableRetryOnFailure()));
+    opt.UseNpgsql(npgConnection, npgsql => 
+    {
+        // Tắt retry strategy để tương thích với manual transactions
+        npgsql.EnableRetryOnFailure(0);
+       
+    }));
 
 // JWT Authentication — dùng key đã validate
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
