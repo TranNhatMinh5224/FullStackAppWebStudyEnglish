@@ -17,5 +17,9 @@ namespace CleanDemo.Application.Interface
         /// User hủy đăng ký khóa học
         /// </summary>
         Task<ServiceResponse<bool>> UnenrollFromCourseAsync(int courseId, int userId);
+
+
+        // tham gia lớp học qua mã lớp học 
+        Task<ServiceResponse<bool>> EnrollInCourseByClassCodeAsync(string classCode, int userId);
     }
 }

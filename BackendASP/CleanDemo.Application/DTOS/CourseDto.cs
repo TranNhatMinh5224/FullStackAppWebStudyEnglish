@@ -157,4 +157,10 @@ namespace CleanDemo.Application.DTOs
         public int StudentCount { get; set; }
         public DateTime CreatedAt { get; set; }
     }
+
+    // DTO tham gia khóa học qua mã lớp học
+    public class EnrollCourseByClassCodeDto
+    {
+        public string ClassCode { get; set; } = string.Empty;
+    }
 }

@@ -1,29 +1,47 @@
-# Environment variables
+###############################################
+#  ENVIRONMENT VARIABLES
+###############################################
 .env
-.env.local
-.env.development
-.env.production
+.env.*
+!.env.example
 
-# ASP.NET Core
+###############################################
+# ASP.NET CORE / .NET BUILD ARTIFACTS
+###############################################
 bin/
 obj/
-*.user
-*.suo
-*.userprefs
-appsettings.Development.json
+out/
+publish/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.log
+*.db
+*.bak
+*.tmp
+*.ide
+*.swp
 
-# Visual Studio
+# Ignore generated migrations (optional — only if you recreate them often)
+# **/Migrations/
+
+###############################################
+#  VISUAL STUDIO / IDE FILES
+###############################################
 .vs/
+.vscode/
+.idea/
 *.sln.docstates
-
-# User-specific files
-*.rsuser
-*.suo
 *.user
 *.userosscache
-*.sln.docstates
+*.suo
+*.rsuser
+*.userprefs
 
-# Build results
+###############################################
+#  BUILD CONFIGURATIONS
+###############################################
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -33,41 +51,70 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
-[Bb]in/
-[Oo]bj/
 [Ll]og/
-
-# .NET Core
-project.lock.json
-project.fragment.lock.json
 artifacts/
+TestResults/
 
-# MSTest test Results
+###############################################
+# FRONTEND (React / Node.js)
+###############################################
+node_modules/
+build/
+dist/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+###############################################
+#  TEST OUTPUT
+###############################################
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
-
-# NUnit
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
 
-# Entity Framework Migrations
+###############################################
+#  ENTITY FRAMEWORK
+
 **/Migrations/
+*.dbmdl
 
-# Node.js dependencies (Frontend)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
-# React build output
-build/
-dist/
+# 🧾 APP SETTINGS (keep example only)
 
-# IDE
-.vscode/
-.idea/
+appsettings.Development.json
+appsettings.Local.json
+appsettings.Test.json
 
-# OS
+
+#  OS-SPECIFIC FILES
+
 .DS_Store
 Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+ehthumbs.db
+
+
+#  BACKUPS / TEMP FILES
+
+*.old
+*.orig
+*.tmp
+*.bak
+*.swp
+*.zip
+*.tar
+*.7z
+*.rar
+
+# CUSTOM IGNORES (optional)
+
+/BackendASP/**/bin/
+/BackendASP/**/obj/
+/Frontend/**/build/
+logs/

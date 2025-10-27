@@ -149,5 +149,56 @@ namespace CleanDemo.Application.Service
 
             return response;
         }
+        // tham gia lớp học qua mã lớp học
+        public async Task<ServiceResponse<bool>> EnrollInCourseByClassCodeAsync(string classCode, int userId)
+        {
+            var response = new ServiceResponse<bool>();
+
+            try
+            {
+                // Tìm course theo classCode
+                var courses = await _courseRepository.SearchCourses(classCode);
+                var course = courses.FirstOrDefault();
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.Message = "Course with the provided class code not found";
+                    return response;
+                }
+
+                // Kiểm tra xem user đã đăng ký chưa
+                if (await _courseRepository.IsUserEnrolled(course.CourseId, userId))
+                {
+                    response.Success = false;
+                    response.Message = "User already enrolled in this course";
+                    return response;
+                }
+
+                // Kiểm tra course có còn chỗ không
+                if (!course.CanJoin())
+                {
+                    response.Success = false;
+                    response.Message = $"Course is full ({course.EnrollmentCount}/{course.MaxStudent}). Cannot enroll more students.";
+                    return response;
+                }
+
+                // Đăng ký user vào course
+                await _courseRepository.EnrollUserInCourse(userId, course.CourseId);
+
+                response.Success = true;
+                response.Data = true;
+                response.Message = "Successfully enrolled in course via class code";
+
+                _logger.LogInformation("User {UserId} enrolled in course {CourseId} via class code", userId, course.CourseId);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Error enrolling in course via class code: {ex.Message}";
+                _logger.LogError(ex, "Error in EnrollInCourseByClassCodeAsync for UserId: {UserId}, ClassCode: {ClassCode}", userId, classCode);
+            }
+
+            return response;
+        }
     }
 }

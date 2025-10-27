@@ -28,5 +28,8 @@ namespace CleanDemo.Application.Interface
         Task<int> CountEnrolledUsers(int courseId);
         Task<IEnumerable<User>> GetEnrolledUsers(int courseId);
         Task<int> GetTotalStudentsByTeacher(int teacherId); // THÊM: Tổng students của teacher
+
+
+        Task<IEnumerable<Course>> SearchCourses(string keyword);
     }
 }

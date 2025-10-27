@@ -284,5 +284,14 @@ namespace CleanDemo.Infrastructure.Repositories
             return await IsUserEnrolledInCourse(userId, courseId);
         }
 
+        // tìm kiem khoa học theo classcode 
+        public async Task<IEnumerable<Course>> SearchCourses(string keyword)
+        {
+            return await _context.Courses
+                .Where(c => c.ClassCode == keyword)
+                .ToListAsync();
+
+        }
+
     }
 }
