@@ -71,3 +71,18 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Build artifacts (additional coverage)
+**/bin/
+**/obj/
+**/*.AssemblyInfo.cs
+**/*.AssemblyInfoInputs.cache
+**/*.csproj.AssemblyReference.cache
+**/*.assets.cache
+**/*.csproj.FileListAbsolute.txt
+**/*.csproj.CoreCompileInputs.cache
+**/*.genruntimeconfig.cache
+**/*.sourcelink.json
+**/ref/
+**/refint/
+**/*.Up2Date
