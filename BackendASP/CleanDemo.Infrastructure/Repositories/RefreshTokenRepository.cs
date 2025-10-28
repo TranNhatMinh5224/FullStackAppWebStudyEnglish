@@ -1,4 +1,3 @@
-git branch -rusing CleanDemo.Application.Interface;
 using CleanDemo.Domain.Entities;
 using CleanDemo.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
