@@ -8,7 +8,6 @@ namespace CleanDemo.Application.Mappings
     {
         public MappingProfile()
         {
-            // Course mappings - Request DTOs to Entity
             CreateMap<AdminCreateCourseRequestDto, Course>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
@@ -17,7 +16,28 @@ namespace CleanDemo.Application.Mappings
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
-            // Course mappings - Entity to Response DTOs
+            CreateMap<AdminUpdateCourseRequestDto, Course>()
+                .ForMember(dest => dest.CourseId, opt => opt.Ignore())
+                .ForMember(dest => dest.TeacherId, opt => opt.Ignore())
+                .ForMember(dest => dest.ClassCode, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.EnrollmentCount, opt => opt.Ignore())
+                .ForMember(dest => dest.Teacher, opt => opt.Ignore())
+                .ForMember(dest => dest.Lessons, opt => opt.Ignore())
+                .ForMember(dest => dest.UserCourses, opt => opt.Ignore());
+
+            CreateMap<TeacherUpdateCourseRequestDto, Course>()
+                .ForMember(dest => dest.CourseId, opt => opt.Ignore())
+                .ForMember(dest => dest.TeacherId, opt => opt.Ignore())
+                .ForMember(dest => dest.Price, opt => opt.Ignore())
+                .ForMember(dest => dest.ClassCode, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.EnrollmentCount, opt => opt.Ignore())
+                .ForMember(dest => dest.IsFeatured, opt => opt.Ignore())
+                .ForMember(dest => dest.Teacher, opt => opt.Ignore())
+                .ForMember(dest => dest.Lessons, opt => opt.Ignore())
+                .ForMember(dest => dest.UserCourses, opt => opt.Ignore());
+
             CreateMap<Course, CourseResponseDto>()
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
@@ -30,7 +50,7 @@ namespace CleanDemo.Application.Mappings
 
             CreateMap<Course, UserCourseListResponseDto>()
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
-                .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore()); // Sẽ set trong service
+                .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore());
 
             CreateMap<Course, CourseDetailResponseDto>()
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
@@ -38,27 +58,23 @@ namespace CleanDemo.Application.Mappings
                 .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore())
                 .ForMember(dest => dest.Lessons, opt => opt.Ignore());
 
-            // Lesson mappings
             CreateMap<Lesson, LessonDto>();
             CreateMap<Lesson, ListLessonDto>();
 
-            // User mappings
             CreateMap<User, UserDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));  // Sửa SureName thành LastName
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
 
             CreateMap<RegisterUserDto, User>()
-                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));  // Sửa SureName thành LastName, và dest.FirstName thành dest.LastName nếu cần
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
 
             CreateMap<UpdateUserDto, User>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            // TeacherPackage mappings
             CreateMap<CreateTeacherPackageDto, TeacherPackage>();
             CreateMap<UpdateTeacherPackageDto, TeacherPackage>();
             CreateMap<TeacherPackage, TeacherPackageDto>();
 
-            // TeacherSubscription mappings
             CreateMap<TeacherSubscription, ResPurchaseTeacherPackageDto>()
             .ForMember(dest => dest.IdTeacherPackage, opt => opt.MapFrom(src => src.TeacherSubscriptionId))
             .ForMember(dest => dest.IdUser, opt => opt.MapFrom(src => src.UserId))

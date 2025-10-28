@@ -102,6 +102,57 @@ namespace CleanDemo.Application.Service
             return response;
         }
 
+        public async Task<ServiceResponse<CourseResponseDto>> AdminUpdateCourseAsync(int courseId, AdminUpdateCourseRequestDto requestDto)
+        {
+            var response = new ServiceResponse<CourseResponseDto>();
+
+            try
+            {
+                var course = await _courseRepository.GetByIdAsync(courseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.Message = "Course not found";
+                    return response;
+                }
+
+                if (requestDto.MaxStudent > 0 && requestDto.MaxStudent < course.EnrollmentCount)
+                {
+                    response.Success = false;
+                    response.Message = $"Cannot set MaxStudent ({requestDto.MaxStudent}) below current enrollment ({course.EnrollmentCount})";
+                    return response;
+                }
+
+                course.Title = requestDto.Title;
+                course.Description = requestDto.Description;
+                course.Img = requestDto.Img;
+                course.Type = requestDto.Type;
+                course.Price = requestDto.Price;
+                course.MaxStudent = requestDto.MaxStudent;
+                course.IsFeatured = requestDto.IsFeatured;
+                course.UpdatedAt = DateTime.UtcNow;
+
+                await _courseRepository.UpdateCourse(course);
+
+                var courseResponseDto = _mapper.Map<CourseResponseDto>(course);
+                courseResponseDto.LessonCount = await _courseRepository.CountLessons(courseId);
+                courseResponseDto.StudentCount = await _courseRepository.CountEnrolledUsers(courseId);
+                courseResponseDto.TeacherName = course.Teacher?.FirstName + " " + course.Teacher?.LastName ?? "System Admin";
+
+                response.Data = courseResponseDto;
+                response.Message = "Course updated successfully by Admin";
+                _logger.LogInformation("Course {CourseId} updated by Admin", courseId);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Error updating course: {ex.Message}";
+                _logger.LogError(ex, "Error in AdminUpdateCourseAsync for CourseId: {CourseId}", courseId);
+            }
+
+            return response;
+        }
+
         public async Task<ServiceResponse<bool>> DeleteCourseAsync(int courseId)
         {
             var response = new ServiceResponse<bool>();

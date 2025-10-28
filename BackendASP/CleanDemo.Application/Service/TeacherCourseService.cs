@@ -114,7 +114,7 @@ namespace CleanDemo.Application.Service
             return response;
         }
 
-        public async Task<ServiceResponse<CourseResponseDto>> UpdateCourseAsync(int courseId, TeacherCreateCourseRequestDto requestDto, int teacherId)
+        public async Task<ServiceResponse<CourseResponseDto>> UpdateCourseAsync(int courseId, TeacherUpdateCourseRequestDto requestDto, int teacherId)
         {
             var response = new ServiceResponse<CourseResponseDto>();
 
@@ -128,15 +128,13 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
-                // Kiểm tra quyền sở hữu
                 if (course.TeacherId != teacherId)
                 {
                     response.Success = false;
-                    response.Message = "You don't have permission to update this course";
+                    response.Message = "You don't have permission to update this course. Only the course owner can update.";
                     return response;
                 }
 
-                // Kiểm tra package limit khi update MaxStudent
                 var teacherPackage = await _teacherPackageRepository.GetInformationTeacherpackage(teacherId);
                 if (teacherPackage == null)
                 {
@@ -145,7 +143,6 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
-                // Kiểm tra MaxStudent không vượt quá package limit
                 if (requestDto.MaxStudent > 0 && requestDto.MaxStudent > teacherPackage.MaxStudents)
                 {
                     response.Success = false;
@@ -153,7 +150,6 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
-                // Nếu đã có students enrolled, không cho phép giảm MaxStudent xuống dưới EnrollmentCount
                 if (requestDto.MaxStudent > 0 && requestDto.MaxStudent < course.EnrollmentCount)
                 {
                     response.Success = false;
@@ -161,23 +157,21 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
-                // Cập nhật course
                 course.Title = requestDto.Title;
                 course.Description = requestDto.Description;
                 course.Img = requestDto.Img;
                 course.Type = requestDto.Type;
                 course.MaxStudent = requestDto.MaxStudent > 0 ? requestDto.MaxStudent : teacherPackage.MaxStudents;
+                course.UpdatedAt = DateTime.UtcNow;
 
                 await _courseRepository.UpdateCourse(course);
 
-                // Dùng Mapper thay manual
                 var courseResponseDto = _mapper.Map<CourseResponseDto>(course);
                 courseResponseDto.LessonCount = await _courseRepository.CountLessons(courseId);
                 courseResponseDto.StudentCount = await _courseRepository.CountEnrolledUsers(courseId);
 
                 response.Data = courseResponseDto;
                 response.Message = "Course updated successfully";
-
                 _logger.LogInformation("Course {CourseId} updated by Teacher {TeacherId}", courseId, teacherId);
             }
             catch (Exception ex)

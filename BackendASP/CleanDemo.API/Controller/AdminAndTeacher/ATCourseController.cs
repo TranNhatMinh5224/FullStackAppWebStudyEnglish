@@ -220,7 +220,81 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-        // === SHARED ENDPOINTS (Admin & Teacher) ===
+        /// <summary>
+        /// Admin - Cập nhật khóa học
+        /// </summary>
+        [HttpPut("admin/{courseId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminUpdateCourse(int courseId, [FromBody] AdminUpdateCourseRequestDto requestDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var result = await _adminCourseService.AdminUpdateCourseAsync(courseId, requestDto);
+
+                if (!result.Success)
+                {
+                    var message = result.Message ?? "Operation failed";
+                    if (message.Contains("not found"))
+                        return NotFound(new { message = message });
+                    if (message.Contains("permission") || message.Contains("own"))
+                        return StatusCode(403, new { message = message });
+                    return BadRequest(new { message = message });
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in AdminUpdateCourse endpoint for CourseId: {CourseId}", courseId);
+                return StatusCode(500, new { message = "Internal server error" });
+            }
+        }
+
+        /// <summary>
+        /// Teacher - Cập nhật khóa học của mình
+        /// </summary>
+        [HttpPut("teacher/{courseId}")]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] TeacherUpdateCourseRequestDto requestDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(teacherIdClaim, out int teacherId))
+                {
+                    return Unauthorized(new { message = "Invalid teacher credentials" });
+                }
+
+                var result = await _teacherCourseService.UpdateCourseAsync(courseId, requestDto, teacherId);
+
+                if (!result.Success)
+                {
+                    var message = result.Message ?? "Operation failed";
+                    if (message.Contains("not found"))
+                        return NotFound(new { message = message });
+                    if (message.Contains("permission") || message.Contains("own"))
+                        return StatusCode(403, new { message = message });
+                    return BadRequest(new { message = message });
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in UpdateCourse endpoint for CourseId: {CourseId}", courseId);
+                return StatusCode(500, new { message = "Internal server error" });
+            }
+        }
     }
 }
 
