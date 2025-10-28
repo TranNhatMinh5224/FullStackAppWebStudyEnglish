@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\CleanDemo.API.csproj": {}
+    "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\CleanDemo.API.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\CleanDemo.API.csproj": {
+    "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\CleanDemo.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\CleanDemo.API.csproj",
+        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\CleanDemo.API.csproj",
         "projectName": "CleanDemo.API",
-        "projectPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\CleanDemo.API.csproj",
+        "projectPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\CleanDemo.API.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\obj\\",
+        "outputPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -26,11 +26,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj": {
-                "projectPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj"
+              "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj": {
+                "projectPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj"
               },
-              "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\CleanDemo.Infrastructure.csproj": {
-                "projectPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\CleanDemo.Infrastructure.csproj"
+              "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\CleanDemo.Infrastructure.csproj": {
+                "projectPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\CleanDemo.Infrastructure.csproj"
               }
             }
           }
@@ -124,14 +124,14 @@
         }
       }
     },
-    "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj": {
+    "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj",
+        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj",
         "projectName": "CleanDemo.Application",
-        "projectPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj",
+        "projectPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\obj\\",
+        "outputPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -146,8 +146,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj": {
-                "projectPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj"
+              "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj": {
+                "projectPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj"
               }
             }
           }
@@ -204,14 +204,14 @@
         }
       }
     },
-    "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj": {
+    "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj",
+        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj",
         "projectName": "CleanDemo.Domain",
-        "projectPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj",
+        "projectPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\obj\\",
+        "outputPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -268,14 +268,14 @@
         }
       }
     },
-    "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\CleanDemo.Infrastructure.csproj": {
+    "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\CleanDemo.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\CleanDemo.Infrastructure.csproj",
+        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\CleanDemo.Infrastructure.csproj",
         "projectName": "CleanDemo.Infrastructure",
-        "projectPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\CleanDemo.Infrastructure.csproj",
+        "projectPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\CleanDemo.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\obj\\",
+        "outputPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -290,11 +290,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj": {
-                "projectPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj"
+              "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj": {
+                "projectPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Application\\CleanDemo.Application.csproj"
               },
-              "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj": {
-                "projectPath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj"
+              "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj": {
+                "projectPath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj"
               }
             }
           }

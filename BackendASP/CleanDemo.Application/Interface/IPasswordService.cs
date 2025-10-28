@@ -7,6 +7,7 @@ namespace CleanDemo.Application.Interface
     {
         Task<ServiceResponse<bool>> ChangePasswordAsync(int userId, ChangePasswordDto dto);
         Task<ServiceResponse<bool>> ForgotPasswordAsync(string email);
-        Task<ServiceResponse<bool>> ResetPasswordAsync(ResetPasswordDto dto);
+        Task<ServiceResponse<bool>> VerifyOtpAsync(VerifyOtpDto dto);
+        Task<ServiceResponse<bool>> SetNewPasswordAsync(SetNewPasswordDto dto);
     }
 }

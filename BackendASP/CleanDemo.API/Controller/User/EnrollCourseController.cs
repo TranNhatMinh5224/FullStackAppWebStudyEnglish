@@ -125,7 +125,7 @@ namespace CleanDemo.API.Controller.User
                 return StatusCode(500, new { message = "Internal server error" });
             }
         }
-
+        [HttpPost("join-by-class-code")]
         public async Task<IActionResult> JoincourseByClassCode([FromBody] EnrollCourseByClassCodeDto joinDto)
         {
             try

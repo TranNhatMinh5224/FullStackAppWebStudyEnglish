@@ -50,20 +50,17 @@ namespace CleanDemo.Application.DTOs
         public string Email { get; set; } = string.Empty;
     }
 
-    public class RefreshTokenDto
+    public class VerifyOtpDto
     {
-        public string RefreshToken { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string OtpCode { get; set; } = string.Empty;
     }
 
-    public class UpdateUserRoleDto
-    {
-        public string RoleName { get; set; } = string.Empty;
-    }
-
-    public class ResetPasswordDto
+    public class SetNewPasswordDto
     {
         public string Email { get; set; } = string.Empty;
         public string OtpCode { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

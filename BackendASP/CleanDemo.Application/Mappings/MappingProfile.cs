@@ -45,10 +45,9 @@ namespace CleanDemo.Application.Mappings
             // User mappings
             CreateMap<User, UserDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));  // Sửa SureName thành LastName
-
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));  
             CreateMap<RegisterUserDto, User>()
-                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));  // Sửa SureName thành LastName, và dest.FirstName thành dest.LastName nếu cần
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));  
 
             CreateMap<UpdateUserDto, User>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));

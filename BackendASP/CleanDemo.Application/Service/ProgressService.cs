@@ -17,7 +17,7 @@ namespace CleanDemo.Application.Service
             _logger = logger;
         }
 
-        public async Task<ServiceResponse<bool>> UpdateLessonProgress(int userId, int lessonId, double completion)
+        public Task<ServiceResponse<bool>> UpdateLessonProgress(int userId, int lessonId, double completion)
         {
             var response = new ServiceResponse<bool>();
 
@@ -38,7 +38,7 @@ namespace CleanDemo.Application.Service
                 _logger.LogError(ex, "Error updating lesson progress for User {UserId}, Lesson {LessonId}", userId, lessonId);
             }
 
-            return response;
+            return Task.FromResult(response);
         }
 
         public async Task<ServiceResponse<bool>> CompleteLessonAsync(int userId, int lessonId)
@@ -46,7 +46,7 @@ namespace CleanDemo.Application.Service
             return await UpdateLessonProgress(userId, lessonId, 100);
         }
 
-        public async Task<ServiceResponse<CourseProgressDto>> GetCourseProgressAsync(int userId, int courseId)
+        public Task<ServiceResponse<CourseProgressDto>> GetCourseProgressAsync(int userId, int courseId)
         {
             var response = new ServiceResponse<CourseProgressDto>();
 
@@ -72,10 +72,10 @@ namespace CleanDemo.Application.Service
                 _logger.LogError(ex, "Error retrieving course progress for User {UserId}, Course {CourseId}", userId, courseId);
             }
 
-            return response;
+            return Task.FromResult(response);
         }
 
-        public async Task<ServiceResponse<List<CourseProgressDto>>> GetAllUserProgressAsync(int userId)
+        public Task<ServiceResponse<List<CourseProgressDto>>> GetAllUserProgressAsync(int userId)
         {
             var response = new ServiceResponse<List<CourseProgressDto>>();
 
@@ -95,7 +95,7 @@ namespace CleanDemo.Application.Service
                 _logger.LogError(ex, "Error retrieving all progress for User {UserId}", userId);
             }
 
-            return response;
+            return Task.FromResult(response);
         }
     }
 }

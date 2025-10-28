@@ -12,15 +12,13 @@ namespace CleanDemo.API.Controllers.User
     {
         private readonly IRegisterService _registerService;
         private readonly ILoginService _loginService;
-        private readonly IAuthenticationService _authenticationService;
         private readonly IUserManagementService _userManagementService;
         private readonly IPasswordService _passwordService;
 
-        public UserAuthController(IRegisterService registerService, ILoginService loginService, IAuthenticationService authenticationService, IUserManagementService userManagementService, IPasswordService passwordService)
+        public UserAuthController(IRegisterService registerService, ILoginService loginService, IUserManagementService userManagementService, IPasswordService passwordService)
         {
             _registerService = registerService;
             _loginService = loginService;
-            _authenticationService = authenticationService;
             _userManagementService = userManagementService;
             _passwordService = passwordService;
         }
@@ -105,27 +103,61 @@ namespace CleanDemo.API.Controllers.User
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
         {
-            var result = await _passwordService.ForgotPasswordAsync(dto.Email);
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return Ok(new { message = result.Message });
+            if (dto == null || string.IsNullOrEmpty(dto.Email))
+            {
+                return BadRequest(new { message = "Email is required" });
+            }
+            
+            try
+            {
+                var result = await _passwordService.ForgotPasswordAsync(dto.Email);
+                if (!result.Success) return BadRequest(new { message = result.Message });
+                return Ok(new { message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while processing your request", error = ex.Message });
+            }
         }
 
-        [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        [HttpPost("verify-otp")]
+        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto dto)
         {
-            Console.WriteLine($"[DEBUG] Controller ResetPassword - Email: {dto?.Email}, OTP: {dto?.OtpCode}, Password Length: {dto?.NewPassword?.Length}");
-
             if (dto == null)
             {
-                Console.WriteLine($"[DEBUG] DTO is null");
                 return BadRequest(new { message = "Invalid request data" });
             }
 
-            var result = await _passwordService.ResetPasswordAsync(dto);
-            Console.WriteLine($"[DEBUG] Controller ResetPassword result - Success: {result.Success}, Message: {result.Message}");
+            try
+            {
+                var result = await _passwordService.VerifyOtpAsync(dto);
+                if (!result.Success) return BadRequest(new { message = result.Message });
+                return Ok(new { message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while verifying OTP", error = ex.Message });
+            }
+        }
 
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return Ok(new { message = result.Message });
+        [HttpPost("set-new-password")]
+        public async Task<IActionResult> SetNewPassword([FromBody] SetNewPasswordDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest(new { message = "Invalid request data" });
+            }
+
+            try
+            {
+                var result = await _passwordService.SetNewPasswordAsync(dto);
+                if (!result.Success) return BadRequest(new { message = result.Message });
+                return Ok(new { message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "An error occurred while setting new password", error = ex.Message });
+            }
         }
 
         // Add more user-specific endpoints here

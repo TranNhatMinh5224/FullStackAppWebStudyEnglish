@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "PyCITj8UBh0=",
+  "dgSpecHash": "o3M3/erQmTU=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\CleanDemo.API.csproj",
+  "projectFilePath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.API\\CleanDemo.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Admin\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.1\\automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",

@@ -9,9 +9,9 @@ namespace CleanDemo.Application.Service
     {
         private readonly IUserRepository _userRepository;
         private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
-        private readonly EmailService _emailService;
+        private readonly IEmailService _emailService;
 
-        public PasswordService(IUserRepository userRepository, IPasswordResetTokenRepository passwordResetTokenRepository, EmailService emailService)
+        public PasswordService(IUserRepository userRepository, IPasswordResetTokenRepository passwordResetTokenRepository, IEmailService emailService)
         {
             _userRepository = userRepository;
             _passwordResetTokenRepository = passwordResetTokenRepository;
@@ -62,43 +62,33 @@ namespace CleanDemo.Application.Service
             var response = new ServiceResponse<bool>();
             try
             {
-                Console.WriteLine($"[DEBUG] ForgotPassword - Email: {email}");
+                // Validate email input
+                if (string.IsNullOrEmpty(email))
+                {
+                    response.Success = false;
+                    response.Message = "Email is required";
+                    return response;
+                }
 
                 var user = await _userRepository.GetUserByEmailAsync(email);
+                
                 if (user == null)
                 {
-                    Console.WriteLine($"[DEBUG] User not found for email: {email}");
-                    // Don't reveal if email exists or not for security
                     response.Data = true;
                     response.Message = "If the email exists, an OTP code has been sent";
                     return response;
                 }
 
-                Console.WriteLine($"[DEBUG] User found - UserId: {user.UserId}");
-
-                // TODO: Temporarily disabled - Invalidate any existing active tokens for this user
-                // var existingTokens = await _passwordResetTokenRepository.GetActiveTokensByUserIdAsync(user.UserId);
-                // foreach (var token in existingTokens)
-                // {
-                //     token.IsUsed = true;
-                //     await _passwordResetTokenRepository.UpdateAsync(token);
-                // }
-                // Console.WriteLine($"[DEBUG] Invalidated {existingTokens.Count} existing tokens");
-
                 // Generate 6-digit OTP code
                 var random = new Random();
                 var otpCode = random.Next(100000, 999999).ToString();
 
-                Console.WriteLine($"[DEBUG] Generated OTP: {otpCode}");
-
                 var passwordResetToken = new PasswordResetToken
                 {
-                    Token = otpCode, // Store OTP code instead of GUID
-                    UserId = user.UserId,
+                    Token = otpCode, 
+                    UserId = user.UserId, 
                     ExpiresAt = DateTime.UtcNow.AddMinutes(5) // OTP expires in 5 minutes
                 };
-
-                Console.WriteLine($"[DEBUG] Saving OTP token - Token: {passwordResetToken.Token}, Expires: {passwordResetToken.ExpiresAt}");
 
                 await _passwordResetTokenRepository.AddAsync(passwordResetToken);
                 await _passwordResetTokenRepository.SaveChangesAsync();
@@ -106,54 +96,42 @@ namespace CleanDemo.Application.Service
                 // Send OTP email via EmailService
                 await _emailService.SendOTPEmailAsync(email, otpCode, user.FirstName);
 
-                Console.WriteLine($"[DEBUG] OTP email sent successfully");
-
                 response.Data = true;
                 response.Message = "If the email exists, an OTP code has been sent";
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DEBUG] Exception in ForgotPassword: {ex.Message}");
                 response.Success = false;
-                response.Message = ex.Message;
+                response.Message = $"An error occurred while processing your request: {ex.Message}";
             }
             return response;
         }
 
-        public async Task<ServiceResponse<bool>> ResetPasswordAsync(ResetPasswordDto dto)
+        public async Task<ServiceResponse<bool>> VerifyOtpAsync(VerifyOtpDto dto)
         {
             var response = new ServiceResponse<bool>();
             try
             {
-                Console.WriteLine($"[DEBUG] ResetPassword - Email: {dto.Email}, OTP: {dto.OtpCode}");
-
                 // Find user by email
                 var user = await _userRepository.GetUserByEmailAsync(dto.Email);
                 if (user == null)
                 {
-                    Console.WriteLine($"[DEBUG] User not found for email: {dto.Email}");
                     response.Success = false;
                     response.Message = "User not found";
                     return response;
                 }
 
-                Console.WriteLine($"[DEBUG] User found - UserId: {user.UserId}");
-
                 // Find active OTP token for this user
                 var otpToken = await _passwordResetTokenRepository.GetActiveTokenByUserIdAsync(user.UserId);
                 if (otpToken == null)
                 {
-                    Console.WriteLine($"[DEBUG] No active OTP token found for user: {user.UserId}");
                     response.Success = false;
                     response.Message = "Invalid or expired OTP code";
                     return response;
                 }
 
-                Console.WriteLine($"[DEBUG] OTP Token found - Token: {otpToken.Token}, Expires: {otpToken.ExpiresAt}, IsUsed: {otpToken.IsUsed}");
-
                 if (otpToken.Token != dto.OtpCode)
                 {
-                    Console.WriteLine($"[DEBUG] OTP mismatch - Expected: {otpToken.Token}, Received: {dto.OtpCode}");
                     response.Success = false;
                     response.Message = "Invalid or expired OTP code";
                     return response;
@@ -162,7 +140,6 @@ namespace CleanDemo.Application.Service
                 // Check if OTP is expired (5 minutes)
                 if (otpToken.ExpiresAt < DateTime.UtcNow)
                 {
-                    Console.WriteLine($"[DEBUG] OTP expired - Expires: {otpToken.ExpiresAt}, Now: {DateTime.UtcNow}");
                     response.Success = false;
                     response.Message = "OTP code has expired";
                     return response;
@@ -171,13 +148,67 @@ namespace CleanDemo.Application.Service
                 // Check if OTP is already used
                 if (otpToken.IsUsed)
                 {
-                    Console.WriteLine($"[DEBUG] OTP already used");
                     response.Success = false;
                     response.Message = "OTP code has already been used";
                     return response;
                 }
 
-                Console.WriteLine($"[DEBUG] OTP validation passed, updating password...");
+                response.Data = true;
+                response.Message = "OTP verified successfully. You can now set your new password.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
+        }
+
+        public async Task<ServiceResponse<bool>> SetNewPasswordAsync(SetNewPasswordDto dto)
+        {
+            var response = new ServiceResponse<bool>();
+            try
+            {
+                // Find user by email
+                var user = await _userRepository.GetUserByEmailAsync(dto.Email);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found";
+                    return response;
+                }
+
+                // Find active OTP token for this user
+                var otpToken = await _passwordResetTokenRepository.GetActiveTokenByUserIdAsync(user.UserId);
+                if (otpToken == null)
+                {
+                    response.Success = false;
+                    response.Message = "Invalid or expired OTP code";
+                    return response;
+                }
+
+                if (otpToken.Token != dto.OtpCode)
+                {
+                    response.Success = false;
+                    response.Message = "Invalid or expired OTP code";
+                    return response;
+                }
+
+                // Check if OTP is expired (5 minutes)
+                if (otpToken.ExpiresAt < DateTime.UtcNow)
+                {
+                    response.Success = false;
+                    response.Message = "OTP code has expired";
+                    return response;
+                }
+
+                // Check if OTP is already used
+                if (otpToken.IsUsed)
+                {
+                    response.Success = false;
+                    response.Message = "OTP code has already been used";
+                    return response;
+                }
 
                 // Update password
                 user.SetPassword(dto.NewPassword);
@@ -191,14 +222,11 @@ namespace CleanDemo.Application.Service
                 await _userRepository.SaveChangesAsync();
                 await _passwordResetTokenRepository.SaveChangesAsync();
 
-                Console.WriteLine($"[DEBUG] Password reset successful");
-
                 response.Data = true;
                 response.Message = "Password has been reset successfully";
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DEBUG] Exception in ResetPassword: {ex.Message}");
                 response.Success = false;
                 response.Message = ex.Message;
             }

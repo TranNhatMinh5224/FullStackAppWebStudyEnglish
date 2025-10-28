@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "PG5+111iOmY=",
+  "dgSpecHash": "HqEuF5qmIzY=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Admin\\Desktop\\Test backend app english\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj",
+  "projectFilePath": "C:\\Users\\Admin\\Desktop\\Testapi appenghlish\\FullStackAppWebStudyEnglish\\BackendASP\\CleanDemo.Domain\\CleanDemo.Domain.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Admin\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512"
   ],

@@ -138,7 +138,6 @@ builder.Services.AddScoped<CleanDemo.Application.Interface.ITeacherSubscriptionR
 builder.Services.AddScoped<CleanDemo.Application.Interface.IUnitOfWork, CleanDemo.Infrastructure.Repositories.UnitOfWork>();
 
 builder.Services.AddScoped<CleanDemo.Application.Interface.IAdminCourseService, CleanDemo.Application.Service.AdminCourseService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IAuthenticationService, CleanDemo.Application.Service.AuthenticationService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.ILessonService, CleanDemo.Application.Service.LessonService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IPasswordService, CleanDemo.Application.Service.PasswordService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IPaymentService, CleanDemo.Application.Service.PaymentService>();
@@ -151,7 +150,7 @@ builder.Services.AddScoped<CleanDemo.Application.Interface.IUserManagementServic
 builder.Services.AddScoped<CleanDemo.Application.Interface.IRegisterService, CleanDemo.Application.Service.RegisterService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.ILoginService, CleanDemo.Application.Service.LoginService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.ITokenService, CleanDemo.Application.Service.TokenService>();
-builder.Services.AddScoped<CleanDemo.Application.Service.EmailService>();
+builder.Services.AddScoped<CleanDemo.Application.Interface.IEmailService, CleanDemo.Application.Service.EmailService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IEmailTemplateService, CleanDemo.Infrastructure.Services.EmailTemplateService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IUserCourseService, CleanDemo.Application.Service.UserCourseService>();
 builder.Services.AddScoped<CleanDemo.Application.Interface.IEnrollmentQueryService, CleanDemo.Application.Service.EnrollmentQueryService>();

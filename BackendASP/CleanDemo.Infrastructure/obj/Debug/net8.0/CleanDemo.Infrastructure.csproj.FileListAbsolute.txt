@@ -158,3 +158,23 @@ C:\Users\Admin\Desktop\Test backend app english\FullStackAppWebStudyEnglish\Back
 C:\Users\Admin\Desktop\Test backend app english\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDemo.Infrastructure.pdb
 C:\Users\Admin\Desktop\Test backend app english\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDemo.Infrastructure.genruntimeconfig.cache
 C:\Users\Admin\Desktop\Test backend app english\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\ref\CleanDemo.Infrastructure.dll
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\bin\Debug\net8.0\CleanDemo.Infrastructure.deps.json
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\bin\Debug\net8.0\CleanDemo.Infrastructure.runtimeconfig.json
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\bin\Debug\net8.0\CleanDemo.Infrastructure.dll
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\bin\Debug\net8.0\CleanDemo.Infrastructure.pdb
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\bin\Debug\net8.0\CleanDemo.Application.dll
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\bin\Debug\net8.0\CleanDemo.Domain.dll
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\bin\Debug\net8.0\CleanDemo.Application.pdb
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\bin\Debug\net8.0\CleanDemo.Domain.pdb
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDemo.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDemo.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDemo.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDemo.Infrastructure.AssemblyInfo.cs
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDemo.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDemo.Infrastructure.sourcelink.json
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDem.8F142EC6.Up2Date
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDemo.Infrastructure.dll
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\refint\CleanDemo.Infrastructure.dll
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDemo.Infrastructure.pdb
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\CleanDemo.Infrastructure.genruntimeconfig.cache
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Infrastructure\obj\Debug\net8.0\ref\CleanDemo.Infrastructure.dll

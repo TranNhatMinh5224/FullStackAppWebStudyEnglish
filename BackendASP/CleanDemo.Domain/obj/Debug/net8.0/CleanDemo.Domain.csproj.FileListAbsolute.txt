@@ -102,3 +102,16 @@ C:\Users\Admin\Desktop\Test backend app english\FullStackAppWebStudyEnglish\Back
 C:\Users\Admin\Desktop\Test backend app english\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\refint\CleanDemo.Domain.dll
 C:\Users\Admin\Desktop\Test backend app english\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\CleanDemo.Domain.pdb
 C:\Users\Admin\Desktop\Test backend app english\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\ref\CleanDemo.Domain.dll
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\bin\Debug\net8.0\CleanDemo.Domain.deps.json
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\bin\Debug\net8.0\CleanDemo.Domain.dll
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\bin\Debug\net8.0\CleanDemo.Domain.pdb
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\CleanDemo.Domain.csproj.AssemblyReference.cache
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\CleanDemo.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\CleanDemo.Domain.AssemblyInfoInputs.cache
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\CleanDemo.Domain.AssemblyInfo.cs
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\CleanDemo.Domain.csproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\CleanDemo.Domain.sourcelink.json
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\CleanDemo.Domain.dll
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\refint\CleanDemo.Domain.dll
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\CleanDemo.Domain.pdb
+C:\Users\Admin\Desktop\Testapi appenghlish\FullStackAppWebStudyEnglish\BackendASP\CleanDemo.Domain\obj\Debug\net8.0\ref\CleanDemo.Domain.dll
