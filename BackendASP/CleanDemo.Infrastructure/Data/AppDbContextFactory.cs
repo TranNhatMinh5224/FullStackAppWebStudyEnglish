@@ -3,7 +3,6 @@ using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using DotNetEnv;
 
 namespace CleanDemo.Infrastructure.Data
 {
@@ -11,23 +10,29 @@ namespace CleanDemo.Infrastructure.Data
     {
         public AppDbContext CreateDbContext(string[] args)
         {
-            // Load .env file
-            var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
-            if (File.Exists(envPath))
-            {
-                Env.Load(envPath);
-            }
+            // Load appsettings.json
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "CleanDemo.API"))
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.Development.json", optional: true)
+                .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
-            // Read PostgreSQL connection info from environment variables
-            var dbServer = Environment.GetEnvironmentVariable("DB__Server_ASPELEARNING") ?? "localhost";
-            var dbPort = Environment.GetEnvironmentVariable("DB__Port_ASPELEARNING") ?? "5432";
-            var dbName = Environment.GetEnvironmentVariable("DB__Name_ASPELEARNING") ?? "Elearning";
-            var dbUser = Environment.GetEnvironmentVariable("DB__User_ASPELEARNING") ?? "postgres";
-            var dbPassword = Environment.GetEnvironmentVariable("DB__Password_ASPELEARNING");
+            // Read connection string from appsettings.json
+            var connectionString = configuration.GetConnectionString("MyConnection");
+            
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                // Fallback: build from individual settings
+                var dbServer = configuration["Database:Server"] ?? "localhost";
+                var dbPort = configuration["Database:Port"] ?? "5432";
+                var dbName = configuration["Database:Name"] ?? "Elearning";
+                var dbUser = configuration["Database:User"] ?? "postgres";
+                var dbPassword = configuration["Database:Password"] ?? "";
 
-            var connectionString = $"Host={dbServer};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};";
+                connectionString = $"Host={dbServer};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};";
+            }
 
             optionsBuilder.UseNpgsql(connectionString);
 

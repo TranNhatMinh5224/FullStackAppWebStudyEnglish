@@ -1,5 +1,4 @@
 using System.Text;
-using DotNetEnv;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -9,55 +8,39 @@ using Microsoft.OpenApi.Models;
 
 using CleanDemo.Infrastructure.Data;
 using CleanDemo.Application.Mappings;
+using CleanDemo.Application.Interface;
+using CleanDemo.Application.Service;
+using CleanDemo.Infrastructure.Repositories;
+using CleanDemo.Infrastructure.Services;
 
-// =====================================
-// 0) Builder
-// =====================================
 var builder = WebApplication.CreateBuilder(args);
 
-// 1) Load .env 
-var envPath = Path.Combine(builder.Environment.ContentRootPath, ".env");
-if (File.Exists(envPath)) Env.Load(envPath);
-
-
+// load config từ appsettings và biến môi trường
 builder.Configuration
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// =====================================
-// 3) Đọc biến môi trường (đã có hậu tố _ASPELEARNING như bạn dùng)
-// =====================================
-string dbHost = Environment.GetEnvironmentVariable("DB__Server_ASPELEARNING") ?? "localhost";
-string dbPort = Environment.GetEnvironmentVariable("DB__Port_ASPELEARNING") ?? "5432";
-string dbName = Environment.GetEnvironmentVariable("DB__Name_ASPELEARNING") ?? "Elearning";
-string dbUser = Environment.GetEnvironmentVariable("DB__User_ASPELEARNING") ?? "postgres";
-string dbPassword = Environment.GetEnvironmentVariable("DB__Password_ASPELEARNING") ?? "05022004";
-string sslMode = Environment.GetEnvironmentVariable("DB__SslMode_ASPELEARNING") ?? "Disable";
-string trustCert = Environment.GetEnvironmentVariable("DB__TrustServerCertificate_ASPELEARNING") ?? "true";
+// đọc config cần thiết }
+var frontendUrl = builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
 
-string? jwtKey = Environment.GetEnvironmentVariable("Jwt__Key_ASPELEARNING");
-
-string? jwtIssuer = Environment.GetEnvironmentVariable("Jwt__Issuer_ASPELEARNING");
-string? jwtAudience = Environment.GetEnvironmentVariable("Jwt__Audience_ASPELEARNING");
-
-string frontendUrl = Environment.GetEnvironmentVariable("Frontend__BaseUrl") ?? "http://localhost:3000";
-
-// Fail-fast: kiểm tra JWT config
+// validate config JWT }
 if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
-    throw new InvalidOperationException("Jwt__Key_ASPELEARNING is missing or too short (>=32 chars).");
+    throw new InvalidOperationException("Jwt:Key is missing or too short (>=32 chars).");
 if (string.IsNullOrWhiteSpace(jwtIssuer))
-    throw new InvalidOperationException("Jwt__Issuer_ASPELEARNING is missing.");
+    throw new InvalidOperationException("Jwt:Issuer is missing.");
 if (string.IsNullOrWhiteSpace(jwtAudience))
-    throw new InvalidOperationException("Jwt__Audience_ASPELEARNING is missing.");
+    throw new InvalidOperationException("Jwt:Audience is missing.");
 
-// =====================================
-// 4) Services
-// =====================================
+// add controller + swagger endpoint
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Swagger + JWT
+// swagger config + JWT authorize button
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "FullStack English Learning API", Version = "v1" });
@@ -71,43 +54,40 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Enter 'Bearer {token}'"
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+            {
         { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }, Array.Empty<string>() }
-    });
+            });
 });
 
-// CORS (BẬT lại, khớp với UseCors phía dưới)
+// CORS cho phép FE gọi API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", p =>
-        p.WithOrigins(frontendUrl)
-         .AllowAnyHeader()
-         .AllowAnyMethod()
-         .AllowCredentials());
+            p.WithOrigins(frontendUrl)
+             .AllowAnyHeader()
+             .AllowAnyMethod()
+             .AllowCredentials());
 });
 
-// FluentValidation
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddFluentValidationClientsideAdapters();
-builder.Services.AddValidatorsFromAssemblyContaining<CleanDemo.Application.Validators.CourseValidators.AdminCreateCourseRequestDtoValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CleanDemo.Application.Validators.Payment.RequestPaymentValidator>();
+// FluentValidation tự động quét validators trong Application
+builder.Services.AddFluentValidationAutoValidation()
+    .AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssembly(typeof(MappingProfile).Assembly);
 
-// AutoMapper
+// AutoMapper mapping giữa DTO và Entity
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Database (PostgreSQL) — dùng biến môi trường
-var npgConnection =
-    $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword};SSL Mode={sslMode};Trust Server Certificate={trustCert};";
+// cấu hình database PostgreSQL
+if (string.IsNullOrWhiteSpace(conn))
+    throw new InvalidOperationException("Missing ConnectionStrings:DefaultConnection.");
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseNpgsql(npgConnection, npgsql => 
+    opt.UseNpgsql(conn, npgsql =>
     {
-        // Tắt retry strategy để tương thích với manual transactions
         npgsql.EnableRetryOnFailure(0);
-       
     }));
 
-// JWT Authentication — dùng key đã validate
+// JWT Auth setup
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -119,47 +99,47 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!)),
-            ClockSkew = TimeSpan.FromMinutes(2) // optional
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.FromMinutes(2)
         };
     });
 
 builder.Services.AddAuthorization();
 
-// Repositories & Services 
-builder.Services.AddScoped<CleanDemo.Application.Interface.ICourseRepository, CleanDemo.Infrastructure.Repositories.CourseRepository>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IUserRepository, CleanDemo.Infrastructure.Repositories.UserRepository>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.ILessonRepository, CleanDemo.Infrastructure.Repositories.LessonRepository>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IPasswordResetTokenRepository, CleanDemo.Infrastructure.Repositories.PasswordResetTokenRepository>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IPaymentRepository, CleanDemo.Infrastructure.Repositories.PaymentRepository>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IRefreshTokenRepository, CleanDemo.Infrastructure.Repositories.RefreshTokenRepository>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.ITeacherPackageRepository, CleanDemo.Infrastructure.Repositories.TeacherPackageRepository>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.ITeacherSubscriptionRepository, CleanDemo.Infrastructure.Repositories.TeacherSubscriptionRepository>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IUnitOfWork, CleanDemo.Infrastructure.Repositories.UnitOfWork>();
+// register repository layer 
+builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ILessonRepository, LessonRepository>();
+builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<ITeacherPackageRepository, TeacherPackageRepository>();
+builder.Services.AddScoped<ITeacherSubscriptionRepository, TeacherSubscriptionRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-builder.Services.AddScoped<CleanDemo.Application.Interface.IAdminCourseService, CleanDemo.Application.Service.AdminCourseService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.ILessonService, CleanDemo.Application.Service.LessonService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IPasswordService, CleanDemo.Application.Service.PasswordService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IPaymentService, CleanDemo.Application.Service.PaymentService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.ITeacherCourseService, CleanDemo.Application.Service.TeacherCourseService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.ITeacherPackageService, CleanDemo.Application.Service.TeacherPackageService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.ITeacherSubscriptionService, CleanDemo.Application.Service.TeacherSubscriptionService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IUserEnrollmentService, CleanDemo.Application.Service.UserEnrollmentService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IUserManagementService, CleanDemo.Application.Service.UserManagementService>();
+// register service layer 
+builder.Services.AddScoped<IAdminCourseService, AdminCourseService>();
+builder.Services.AddScoped<ILessonService, LessonService>();
+builder.Services.AddScoped<IPasswordService, PasswordService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
+builder.Services.AddScoped<ITeacherPackageService, TeacherPackageService>();
+builder.Services.AddScoped<ITeacherSubscriptionService, TeacherSubscriptionService>();
+builder.Services.AddScoped<IUserEnrollmentService, UserEnrollmentService>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<IRegisterService, RegisterService>();
+builder.Services.AddScoped<ILoginService, LoginService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+builder.Services.AddScoped<IUserCourseService, UserCourseService>();
+builder.Services.AddScoped<IEnrollmentQueryService, EnrollmentQueryService>();
+builder.Services.AddScoped<IProgressService, ProgressService>();
 
-builder.Services.AddScoped<CleanDemo.Application.Interface.IRegisterService, CleanDemo.Application.Service.RegisterService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.ILoginService, CleanDemo.Application.Service.LoginService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.ITokenService, CleanDemo.Application.Service.TokenService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IEmailService, CleanDemo.Application.Service.EmailService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IEmailTemplateService, CleanDemo.Infrastructure.Services.EmailTemplateService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IUserCourseService, CleanDemo.Application.Service.UserCourseService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IEnrollmentQueryService, CleanDemo.Application.Service.EnrollmentQueryService>();
-builder.Services.AddScoped<CleanDemo.Application.Interface.IProgressService, CleanDemo.Application.Service.ProgressService>();
-// =====================================
-// 5) Pipeline
-// =====================================
+// build app 
 var app = builder.Build();
 
+// middleware pipeline 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -175,8 +155,4 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();
-
-// Cho test integration
-public partial class Program { }

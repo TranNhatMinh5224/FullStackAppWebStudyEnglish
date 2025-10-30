@@ -6,6 +6,18 @@
 !.env.example
 
 ###############################################
+#  APP SETTINGS - SENSITIVE DATA
+###############################################
+# Exclude development appsettings (contains passwords, keys)
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/appsettings.Test.json
+**/appsettings.Production.json
+
+# Keep template/example files
+!**/appsettings.json.example
+
+###############################################
 # ASP.NET CORE / .NET BUILD ARTIFACTS
 ###############################################
 bin/
@@ -79,11 +91,10 @@ nunit-*.xml
 *.dbmdl
 
 
-#  APP SETTINGS (keep example only)
-
-appsettings.Development.json
-appsettings.Local.json
-appsettings.Test.json
+# ⚠️ REMOVED - No longer needed (now using appsettings.json)
+# appsettings.Development.json
+# appsettings.Local.json  
+# appsettings.Test.json
 
 
 #  OS-SPECIFIC FILES

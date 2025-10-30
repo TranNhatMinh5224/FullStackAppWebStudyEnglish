@@ -1,47 +1,46 @@
 using System.Net;
 using System.Net.Mail;
 using CleanDemo.Application.Interface;
+using Microsoft.Extensions.Configuration;
 
 namespace CleanDemo.Application.Service
 {
     public class EmailService : IEmailService
     {
         private readonly IEmailTemplateService _templateService;
+        private readonly IConfiguration _configuration;
 
-        public EmailService(IEmailTemplateService templateService)
+        public EmailService(IEmailTemplateService templateService, IConfiguration configuration)
         {
             _templateService = templateService;
+            _configuration = configuration;
         }
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
             try
             {
-                Console.WriteLine($"[DEBUG] EmailService - SendEmailAsync called for: {toEmail}");
-                
-                // Load SMTP settings from environment variables (.env file)
-                var host = Environment.GetEnvironmentVariable("SMTP_HOST_ASPELEARNING");
-                var portString = Environment.GetEnvironmentVariable("SMTP_PORT_ASPELEARNING");
-                var username = Environment.GetEnvironmentVariable("SMTP_USER_ASPELEARNING");
-                var password = Environment.GetEnvironmentVariable("SMTP_PASS_ASPELEARNING");
-                
-                Console.WriteLine($"[DEBUG] EmailService - SMTP Host: {host}, Port: {portString}");
-                Console.WriteLine($"[DEBUG] EmailService - SMTP Username: {username}");
-                
+                // Load SMTP settings from appsettings.json
+                var host = _configuration["Smtp:Host"];
+                var portString = _configuration["Smtp:Port"];
+                var username = _configuration["Smtp:User"];
+                var password = _configuration["Smtp:Password"];
+                var enableSslString = _configuration["Smtp:EnableSsl"];
+                var fromName = _configuration["Smtp:FromName"] ?? "E-Learning English Platform";
+
                 // Validate required SMTP settings
                 if (string.IsNullOrEmpty(host))
-                    throw new InvalidOperationException("SMTP_HOST_ASPELEARNING environment variable not configured");
+                    throw new InvalidOperationException("Smtp:Host configuration is missing");
                 if (string.IsNullOrEmpty(portString) || !int.TryParse(portString, out var port))
-                    throw new InvalidOperationException("SMTP_PORT_ASPELEARNING environment variable not configured or invalid");
+                    throw new InvalidOperationException("Smtp:Port configuration is missing or invalid");
                 if (string.IsNullOrEmpty(username))
-                    throw new InvalidOperationException("SMTP_USER_ASPELEARNING environment variable not configured");
+                    throw new InvalidOperationException("Smtp:User configuration is missing");
                 if (string.IsNullOrEmpty(password))
-                    throw new InvalidOperationException("SMTP_PASS_ASPELEARNING environment variable not configured");
-                
-                // Gmail SMTP always uses SSL
-                var enableSsl = true;
+                    throw new InvalidOperationException("Smtp:Password configuration is missing");
 
-                Console.WriteLine($"[DEBUG] EmailService - Creating SMTP client...");
+                // Parse EnableSsl (default true for Gmail)
+                var enableSsl = string.IsNullOrEmpty(enableSslString) || bool.Parse(enableSslString);
+
                 using var client = new SmtpClient(host, port)
                 {
                     Credentials = new NetworkCredential(username, password),
@@ -50,34 +49,32 @@ namespace CleanDemo.Application.Service
 
                 var mailMessage = new MailMessage
                 {
-                    From = new MailAddress(username, "E-Learning English Platform"),
+                    From = new MailAddress(username, fromName),
                     Subject = subject,
                     Body = body,
                     IsBodyHtml = true
                 };
                 mailMessage.To.Add(toEmail);
 
-                Console.WriteLine($"[DEBUG] EmailService - Sending email...");
                 await client.SendMailAsync(mailMessage);
-                Console.WriteLine($"[DEBUG] EmailService - Email sent successfully to {toEmail}");
+
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DEBUG] EmailService Exception: {ex.Message}");
-                Console.WriteLine($"[DEBUG] EmailService StackTrace: {ex.StackTrace}");
-                throw; // Re-throw để PasswordService có thể catch và xử lý
+                throw new Exception($"Lỗi khi gửi email: {ex.Message}", ex);
             }
         }
 
         public async Task SendOTPEmailAsync(string toEmail, string otpCode, string userName)
         {
-            Console.WriteLine($"[DEBUG] EmailService - SendOTPEmailAsync called for: {toEmail}, OTP: {otpCode}, User: {userName}");
-            
+
+
             var subject = "Your OTP Code - Catalunya English";
             var body = _templateService.GenerateOTPEmailTemplate(otpCode, userName);
-            
+
             Console.WriteLine($"[DEBUG] EmailService - Generated email body with template");
             await SendEmailAsync(toEmail, subject, body);
         }
+
     }
 }
