@@ -2,7 +2,6 @@ using CleanDemo.Domain.Enums;
 
 namespace CleanDemo.Application.DTOs
 {
-    // === REQUEST DTOs ===
 
     // DTO tạo khóa học mới (Admin) - Request
     public class AdminCreateCourseRequestDto
@@ -11,7 +10,7 @@ namespace CleanDemo.Application.DTOs
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
         public decimal? Price { get; set; }
-        public int MaxStudent { get; set; } = 0; // 0 = không giới hạn
+        public int MaxStudent { get; set; }
         public bool IsFeatured { get; set; } = false;
         public CourseType Type { get; set; } = CourseType.System;
     }
@@ -22,7 +21,7 @@ namespace CleanDemo.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
-        public int MaxStudent { get; set; } = 0; // 0 = không giới hạn
+        public int MaxStudent { get; set; }
         public CourseType Type { get; set; } = CourseType.Teacher;
     }
 
@@ -32,7 +31,7 @@ namespace CleanDemo.Application.DTOs
         public int CourseId { get; set; }
     }
 
-    // === RESPONSE DTOs ===
+
 
     // DTO response chung cho Course
     public class CourseResponseDto
@@ -162,5 +161,26 @@ namespace CleanDemo.Application.DTOs
     public class EnrollCourseByClassCodeDto
     {
         public string ClassCode { get; set; } = string.Empty;
+    }
+    // DTO cập nhật khóa học (Admin) - Request
+    public class AdminUpdateCourseRequestDto
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string? Img { get; set; }
+        public decimal? Price { get; set; }
+        public int MaxStudent { get; set; } = 0;
+        public bool IsFeatured { get; set; } = false;
+        public CourseType Type { get; set; } = CourseType.System;
+    }
+
+    // DTO cập nhật khóa học (Teacher) - Request
+    public class TeacherUpdateCourseRequestDto
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string? Img { get; set; }
+        public int MaxStudent { get; set; } = 0;
+        public CourseType Type { get; set; } = CourseType.Teacher;
     }
 }

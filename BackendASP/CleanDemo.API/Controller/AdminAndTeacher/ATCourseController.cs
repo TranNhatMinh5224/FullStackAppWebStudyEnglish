@@ -28,11 +28,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             _logger = logger;
         }
 
-        // === ADMIN ENDPOINTS ===
 
-        /// <summary>
-        /// Admin - Lấy tất cả khóa học
-        /// </summary>
+        // Admin - Lấy tất cả khóa học
+
         [HttpGet("admin/all")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllCourses()
@@ -220,7 +218,94 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-        // === SHARED ENDPOINTS (Admin & Teacher) ===
+        /// <summary>
+        /// Admin - Cập nhật khóa học
+        /// </summary>
+        [HttpPut("admin/{courseId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminUpdateCourse(int courseId, [FromBody] AdminUpdateCourseRequestDto requestDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
+                }
+
+                var result = await _adminCourseService.AdminUpdateCourseAsync(courseId, requestDto);
+
+                if (!result.Success)
+                {
+                    return StatusCode(result.StatusCode, new 
+                    { 
+                        success = false, 
+                        message = result.Message,
+                        statusCode = result.StatusCode
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = result.Message,
+                    data = result.Data,
+                    statusCode = result.StatusCode
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in AdminUpdateCourse endpoint for CourseId: {CourseId}", courseId);
+                return StatusCode(500, new { success = false, message = "Lỗi hệ thống", statusCode = 500 });
+            }
+        }
+
+
+        /// <summary>
+        /// Teacher - Cập nhật khóa học của mình
+        /// </summary>
+        [HttpPut("teacher/{courseId}")]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] TeacherUpdateCourseRequestDto requestDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
+                }
+
+                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(teacherIdClaim, out int teacherId))
+                {
+                    return Unauthorized(new { success = false, message = "Thông tin giáo viên không hợp lệ" });
+                }
+
+                var result = await _teacherCourseService.UpdateCourseAsync(courseId, requestDto, teacherId);
+
+                if (!result.Success)
+                {
+                    return StatusCode(result.StatusCode, new 
+                    { 
+                        success = false, 
+                        message = result.Message,
+                        statusCode = result.StatusCode
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = result.Message,
+                    data = result.Data,
+                    statusCode = result.StatusCode
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in UpdateCourse endpoint for CourseId: {CourseId}", courseId);
+                return StatusCode(500, new { success = false, message = "Lỗi hệ thống", statusCode = 500 });
+            }
+        }
     }
 }
 

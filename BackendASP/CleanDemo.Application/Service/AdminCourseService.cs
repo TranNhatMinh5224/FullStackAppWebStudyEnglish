@@ -106,6 +106,57 @@ namespace CleanDemo.Application.Service
             return response;
         }
 
+        public async Task<ServiceResponse<CourseResponseDto>> AdminUpdateCourseAsync(int courseId, AdminUpdateCourseRequestDto requestDto)
+        {
+            var response = new ServiceResponse<CourseResponseDto>();
+
+            try
+            {
+                var course = await _courseRepository.GetByIdAsync(courseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                // Admin có thể update tất cả courses (System & Teacher)
+                course.Title = requestDto.Title;
+                course.Description = requestDto.Description;
+                course.Img = requestDto.Img;
+                course.Price = requestDto.Price;
+                course.MaxStudent = requestDto.MaxStudent;
+                course.IsFeatured = requestDto.IsFeatured;
+                course.Type = requestDto.Type;
+
+                await _courseRepository.UpdateCourse(course);
+
+                // Map response
+                var courseResponseDto = _mapper.Map<CourseResponseDto>(course);
+                courseResponseDto.LessonCount = await _courseRepository.CountLessons(courseId);
+                courseResponseDto.StudentCount = await _courseRepository.CountEnrolledUsers(courseId);
+                courseResponseDto.TeacherName = course.Teacher != null 
+                    ? $"{course.Teacher.FirstName} {course.Teacher.LastName}" 
+                    : "System Admin";
+
+                response.StatusCode = 200;
+                response.Data = courseResponseDto;
+                response.Message = "Cập nhật khóa học thành công";
+
+                _logger.LogInformation("Admin updated course {CourseId}", courseId);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+                _logger.LogError(ex, "Error in AdminUpdateCourseAsync for CourseId: {CourseId}", courseId);
+            }
+
+            return response;
+        }
+
         public async Task<ServiceResponse<bool>> DeleteCourseAsync(int courseId)
         {
             var response = new ServiceResponse<bool>();

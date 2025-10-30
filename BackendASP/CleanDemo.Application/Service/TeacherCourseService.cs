@@ -114,7 +114,7 @@ namespace CleanDemo.Application.Service
             return response;
         }
 
-        public async Task<ServiceResponse<CourseResponseDto>> UpdateCourseAsync(int courseId, TeacherCreateCourseRequestDto requestDto, int teacherId)
+        public async Task<ServiceResponse<CourseResponseDto>> UpdateCourseAsync(int courseId, TeacherUpdateCourseRequestDto requestDto, int teacherId)
         {
             var response = new ServiceResponse<CourseResponseDto>();
 
@@ -124,7 +124,8 @@ namespace CleanDemo.Application.Service
                 if (course == null)
                 {
                     response.Success = false;
-                    response.Message = "Course not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
                     return response;
                 }
 
@@ -132,7 +133,8 @@ namespace CleanDemo.Application.Service
                 if (course.TeacherId != teacherId)
                 {
                     response.Success = false;
-                    response.Message = "You don't have permission to update this course";
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền cập nhật khóa học này";
                     return response;
                 }
 
@@ -141,7 +143,8 @@ namespace CleanDemo.Application.Service
                 if (teacherPackage == null)
                 {
                     response.Success = false;
-                    response.Message = "Active subscription not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy gói đăng ký đang hoạt động";
                     return response;
                 }
 
@@ -149,7 +152,8 @@ namespace CleanDemo.Application.Service
                 if (requestDto.MaxStudent > 0 && requestDto.MaxStudent > teacherPackage.MaxStudents)
                 {
                     response.Success = false;
-                    response.Message = $"MaxStudent ({requestDto.MaxStudent}) cannot exceed your package limit ({teacherPackage.MaxStudents})";
+                    response.StatusCode = 400;
+                    response.Message = $"Số học sinh tối đa ({requestDto.MaxStudent}) không được vượt quá giới hạn gói ({teacherPackage.MaxStudents})";
                     return response;
                 }
 
@@ -157,7 +161,8 @@ namespace CleanDemo.Application.Service
                 if (requestDto.MaxStudent > 0 && requestDto.MaxStudent < course.EnrollmentCount)
                 {
                     response.Success = false;
-                    response.Message = $"Cannot set MaxStudent ({requestDto.MaxStudent}) below current enrollment ({course.EnrollmentCount})";
+                    response.StatusCode = 400;
+                    response.Message = $"Không thể đặt số học sinh tối đa ({requestDto.MaxStudent}) thấp hơn số lượng đã đăng ký ({course.EnrollmentCount})";
                     return response;
                 }
 
@@ -175,15 +180,17 @@ namespace CleanDemo.Application.Service
                 courseResponseDto.LessonCount = await _courseRepository.CountLessons(courseId);
                 courseResponseDto.StudentCount = await _courseRepository.CountEnrolledUsers(courseId);
 
+                response.StatusCode = 200;
                 response.Data = courseResponseDto;
-                response.Message = "Course updated successfully";
+                response.Message = "Cập nhật khóa học thành công";
 
                 _logger.LogInformation("Course {CourseId} updated by Teacher {TeacherId}", courseId, teacherId);
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Error updating course: {ex.Message}";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi khi cập nhật khóa học";
                 _logger.LogError(ex, "Error in UpdateCourseAsync for CourseId: {CourseId}", courseId);
             }
 
