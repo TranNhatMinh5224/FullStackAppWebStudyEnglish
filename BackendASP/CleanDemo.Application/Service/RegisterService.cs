@@ -27,7 +27,8 @@ namespace CleanDemo.Application.Service
                 if (existingUser != null)
                 {
                     response.Success = false;
-                    response.Message = "Email already exists";
+                    response.StatusCode = 400;
+                    response.Message = "Email đã tồn tại trong hệ thống";
                     return response;
                 }
 
@@ -39,7 +40,8 @@ namespace CleanDemo.Application.Service
                 if (studentRole == null)
                 {
                     response.Success = false;
-                    response.Message = "Default role 'Student' not found in database";
+                    response.StatusCode = 500;
+                    response.Message = "Không tìm thấy vai trò mặc định 'Student'";
                     return response;
                 }
 
@@ -48,12 +50,15 @@ namespace CleanDemo.Application.Service
                 await _userRepository.AddUserAsync(user);
                 await _userRepository.SaveChangesAsync();
 
+                response.StatusCode = 201;
+                response.Message = "Đăng ký tài khoản thành công";
                 response.Data = _mapper.Map<UserDto>(user);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 response.Success = false;
-                response.Message = ex.Message;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }

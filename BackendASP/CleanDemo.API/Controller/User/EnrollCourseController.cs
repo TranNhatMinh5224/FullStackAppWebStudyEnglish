@@ -26,11 +26,7 @@ namespace CleanDemo.API.Controller.User
             _logger = logger;
         }
 
-        /// <summary>
-        /// Đăng ký khóa học (hỗ trợ cả course hệ thống và teacher course)
-        /// - Course hệ thống: Kiểm tra thanh toán nếu có phí
-        /// - Course Teacher: Miễn phí, tự động kiểm tra giới hạn học viên
-        /// </summary>
+       
         [HttpPost("course")]
         public async Task<IActionResult> EnrollInCourse([FromBody] EnrollCourseDto enrollDto)
         {

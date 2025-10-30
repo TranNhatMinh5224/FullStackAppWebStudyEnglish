@@ -27,6 +27,7 @@ namespace CleanDemo.Application.Service
             try
             {
                 var teacherPackages = await _teacherPackageRepository.GetAllTeacherPackagesAsync();
+                response.StatusCode = 200;
                 response.Data = _mapper.Map<List<TeacherPackageDto>>(teacherPackages);
                 response.Success = true;
             }
@@ -34,7 +35,8 @@ namespace CleanDemo.Application.Service
             {
                 _logger.LogError(ex, "Error retrieving all teacher packages.");
                 response.Success = false;
-                response.Message = "An error occurred while retrieving teacher packages.";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi khi lấy danh sách gói giáo viên";
             }
             return response;
         }
@@ -46,20 +48,23 @@ namespace CleanDemo.Application.Service
                 var teacherPackage = await _teacherPackageRepository.GetTeacherPackageByIdAsync(id);
                 if (teacherPackage != null)
                 {
+                    response.StatusCode = 200;
                     response.Data = _mapper.Map<TeacherPackageDto>(teacherPackage);
                     response.Success = true;
                 }
                 else
                 {
                     response.Success = false;
-                    response.Message = "Teacher package not found.";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy gói giáo viên";
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error retrieving teacher package with ID {id}.");
                 response.Success = false;
-                response.Message = "An error occurred while retrieving the teacher package.";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi khi lấy thông tin gói giáo viên";
             }
             return response;
         }
@@ -73,12 +78,14 @@ namespace CleanDemo.Application.Service
                 if (existingPackage.Any(p => p.PackageName == dto.PackageName))
                 {
                     response.Success = false;
-                    response.Message = "Teacher package with the same name already exists.";
+                    response.StatusCode = 400;
+                    response.Message = "Gói giáo viên với tên này đã tồn tại";
                     return response;
                 }
 
                 var teacherPackage = _mapper.Map<TeacherPackage>(dto);
                 await _teacherPackageRepository.AddTeacherPackageAsync(teacherPackage);
+                response.StatusCode = 201;
                 response.Data = _mapper.Map<TeacherPackageDto>(teacherPackage);
                 response.Success = true;
             }
@@ -86,7 +93,8 @@ namespace CleanDemo.Application.Service
             {
                 _logger.LogError(ex, "Error creating teacher package.");
                 response.Success = false;
-                response.Message = "An error occurred while creating the teacher package.";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi khi tạo gói giáo viên";
             }
             return response;
         }
@@ -100,7 +108,8 @@ namespace CleanDemo.Application.Service
                 if (existingPackage == null)
                 {
                     response.Success = false;
-                    response.Message = "Teacher package not found.";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy gói giáo viên";
                     return response;
                 }
 
@@ -117,15 +126,18 @@ namespace CleanDemo.Application.Service
                 var result = _mapper.Map<TeacherPackageDto>(existingPackage);
                 return new ServiceResponse<TeacherPackageDto>
                 {
+                    StatusCode = 200,
                     Data = result,
-                    Success = true
+                    Success = true,
+                    Message = "Cập nhật gói giáo viên thành công"
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating teacher package.");
                 response.Success = false;
-                response.Message = "An error occurred while updating the teacher package.";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi khi cập nhật gói giáo viên";
             }
             return response;
         }
@@ -139,20 +151,24 @@ namespace CleanDemo.Application.Service
                 if (existingPackage == null)
                 {
                     response.Success = false;
-                    response.Message = "Teacher package not found.";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy gói giáo viên";
                     return response;
                 }
 
                 await _teacherPackageRepository.DeleteTeacherPackageAsync(id);
+                response.StatusCode = 200;
                 response.Data = true;
                 response.Success = true;
+                response.Message = "Xóa gói giáo viên thành công";
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error deleting teacher package with ID {id}.");
                 response.Data = false;
                 response.Success = false;
-                response.Message = "An error occurred while deleting the teacher package.";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi khi xóa gói giáo viên";
             }
             return response;
         }

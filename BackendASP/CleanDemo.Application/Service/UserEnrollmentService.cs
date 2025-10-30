@@ -44,7 +44,8 @@ namespace CleanDemo.Application.Service
                 if (course == null)
                 {
                     response.Success = false;
-                    response.Message = "Course not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
                     return response;
                 }
 
@@ -52,7 +53,8 @@ namespace CleanDemo.Application.Service
                 if (await _courseRepository.IsUserEnrolled(enrollDto.CourseId, userId))
                 {
                     response.Success = false;
-                    response.Message = "User already enrolled in this course";
+                    response.StatusCode = 400;
+                    response.Message = "Bạn đã đăng ký khóa học này rồi";
                     return response;
                 }
 
@@ -64,6 +66,7 @@ namespace CleanDemo.Application.Service
                     if (payment == null)
                     {
                         response.Success = false;
+                        response.StatusCode = 402;
                         response.Message = "Hãy thanh toán khóa học trước khi đăng ký";
                         return response;
                     }
@@ -73,7 +76,8 @@ namespace CleanDemo.Application.Service
                 if (!course.CanJoin())
                 {
                     response.Success = false;
-                    response.Message = $"Course is full ({course.EnrollmentCount}/{course.MaxStudent}). Cannot enroll more students.";
+                    response.StatusCode = 400;
+                    response.Message = $"Khóa học đã đầy ({course.EnrollmentCount}/{course.MaxStudent}). Không thể đăng ký thêm";
                     return response;
                 }
 
@@ -89,7 +93,8 @@ namespace CleanDemo.Application.Service
                         if (totalStudents >= teacherPackage.MaxStudents)
                         {
                             response.Success = false;
-                            response.Message = $"Teacher has reached maximum students limit ({totalStudents}/{teacherPackage.MaxStudents})";
+                            response.StatusCode = 400;
+                            response.Message = $"Giáo viên đã đạt giới hạn số học sinh ({totalStudents}/{teacherPackage.MaxStudents})";
                             return response;
                         }
                     }
@@ -99,15 +104,17 @@ namespace CleanDemo.Application.Service
                 await _courseRepository.EnrollUserInCourse(userId, enrollDto.CourseId);
 
                 response.Success = true;
+                response.StatusCode = 200;
                 response.Data = true;
-                response.Message = "Successfully enrolled in course";
+                response.Message = "Đăng ký khóa học thành công";
 
                 _logger.LogInformation("User {UserId} enrolled in course {CourseId}", userId, enrollDto.CourseId);
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Error enrolling in course: {ex.Message}";
+                response.StatusCode = 500;
+                response.Message = $"Lỗi khi đăng ký khóa học: {ex.Message}";
                 _logger.LogError(ex, "Error in EnrollInCourseAsync for UserId: {UserId}, CourseId: {CourseId}", userId, enrollDto.CourseId);
             }
 
@@ -127,7 +134,8 @@ namespace CleanDemo.Application.Service
                 if (!await _courseRepository.IsUserEnrolled(courseId, userId))
                 {
                     response.Success = false;
-                    response.Message = "User is not enrolled in this course";
+                    response.StatusCode = 400;
+                    response.Message = "Bạn chưa đăng ký khóa học này";
                     return response;
                 }
 
@@ -135,15 +143,17 @@ namespace CleanDemo.Application.Service
                 await _courseRepository.UnenrollUserFromCourse(courseId, userId);
 
                 response.Success = true;
+                response.StatusCode = 200;
                 response.Data = true;
-                response.Message = "Successfully unenrolled from course";
+                response.Message = "Hủy đăng ký khóa học thành công";
 
                 _logger.LogInformation("User {UserId} unenrolled from course {CourseId}", userId, courseId);
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Error unenrolling from course: {ex.Message}";
+                response.StatusCode = 500;
+                response.Message = $"Lỗi khi hủy đăng ký khóa học: {ex.Message}";
                 _logger.LogError(ex, "Error in UnenrollFromCourseAsync for UserId: {UserId}, CourseId: {CourseId}", userId, courseId);
             }
 
@@ -162,7 +172,8 @@ namespace CleanDemo.Application.Service
                 if (course == null)
                 {
                     response.Success = false;
-                    response.Message = "Course with the provided class code not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học với mã lớp học này";
                     return response;
                 }
 
@@ -170,7 +181,8 @@ namespace CleanDemo.Application.Service
                 if (await _courseRepository.IsUserEnrolled(course.CourseId, userId))
                 {
                     response.Success = false;
-                    response.Message = "User already enrolled in this course";
+                    response.StatusCode = 400;
+                    response.Message = "Bạn đã đăng ký khóa học này rồi";
                     return response;
                 }
 
@@ -178,7 +190,8 @@ namespace CleanDemo.Application.Service
                 if (!course.CanJoin())
                 {
                     response.Success = false;
-                    response.Message = $"Course is full ({course.EnrollmentCount}/{course.MaxStudent}). Cannot enroll more students.";
+                    response.StatusCode = 400;
+                    response.Message = $"Khóa học đã đầy ({course.EnrollmentCount}/{course.MaxStudent}). Không thể đăng ký thêm";
                     return response;
                 }
 
@@ -186,15 +199,17 @@ namespace CleanDemo.Application.Service
                 await _courseRepository.EnrollUserInCourse(userId, course.CourseId);
 
                 response.Success = true;
+                response.StatusCode = 200;
                 response.Data = true;
-                response.Message = "Successfully enrolled in course via class code";
+                response.Message = "Đăng ký khóa học thành công qua mã lớp học";
 
                 _logger.LogInformation("User {UserId} enrolled in course {CourseId} via class code", userId, course.CourseId);
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Error enrolling in course via class code: {ex.Message}";
+                response.StatusCode = 500;
+                response.Message = $"Lỗi khi đăng ký khóa học qua mã lớp: {ex.Message}";
                 _logger.LogError(ex, "Error in EnrollInCourseByClassCodeAsync for UserId: {UserId}, ClassCode: {ClassCode}", userId, classCode);
             }
 

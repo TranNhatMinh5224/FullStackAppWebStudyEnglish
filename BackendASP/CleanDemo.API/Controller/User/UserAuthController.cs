@@ -27,16 +27,18 @@ namespace CleanDemo.API.Controllers.User
         public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
             var result = await _registerService.RegisterUserAsync(dto);
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return CreatedAtAction(nameof(Register), result.Data);
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
+            return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message, data = result.Data });
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
         {
             var result = await _loginService.LoginUserAsync(dto);
-            if (!result.Success) return Unauthorized(new { message = result.Message });
-            return Ok(result.Data);
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
+            return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message, data = result.Data });
         }
 
         [Authorize]
@@ -44,7 +46,7 @@ namespace CleanDemo.API.Controllers.User
         public async Task<IActionResult> GetProfile()
         {
 
-            // Try both Sub and NameIdentifier claim types
+
             var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
                             ?? User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -52,12 +54,13 @@ namespace CleanDemo.API.Controllers.User
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             {
                 Console.WriteLine("Failed to parse userId from Sub claim");
-                return Unauthorized(new { message = "Invalid token" });
+                return StatusCode(401, new { success = false, message = "Token không hợp lệ" });
             }
 
             var result = await _userManagementService.GetUserProfileAsync(userId);
-            if (!result.Success) return NotFound(new { message = result.Message });
-            return Ok(result.Data);
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
+            return StatusCode(result.StatusCode, new { success = result.Success, data = result.Data });
         }
 
         [Authorize]
@@ -77,13 +80,14 @@ namespace CleanDemo.API.Controllers.User
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             {
                 Console.WriteLine("Failed to parse userId from Sub claim");
-                return Unauthorized(new { message = "Invalid token" });
+                return StatusCode(401, new { success = false, message = "Token không hợp lệ" });
             }
 
             Console.WriteLine($"Parsed userId: {userId}");
             var result = await _userManagementService.UpdateUserProfileAsync(userId, dto);
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return Ok(result.Data);
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
+            return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message, data = result.Data });
         }
 
         [Authorize]
@@ -93,11 +97,12 @@ namespace CleanDemo.API.Controllers.User
             var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
                             ?? User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-                return Unauthorized(new { message = "Invalid token" });
+                return StatusCode(401, new { success = false, message = "Token không hợp lệ" });
 
             var result = await _passwordService.ChangePasswordAsync(userId, dto);
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return Ok(new { message = "Password changed successfully" });
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
+            return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
         }
 
         [HttpPost("forgot-password")]
@@ -105,18 +110,19 @@ namespace CleanDemo.API.Controllers.User
         {
             if (dto == null || string.IsNullOrEmpty(dto.Email))
             {
-                return BadRequest(new { message = "Email is required" });
+                return StatusCode(400, new { success = false, message = "Email là bắt buộc" });
             }
-            
+
             try
             {
                 var result = await _passwordService.ForgotPasswordAsync(dto.Email);
-                if (!result.Success) return BadRequest(new { message = result.Message });
-                return Ok(new { message = result.Message });
+                if (!result.Success)
+                    return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
+                return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new { message = "An error occurred while processing your request", error = ex.Message });
+                return StatusCode(500, new { success = false, message = "Đã xảy ra lỗi hệ thống" });
             }
         }
 
@@ -125,18 +131,19 @@ namespace CleanDemo.API.Controllers.User
         {
             if (dto == null)
             {
-                return BadRequest(new { message = "Invalid request data" });
+                return StatusCode(400, new { success = false, message = "Dữ liệu không hợp lệ" });
             }
 
             try
             {
                 var result = await _passwordService.VerifyOtpAsync(dto);
-                if (!result.Success) return BadRequest(new { message = result.Message });
-                return Ok(new { message = result.Message });
+                if (!result.Success)
+                    return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
+                return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new { message = "An error occurred while verifying OTP", error = ex.Message });
+                return StatusCode(500, new { success = false, message = "Đã xảy ra lỗi khi xác thực OTP" });
             }
         }
 
@@ -145,18 +152,19 @@ namespace CleanDemo.API.Controllers.User
         {
             if (dto == null)
             {
-                return BadRequest(new { message = "Invalid request data" });
+                return StatusCode(400, new { success = false, message = "Dữ liệu không hợp lệ" });
             }
 
             try
             {
                 var result = await _passwordService.SetNewPasswordAsync(dto);
-                if (!result.Success) return BadRequest(new { message = result.Message });
-                return Ok(new { message = result.Message });
+                if (!result.Success)
+                    return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
+                return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new { message = "An error occurred while setting new password", error = ex.Message });
+                return StatusCode(500, new { success = false, message = "Đã xảy ra lỗi khi đặt lại mật khẩu" });
             }
         }
 

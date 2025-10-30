@@ -23,12 +23,9 @@ publish/
 *.ide
 *.swp
 
-# Ignore generated migrations (optional — only if you recreate them often)
+
 # **/Migrations/
 
-###############################################
-#  VISUAL STUDIO / IDE FILES
-###############################################
 .vs/
 .vscode/
 .idea/
@@ -39,9 +36,9 @@ publish/
 *.rsuser
 *.userprefs
 
-###############################################
+
 #  BUILD CONFIGURATIONS
-###############################################
+
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -54,10 +51,8 @@ bld/
 [Ll]og/
 artifacts/
 TestResults/
+FRONTEND (React / Node.js)
 
-###############################################
-# FRONTEND (React / Node.js)
-###############################################
 node_modules/
 build/
 dist/
@@ -68,23 +63,23 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
-###############################################
+
 #  TEST OUTPUT
-###############################################
+
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
 
-###############################################
+
 #  ENTITY FRAMEWORK
 
 **/Migrations/
 *.dbmdl
 
 
-# 🧾 APP SETTINGS (keep example only)
+#  APP SETTINGS (keep example only)
 
 appsettings.Development.json
 appsettings.Local.json

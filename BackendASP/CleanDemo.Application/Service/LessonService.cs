@@ -39,7 +39,8 @@ namespace CleanDemo.Application.Service
                 if (course == null)
                 {
                     response.Success = false;
-                    response.Message = "Course not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
                     return response;
                 }
 
@@ -47,7 +48,8 @@ namespace CleanDemo.Application.Service
                 if (course.Type != CourseType.System)
                 {
                     response.Success = false;
-                    response.Message = "Admin can only add lessons to System courses";
+                    response.StatusCode = 403;
+                    response.Message = "Chỉ admin mới có thể thêm bài học vào khóa học hệ thống";
                     return response;
                 }
 
@@ -56,7 +58,8 @@ namespace CleanDemo.Application.Service
                 if (lessons)
                 {
                     response.Success = false;
-                    response.Message = "Lesson already exists in this course";
+                    response.StatusCode = 400;
+                    response.Message = "Bài học đã tồn tại trong khóa học này";
                     return response;
                 }
                 var lesson = new Lesson
@@ -66,14 +69,16 @@ namespace CleanDemo.Application.Service
                     CourseId = dto.CourseId
                 };
                 await _lessonRepository.AddLesson(lesson);
+                response.StatusCode = 201;
+                response.Message = "Tạo bài học thành công";
                 response.Data = _mapper.Map<LessonDto>(lesson);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error adding lesson");
                 response.Success = false;
-                response.Message = "Error adding lesson";
-                return response;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }
@@ -88,7 +93,8 @@ namespace CleanDemo.Application.Service
                 if (course == null)
                 {
                     response.Success = false;
-                    response.Message = "Course not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
                     return response;
                 }
 
@@ -96,7 +102,8 @@ namespace CleanDemo.Application.Service
                 if (course.Type != CourseType.Teacher)
                 {
                     response.Success = false;
-                    response.Message = "Can only add lessons to Teacher courses";
+                    response.StatusCode = 403;
+                    response.Message = "Chỉ có thể thêm bài học vào khóa học của giáo viên";
                     return response;
                 }
 
@@ -107,7 +114,8 @@ namespace CleanDemo.Application.Service
                     if (teacherPackage == null)
                     {
                         response.Success = false;
-                        response.Message = "Teacher does not have an active subscription";
+                        response.StatusCode = 403;
+                        response.Message = "Giáo viên không có gói đăng ký hoạt động";
                         return response;
                     }
 
@@ -117,7 +125,8 @@ namespace CleanDemo.Application.Service
                     if (currentLessonCount >= maxLessons)
                     {
                         response.Success = false;
-                        response.Message = $"Maximum lessons reached ({currentLessonCount}/{maxLessons}). Please upgrade your package.";
+                        response.StatusCode = 403;
+                        response.Message = $"Đã đạt số lượng bài học tối đa ({currentLessonCount}/{maxLessons}). Vui lòng nâng cấp gói.";
                         return response;
                     }
                 }
@@ -127,7 +136,8 @@ namespace CleanDemo.Application.Service
                 if (lessons)
                 {
                     response.Success = false;
-                    response.Message = "Lesson already exists in this course";
+                    response.StatusCode = 400;
+                    response.Message = "Bài học đã tồn tại trong khóa học này";
                     return response;
                 }
 
@@ -138,14 +148,16 @@ namespace CleanDemo.Application.Service
                     CourseId = dto.CourseId
                 };
                 await _lessonRepository.AddLesson(lesson);
+                response.StatusCode = 201;
+                response.Message = "Tạo bài học thành công";
                 response.Data = _mapper.Map<LessonDto>(lesson);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error adding lesson");
                 response.Success = false;
-                response.Message = "Error adding lesson";
-                return response;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
 
@@ -157,14 +169,15 @@ namespace CleanDemo.Application.Service
             try
             {
                 var lessons = await _lessonRepository.GetListLessonByCourseId(CourseId);
+                response.StatusCode = 200;
                 response.Data = lessons.Select(l => _mapper.Map<ListLessonDto>(l)).ToList();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting lessons");
                 response.Success = false;
-                response.Message = "Error getting lessons";
-                return response;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }
@@ -177,17 +190,19 @@ namespace CleanDemo.Application.Service
                 if (lesson == null)
                 {
                     response.Success = false;
-                    response.Message = "Lesson not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài học";
                     return response;
                 }
+                response.StatusCode = 200;
                 response.Data = _mapper.Map<LessonDto>(lesson);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting lesson");
                 response.Success = false;
-                response.Message = "Error getting lesson";
-                return response;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }
@@ -201,7 +216,8 @@ namespace CleanDemo.Application.Service
                 if (lesson == null)
                 {
                     response.Success = false;
-                    response.Message = "Lesson not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài học";
                     return response;
                 }
 
@@ -210,14 +226,16 @@ namespace CleanDemo.Application.Service
                 lesson.Description = dto.Description;
 
                 await _lessonRepository.UpdateLesson(lesson);
+                response.StatusCode = 200;
+                response.Message = "Cập nhật bài học thành công";
                 response.Data = _mapper.Map<LessonDto>(lesson);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating lesson");
                 response.Success = false;
-                response.Message = "Error updating lesson";
-                return response;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }
@@ -231,7 +249,8 @@ namespace CleanDemo.Application.Service
                 if (lesson == null)
                 {
                     response.Success = false;
-                    response.Message = "Lesson not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài học";
                     response.Data = false;
                     return response;
                 }
@@ -240,7 +259,8 @@ namespace CleanDemo.Application.Service
                 if (course == null)
                 {
                     response.Success = false;
-                    response.Message = "Course not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
                     response.Data = false;
                     return response;
                 }
@@ -249,7 +269,8 @@ namespace CleanDemo.Application.Service
                     case CourseType.System:
                         // Admin mới được xóa lesson trong System course
                         response.Success = false;
-                        response.Message = "Only admin can delete lessons from System courses";
+                        response.StatusCode = 403;
+                        response.Message = "Chỉ admin mới có thể xóa bài học từ khóa học hệ thống";
                         response.Data = false;
                         return response;
                     case CourseType.Teacher:
@@ -258,21 +279,24 @@ namespace CleanDemo.Application.Service
                         break;
                     default:
                         response.Success = false;
-                        response.Message = "Invalid course type";
+                        response.StatusCode = 400;
+                        response.Message = "Loại khóa học không hợp lệ";
                         response.Data = false;
                         return response;
                 }
 
                 await _lessonRepository.DeleteLesson(lessonId);
+                response.StatusCode = 200;
+                response.Message = "Xóa bài học thành công";
                 response.Data = true;
             }
             catch (Exception ex) 
             {
                 _logger.LogError(ex, "Error deleting lesson {LessonId}", lessonId);
                 response.Success = false;
-                response.Message = "Error deleting lesson";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
                 response.Data = false;
-                return response;
             }
             return response;
         }
@@ -308,7 +332,8 @@ namespace CleanDemo.Application.Service
                 if (!lessonResponse.Success || lessonResponse.Data == null)
                 {
                     response.Success = false;
-                    response.Message = "Lesson not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài học";
                     response.Data = false;
                     return response;
                 }
@@ -328,7 +353,8 @@ namespace CleanDemo.Application.Service
                     {
                         _logger.LogWarning("Teacher {UserId} attempted to delete lesson {LessonId} without permission", userId, lessonId);
                         response.Success = false;
-                        response.Message = "You can only delete lessons from your own courses";
+                        response.StatusCode = 403;
+                        response.Message = "Bạn chỉ có thể xóa bài học từ khóa học của mình";
                         response.Data = false;
                         return response;
                     }
@@ -338,7 +364,8 @@ namespace CleanDemo.Application.Service
                 }
 
                 response.Success = false;
-                response.Message = "Insufficient permissions";
+                response.StatusCode = 403;
+                response.Message = "Không có quyền truy cập";
                 response.Data = false;
                 return response;
             }
@@ -346,7 +373,8 @@ namespace CleanDemo.Application.Service
             {
                 _logger.LogError(ex, "Error in DeleteLessonWithAuthorizationAsync for lesson {LessonId} by user {UserId}", lessonId, userId);
                 response.Success = false;
-                response.Message = "Internal server error";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
                 response.Data = false;
                 return response;
             }
@@ -362,7 +390,8 @@ namespace CleanDemo.Application.Service
                 if (!lessonResponse.Success || lessonResponse.Data == null)
                 {
                     response.Success = false;
-                    response.Message = "Lesson not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài học";
                     return response;
                 }
 
@@ -381,27 +410,28 @@ namespace CleanDemo.Application.Service
                     {
                         _logger.LogWarning("Teacher {UserId} attempted to update lesson {LessonId} without permission", userId, lessonId);
                         response.Success = false;
-                        response.Message = "You can only update lessons from your own courses";
+                        response.StatusCode = 403;
+                        response.Message = "Bạn chỉ có thể cập nhật bài học từ khóa học của mình";
                         return response;
                     }
 
-                    _logger.LogInformation("Teacher {UserId} is updating lesson {LessonId} from course {CourseId}", userId, lessonId, lessonResponse.Data.CourseId);
+                    _logger.LogInformation("Teacher {UserId} is updating lesson {LessonId}", userId, lessonId);
                     return await UpdateLesson(lessonId, dto);
                 }
 
                 response.Success = false;
-                response.Message = "Insufficient permissions";
+                response.StatusCode = 403;
+                response.Message = "Không có quyền truy cập";
                 return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in UpdateLessonWithAuthorizationAsync for lesson {LessonId} by user {UserId}", lessonId, userId);
                 response.Success = false;
-                response.Message = "Internal server error";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
                 return response;
             }
         }
-
-
     }
 }

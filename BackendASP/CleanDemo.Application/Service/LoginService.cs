@@ -31,7 +31,8 @@ namespace CleanDemo.Application.Service
                 if (user == null || !user.VerifyPassword(dto.Password))
                 {
                     response.Success = false;
-                    response.Message = "Invalid email or password";
+                    response.StatusCode = 401;
+                    response.Message = "Email hoặc mật khẩu không đúng";
                     return response;
                 }
 
@@ -41,12 +42,15 @@ namespace CleanDemo.Application.Service
                 await _refreshTokenRepository.AddAsync(refreshToken);
                 await _refreshTokenRepository.SaveChangesAsync();
 
+                response.StatusCode = 200;
+                response.Message = "Đăng nhập thành công";
                 response.Data = new AuthResponseDto { AccessToken = accessToken, RefreshToken = refreshToken.Token, User = _mapper.Map<UserDto>(user) };
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 response.Success = false;
-                response.Message = ex.Message;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }

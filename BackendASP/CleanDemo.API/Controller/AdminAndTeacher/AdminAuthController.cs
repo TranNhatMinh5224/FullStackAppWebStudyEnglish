@@ -8,6 +8,8 @@ namespace CleanDemo.API.Controllers.Admin
     [ApiController]
     [Route("api/admin/auth")]
     [Authorize(Roles = "Admin")]
+
+    // ControllerBase là lớp cơ sở cho tất cả các controller trong ASP.NET Core
     public class AdminAuthController : ControllerBase
     {
         private readonly IUserManagementService _userManagementService;
@@ -16,6 +18,7 @@ namespace CleanDemo.API.Controllers.Admin
         {
             _userManagementService = userManagementService;
         }
+        // Controller lấy ra danh sách User trong hệ thống
 
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
@@ -24,8 +27,12 @@ namespace CleanDemo.API.Controllers.Admin
             if (!result.Success) return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
+        // Controller lấy ra danh sách giáo viên trong hệ thống
 
-    
+
+
+
+
 
 
     }

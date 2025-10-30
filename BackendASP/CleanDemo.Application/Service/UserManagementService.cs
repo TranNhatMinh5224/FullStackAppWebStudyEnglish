@@ -25,16 +25,19 @@ namespace CleanDemo.Application.Service
                 if (user == null)
                 {
                     response.Success = false;
-                    response.Message = "User not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy người dùng";
                     return response;
                 }
 
+                response.StatusCode = 200;
                 response.Data = _mapper.Map<UserDto>(user);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 response.Success = false;
-                response.Message = ex.Message;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }
@@ -48,7 +51,8 @@ namespace CleanDemo.Application.Service
                 if (user == null)
                 {
                     response.Success = false;
-                    response.Message = "User not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy người dùng";
                     return response;
                 }
 
@@ -57,12 +61,15 @@ namespace CleanDemo.Application.Service
                 await _userRepository.UpdateUserAsync(user);
                 await _userRepository.SaveChangesAsync();
 
+                response.StatusCode = 200;
+                response.Message = "Cập nhật hồ sơ thành công";
                 response.Data = _mapper.Map<UserDto>(user);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 response.Success = false;
-                response.Message = ex.Message;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }
@@ -73,12 +80,14 @@ namespace CleanDemo.Application.Service
             try
             {
                 var users = await _userRepository.GetAllUsersAsync();
+                response.StatusCode = 200;
                 response.Data = _mapper.Map<List<UserDto>>(users);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 response.Success = false;
-                response.Message = ex.Message;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }

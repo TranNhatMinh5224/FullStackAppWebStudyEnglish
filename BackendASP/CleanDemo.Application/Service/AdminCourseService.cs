@@ -44,15 +44,17 @@ namespace CleanDemo.Application.Service
                     courseDtos.Add(courseDto);
                 }
 
+                response.StatusCode = 200;
                 response.Data = courseDtos;
-                response.Message = "Retrieved all courses successfully";
+                response.Message = "Lấy danh sách khóa học thành công";
 
                 _logger.LogInformation("Admin retrieved {Count} courses", courseDtos.Count);
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Error retrieving courses: {ex.Message}";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
                 _logger.LogError(ex, "Error in GetAllCoursesAsync");
             }
 
@@ -87,15 +89,17 @@ namespace CleanDemo.Application.Service
                 courseResponseDto.LessonCount = 0;
                 courseResponseDto.StudentCount = 0;
 
+                response.StatusCode = 201;
                 response.Data = courseResponseDto;
-                response.Message = "Course created successfully by Admin";
+                response.Message = "Tạo khóa học thành công";
 
                 _logger.LogInformation("Admin created course: {CourseTitle} (ID: {CourseId})", requestDto.Title, course.CourseId);
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Error creating course: {ex.Message}";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
                 _logger.LogError(ex, "Error in AdminCreateCourseAsync");
             }
 
@@ -113,22 +117,25 @@ namespace CleanDemo.Application.Service
                 if (course == null)
                 {
                     response.Success = false;
-                    response.Message = "Course not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
                     return response;
                 }
 
                 await _courseRepository.DeleteCourse(courseId);
 
                 response.Success = true;
+                response.StatusCode = 200;
                 response.Data = true;
-                response.Message = "Course deleted successfully";
+                response.Message = "Xóa khóa học thành công";
 
                 _logger.LogInformation("Course {CourseId} deleted", courseId);
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Error deleting course: {ex.Message}";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
                 _logger.LogError(ex, "Error in DeleteCourseAsync for CourseId: {CourseId}", courseId);
             }
 

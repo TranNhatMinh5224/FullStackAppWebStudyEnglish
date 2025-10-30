@@ -28,7 +28,8 @@ namespace CleanDemo.Application.Service
                 {
                     // Log failed attempt for security monitoring
                     response.Success = false;
-                    response.Message = "Invalid current password";
+                    response.StatusCode = 400;
+                    response.Message = "Mật khẩu hiện tại không đúng";
                     return response;
                 }
 
@@ -36,7 +37,8 @@ namespace CleanDemo.Application.Service
                 if (!IsPasswordStrong(dto.NewPassword))
                 {
                     response.Success = false;
-                    response.Message = "Password must contain at least 8 characters, including uppercase, lowercase, number and special character";
+                    response.StatusCode = 400;
+                    response.Message = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt";
                     return response;
                 }
 
@@ -46,13 +48,15 @@ namespace CleanDemo.Application.Service
 
                 await _userRepository.SaveChangesAsync();
 
+                response.StatusCode = 200;
                 response.Data = true;
-                response.Message = "Password changed successfully. Please login again on all devices.";
+                response.Message = "Đổi mật khẩu thành công";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 response.Success = false;
-                response.Message = ex.Message;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }
@@ -66,7 +70,8 @@ namespace CleanDemo.Application.Service
                 if (string.IsNullOrEmpty(email))
                 {
                     response.Success = false;
-                    response.Message = "Email is required";
+                    response.StatusCode = 400;
+                    response.Message = "Email là bắt buộc";
                     return response;
                 }
 
@@ -74,8 +79,9 @@ namespace CleanDemo.Application.Service
                 
                 if (user == null)
                 {
+                    response.StatusCode = 200;
                     response.Data = true;
-                    response.Message = "If the email exists, an OTP code has been sent";
+                    response.Message = "Email khôi phục mật khẩu đã được gửi";
                     return response;
                 }
 
@@ -96,13 +102,15 @@ namespace CleanDemo.Application.Service
                 // Send OTP email via EmailService
                 await _emailService.SendOTPEmailAsync(email, otpCode, user.FirstName);
 
+                response.StatusCode = 200;
                 response.Data = true;
-                response.Message = "If the email exists, an OTP code has been sent";
+                response.Message = "Email khôi phục mật khẩu đã được gửi";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 response.Success = false;
-                response.Message = $"An error occurred while processing your request: {ex.Message}";
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }
@@ -117,7 +125,8 @@ namespace CleanDemo.Application.Service
                 if (user == null)
                 {
                     response.Success = false;
-                    response.Message = "User not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy người dùng";
                     return response;
                 }
 
@@ -126,14 +135,16 @@ namespace CleanDemo.Application.Service
                 if (otpToken == null)
                 {
                     response.Success = false;
-                    response.Message = "Invalid or expired OTP code";
+                    response.StatusCode = 400;
+                    response.Message = "Mã OTP không hợp lệ hoặc đã hết hạn";
                     return response;
                 }
 
                 if (otpToken.Token != dto.OtpCode)
                 {
                     response.Success = false;
-                    response.Message = "Invalid or expired OTP code";
+                    response.StatusCode = 400;
+                    response.Message = "Mã OTP không hợp lệ hoặc đã hết hạn";
                     return response;
                 }
 
@@ -141,7 +152,8 @@ namespace CleanDemo.Application.Service
                 if (otpToken.ExpiresAt < DateTime.UtcNow)
                 {
                     response.Success = false;
-                    response.Message = "OTP code has expired";
+                    response.StatusCode = 400;
+                    response.Message = "Mã OTP không hợp lệ hoặc đã hết hạn";
                     return response;
                 }
 
@@ -149,17 +161,20 @@ namespace CleanDemo.Application.Service
                 if (otpToken.IsUsed)
                 {
                     response.Success = false;
-                    response.Message = "OTP code has already been used";
+                    response.StatusCode = 400;
+                    response.Message = "Mã OTP đã được sử dụng";
                     return response;
                 }
 
+                response.StatusCode = 200;
                 response.Data = true;
-                response.Message = "OTP verified successfully. You can now set your new password.";
+                response.Message = "Xác thực mã OTP thành công";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 response.Success = false;
-                response.Message = ex.Message;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }
@@ -174,7 +189,8 @@ namespace CleanDemo.Application.Service
                 if (user == null)
                 {
                     response.Success = false;
-                    response.Message = "User not found";
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy người dùng";
                     return response;
                 }
 
@@ -183,14 +199,16 @@ namespace CleanDemo.Application.Service
                 if (otpToken == null)
                 {
                     response.Success = false;
-                    response.Message = "Invalid or expired OTP code";
+                    response.StatusCode = 400;
+                    response.Message = "Mã OTP không hợp lệ hoặc đã hết hạn";
                     return response;
                 }
 
                 if (otpToken.Token != dto.OtpCode)
                 {
                     response.Success = false;
-                    response.Message = "Invalid or expired OTP code";
+                    response.StatusCode = 400;
+                    response.Message = "Mã OTP không hợp lệ hoặc đã hết hạn";
                     return response;
                 }
 
@@ -198,7 +216,8 @@ namespace CleanDemo.Application.Service
                 if (otpToken.ExpiresAt < DateTime.UtcNow)
                 {
                     response.Success = false;
-                    response.Message = "OTP code has expired";
+                    response.StatusCode = 400;
+                    response.Message = "Mã OTP không hợp lệ hoặc đã hết hạn";
                     return response;
                 }
 
@@ -206,7 +225,8 @@ namespace CleanDemo.Application.Service
                 if (otpToken.IsUsed)
                 {
                     response.Success = false;
-                    response.Message = "OTP code has already been used";
+                    response.StatusCode = 400;
+                    response.Message = "Mã OTP đã được sử dụng";
                     return response;
                 }
 
@@ -222,13 +242,15 @@ namespace CleanDemo.Application.Service
                 await _userRepository.SaveChangesAsync();
                 await _passwordResetTokenRepository.SaveChangesAsync();
 
+                response.StatusCode = 200;
                 response.Data = true;
-                response.Message = "Password has been reset successfully";
+                response.Message = "Đặt lại mật khẩu thành công";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 response.Success = false;
-                response.Message = ex.Message;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
             }
             return response;
         }

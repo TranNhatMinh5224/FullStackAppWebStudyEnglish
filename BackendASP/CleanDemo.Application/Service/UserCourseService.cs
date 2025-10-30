@@ -34,15 +34,17 @@ namespace CleanDemo.Application.Service
 
                 var courseDtos = _mapper.Map<IEnumerable<UserCourseListResponseDto>>(courses);
 
+                response.StatusCode = 200;
                 response.Data = courseDtos;
-                response.Message = "Retrieved system courses successfully";
+                response.Message = "Lấy danh sách khóa học hệ thống thành công";
 
                 _logger.LogInformation("User retrieved {Count} system courses", courseDtos.Count());
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Error retrieving system courses: {ex.Message}";
+                response.StatusCode = 500;
+                response.Message = $"Lỗi khi lấy danh sách khóa học hệ thống: {ex.Message}";
                 _logger.LogError(ex, "Error in GetSystemCoursesAsync");
             }
 
