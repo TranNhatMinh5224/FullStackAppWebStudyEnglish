@@ -57,7 +57,7 @@ namespace CleanDemo.Application.Service
 
                 response.StatusCode = 200;
                 response.Message = "Đăng nhập thành công";
-                response.Data = new AuthResponseDto { AccessToken = accessToken, RefreshToken = refreshToken.Token, User = _mapper.Map<UserDto>(user) };
+                response.Data = new AuthResponseDto { AccessToken = accessToken.Item1, RefreshToken = refreshToken.Token, ExpiresAt = accessToken.Item2, User = _mapper.Map<UserDto>(user) };
             }
             catch (Exception)
             {
