@@ -28,12 +28,14 @@ namespace CleanDemo.Application.DTOs
         public string PhoneNumber { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
     }
-    // Dto dành cho phản hồi xác thực
+    // Dto dành cho phản hồi đăng nhập thành công  
     public class AuthResponseDto
     {
         public string AccessToken { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
         public UserDto User { get; set; } = new();
+
+        public DateTime ExpiresAt { get; set; }
     }
     // Dto dùng cho update user
     public class UpdateUserDto
@@ -72,6 +74,7 @@ namespace CleanDemo.Application.DTOs
     {
         public string AccessToken { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
+
     }
     // Dto phản hồi refresh token
     public class RefreshTokenResponseDto
