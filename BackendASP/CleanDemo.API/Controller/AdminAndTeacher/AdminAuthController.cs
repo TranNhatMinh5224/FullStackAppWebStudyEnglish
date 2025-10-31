@@ -38,8 +38,19 @@ namespace CleanDemo.API.Controllers.Admin
                 return StatusCode(result.StatusCode, new { message = result.Message });
 
             return Ok(result.Data);
-           
-        }
 
+        }
+        
+        // Controller mở khóa tài khoản người dùng
+        [HttpPut("unblock-account/{userId}")]
+        public async Task<IActionResult> UnblockAccount(int userId)
+        {
+            var result = await _userManagementService.UnblockAccountAsync(userId);
+
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { message = result.Message });
+
+            return Ok(result.Data);
+        }
     }
 }
