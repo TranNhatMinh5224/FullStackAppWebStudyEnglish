@@ -18,9 +18,9 @@ namespace CleanDemo.Application.Service
 
         public string GenerateAccessToken(User user)
         {
-            var jwtKey = Environment.GetEnvironmentVariable("Jwt__Key_ASPELEARNING") ?? throw new InvalidOperationException("JWT Key not configured");
-            var jwtIssuer = Environment.GetEnvironmentVariable("Jwt__Issuer_ASPELEARNING") ?? "default-issuer";
-            var jwtAudience = Environment.GetEnvironmentVariable("Jwt__Audience_ASPELEARNING") ?? "default-audience";
+            var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+            var jwtIssuer = _configuration["Jwt:Issuer"] ?? "default-issuer";
+            var jwtAudience = _configuration["Jwt:Audience"] ?? "default-audience";
 
             var claims = new List<Claim>
             {
