@@ -167,6 +167,7 @@ namespace CleanDemo.API.Controllers.User
                 return StatusCode(500, new { success = false, message = "Đã xảy ra lỗi khi đặt lại mật khẩu" });
             }
         }
+        // Controller xin cấp refresh token
 
         // Add more user-specific endpoints here
     }

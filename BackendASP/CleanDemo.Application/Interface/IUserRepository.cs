@@ -14,5 +14,7 @@ namespace CleanDemo.Application.Interface
         Task SaveChangesAsync();
         // Thêm method lấy role
         Task<Role?> GetRoleByNameAsync(string roleName);
+        // Thêm Phương thức lấy role theo userId
+        Task<bool> GetUserRolesAsync(int userId);
     }
 }
