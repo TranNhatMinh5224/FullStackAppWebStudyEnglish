@@ -15,20 +15,20 @@ using CleanDemo.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// load config từ appsettings và biến môi trường
+// Load configuration (appsettings + environment)
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// đọc config cần thiết }
+// Read essential configs
 var frontendUrl = builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
 
-// validate config JWT }
+// Validate JWT config
 if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
     throw new InvalidOperationException("Jwt:Key is missing or too short (>=32 chars).");
 if (string.IsNullOrWhiteSpace(jwtIssuer))
@@ -36,11 +36,10 @@ if (string.IsNullOrWhiteSpace(jwtIssuer))
 if (string.IsNullOrWhiteSpace(jwtAudience))
     throw new InvalidOperationException("Jwt:Audience is missing.");
 
-// add controller + swagger endpoint
+// Add controllers + Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// swagger config + JWT authorize button
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "FullStack English Learning API", Version = "v1" });
@@ -54,30 +53,30 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Enter 'Bearer {token}'"
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
+    {
         { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }, Array.Empty<string>() }
-            });
+    });
 });
 
-// CORS cho phép FE gọi API
+// CORS (frontend)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", p =>
-            p.WithOrigins(frontendUrl)
-             .AllowAnyHeader()
-             .AllowAnyMethod()
-             .AllowCredentials());
+        p.WithOrigins(frontendUrl)
+         .AllowAnyHeader()
+         .AllowAnyMethod()
+         .AllowCredentials());
 });
 
-// FluentValidation tự động quét validators trong Application
+// FluentValidation
 builder.Services.AddFluentValidationAutoValidation()
     .AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssembly(typeof(MappingProfile).Assembly);
 
-// AutoMapper mapping giữa DTO và Entity
+// AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// cấu hình database PostgreSQL
+// Database (PostgreSQL)
 if (string.IsNullOrWhiteSpace(conn))
     throw new InvalidOperationException("Missing ConnectionStrings:DefaultConnection.");
 
@@ -87,7 +86,7 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
         npgsql.EnableRetryOnFailure(0);
     }));
 
-// JWT Auth setup
+// JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -106,7 +105,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// register repository layer 
+// Repository layer
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
@@ -117,7 +116,7 @@ builder.Services.AddScoped<ITeacherPackageRepository, TeacherPackageRepository>(
 builder.Services.AddScoped<ITeacherSubscriptionRepository, TeacherSubscriptionRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-// register service layer 
+// Service layer
 builder.Services.AddScoped<IAdminCourseService, AdminCourseService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
@@ -136,10 +135,10 @@ builder.Services.AddScoped<IUserCourseService, UserCourseService>();
 builder.Services.AddScoped<IEnrollmentQueryService, EnrollmentQueryService>();
 builder.Services.AddScoped<IProgressService, ProgressService>();
 
-// build app 
+// Build app
 var app = builder.Build();
 
-// middleware pipeline 
+// Middleware pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
