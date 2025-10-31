@@ -85,4 +85,9 @@ namespace CleanDemo.Application.DTOs
     {
         public string Message { get; set; } = string.Empty;
     }
+    // Dto phản hồi unblock account
+    public class UnblockAccountResponseDto
+    {
+        public string Message { get; set; } = string.Empty;
+    }
 }

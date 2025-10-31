@@ -134,7 +134,51 @@ namespace CleanDemo.Application.Service
                 {
                     Message = "Block tài khoản thành công"
                 };
-                return response;
+
+            }
+            catch (Exception)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+        // Implement cho phương thức unblock account
+        public async Task<ServiceResponse<UnblockAccountResponseDto>> UnblockAccountAsync(int userId)
+        {
+            var response = new ServiceResponse<UnblockAccountResponseDto>();
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy tài khoản người dùng";
+                    return response;
+                }
+
+                if (user.Status == StatusAccount.Active)
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "Tài khoản hiện không bị khóa";
+                    return response;
+                }
+
+                user.Status = StatusAccount.Active;
+                user.UpdatedAt = DateTime.UtcNow;
+                await _userRepository.UpdateUserAsync(user);
+                await _userRepository.SaveChangesAsync();
+
+                response.StatusCode = 200;
+                response.Success = true;
+                response.Data = new UnblockAccountResponseDto
+                {
+                    Message = "Unblock tài khoản thành công"
+                };
+
             }
             catch (Exception)
             {
