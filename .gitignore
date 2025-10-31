@@ -8,7 +8,7 @@
 ###############################################
 #  APP SETTINGS - SENSITIVE DATA
 ###############################################
-# Exclude development appsettings (contains passwords, keys)
+# Exclude environment-specific appsettings (often contain secrets)
 **/appsettings.Development.json
 **/appsettings.Local.json
 **/appsettings.Test.json
@@ -35,9 +35,7 @@ publish/
 *.ide
 *.swp
 
-
-# **/Migrations/
-
+# IDE metadata
 .vs/
 .vscode/
 .idea/
@@ -48,9 +46,9 @@ publish/
 *.rsuser
 *.userprefs
 
-
+###############################################
 #  BUILD CONFIGURATIONS
-
+###############################################
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -63,8 +61,10 @@ bld/
 [Ll]og/
 artifacts/
 TestResults/
-FRONTEND (React / Node.js)
 
+###############################################
+# FRONTEND (React / Node.js)
+###############################################
 node_modules/
 build/
 dist/
@@ -72,42 +72,38 @@ coverage/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
-yarn.lock
+# Giữ lockfile để build reproducible
+# (KHÔNG ignore 2 file dưới, nên comment lại)
+# package-lock.json
+# yarn.lock
 
-
+###############################################
 #  TEST OUTPUT
-
+###############################################
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
 
-
+###############################################
 #  ENTITY FRAMEWORK
-
-**/Migrations/
+###############################################
+# KHÔNG ignore migrations (cần commit để đồng bộ DB schema)
 *.dbmdl
 
-
-# ⚠️ REMOVED - No longer needed (now using appsettings.json)
-# appsettings.Development.json
-# appsettings.Local.json  
-# appsettings.Test.json
-
-
+###############################################
 #  OS-SPECIFIC FILES
-
+###############################################
 .DS_Store
 Thumbs.db
 desktop.ini
 $RECYCLE.BIN/
 ehthumbs.db
 
-
+###############################################
 #  BACKUPS / TEMP FILES
-
+###############################################
 *.old
 *.orig
 *.tmp
@@ -118,8 +114,9 @@ ehthumbs.db
 *.7z
 *.rar
 
+###############################################
 # CUSTOM IGNORES (optional)
-
+###############################################
 /BackendASP/**/bin/
 /BackendASP/**/obj/
 /Frontend/**/build/
