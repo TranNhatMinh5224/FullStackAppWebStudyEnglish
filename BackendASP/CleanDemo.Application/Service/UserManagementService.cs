@@ -188,5 +188,25 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
+        // Implement cho phương thức lấy danh sách tài khoản bị khóa
+        public async Task<ServiceResponse<List<UserDto>>> GetListBlockedAccountsAsync()
+        {
+            var response = new ServiceResponse<List<UserDto>>();
+            try
+            {
+                var users = await _userRepository.GetAllUsersAsync();
+                var ListBlockedUsers = users.Where(u => u.Status == StatusAccount.Inactive).ToList();
+                response.StatusCode = 200;
+                response.Success = true;
+                response.Data = _mapper.Map<List<UserDto>>(ListBlockedUsers);
+            }
+            catch (Exception)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
     }
 }

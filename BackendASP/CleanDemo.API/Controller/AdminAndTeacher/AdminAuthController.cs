@@ -40,7 +40,7 @@ namespace CleanDemo.API.Controllers.Admin
             return Ok(result.Data);
 
         }
-        
+
         // Controller mở khóa tài khoản người dùng
         [HttpPut("unblock-account/{userId}")]
         public async Task<IActionResult> UnblockAccount(int userId)
@@ -50,6 +50,14 @@ namespace CleanDemo.API.Controllers.Admin
             if (!result.Success)
                 return StatusCode(result.StatusCode, new { message = result.Message });
 
+            return Ok(result.Data);
+        }
+        // Controller lấy danh sách tài khoản bị khóa
+        [HttpGet("list-blocked-accounts")]
+        public async Task<IActionResult> GetListBlockedAccounts()
+        {
+            var result = await _userManagementService.GetListBlockedAccountsAsync();
+            if (!result.Success) return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
     }

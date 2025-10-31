@@ -10,5 +10,6 @@ namespace CleanDemo.Application.Interface
         Task<ServiceResponse<List<UserDto>>> GetAllUsersAsync();
         Task<ServiceResponse<BlockAccountResponseDto>> BlockAccountAsync(int userId);
         Task<ServiceResponse<UnblockAccountResponseDto>> UnblockAccountAsync(int userId);
+        Task<ServiceResponse<List<UserDto>>> GetListBlockedAccountsAsync();
     }
 }
