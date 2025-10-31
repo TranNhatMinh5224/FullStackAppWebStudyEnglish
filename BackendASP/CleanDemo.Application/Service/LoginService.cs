@@ -3,6 +3,7 @@ using CleanDemo.Application.Common;
 using CleanDemo.Application.Interface;
 using CleanDemo.Domain.Entities;
 using AutoMapper;
+using CleanDemo.Domain.Enums;
 using Microsoft.Extensions.Configuration;
 
 namespace CleanDemo.Application.Service
@@ -34,6 +35,18 @@ namespace CleanDemo.Application.Service
                     response.StatusCode = 401;
                     response.Message = "Email hoặc mật khẩu không đúng";
                     return response;
+                }
+                if (user.Status == StatusAccount.Inactive)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Tài khoản của bạn đã bị khóa do vi phạm chính sách!";
+                    response.Data = new AuthResponseDto
+                    {
+                        User = _mapper.Map<UserDto>(user),
+                    };
+                    return response;
+                    
                 }
 
                 var accessToken = _tokenService.GenerateAccessToken(user);

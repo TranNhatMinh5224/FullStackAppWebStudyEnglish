@@ -64,5 +64,20 @@ namespace CleanDemo.Infrastructure.Repositories
             await _context.SaveChangesAsync();  // Save changes
             return true;
         }
+        // Implement cho phương thức lấy role theo userId
+        public async Task<bool> GetUserRolesAsync(int userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+            
+            if (user == null)
+            {
+                return false;
+            }
+
+            // Kiểm tra có role Admin không
+            return user.Roles.Any(r => r.Name.ToLower() == "admin");
+        }
     }
 }

@@ -28,12 +28,18 @@ namespace CleanDemo.API.Controllers.Admin
             return Ok(result.Data);
         }
         // Controller lấy ra danh sách giáo viên trong hệ thống
+        // Controller block tài khoản người dùng(teacher và student)
+        [HttpPut("block-account/{userId}")]
+        public async Task<IActionResult> BlockAccount(int userId)
+        {
+            var result = await _userManagementService.BlockAccountAsync(userId);
 
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { message = result.Message });
 
-
-
-
-
+            return Ok(result.Data);
+           
+        }
 
     }
 }

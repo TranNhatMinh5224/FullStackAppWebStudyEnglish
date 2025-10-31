@@ -1,6 +1,7 @@
 using CleanDemo.Application.DTOs;
 using CleanDemo.Application.Interface;
 using CleanDemo.Application.Common;
+using CleanDemo.Domain.Enums; 
 using AutoMapper;
 
 namespace CleanDemo.Application.Service
@@ -82,6 +83,58 @@ namespace CleanDemo.Application.Service
                 var users = await _userRepository.GetAllUsersAsync();
                 response.StatusCode = 200;
                 response.Data = _mapper.Map<List<UserDto>>(users);
+            }
+            catch (Exception)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+        // Implement phương thức block account
+        public async Task<ServiceResponse<BlockAccountResponseDto>> BlockAccountAsync(int userId)
+        {
+            var response = new ServiceResponse<BlockAccountResponseDto>();
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy tài khoản người dùng";
+                    return response;
+                }
+
+                var isAdmin = await _userRepository.GetUserRolesAsync(userId);
+                if (isAdmin)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Không thể block tài khoản Admin";
+                    return response;
+                }
+
+                if (user.Status == StatusAccount.Inactive)
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "Tài khoản đã bị khóa trước đó";
+                    return response;
+                }
+                user.Status = StatusAccount.Inactive;
+                user.UpdatedAt = DateTime.UtcNow;
+                await _userRepository.UpdateUserAsync(user);
+                await _userRepository.SaveChangesAsync();
+
+                response.StatusCode = 200;
+                response.Success = true;
+                response.Data = new BlockAccountResponseDto
+                {
+                    Message = "Block tài khoản thành công"
+                };
+                return response;
             }
             catch (Exception)
             {

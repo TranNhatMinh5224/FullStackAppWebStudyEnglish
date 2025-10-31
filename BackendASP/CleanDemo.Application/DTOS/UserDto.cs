@@ -1,3 +1,6 @@
+using System.Runtime.CompilerServices;
+using CleanDemo.Domain.Entities;
+
 namespace CleanDemo.Application.DTOs
 {
     // Dto dành cho đăng ký người dùng
@@ -70,11 +73,16 @@ namespace CleanDemo.Application.DTOs
         public string AccessToken { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
     }
-
+    // Dto phản hồi refresh token
     public class RefreshTokenResponseDto
     {
         public string AccessToken { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
         public DateTime ExpiresAt { get; set; }
+    }
+    // Dto phản hồi block account
+    public class BlockAccountResponseDto
+    {
+        public string Message { get; set; } = string.Empty;
     }
 }

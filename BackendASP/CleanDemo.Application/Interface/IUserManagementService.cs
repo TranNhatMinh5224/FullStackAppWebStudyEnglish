@@ -8,5 +8,6 @@ namespace CleanDemo.Application.Interface
         Task<ServiceResponse<UserDto>> GetUserProfileAsync(int userId);
         Task<ServiceResponse<UserDto>> UpdateUserProfileAsync(int userId, UpdateUserDto dto);
         Task<ServiceResponse<List<UserDto>>> GetAllUsersAsync();
+        Task<ServiceResponse<BlockAccountResponseDto>> BlockAccountAsync(int userId);
     }
 }
