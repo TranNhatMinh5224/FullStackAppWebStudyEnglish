@@ -169,6 +169,15 @@ namespace CleanDemo.API.Controllers.User
         }
         // Controller xin cấp refresh token
 
-        // Add more user-specific endpoints here
+        // Refresh Token
+        [HttpPost("refresh-token")]
+        [Authorize(Roles = "User,Admin,Teacher")]
+        public async Task<IActionResult> RefreshToken([FromBody] ReceiveRefreshTokenDto request)
+        {
+            var result = await _loginService.RefreshTokenAsync(request);
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
+            return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message, data = result.Data });
+        }
     }
 }
