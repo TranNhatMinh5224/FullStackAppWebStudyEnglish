@@ -7,8 +7,5 @@ namespace CleanDemo.Application.Interface
     {
         Task<ServiceResponse<AuthResponseDto>> LoginUserAsync(LoginUserDto dto);
 
-
-
-
     }
 }
