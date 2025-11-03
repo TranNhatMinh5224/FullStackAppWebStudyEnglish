@@ -18,5 +18,7 @@ namespace CleanDemo.Application.Interface
 
         // Giữ từ dev
         Task<ServiceResponse<List<UserDto>>> GetListTeachersAsync();
+        //Lấy danh sách học sinh theo all course
+        Task<ServiceResponse<List<StudentsByAllCoursesDto>>> GetStudentsByAllCoursesAsync();
     }
 }

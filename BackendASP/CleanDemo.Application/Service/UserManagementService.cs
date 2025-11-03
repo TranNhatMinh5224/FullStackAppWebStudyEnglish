@@ -279,5 +279,45 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
+        // Implement lấy danh sách học sinh theo all course
+        public async Task<ServiceResponse<List<StudentsByAllCoursesDto>>> GetStudentsByAllCoursesAsync()
+        {
+            var response = new ServiceResponse<List<StudentsByAllCoursesDto>>();
+            try
+            {
+                var allCourses = await _courseRepository.GetAllCourses();
+                var studentsByAllCourses = new List<StudentsByAllCoursesDto>();
+
+                foreach (var course in allCourses)
+                {
+                    var usersInCourse = await _courseRepository.GetEnrolledUsers(course.CourseId);
+
+                    var courseWithUsers = new StudentsByAllCoursesDto
+                    {
+                        CourseId = course.CourseId,
+                        Title = course.Title,
+                        Description = course.Description ?? "",
+                        TeacherName = course.Teacher != null ?
+                            $"{course.Teacher.FirstName} {course.Teacher.LastName}" : "System",
+                        TotalUsers = usersInCourse.Count(),
+                        Users = _mapper.Map<List<UserDto>>(usersInCourse)
+                    };
+
+                    studentsByAllCourses.Add(courseWithUsers);
+                }
+
+                response.Data = studentsByAllCourses;
+                response.StatusCode = 200;
+                response.Success = true;
+                response.Message = "Lấy danh sách học sinh theo tất cả khóa học thành công";
+            }
+            catch (Exception)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
     }
 }
