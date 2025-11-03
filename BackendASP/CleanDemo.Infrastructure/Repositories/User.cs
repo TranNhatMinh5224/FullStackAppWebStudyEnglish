@@ -46,12 +46,12 @@ namespace CleanDemo.Infrastructure.Repositories
                 return false;
             }
 
-            // Check if user already has Teacher role (RoleId=3)
+
             var existingUserRole = await _context.UserRoles
                 .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == 2);
             if (existingUserRole != null)
             {
-                // Already has the role, no need to add
+
                 return true;
             }
 
@@ -61,7 +61,7 @@ namespace CleanDemo.Infrastructure.Repositories
                 RoleId = 2
             };
             _context.UserRoles.Add(userRole);
-            await _context.SaveChangesAsync();  // Save changes
+            await _context.SaveChangesAsync();
             return true;
         }
         // Implement cho phương thức lấy role theo userId
@@ -70,7 +70,7 @@ namespace CleanDemo.Infrastructure.Repositories
             var user = await _context.Users
                 .Include(u => u.Roles)
                 .FirstOrDefaultAsync(u => u.UserId == userId);
-            
+
             if (user == null)
             {
                 return false;
@@ -79,5 +79,17 @@ namespace CleanDemo.Infrastructure.Repositories
             // Kiểm tra có role Admin không
             return user.Roles.Any(r => r.Name.ToLower() == "admin");
         }
+        // repo lay ra danh sach teacher 
+
+        public async Task<List<User>> GetAllTeachersAsync()
+        {
+            var teachers = await _context.Users
+            .Include(u => u.Roles)
+            .Include(u => u.UserRoles)
+            .Where(u => u.UserRoles.Any(ur => ur.RoleId == 2))
+            .ToListAsync();
+            return teachers;
+        }
+
     }
 }

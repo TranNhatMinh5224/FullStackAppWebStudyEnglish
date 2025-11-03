@@ -1,7 +1,7 @@
 using CleanDemo.Application.DTOs;
 using CleanDemo.Application.Interface;
 using CleanDemo.Application.Common;
-using CleanDemo.Domain.Enums; 
+using CleanDemo.Domain.Enums;
 using AutoMapper;
 
 namespace CleanDemo.Application.Service
@@ -94,7 +94,8 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        // Implement phương thức block account
+
+        // Block account
         public async Task<ServiceResponse<BlockAccountResponseDto>> BlockAccountAsync(int userId)
         {
             var response = new ServiceResponse<BlockAccountResponseDto>();
@@ -125,6 +126,7 @@ namespace CleanDemo.Application.Service
                     response.Message = "Tài khoản đã bị khóa trước đó";
                     return response;
                 }
+
                 user.Status = StatusAccount.Inactive;
                 user.UpdatedAt = DateTime.UtcNow;
                 await _userRepository.UpdateUserAsync(user);
@@ -132,11 +134,7 @@ namespace CleanDemo.Application.Service
 
                 response.StatusCode = 200;
                 response.Success = true;
-                response.Data = new BlockAccountResponseDto
-                {
-                    Message = "Block tài khoản thành công"
-                };
-
+                response.Data = new BlockAccountResponseDto { Message = "Block tài khoản thành công" };
             }
             catch (Exception)
             {
@@ -146,7 +144,8 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        // Implement cho phương thức unblock account
+
+        // Unblock account
         public async Task<ServiceResponse<UnblockAccountResponseDto>> UnblockAccountAsync(int userId)
         {
             var response = new ServiceResponse<UnblockAccountResponseDto>();
@@ -176,11 +175,7 @@ namespace CleanDemo.Application.Service
 
                 response.StatusCode = 200;
                 response.Success = true;
-                response.Data = new UnblockAccountResponseDto
-                {
-                    Message = "Unblock tài khoản thành công"
-                };
-
+                response.Data = new UnblockAccountResponseDto { Message = "Unblock tài khoản thành công" };
             }
             catch (Exception)
             {
@@ -190,17 +185,18 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        // Implement cho phương thức lấy danh sách tài khoản bị khóa
+
+        // Danh sách tài khoản bị khóa
         public async Task<ServiceResponse<List<UserDto>>> GetListBlockedAccountsAsync()
         {
             var response = new ServiceResponse<List<UserDto>>();
             try
             {
                 var users = await _userRepository.GetAllUsersAsync();
-                var ListBlockedUsers = users.Where(u => u.Status == StatusAccount.Inactive).ToList();
+                var blocked = users.Where(u => u.Status == StatusAccount.Inactive).ToList();
                 response.StatusCode = 200;
                 response.Success = true;
-                response.Data = _mapper.Map<List<UserDto>>(ListBlockedUsers);
+                response.Data = _mapper.Map<List<UserDto>>(blocked);
             }
             catch (Exception)
             {
@@ -210,9 +206,10 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        // Implement cho phương thức lấy danh sách người dùng theo id khóa học
-        public async Task<ServiceResponse<List<UserDto>>> GetUsersByCourseIdAsync(int courseId, int userId, string checkRole)
 
+        // === Giữ từ feature/LVE-107-GetUserbyCourseId ===
+        // Lấy danh sách người dùng theo id khóa học, có kiểm tra quyền truy cập
+        public async Task<ServiceResponse<List<UserDto>>> GetUsersByCourseIdAsync(int courseId, int userId, string checkRole)
         {
             var response = new ServiceResponse<List<UserDto>>();
             try
@@ -250,8 +247,29 @@ namespace CleanDemo.Application.Service
                 var users = await _courseRepository.GetEnrolledUsers(courseId);
                 response.Data = _mapper.Map<List<UserDto>>(users);
                 response.StatusCode = 200;
+                response.Success = true;
                 response.Message = "Lấy danh sách học sinh thành công";
+            }
+            catch (Exception)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
 
+        // === Giữ từ dev ===
+        // Lấy danh sách giáo viên
+        public async Task<ServiceResponse<List<UserDto>>> GetListTeachersAsync()
+        {
+            var response = new ServiceResponse<List<UserDto>>();
+            try
+            {
+                var teachers = await _userRepository.GetAllTeachersAsync();
+                response.StatusCode = 200;
+                response.Success = true;
+                response.Data = _mapper.Map<List<UserDto>>(teachers);
             }
             catch (Exception)
             {

@@ -16,5 +16,8 @@ namespace CleanDemo.Application.Interface
         Task<Role?> GetRoleByNameAsync(string roleName);
         // Thêm Phương thức lấy role theo userId
         Task<bool> GetUserRolesAsync(int userId);
+
+
+        Task<List<User>> GetAllTeachersAsync();
     }
 }
