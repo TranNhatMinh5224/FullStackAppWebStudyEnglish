@@ -1,7 +1,7 @@
 using CleanDemo.Application.DTOs;
 using CleanDemo.Application.Interface;
 using CleanDemo.Application.Common;
-using CleanDemo.Domain.Enums; 
+using CleanDemo.Domain.Enums;
 using AutoMapper;
 
 namespace CleanDemo.Application.Service
@@ -199,6 +199,26 @@ namespace CleanDemo.Application.Service
                 response.StatusCode = 200;
                 response.Success = true;
                 response.Data = _mapper.Map<List<UserDto>>(ListBlockedUsers);
+            }
+            catch (Exception)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+
+        // Implement cho phương thức lấy danh sách teachers
+        public async Task<ServiceResponse<List<UserDto>>> GetListTeachersAsync()
+        {
+            var response = new ServiceResponse<List<UserDto>>();
+            try
+            {
+                var teachers = await _userRepository.GetAllTeachersAsync();
+                response.StatusCode = 200;
+                response.Success = true;
+                response.Data = _mapper.Map<List<UserDto>>(teachers);
             }
             catch (Exception)
             {

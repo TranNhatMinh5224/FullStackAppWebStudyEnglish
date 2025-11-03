@@ -60,5 +60,15 @@ namespace CleanDemo.API.Controllers.Admin
             if (!result.Success) return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
+
+        // Controller lấy danh sách giáo viên trong hệ thống
+        [HttpGet("teachers")]
+
+        public async Task<IActionResult> GetListTeachers()
+        {
+            var result = await _userManagementService.GetListTeachersAsync();
+            if (!result.Success) return BadRequest(new { message = result.Message });
+            return Ok(result.Data);
+        }
     }
 }

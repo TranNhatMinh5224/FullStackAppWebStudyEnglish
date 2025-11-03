@@ -84,10 +84,12 @@ namespace CleanDemo.Infrastructure.Repositories
         public async Task<List<User>> GetAllTeachersAsync()
         {
             var teachers = await _context.Users
-                .Include(u => u.Roles)
-
-                .Where(u => u.RoleId == 2);
-
-
+            .Include(u => u.Roles)
+            .Include(u => u.UserRoles)
+            .Where(u => u.UserRoles.Any(ur => ur.RoleId == 2))
+            .ToListAsync();
+            return teachers;
         }
+
     }
+}
