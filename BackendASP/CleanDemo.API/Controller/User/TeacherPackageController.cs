@@ -47,9 +47,9 @@ namespace CleanDemo.API.Controller.User
             }
         }
 
-        /// <summary>
-        /// Lấy chi tiết gói teacher theo ID
-        /// </summary>
+        
+        // Lấy chi tiết gói teacher theo ID
+        
         [HttpGet("teacher-packages/{id}")]
         public async Task<IActionResult> GetTeacherPackageById(int id)
         {

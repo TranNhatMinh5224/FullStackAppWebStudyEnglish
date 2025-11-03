@@ -60,9 +60,9 @@ namespace CleanDemo.API.Controller.User
             }
         }
 
-        /// <summary>
-        /// Hủy đăng ký khóa học
-        /// </summary>
+
+        // Controller - Hủy đăng ký khóa học
+
         [HttpDelete("course/{courseId}")]
         public async Task<IActionResult> UnenrollFromCourse(int courseId)
         {
@@ -91,9 +91,9 @@ namespace CleanDemo.API.Controller.User
             }
         }
 
-        /// <summary>
-        /// Lấy danh sách khóa học đã đăng ký
-        /// </summary>
+      
+        // Controller Lấy danh sách khóa học đã đăng ký
+     
         [HttpGet("my-courses")]
         public async Task<IActionResult> GetMyEnrolledCourses()
         {
