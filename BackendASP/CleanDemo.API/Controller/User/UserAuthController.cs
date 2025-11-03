@@ -14,13 +14,15 @@ namespace CleanDemo.API.Controllers.User
         private readonly ILoginService _loginService;
         private readonly IUserManagementService _userManagementService;
         private readonly IPasswordService _passwordService;
+        private readonly ITokenService _tokenService;
 
-        public UserAuthController(IRegisterService registerService, ILoginService loginService, IUserManagementService userManagementService, IPasswordService passwordService)
+        public UserAuthController(IRegisterService registerService, ILoginService loginService, IUserManagementService userManagementService, IPasswordService passwordService, ITokenService tokenService)
         {
             _registerService = registerService;
             _loginService = loginService;
             _userManagementService = userManagementService;
             _passwordService = passwordService;
+            _tokenService = tokenService;
         }
 
         [HttpPost("register")]
@@ -171,10 +173,10 @@ namespace CleanDemo.API.Controllers.User
 
         // Refresh Token
         [HttpPost("refresh-token")]
-        [Authorize(Roles = "User,Admin,Teacher")]
+        //[Authorize(Roles = "Student,Admin,Teacher")]
         public async Task<IActionResult> RefreshToken([FromBody] ReceiveRefreshTokenDto request)
         {
-            var result = await _loginService.RefreshTokenAsync(request);
+            var result = await _tokenService.RefreshTokenAsync(request);
             if (!result.Success)
                 return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
             return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message, data = result.Data });
