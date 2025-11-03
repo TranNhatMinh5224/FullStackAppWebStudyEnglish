@@ -53,9 +53,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Admin - Xóa khóa học
-        /// </summary>
+       
+        // Controller Admin - Xóa khóa học
+      
         [HttpDelete("admin/{courseId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCourse(int courseId)
@@ -78,9 +78,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Admin - Tạo khóa học mới
-        /// </summary>
+        
+        // Controller Admin - Tạo khóa học mới
+        
         [HttpPost("admin/create")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminCreateCourse([FromBody] AdminCreateCourseRequestDto requestDto)
@@ -108,11 +108,11 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-        // === TEACHER ENDPOINTS ===
 
-        /// <summary>
-        /// Teacher - Tạo khóa học mới
-        /// </summary>
+
+       
+        // Controller Teacher - Tạo khóa học mới
+     
         [HttpPost("teacher/create")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> CreateCourse([FromBody] TeacherCreateCourseRequestDto requestDto)
@@ -147,9 +147,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Teacher - Lấy danh sách khóa học của mình
-        /// </summary>
+        
+        // Controller Teacher - Lấy danh sách khóa học của mình
+        
         [HttpGet("teacher/my-courses")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> GetMyCourses()
@@ -179,48 +179,48 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Teacher - Tham gia khóa học của teacher khác
-        /// </summary>
-        [HttpPost("teacher/join-course")]
-        [Authorize(Roles = "Teacher")]
-        public async Task<IActionResult> JoinCourse([FromBody] JoinCourseTeacherDto joinDto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+       
+        // Controller Teacher - Tham gia khóa học của teacher khác
+      
+        // [HttpPost("teacher/join-course")]
+        // [Authorize(Roles = "Teacher")]
+        // public async Task<IActionResult> JoinCourse([FromBody] JoinCourseTeacherDto joinDto)
+        // {
+        //     try
+        //     {
+        //         if (!ModelState.IsValid)
+        //         {
+        //             return BadRequest(ModelState);
+        //         }
 
-                // Lấy TeacherId từ JWT token
-                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(teacherIdClaim, out int teacherId))
-                {
-                    return Unauthorized(new { message = "Invalid teacher credentials" });
-                }
+        //         // Lấy TeacherId từ JWT token
+        //         var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //         if (!int.TryParse(teacherIdClaim, out int teacherId))
+        //         {
+        //             return Unauthorized(new { message = "Invalid teacher credentials" });
+        //         }
 
-                // Convert JoinCourseTeacherDto to EnrollCourseDto
-                var enrollDto = new EnrollCourseDto { CourseId = joinDto.CourseId };
-                var result = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, teacherId);
+        //         // Convert JoinCourseTeacherDto to EnrollCourseDto
+        //         var enrollDto = new EnrollCourseDto { CourseId = joinDto.CourseId };
+        //         var result = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, teacherId);
 
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
+        //         if (!result.Success)
+        //         {
+        //             return BadRequest(result);
+        //         }
 
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in JoinCourse endpoint");
-                return StatusCode(500, new { message = "Internal server error" });
-            }
-        }
+        //         return Ok(result);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError(ex, "Error in JoinCourse endpoint");
+        //         return StatusCode(500, new { message = "Internal server error" });
+        //     }
+        // }
 
-        /// <summary>
-        /// Admin - Cập nhật khóa học
-        /// </summary>
+        
+        // Controller Admin - Cập nhật khóa học
+       
         [HttpPut("admin/{courseId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminUpdateCourse(int courseId, [FromBody] AdminUpdateCourseRequestDto requestDto)

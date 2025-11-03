@@ -62,7 +62,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         {
             try
             {
-                // Extract user information from JWT
+                
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!int.TryParse(userIdClaim, out int userId))
                 {

@@ -58,7 +58,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// CORS (frontend)
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", p =>
