@@ -15,17 +15,20 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         private readonly ITeacherCourseService _teacherCourseService;
         private readonly IUserEnrollmentService _userEnrollmentService;
         private readonly ILogger<CourseController> _logger;
+        private readonly IUserManagementService _userManagementService;
 
         public CourseController(
             IAdminCourseService adminCourseService,
             ITeacherCourseService teacherCourseService,
             IUserEnrollmentService userEnrollmentService,
-            ILogger<CourseController> logger)
+            ILogger<CourseController> logger,
+            IUserManagementService userManagementService)
         {
             _adminCourseService = adminCourseService;
             _teacherCourseService = teacherCourseService;
             _userEnrollmentService = userEnrollmentService;
             _logger = logger;
+            _userManagementService = userManagementService;
         }
 
 
@@ -53,9 +56,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-       
+
         // Controller Admin - Xóa khóa học
-      
+
         [HttpDelete("admin/{courseId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCourse(int courseId)
@@ -78,9 +81,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-        
+
         // Controller Admin - Tạo khóa học mới
-        
+
         [HttpPost("admin/create")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminCreateCourse([FromBody] AdminCreateCourseRequestDto requestDto)
@@ -110,9 +113,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
 
 
 
-       
+
         // Controller Teacher - Tạo khóa học mới
-     
+
         [HttpPost("teacher/create")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> CreateCourse([FromBody] TeacherCreateCourseRequestDto requestDto)
@@ -147,9 +150,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-        
+
         // Controller Teacher - Lấy danh sách khóa học của mình
-        
+
         [HttpGet("teacher/my-courses")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> GetMyCourses()
@@ -179,9 +182,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
             }
         }
 
-       
+
         // Controller Teacher - Tham gia khóa học của teacher khác
-      
+
         // [HttpPost("teacher/join-course")]
         // [Authorize(Roles = "Teacher")]
         // public async Task<IActionResult> JoinCourse([FromBody] JoinCourseTeacherDto joinDto)
@@ -218,9 +221,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         //     }
         // }
 
-        
+
         // Controller Admin - Cập nhật khóa học
-       
+
         [HttpPut("admin/{courseId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminUpdateCourse(int courseId, [FromBody] AdminUpdateCourseRequestDto requestDto)
@@ -236,9 +239,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
 
                 if (!result.Success)
                 {
-                    return StatusCode(result.StatusCode, new 
-                    { 
-                        success = false, 
+                    return StatusCode(result.StatusCode, new
+                    {
+                        success = false,
                         message = result.Message,
                         statusCode = result.StatusCode
                     });
@@ -260,9 +263,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         }
 
 
-        /// <summary>
-        /// Teacher - Cập nhật khóa học của mình
-        /// </summary>
+
+        // Controller Teacher - Cập nhật khóa học của mình
+
         [HttpPut("teacher/{courseId}")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] TeacherUpdateCourseRequestDto requestDto)
@@ -284,9 +287,9 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
 
                 if (!result.Success)
                 {
-                    return StatusCode(result.StatusCode, new 
-                    { 
-                        success = false, 
+                    return StatusCode(result.StatusCode, new
+                    {
+                        success = false,
                         message = result.Message,
                         statusCode = result.StatusCode
                     });
@@ -305,6 +308,29 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                 _logger.LogError(ex, "Error in UpdateCourse endpoint for CourseId: {CourseId}", courseId);
                 return StatusCode(500, new { success = false, message = "Lỗi hệ thống", statusCode = 500 });
             }
+        }
+        // Controller lấy danh sách User trong khóa học (theo courseId) dành cho Admin và Teacher
+        [HttpGet("getusersbycourse/{courseId}")]
+        [Authorize(Roles = "Admin, Teacher")]
+        public async Task<IActionResult> GetUsersByCourseId(int courseId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var checkRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Invalid user credentials" });
+            }
+            if (string.IsNullOrEmpty(checkRole))
+            {
+                return Unauthorized(new { message = "User role not found" });
+            }
+            var result = await _userManagementService.GetUsersByCourseIdAsync(courseId, userId, checkRole);
+            if (!result.Success)
+            {
+                return StatusCode(result.StatusCode, new { message = result.Message });
+            }
+            return Ok(result.Data);
         }
     }
 }

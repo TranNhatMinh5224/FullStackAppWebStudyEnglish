@@ -10,11 +10,13 @@ namespace CleanDemo.Application.Service
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly ICourseRepository _courseRepository;
 
-        public UserManagementService(IUserRepository userRepository, IMapper mapper)
+        public UserManagementService(IUserRepository userRepository, IMapper mapper, ICourseRepository courseRepository)
         {
             _userRepository = userRepository;
             _mapper = mapper;
+            _courseRepository = courseRepository;
         }
 
         public async Task<ServiceResponse<UserDto>> GetUserProfileAsync(int userId)
@@ -92,7 +94,8 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        // Implement phương thức block account
+
+        // Block account
         public async Task<ServiceResponse<BlockAccountResponseDto>> BlockAccountAsync(int userId)
         {
             var response = new ServiceResponse<BlockAccountResponseDto>();
@@ -123,6 +126,7 @@ namespace CleanDemo.Application.Service
                     response.Message = "Tài khoản đã bị khóa trước đó";
                     return response;
                 }
+
                 user.Status = StatusAccount.Inactive;
                 user.UpdatedAt = DateTime.UtcNow;
                 await _userRepository.UpdateUserAsync(user);
@@ -130,11 +134,7 @@ namespace CleanDemo.Application.Service
 
                 response.StatusCode = 200;
                 response.Success = true;
-                response.Data = new BlockAccountResponseDto
-                {
-                    Message = "Block tài khoản thành công"
-                };
-
+                response.Data = new BlockAccountResponseDto { Message = "Block tài khoản thành công" };
             }
             catch (Exception)
             {
@@ -144,7 +144,8 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        // Implement cho phương thức unblock account
+
+        // Unblock account
         public async Task<ServiceResponse<UnblockAccountResponseDto>> UnblockAccountAsync(int userId)
         {
             var response = new ServiceResponse<UnblockAccountResponseDto>();
@@ -174,11 +175,7 @@ namespace CleanDemo.Application.Service
 
                 response.StatusCode = 200;
                 response.Success = true;
-                response.Data = new UnblockAccountResponseDto
-                {
-                    Message = "Unblock tài khoản thành công"
-                };
-
+                response.Data = new UnblockAccountResponseDto { Message = "Unblock tài khoản thành công" };
             }
             catch (Exception)
             {
@@ -188,17 +185,18 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        // Implement cho phương thức lấy danh sách tài khoản bị khóa
+
+        // Danh sách tài khoản bị khóa
         public async Task<ServiceResponse<List<UserDto>>> GetListBlockedAccountsAsync()
         {
             var response = new ServiceResponse<List<UserDto>>();
             try
             {
                 var users = await _userRepository.GetAllUsersAsync();
-                var ListBlockedUsers = users.Where(u => u.Status == StatusAccount.Inactive).ToList();
+                var blocked = users.Where(u => u.Status == StatusAccount.Inactive).ToList();
                 response.StatusCode = 200;
                 response.Success = true;
-                response.Data = _mapper.Map<List<UserDto>>(ListBlockedUsers);
+                response.Data = _mapper.Map<List<UserDto>>(blocked);
             }
             catch (Exception)
             {
@@ -209,7 +207,60 @@ namespace CleanDemo.Application.Service
             return response;
         }
 
-        // Implement cho phương thức lấy danh sách teachers
+        // === Giữ từ feature/LVE-107-GetUserbyCourseId ===
+        // Lấy danh sách người dùng theo id khóa học, có kiểm tra quyền truy cập
+        public async Task<ServiceResponse<List<UserDto>>> GetUsersByCourseIdAsync(int courseId, int userId, string checkRole)
+        {
+            var response = new ServiceResponse<List<UserDto>>();
+            try
+            {
+                var course = await _courseRepository.GetByIdAsync(courseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isAuthorized = false;
+                if (checkRole == "Admin")
+                {
+                    isAuthorized = true;
+                }
+                else if (checkRole == "Teacher")
+                {
+                    if (course.TeacherId == userId)
+                    {
+                        isAuthorized = true;
+                    }
+                }
+
+                if (!isAuthorized)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn chỉ được xem danh sách học sinh trong khóa học của mình";
+                    return response;
+                }
+
+                var users = await _courseRepository.GetEnrolledUsers(courseId);
+                response.Data = _mapper.Map<List<UserDto>>(users);
+                response.StatusCode = 200;
+                response.Success = true;
+                response.Message = "Lấy danh sách học sinh thành công";
+            }
+            catch (Exception)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+
+        // === Giữ từ dev ===
+        // Lấy danh sách giáo viên
         public async Task<ServiceResponse<List<UserDto>>> GetListTeachersAsync()
         {
             var response = new ServiceResponse<List<UserDto>>();

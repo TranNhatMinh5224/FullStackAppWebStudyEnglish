@@ -79,9 +79,9 @@ namespace CleanDemo.API.Controller.User
             return BadRequest(new { message = result.Message });
         }
 
-        /// <summary>
+        
         /// Lấy tiến độ học của tất cả courses
-        /// </summary>
+        
         [HttpGet("all")]
         public async Task<IActionResult> GetAllProgress()
         {
