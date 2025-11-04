@@ -253,7 +253,7 @@ namespace CleanDemo.Infrastructure.Repositories
         }
 
 
-        // Lấy khóa học hệ thống (User trang chủ) - alias cho GetAllCourseSystem
+        // Lấy khóa học hệ thống (User trang chủ) 
 
         public async Task<IEnumerable<Course>> GetSystemCourses()
         {
@@ -261,7 +261,7 @@ namespace CleanDemo.Infrastructure.Repositories
         }
 
 
-        // Lấy khóa học do teacher tạo - alias cho GetAllCoursesByTeacherId
+        // Lấy khóa học do teacher tạo 
 
         public async Task<IEnumerable<Course>> GetCoursesByTeacher(int teacherId)
         {
@@ -269,7 +269,7 @@ namespace CleanDemo.Infrastructure.Repositories
         }
 
 
-        // Lấy khóa học user đã đăng ký - alias cho GetEnrolledCoursesByUserId
+        // Lấy khóa học user đã đăng ký 
 
         public async Task<IEnumerable<Course>> GetEnrolledCoursesByUser(int userId)
         {
@@ -277,7 +277,7 @@ namespace CleanDemo.Infrastructure.Repositories
         }
 
 
-        // Kiểm tra user đã đăng ký khóa học chưa - alias cho IsUserEnrolledInCourse
+        // Kiểm tra user đã đăng ký khóa học chưa 
 
         public async Task<bool> IsUserEnrolled(int courseId, int userId)
         {
