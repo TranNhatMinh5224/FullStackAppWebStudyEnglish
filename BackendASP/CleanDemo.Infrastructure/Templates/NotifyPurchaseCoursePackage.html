@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #6f42c1;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .package-info {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #6f42c1;
+            margin: 20px 0;
+        }
+
+        .price-highlight {
+            font-size: 24px;
+            color: #6f42c1;
+            font-weight: bold;
+        }
+
+        .footer {
+            background-color: #6c757d;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .btn {
+            background-color: #6f42c1;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👨‍🏫 Teacher Package Activated!</h1>
+            <h2>Catalunya English</h2>
+        </div>
+
+        <div class="content">
+            <p>Dear <strong>{{USER_NAME}}</strong>,</p>
+
+            <p>🎉 Congratulations! Your Teacher Package has been successfully activated!</p>
+
+            <div class="package-info">
+                <h3>📋 Package Details</h3>
+                <p><strong>Package:</strong> {{PACKAGE_NAME}}</p>
+                <p><strong>Price:</strong> <span class="price-highlight">${{PRICE}}</span></p>
+                <p><strong>Activated Date:</strong> {{PURCHASE_DATE}}</p>
+                <p><strong>Valid Until:</strong> {{VALID_UNTIL}}</p>
+                <p><strong>Status:</strong> ✅ Active</p>
+            </div>
+
+            <h3>🌟 Your Teacher Benefits Include:</h3>
+            <ul>
+                <li>✅ Create unlimited courses</li>
+                <li>✅ Advanced analytics dashboard</li>
+                <li>✅ Student management tools</li>
+                <li>✅ Custom branding options</li>
+                <li>✅ Priority support</li>
+                <li>✅ Revenue tracking</li>
+            </ul>
+
+            <a href="{{TEACHER_DASHBOARD_URL}}" class="btn">🚀 Access Teacher Dashboard</a>
+
+            <p>Start creating amazing courses and share your knowledge with students worldwide!</p>
+
+            <p>Best regards,<br>
+                <strong>Catalunya English Team</strong>
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>© {{CURRENT_YEAR}} Catalunya English. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+
+</html>
