@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Course Purchase Confirmation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 20px; }
+        .header { background-color: #007bff; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 30px; }
+        .course-info { background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0; border-radius: 4px; }
+        .footer { background-color: #6c757d; color: white; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; }
+        .btn { background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }
+        .highlight { color: #007bff; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Xác nhận mua khóa học thành công</h1>
+            <h2>Catalunya English</h2>
+        </div>
+        
+        <div class="content">
+            <p>Chào <strong>{{USER_NAME}}</strong>,</p>
+            
+            <p>🎊 Chúc mừng! Bạn đã mua thành công khóa học:</p>
+            
+            <div class="course-info">
+                <h3>📚 Thông tin khóa học</h3>
+                <p><strong>Tên khóa học:</strong> {{COURSE_NAME}}</p>
+                <p><strong>Ngày mua:</strong> {{PURCHASE_DATE}}</p>
+                <p><strong>Trạng thái:</strong> ✅ Đã kích hoạt</p>
+            </div>
+            
+            <p>Bạn có thể bắt đầu học ngay bây giờ!</p>
+            
+            <a href="{{COURSE_URL}}" class="btn">🚀 Bắt đầu học</a>
+            
+            <h3>📖 Bước tiếp theo:</h3>
+            <ul>
+                <li>Truy cập dashboard khóa học</li>
+                <li>Tải tài liệu học tập</li>
+                <li>Tham gia thảo luận</li>
+                <li>Theo dõi tiến độ học tập</li>
+            </ul>
+            
+            <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ đội ngũ hỗ trợ của chúng tôi.</p>
+            
+            <p>Chúc bạn học tập hiệu quả!<br>
+            <strong>Đội ngũ Catalunya English</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>© {{CURRENT_YEAR}} Catalunya English. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

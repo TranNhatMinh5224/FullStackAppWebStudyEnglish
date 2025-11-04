@@ -84,10 +84,10 @@ namespace CleanDemo.Application.Service
 
         }
 
-        public async SendNotifyPurchaseTeacherPackageAsync(string toEmail, string packageName, string userName, decimal price, DateTime validUntil)
+        public async Task SendNotifyPurchaseTeacherPackageAsync(string toEmail, string packageName, string userName, decimal price, DateTime validUntil)
         {
             var subject = "Teacher Package Purchase Confirmation - Catalunya English";
-            var body = _templateService.GenerateNotifyPurchaseTeacherPackageTemplate(packageName, userName, price, validUntil);
+            var body = _templateService.GenerateTeacherPackagePurchaseTemplate(packageName, userName, price, validUntil);
             await SendEmailAsync(toEmail, subject, body);
         }
     }
