@@ -10,7 +10,7 @@ namespace CleanDemo.Infrastructure.Services
         {
             // Look for templates in the Infrastructure project's Templates folder
             _templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "CleanDemo.Infrastructure", "Templates");
-            
+
             // Fallback to current directory if development path doesn't exist
             if (!Directory.Exists(_templatePath))
             {
@@ -21,14 +21,14 @@ namespace CleanDemo.Infrastructure.Services
         public string GenerateOTPEmailTemplate(string otpCode, string userName)
         {
             var templatePath = Path.Combine(_templatePath, "OTPEmail.html");
-            
+
             if (!File.Exists(templatePath))
             {
                 throw new FileNotFoundException($"Email template not found: {templatePath}");
             }
 
             var template = File.ReadAllText(templatePath);
-            
+
             // Replace placeholders
             return template
                 .Replace("{{OTPCode}}", otpCode)
@@ -45,6 +45,33 @@ namespace CleanDemo.Infrastructure.Services
         {
             // Future template for password change notifications
             return $"<h1>Password Changed</h1><p>Hello {userName}, your password has been successfully changed.</p>";
+        }
+        public string GenerateNotifyJoinCourseTemplate(string courseName, string userName)
+        {
+            var templatePath = Path.Combine(_templatePath, "CoursePurchaseConfirmation.html");
+            var htmlTemplate = File.ReadAllText(templatePath);
+
+            return htmlTemplate
+                .Replace("{{USER_NAME}}", userName)
+                .Replace("{{COURSE_NAME}}", courseName)
+                .Replace("{{PURCHASE_DATE}}", DateTime.Now.ToString("dd/MM/yyyy"))
+                .Replace("{{COURSE_URL}}", $"https://catalunya-english.com/courses/{courseName.Replace(" ", "-").ToLower()}")
+                .Replace("{{CURRENT_YEAR}}", DateTime.Now.Year.ToString());
+        }
+
+        public string GenerateTeacherPackagePurchaseTemplate(string packageName, string userName, decimal price, DateTime validUntil)
+        {
+            var templatePath = Path.Combine(_templatePath, "TeacherPackagePurchase.html");
+            var htmlTemplate = File.ReadAllText(templatePath);
+
+            return htmlTemplate
+                .Replace("{{USER_NAME}}", userName)
+                .Replace("{{PACKAGE_NAME}}", packageName)
+                .Replace("{{PRICE}}", price.ToString("F2"))
+                .Replace("{{PURCHASE_DATE}}", DateTime.Now.ToString("dd/MM/yyyy"))
+                .Replace("{{VALID_UNTIL}}", validUntil.ToString("dd/MM/yyyy"))
+                .Replace("{{TEACHER_DASHBOARD_URL}}", "https://catalunya-english.com/teacher/dashboard")
+                .Replace("{{CURRENT_YEAR}}", DateTime.Now.Year.ToString());
         }
     }
 }
