@@ -70,5 +70,13 @@ namespace CleanDemo.API.Controllers.Admin
             if (!result.Success) return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
+        // Controller lấy danh sách học sinh theo all course
+        [HttpGet("admin/getall-students-by-all-courses")]
+        public async Task<IActionResult> GetStudentsByAllCourses()
+        {
+            var result = await _userManagementService.GetStudentsByAllCoursesAsync();
+            if (!result.Success) return BadRequest(new { message = result.Message });
+            return Ok(result.Data);
+        }
     }
 }

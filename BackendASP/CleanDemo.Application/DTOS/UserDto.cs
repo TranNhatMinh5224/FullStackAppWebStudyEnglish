@@ -93,4 +93,15 @@ namespace CleanDemo.Application.DTOs
     {
         public string Message { get; set; } = string.Empty;
     }
+    // Dto dành cho reponse danh sách user trong all courses
+    public class StudentsByAllCoursesDto
+    {
+        public int CourseId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string TeacherName { get; set; } = string.Empty;
+        public int TotalUsers { get; set; }
+
+        public List<UserDto> Users { get; set; } = new();
+    }
 }
