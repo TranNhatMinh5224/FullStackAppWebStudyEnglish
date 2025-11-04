@@ -45,9 +45,9 @@ namespace CleanDemo.Application.Mappings
             // User mappings
             CreateMap<User, UserDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));  
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
             CreateMap<RegisterUserDto, User>()
-                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));  
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
 
             CreateMap<UpdateUserDto, User>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
@@ -67,6 +67,12 @@ namespace CleanDemo.Application.Mappings
             .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate))
             .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate));
            
+           // MiniTest mappings
+            CreateMap<MiniTest, MiniTestResponseDto>();
+            CreateMap<MiniTestDto, MiniTest>()
+                .ForMember(dest => dest.MiniTestId, opt => opt.Ignore())
+                .ForMember(dest => dest.Lesson, opt => opt.Ignore())
+                .ForMember(dest => dest.Questions, opt => opt.Ignore());
             
             
         }

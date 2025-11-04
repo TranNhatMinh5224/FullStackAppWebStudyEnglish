@@ -1,0 +1,28 @@
+using CleanDemo.Application.Interface;
+using CleanDemo.Domain.Entities;
+using CleanDemo.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+namespace CleanDemo.Infrastructure.Repositories
+{
+    public class MiniTestRepository : IMiniTestRepository
+    {
+        private readonly AppDbContext _context;
+
+        public MiniTestRepository(AppDbContext context)
+        {
+            _context = context;
+        }
+        // Thêm MiniTest
+        public async Task AddMiniTestAsync(MiniTest miniTest)
+        {
+            await _context.MiniTests.AddAsync(miniTest);
+            await _context.SaveChangesAsync();
+        }
+        // Kiểm tra MiniTest có tồn tại trong Lesson
+        public async Task<bool> MiniTestExistsInLesson(string title, int lessonId)
+        {
+            return await _context.MiniTests.AnyAsync(mt => mt.Title == title && mt.LessonId == lessonId);
+        }
+    
+    }
+}
