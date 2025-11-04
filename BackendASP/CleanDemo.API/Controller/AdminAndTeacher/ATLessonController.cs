@@ -62,7 +62,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         {
             try
             {
-                
+
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!int.TryParse(userIdClaim, out int userId))
                 {
@@ -77,7 +77,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
 
                 // Call service method with authorization
                 var response = await _lessonService.DeleteLessonWithAuthorizationAsync(lessonId, userId, userRole);
-                
+
                 if (!response.Success)
                 {
                     var message = response.Message ?? "Operation failed";
@@ -103,7 +103,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         {
             try
             {
-                if (!ModelState.IsValid) 
+                if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
                 // Extract user information from JWT
@@ -121,7 +121,7 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
 
                 // Call service method with authorization
                 var response = await _lessonService.UpdateLessonWithAuthorizationAsync(lessonId, dto, userId, userRole);
-                
+
                 if (!response.Success)
                 {
                     var message = response.Message ?? "Operation failed";
@@ -142,12 +142,36 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         }
 
         [HttpGet("get/{lessonId}")]
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> GetLessonById(int lessonId)
         {
             try
             {
-                var response = await _lessonService.GetLessonById(lessonId);
-                if (!response.Success) return NotFound(response);  // 404 nếu không tìm thấy
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid user credentials" });
+                }
+
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                if (string.IsNullOrEmpty(userRole))
+                {
+                    return Unauthorized(new { message = "User role not found" });
+                }
+
+                var response = await _lessonService.GetLessonById(lessonId, userId, userRole);
+                if (!response.Success)
+                {
+                    if (response.StatusCode == 404)
+                    {
+                        return NotFound(new { message = response.Message });
+                    }
+                    if (response.StatusCode == 403)
+                    {
+                        return StatusCode(403, new { message = response.Message });
+                    }
+                    return BadRequest(new { message = response.Message });
+                }
                 return Ok(response);
             }
             catch (Exception ex)
@@ -162,9 +186,38 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
         {
             try
             {
-                var response = await _lessonService.GetListLessonByCourseId(courseId);
-                if (!response.Success) return BadRequest(response);
+
+           
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid user credentials" });
+                }
+
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                if (string.IsNullOrEmpty(userRole))
+                {
+                    return Unauthorized(new { message = "User role not found" });
+                }
+
+             
+                var response = await _lessonService.GetListLessonByCourseId(courseId, userId, userRole);
+
+                if (!response.Success)
+                {
+                    if (response.StatusCode == 404)
+                    {
+                        return NotFound(new { message = response.Message });
+                    }
+                    if (response.StatusCode == 403)
+                    {
+                        return StatusCode(403, new { message = response.Message });
+                    }
+                    return BadRequest(new { message = response.Message });
+                }
+
                 return Ok(response);
+
             }
             catch (Exception ex)
             {
@@ -172,6 +225,6 @@ namespace CleanDemo.API.Controller.AdminAndTeacher
                 return StatusCode(500, "Internal server error");
             }
         }
-       
+
     }
-    }
+}

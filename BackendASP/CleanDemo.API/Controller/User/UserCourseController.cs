@@ -19,9 +19,9 @@ namespace CleanDemo.API.Controller.User
             _logger = logger;
         }
 
-        /// <summary>
-        /// Lấy danh sách khóa học hệ thống (không cần đăng nhập)
-        /// </summary>
+        
+        //Lấy danh sách khóa học hệ thống (không cần đăng nhập)
+        
         [HttpGet("system-courses")]
         [AllowAnonymous]
         public async Task<IActionResult> GetSystemCourses()

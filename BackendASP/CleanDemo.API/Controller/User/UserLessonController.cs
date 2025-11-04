@@ -23,7 +23,7 @@ namespace CleanDemo.API.Controller.User
         }
 
 
-        /// Lấy danh sách bài học theo CourseId (chỉ user đã enroll mới xem được)
+        // Lấy danh sách bài học theo CourseId (chỉ user đã enroll mới xem được)
         [HttpGet("course/{courseId}")]
         public async Task<IActionResult> GetLessonsByCourseId(int courseId)
         {
@@ -36,14 +36,29 @@ namespace CleanDemo.API.Controller.User
                     return Unauthorized(new { message = "Invalid user credentials" });
                 }
 
-                // Kiểm tra user đã enroll course chưa
-                if (!await _courseRepository.IsUserEnrolled(courseId, userId))
+               
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                if (string.IsNullOrEmpty(userRole))
                 {
-                    return Forbid("You are not enrolled in this course");
+                    return Unauthorized(new { message = "User role not found" });
                 }
 
-                var response = await _lessonService.GetListLessonByCourseId(courseId);
-                if (!response.Success) return BadRequest(response);
+          
+                var response = await _lessonService.GetListLessonByCourseId(courseId, userId, userRole);
+
+                if (!response.Success)
+                {
+                    if (response.StatusCode == 404)
+                    {
+                        return NotFound(new { message = response.Message });
+                    }
+                    if (response.StatusCode == 403)
+                    {
+                        return StatusCode(403, new { message = response.Message });
+                    }
+                    return BadRequest(new { message = response.Message });
+                }
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -58,8 +73,32 @@ namespace CleanDemo.API.Controller.User
         {
             try
             {
-                var response = await _lessonService.GetLessonById(lessonId);
-                if (!response.Success) return NotFound(response);
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid user credentials" });
+                }
+
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                if (string.IsNullOrEmpty(userRole))
+                {
+                    return Unauthorized(new { message = "User role not found" });
+                }
+
+                var response = await _lessonService.GetLessonById(lessonId, userId, userRole);
+                if (!response.Success)
+                {
+                    if (response.StatusCode == 404)
+                    {
+                        return NotFound(new { message = response.Message });
+                    }
+                    if (response.StatusCode == 403)
+                    {
+                        return StatusCode(403, new { message = response.Message });
+                    }
+                    return BadRequest(new { message = response.Message });
+
+                }
                 return Ok(response);
             }
             catch (Exception ex)
