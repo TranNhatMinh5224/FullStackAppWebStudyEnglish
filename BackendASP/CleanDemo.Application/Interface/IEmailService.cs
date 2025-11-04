@@ -4,5 +4,7 @@ namespace CleanDemo.Application.Interface
     {
         Task SendEmailAsync(string toEmail, string subject, string body);
         Task SendOTPEmailAsync(string toEmail, string otpCode, string userName);
+        Task SendNotifyJoinCourseAsync(string toEmail, string courseName, string userName);
+        Task SendNotifyPurchaseTeacherPackageAsync(string toEmail, string packageName, string userName, decimal price, DateTime validUntil);
     }
 }
