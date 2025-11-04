@@ -70,11 +70,25 @@ namespace CleanDemo.Application.Service
 
 
             var subject = "Your OTP Code - Catalunya English";
+
             var body = _templateService.GenerateOTPEmailTemplate(otpCode, userName);
 
             Console.WriteLine($"[DEBUG] EmailService - Generated email body with template");
             await SendEmailAsync(toEmail, subject, body);
         }
+        public async Task SendNotifyJoinCourseAsync(string toEmail, string courseName, string userName)
+        {
+            var subject = "Course Enrollment Confirmation - Catalunya English";
+            var body = _templateService.GenerateNotifyJoinCourseTemplate(courseName, userName);
+            await SendEmailAsync(toEmail, subject, body);
 
+        }
+
+        public async SendNotifyPurchaseTeacherPackageAsync(string toEmail, string packageName, string userName, decimal price, DateTime validUntil)
+        {
+            var subject = "Teacher Package Purchase Confirmation - Catalunya English";
+            var body = _templateService.GenerateNotifyPurchaseTeacherPackageTemplate(packageName, userName, price, validUntil);
+            await SendEmailAsync(toEmail, subject, body);
+        }
     }
 }
