@@ -6,8 +6,8 @@ namespace CleanDemo.Application.Interface
     public interface ILessonService
     {
         // CRUD với ServiceResponse và DTOs
-        Task<ServiceResponse<List<ListLessonDto>>> GetListLessonByCourseId(int CourseId);
-        Task<ServiceResponse<LessonDto>> GetLessonById(int lessonId);
+        Task<ServiceResponse<List<ListLessonDto>>> GetListLessonByCourseId(int CourseId, int userId, string userRole);
+        Task<ServiceResponse<LessonDto>> GetLessonById(int lessonId, int userId, string userRole);
         Task<ServiceResponse<LessonDto>> AdminAddLesson(AdminCreateLessonDto dto);
         Task<ServiceResponse<LessonDto>> TeacherAddLesson(TeacherCreateLessonDto dto);
         Task<ServiceResponse<LessonDto>> UpdateLesson(int lessonId, UpdateLessonDto dto);

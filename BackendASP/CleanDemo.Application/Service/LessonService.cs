@@ -163,11 +163,54 @@ namespace CleanDemo.Application.Service
 
 
         }
-        public async Task<ServiceResponse<List<ListLessonDto>>> GetListLessonByCourseId(int CourseId)
+        public async Task<ServiceResponse<List<ListLessonDto>>> GetListLessonByCourseId(int CourseId, int userId, string userRole)
         {
             var response = new ServiceResponse<List<ListLessonDto>>();
             try
             {
+                var course = await _courseRepository.GetCourseById(CourseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+                if (userRole == "Admin")
+                {
+                    response.StatusCode = 200;
+                    response.Data = (await _lessonRepository.GetListLessonByCourseId(CourseId))
+                        .Select(l => _mapper.Map<ListLessonDto>(l)).ToList();
+                }
+                else if (userRole == "Teacher")
+                {
+                    if (course.Type != CourseType.Teacher || course.TeacherId != userId)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Bạn chỉ có thể xem bài học của khóa học do mình tạo";
+                        return response;
+                    }
+                }
+                else if (userRole == "Student")
+                {
+                    bool isEnrolled = await _courseRepository.IsUserEnrolled(course.CourseId, userId);
+                    if (!isEnrolled)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Khóa học này mà bạn chưa đăng ký, xin vui lòng đăng ký để xem những bài học mà bạn muốn.";
+                        return response;
+                    }
+                }
+                else
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Không có quyền truy cập";
+                    return response;
+                }
+
                 var lessons = await _lessonRepository.GetListLessonByCourseId(CourseId);
                 response.StatusCode = 200;
                 response.Data = lessons.Select(l => _mapper.Map<ListLessonDto>(l)).ToList();
@@ -181,7 +224,7 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
-        public async Task<ServiceResponse<LessonDto>> GetLessonById(int lessonId)
+        public async Task<ServiceResponse<LessonDto>> GetLessonById(int lessonId, int userId, string userRole)
         {
             var response = new ServiceResponse<LessonDto>();
             try
@@ -194,6 +237,56 @@ namespace CleanDemo.Application.Service
                     response.Message = "Không tìm thấy bài học";
                     return response;
                 }
+
+              
+                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                    if (course == null)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 404;
+                        response.Message = "Không tìm thấy khóa học";
+                        return response;
+                    }
+
+                 
+                    if (userRole == "Admin")
+                    {
+                        response.StatusCode = 200;
+                        response.Data = _mapper.Map<LessonDto>(lesson);
+                    }
+                   
+                    else if (userRole == "Teacher")
+                    {
+                        if (course.Type != CourseType.Teacher || course.TeacherId != userId)
+                        {
+                            response.Success = false;
+                            response.StatusCode = 403;
+                            response.Message = "Bạn chỉ có thể xem bài học của khóa học do mình tạo";
+                            return response;
+                        }
+                    }
+                   
+                    else if (userRole == "Student")
+                    {
+                        bool isEnrolled = await _courseRepository.IsUserEnrolled(course.CourseId, userId);
+                        if (!isEnrolled)
+                        {
+                            response.Success = false;
+                            response.StatusCode = 403;
+                            response.Message = "Bài học này thuộc khóa học mà bạn chưa đăng ký, xin vui lòng đăng ký để xem những bài học mà bạn muốn.";
+                            return response;
+                        }
+                    }
+                    
+                    else
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Không có quyền truy cập";
+                        return response;
+                    }
+                
+
                 response.StatusCode = 200;
                 response.Data = _mapper.Map<LessonDto>(lesson);
             }
@@ -290,7 +383,7 @@ namespace CleanDemo.Application.Service
                 response.Message = "Xóa bài học thành công";
                 response.Data = true;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting lesson {LessonId}", lessonId);
                 response.Success = false;
@@ -328,7 +421,7 @@ namespace CleanDemo.Application.Service
             try
             {
                 // Get lesson first to check if it exists
-                var lessonResponse = await GetLessonById(lessonId);
+                var lessonResponse = await GetLessonById(lessonId, userId, userRole);
                 if (!lessonResponse.Success || lessonResponse.Data == null)
                 {
                     response.Success = false;
@@ -386,7 +479,7 @@ namespace CleanDemo.Application.Service
             try
             {
                 // Get lesson first to check if it exists
-                var lessonResponse = await GetLessonById(lessonId);
+                var lessonResponse = await GetLessonById(lessonId, userId, userRole);
                 if (!lessonResponse.Success || lessonResponse.Data == null)
                 {
                     response.Success = false;
