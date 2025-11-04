@@ -8,10 +8,10 @@ namespace CleanDemo.Application.Interface
     {
         IPaymentProcessor GetProcessor(TypeProduct productType);
     }
-    
+
     public interface IPaymentProcessor
     {
-        Task<ServiceResponse<decimal>> ValidateProductAsync(int productId);
-        Task<ServiceResponse<bool>> ProcessPostPaymentAsync(int userId, int productId, int paymentId);
+        Task<ServiceResponse<decimal>> ValidateProductAsync(int productId); // Validate product and return amount
+        Task<ServiceResponse<bool>> ProcessPostPaymentAsync(int userId, int productId, int paymentId); // Process post-payment actions
     }
 }

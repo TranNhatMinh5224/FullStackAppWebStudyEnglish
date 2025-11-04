@@ -8,7 +8,7 @@ using CleanDemo.Application.Common;
 
 namespace CleanDemo.Application.Service
 {
-    // Dịch vụ thanh toán hoàn chỉnh (bỏ validation cơ bản)
+
     public class PaymentService : IPaymentService
     {
         private readonly IPaymentRepository _paymentRepository;
@@ -42,7 +42,7 @@ namespace CleanDemo.Application.Service
                 _logger.LogInformation("Bắt đầu xử lý thanh toán cho User {UserId}, Sản phẩm {ProductId}, Loại {TypeProduct}",
                     userId, request.ProductId, request.typeproduct);
 
-                // 1. Validate user and check existing payment
+                // 1  Validate user and check existing payment
                 var userValidationResult = await _paymentValidator.ValidateUserPaymentAsync(userId, request.ProductId, request.typeproduct);
                 if (!userValidationResult.Success)
                 {
@@ -51,7 +51,7 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
-                // 2. Validate product and get amount
+                // 2 Validate product and get amount
                 var productValidationResult = await _paymentValidator.ValidateProductAsync(request.ProductId, request.typeproduct);
                 if (!productValidationResult.Success)
                 {
@@ -62,7 +62,7 @@ namespace CleanDemo.Application.Service
 
                 var amount = productValidationResult.Data;
 
-                // 4. Create payment within transaction
+                // 4 Create paymeent use transaction
                 await _unitOfWork.BeginTransactionAsync();
                 try
                 {
@@ -153,13 +153,13 @@ namespace CleanDemo.Application.Service
 
                 await _paymentRepository.UpdatePaymentStatusAsync(existingPayment);
 
-                // Handle post-payment actions using Factory Pattern
+                // xử lý thanh toán tùy theo loại sản phẩm
                 try
                 {
                     var processor = _processorFactory.GetProcessor(existingPayment.ProductType);
                     var postPaymentResult = await processor.ProcessPostPaymentAsync(
-                        existingPayment.UserId, 
-                        existingPayment.ProductId, 
+                        existingPayment.UserId,
+                        existingPayment.ProductId,
                         paymentDto.PaymentId);
 
                     if (!postPaymentResult.Success)
@@ -176,7 +176,7 @@ namespace CleanDemo.Application.Service
                 }
                 catch (NotSupportedException ex)
                 {
-                    _logger.LogError(ex, "Unsupported product type {ProductType} for Payment {PaymentId}", 
+                    _logger.LogError(ex, "Unsupported product type {ProductType} for Payment {PaymentId}",
                         existingPayment.ProductType, paymentDto.PaymentId);
                     response.Success = false;
                     response.Message = "Loại sản phẩm không được hỗ trợ";
