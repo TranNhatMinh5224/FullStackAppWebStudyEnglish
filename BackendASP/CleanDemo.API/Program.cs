@@ -10,6 +10,7 @@ using CleanDemo.Infrastructure.Data;
 using CleanDemo.Application.Mappings;
 using CleanDemo.Application.Interface;
 using CleanDemo.Application.Service;
+using CleanDemo.Application.Service.PaymentProcessors;
 using CleanDemo.Infrastructure.Repositories;
 using CleanDemo.Infrastructure.Services;
 
@@ -131,9 +132,17 @@ builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+builder.Services.AddScoped<ITemplatePathResolver, TemplatePathResolver>();
 builder.Services.AddScoped<IUserCourseService, UserCourseService>();
 builder.Services.AddScoped<IEnrollmentQueryService, EnrollmentQueryService>();
 builder.Services.AddScoped<IProgressService, ProgressService>();
+
+// Payment related services
+builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
+builder.Services.AddScoped<IPaymentProcessorFactory, PaymentProcessorFactory>();
+builder.Services.AddScoped<IPaymentNotificationService, PaymentNotificationService>();
+builder.Services.AddScoped<CoursePaymentProcessor>();
+builder.Services.AddScoped<TeacherPackagePaymentProcessor>();
 
 // Build app
 var app = builder.Build();

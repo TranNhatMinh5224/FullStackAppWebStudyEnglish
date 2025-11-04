@@ -4,25 +4,18 @@ namespace CleanDemo.Infrastructure.Services
 {
     public class EmailTemplateService : IEmailTemplateService
     {
-        private readonly string _templatePath;
+        private readonly ITemplatePathResolver _pathResolver;
 
-        public EmailTemplateService()
+        public EmailTemplateService(ITemplatePathResolver pathResolver)
         {
-            // Look for templates in the Infrastructure project's Templates folder
-            _templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "CleanDemo.Infrastructure", "Templates");
-
-            // Fallback to current directory if development path doesn't exist
-            if (!Directory.Exists(_templatePath))
-            {
-                _templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates");
-            }
+            _pathResolver = pathResolver;
         }
 
         public string GenerateOTPEmailTemplate(string otpCode, string userName)
         {
-            var templatePath = Path.Combine(_templatePath, "OTPEmail.html");
+            var templatePath = _pathResolver.GetTemplatePath("OTPEmail.html");
 
-            if (!File.Exists(templatePath))
+            if (!_pathResolver.TemplateExists("OTPEmail.html"))
             {
                 throw new FileNotFoundException($"Email template not found: {templatePath}");
             }
@@ -48,7 +41,7 @@ namespace CleanDemo.Infrastructure.Services
         }
         public string GenerateNotifyJoinCourseTemplate(string courseName, string userName)
         {
-            var templatePath = Path.Combine(_templatePath, "CoursePurchaseConfirmation.html");
+            var templatePath = _pathResolver.GetTemplatePath("CoursePurchaseConfirmation.html");
             var htmlTemplate = File.ReadAllText(templatePath);
 
             return htmlTemplate
@@ -61,7 +54,7 @@ namespace CleanDemo.Infrastructure.Services
 
         public string GenerateTeacherPackagePurchaseTemplate(string packageName, string userName, decimal price, DateTime validUntil)
         {
-            var templatePath = Path.Combine(_templatePath, "TeacherPackagePurchase.html");
+            var templatePath = _pathResolver.GetTemplatePath("TeacherPackagePurchase.html");
             var htmlTemplate = File.ReadAllText(templatePath);
 
             return htmlTemplate
