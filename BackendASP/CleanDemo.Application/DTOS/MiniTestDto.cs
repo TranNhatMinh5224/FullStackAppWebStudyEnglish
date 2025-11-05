@@ -12,6 +12,10 @@ public class MiniTestResponseDto
     public int MiniTestId { get; set; }
     public string Title { get; set; } = string.Empty;
     public int LessonId { get; set; }
+}
 
-   
+// DTO cho Update MiniTest
+public class UpdateMiniTestDto
+{
+    public string Title { get; set; } = string.Empty;
 }

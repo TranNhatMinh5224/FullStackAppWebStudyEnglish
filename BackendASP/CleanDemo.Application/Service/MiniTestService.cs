@@ -183,5 +183,109 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
+        // Implement phương thức Admin Cập nhật MiniTest
+        public async Task<ServiceResponse<MiniTestResponseDto>> AdminUpdateMiniTest(int miniTestId, UpdateMiniTestDto dto)
+        {
+            var response = new ServiceResponse<MiniTestResponseDto>();
+            try
+            {
+                var existingMiniTest = await _miniTestRepository.GetMiniTestByIdAsync(miniTestId);
+                if (existingMiniTest == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy mini test";
+                    return response;
+                }
+
+                if (existingMiniTest.Lesson?.Course?.Type != CourseType.System)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Admin chỉ có thể cập nhật mini test thuộc bài học của khóa học hệ thống";
+                    return response;
+                }
+
+                if (dto.Title != existingMiniTest.Title)
+                {
+                    var titleExists = await _miniTestRepository.MiniTestExistsInLesson(dto.Title, existingMiniTest.LessonId);
+                    if (titleExists)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Tên mini test đã tồn tại trong bài học này";
+                        return response;
+                    }
+                }
+
+                existingMiniTest.Title = dto.Title;
+                await _miniTestRepository.UpdateMiniTestAsync(existingMiniTest);
+
+                response.StatusCode = 200;
+                response.Message = "Cập nhật mini test thành công";
+                response.Data = _mapper.Map<MiniTestResponseDto>(existingMiniTest);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating mini test for admin");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+        // Implement phương thức Teacher Cập nhật MiniTest
+        public async Task<ServiceResponse<MiniTestResponseDto>> TeacherUpdateMiniTest(int miniTestId, UpdateMiniTestDto dto, int teacherId)
+        {
+            var response = new ServiceResponse<MiniTestResponseDto>();
+            try
+            {
+                var existingMiniTest = await _miniTestRepository.GetMiniTestByIdAsync(miniTestId);
+                if (existingMiniTest == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy mini test";
+                    return response;
+                }
+
+                if (existingMiniTest.Lesson?.Course?.Type != CourseType.Teacher ||
+                    existingMiniTest.Lesson?.Course?.TeacherId != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Teacher chỉ có thể cập nhật mini test của bài học thuộc khóa học do mình tạo";
+                    return response;
+                }
+
+                if (dto.Title != existingMiniTest.Title)
+                {
+                    var titleExists = await _miniTestRepository.MiniTestExistsInLesson(dto.Title, existingMiniTest.LessonId);
+                    if (titleExists)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Tên mini test đã tồn tại trong bài học này";
+                        return response;
+                    }
+                }
+
+                existingMiniTest.Title = dto.Title;
+                await _miniTestRepository.UpdateMiniTestAsync(existingMiniTest);
+
+                response.StatusCode = 200;
+                response.Message = "Cập nhật mini test thành công";
+                response.Data = _mapper.Map<MiniTestResponseDto>(existingMiniTest);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating mini test for teacher");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+
     }
 }
