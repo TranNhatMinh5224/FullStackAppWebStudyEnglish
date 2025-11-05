@@ -163,5 +163,25 @@ namespace CleanDemo.Application.Service
             }
             return response;
         }
+        // Implement phương thức Lấy tất cả MiniTest
+        public async Task<ServiceResponse<List<MiniTestResponseDto>>> GetAllMiniTests(int lessonId)
+        {
+            var response = new ServiceResponse<List<MiniTestResponseDto>>();
+            try
+            {
+                var miniTests = await _miniTestRepository.GetListMiniTestByIdLesson(lessonId);
+                response.Data = _mapper.Map<List<MiniTestResponseDto>>(miniTests);
+                response.StatusCode = 200;
+                response.Message = "Lấy tất cả mini test thành công";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "lỗi lấy tất cả mini test");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
     }
 }

@@ -9,7 +9,7 @@ namespace CleanDemo.API.Controller.User
 {
     [ApiController]
     [Route("api/user/enroll")]
-    [Authorize(Roles = "Student,User")]
+    [Authorize(Roles = "Student")]
     public class EnrollCourseController : ControllerBase
     {
         private readonly IUserEnrollmentService _userEnrollmentService;
