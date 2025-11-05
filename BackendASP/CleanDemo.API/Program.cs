@@ -140,6 +140,10 @@ builder.Services.AddScoped<IEnrollmentQueryService, EnrollmentQueryService>();
 builder.Services.AddScoped<IProgressService, ProgressService>();
 builder.Services.AddScoped<IMiniTestService, MiniTestService>();
 
+// Question-Answer services
+builder.Services.AddScoped<IQuestionAnswerRepository, QuestionAnswerRepository>();
+builder.Services.AddScoped<IQuestionAnswerService, QuestionAnswerService>();
+
 // Payment related services
 builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
 builder.Services.AddScoped<IPaymentProcessorFactory, PaymentProcessorFactory>();
