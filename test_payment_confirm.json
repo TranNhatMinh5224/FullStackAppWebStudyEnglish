@@ -1,0 +1,7 @@
+{
+  "paymentId": 1,
+  "productId": 1,
+  "productType": 0,
+  "amount": 100000,
+  "paymentMethod": "VNPay"
+}

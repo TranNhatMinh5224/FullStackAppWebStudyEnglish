@@ -146,14 +146,16 @@ namespace CleanDemo.Application.Service
 
                 _logger.LogInformation("Xác nhận thanh toán {PaymentId} cho User {UserId}", paymentDto.PaymentId, userId);
 
-                // Update payment status
+                // CẬP NHẬT PAYMENT STATUS TRƯỚC để UserEnrollmentService có thể kiểm tra
+                _logger.LogInformation("Cập nhật payment status thành Completed cho Payment {PaymentId}", paymentDto.PaymentId);
                 existingPayment.PaymentMethod = paymentDto.PaymentMethod;
                 existingPayment.Status = PaymentStatus.Completed;
                 existingPayment.PaidAt = DateTime.UtcNow;
 
                 await _paymentRepository.UpdatePaymentStatusAsync(existingPayment);
+                await _paymentRepository.SaveChangesAsync();
 
-                // xử lý thanh toán tùy theo loại sản phẩm
+                // SAU KHI update payment status, mới xử lý post-payment actions
                 try
                 {
                     var processor = _processorFactory.GetProcessor(existingPayment.ProductType);
@@ -184,7 +186,7 @@ namespace CleanDemo.Application.Service
                     return response;
                 }
 
-                await _paymentRepository.SaveChangesAsync();
+                // Payment status đã được update ở trên, chỉ cần commit transaction
                 await _unitOfWork.CommitAsync();
 
                 _logger.LogInformation("Xác nhận thanh toán {PaymentId} thành công", paymentDto.PaymentId);
@@ -195,7 +197,7 @@ namespace CleanDemo.Application.Service
                 _logger.LogError(ex, "Lỗi khi xác nhận thanh toán {PaymentId} cho User {UserId}", paymentDto.PaymentId, userId);
                 await _unitOfWork.RollbackAsync();
                 response.Success = false;
-                response.Message = "Đã xảy ra lỗi khi xác nhận thanh toán";
+                response.Message = "Đã xảy ra lỗi khi xác nhận thanh toán. Vui lòng thử lại sau.";
                 response.Data = false;
             }
             return response;

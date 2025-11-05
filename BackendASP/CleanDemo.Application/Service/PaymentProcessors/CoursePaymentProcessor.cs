@@ -76,7 +76,7 @@ namespace CleanDemo.Application.Service.PaymentProcessors
             {
                 _logger.LogInformation("Thanh toán hoàn tất cho khóa học {CourseId}. Tự động đăng ký User {UserId}", productId, userId);
 
-                // Auto-enroll user into course
+                // Auto-enroll user into course using post-payment method (skip payment check)
                 var enrollDto = new EnrollCourseDto { CourseId = productId };
                 var enrollResult = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, userId);
 
@@ -87,7 +87,7 @@ namespace CleanDemo.Application.Service.PaymentProcessors
                         paymentId, userId, productId);
                     
                     response.Success = false;
-                    response.Message = "Thanh toán thành công nhưng đăng ký khóa học thất bại";
+                    response.Message = "Thanh toán thành công nhưng đăng ký khóa học thất bại: " + enrollResult.Message;
                     return response;
                 }
 

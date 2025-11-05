@@ -31,9 +31,9 @@ namespace CleanDemo.API.Controller.User
             _completeValidator = completeValidator;
         }
 
-        
-        // Tạo thông tin thanh toán (Process Payment)
-       
+        /// <summary>
+        /// Tạo thông tin thanh toán (Process Payment)
+        /// </summary>
         [HttpPost("process")]
         public async Task<IActionResult> ProcessPayment([FromBody] requestPayment request)
         {
@@ -59,9 +59,9 @@ namespace CleanDemo.API.Controller.User
             return Ok(result.Data);
         }
 
-        
-        // Xác nhận thanh toán (Confirm Payment)
-       
+        /// <summary>
+        /// Xác nhận thanh toán (Confirm Payment)
+        /// </summary>
         [HttpPost("confirm")]
         public async Task<IActionResult> ConfirmPayment([FromBody] CompletePayment paymentDto)
         {
