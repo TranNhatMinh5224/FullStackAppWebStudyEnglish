@@ -5,8 +5,6 @@ public class Lesson
     public int LessonId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
-
-    // Foreign Key - Liên kết trực tiếp với Course
     public int CourseId { get; set; }
 
     // Navigation Properties

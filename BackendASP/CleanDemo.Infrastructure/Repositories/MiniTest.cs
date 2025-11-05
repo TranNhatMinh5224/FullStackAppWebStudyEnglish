@@ -23,6 +23,13 @@ namespace CleanDemo.Infrastructure.Repositories
         {
             return await _context.MiniTests.AnyAsync(mt => mt.Title == title && mt.LessonId == lessonId);
         }
+        // Lấy danh sách MiniTest theo LessonId
+        public async Task<List<MiniTest>?> GetListMiniTestByIdLesson (int lessonId)
+        {
+            return await _context.MiniTests
+                .Where(mt => mt.LessonId == lessonId)
+                .ToListAsync();
+        }
     
     }
 }

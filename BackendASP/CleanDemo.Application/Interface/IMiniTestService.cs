@@ -6,5 +6,6 @@ namespace CleanDemo.Application.Interface
     {
         Task<ServiceResponse<MiniTestResponseDto>> AdminAddMiniTest(MiniTestDto dto);
         Task<ServiceResponse<MiniTestResponseDto>> TeacherAddMiniTest(MiniTestDto dto, int teacherId);
+        Task<ServiceResponse<List<MiniTestResponseDto>>> GetAllMiniTests(int lessonId);
     }
 }

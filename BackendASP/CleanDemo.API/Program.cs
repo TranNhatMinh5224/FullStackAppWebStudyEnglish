@@ -22,14 +22,14 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// Read essential configs
+// đọc cấu hình từ appsettings
 var frontendUrl = builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
 
-// Validate JWT config
+// Validate JWT
 if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
     throw new InvalidOperationException("Jwt:Key is missing or too short (>=32 chars).");
 if (string.IsNullOrWhiteSpace(jwtIssuer))
@@ -59,7 +59,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
+// CORS có chức năng cho phép frontend truy cập API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", p =>
@@ -68,6 +68,7 @@ builder.Services.AddCors(options =>
          .AllowAnyMethod()
          .AllowCredentials());
 });
+
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation()
