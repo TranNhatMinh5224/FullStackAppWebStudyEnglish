@@ -287,5 +287,90 @@ namespace CleanDemo.Application.Service
             return response;
         }
 
+        // Implement phương thức xóa mini test dành cho admin
+        public async Task<ServiceResponse<bool>> AdminDeleteMiniTest(int miniTestId)
+        {
+            var response = new ServiceResponse<bool>();
+            try
+            {
+                
+                var existingMiniTest = await _miniTestRepository.GetMiniTestByIdAsync(miniTestId);
+                if (existingMiniTest == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy mini test";
+                    return response;
+                }
+
+                
+                if (existingMiniTest.Lesson?.Course?.Type != CourseType.System)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Admin chỉ có thể xóa mini test của khóa học hệ thống";
+                    return response;
+                }
+
+                
+                await _miniTestRepository.DeleteMiniTestAsync(existingMiniTest);
+
+                response.StatusCode = 200;
+                response.Message = "Xóa mini test thành công";
+                response.Data = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting mini test for admin");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+
+        // Implement phương thức xóa mini test dành cho teacher
+        public async Task<ServiceResponse<bool>> TeacherDeleteMiniTest(int miniTestId, int teacherId)
+        {
+            var response = new ServiceResponse<bool>();
+            try
+            {
+              
+                var existingMiniTest = await _miniTestRepository.GetMiniTestByIdAsync(miniTestId);
+                if (existingMiniTest == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy mini test";
+                    return response;
+                }
+
+              
+                if (existingMiniTest.Lesson?.Course?.Type != CourseType.Teacher ||
+                    existingMiniTest.Lesson?.Course?.TeacherId != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Teacher chỉ có thể xóa mini test của khóa học do mình tạo";
+                    return response;
+                }
+
+               
+                await _miniTestRepository.DeleteMiniTestAsync(existingMiniTest);
+
+                response.StatusCode = 200;
+                response.Message = "Xóa mini test thành công";
+                response.Data = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting mini test for teacher");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+
     }
 }
