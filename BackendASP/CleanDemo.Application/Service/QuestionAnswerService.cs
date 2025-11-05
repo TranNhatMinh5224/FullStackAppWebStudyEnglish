@@ -13,6 +13,7 @@ namespace CleanDemo.Application.Service
         private readonly IQuestionAnswerRepository _repo;
         private readonly IMiniTestRepository _miniTestRepo;
         private readonly ILogger<QuestionAnswerService> _logger;
+        
 
         public QuestionAnswerService(IQuestionAnswerRepository repo, IMiniTestRepository miniTestRepo, ILogger<QuestionAnswerService> logger)
         {
@@ -26,7 +27,7 @@ namespace CleanDemo.Application.Service
             var res = new ServiceResponse<QuestionDto>();
             try
             {
-                var miniTest = await _miniTestRepo.GetMiniTestById(dto.MiniTestId);
+                var miniTest = await _miniTestRepo.GetMiniTestByIdAsync(dto.MiniTestId);
                 if (miniTest == null)
                 {
                     res.Success = false;

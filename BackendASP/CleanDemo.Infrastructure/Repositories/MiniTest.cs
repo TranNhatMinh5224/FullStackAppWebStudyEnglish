@@ -44,6 +44,12 @@ namespace CleanDemo.Infrastructure.Repositories
             _context.MiniTests.Update(miniTest);
             await _context.SaveChangesAsync();
         }
+        // Xóa MiniTest
+        public async Task DeleteMiniTestAsync(MiniTest miniTest)
+        {
+            _context.MiniTests.Remove(miniTest);
+            await _context.SaveChangesAsync();
+        }
     
     }
 }

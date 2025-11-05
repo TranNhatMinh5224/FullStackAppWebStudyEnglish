@@ -9,5 +9,7 @@ namespace CleanDemo.Application.Interface
         Task<ServiceResponse<List<MiniTestResponseDto>>> GetAllMiniTests(int lessonId);
         Task<ServiceResponse<MiniTestResponseDto>> AdminUpdateMiniTest(int miniTestId, UpdateMiniTestDto dto);
         Task<ServiceResponse<MiniTestResponseDto>> TeacherUpdateMiniTest(int miniTestId, UpdateMiniTestDto dto, int teacherId);
+        Task<ServiceResponse<bool>> AdminDeleteMiniTest(int miniTestId);
+        Task<ServiceResponse<bool>> TeacherDeleteMiniTest(int miniTestId, int teacherId);
     }
 }

@@ -8,6 +8,6 @@ namespace CleanDemo.Application.Interface
         Task<List<MiniTest>?> GetListMiniTestByIdLesson(int lessonId);
         Task<MiniTest?> GetMiniTestByIdAsync(int miniTestId);
         Task UpdateMiniTestAsync(MiniTest miniTest);
-       
+        Task DeleteMiniTestAsync(MiniTest miniTest);
     }
 }
