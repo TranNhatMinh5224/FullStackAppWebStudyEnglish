@@ -6,6 +6,8 @@ namespace CleanDemo.Application.Interface
         Task AddMiniTestAsync(MiniTest miniTest);
         Task<bool> MiniTestExistsInLesson(string title, int lessonId);
         Task<List<MiniTest>?> GetListMiniTestByIdLesson(int lessonId);
+        Task<MiniTest?> GetMiniTestByIdAsync(int miniTestId);
+        Task UpdateMiniTestAsync(MiniTest miniTest);
        
     }
 }
