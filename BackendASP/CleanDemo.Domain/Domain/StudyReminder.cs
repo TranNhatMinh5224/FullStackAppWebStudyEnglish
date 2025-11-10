@@ -1,3 +1,5 @@
+using CleanDemo.Domain.Enums;
+
 namespace CleanDemo.Domain.Entities;
 
 // Nhắc nhở học tập (Study Reminders) - push notifications, email
@@ -6,8 +8,8 @@ public class StudyReminder
     public int StudyReminderId { get; set; }
     public int UserId { get; set; }
     
-    // Loại reminder (DailyStudy, FlashcardReview, AssignmentDue, QuizDeadline)
-    public string Type { get; set; } = "DailyStudy";
+    // Loại reminder - Now using enum instead of string
+    public ReminderType Type { get; set; } = ReminderType.DailyStudy;
     
     public string Title { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
@@ -15,9 +17,8 @@ public class StudyReminder
     // Thời gian nhắc (giờ:phút) - Format: "14:30"
     public string ScheduledTime { get; set; } = "19:00";
     
-    // Ngày trong tuần (Monday, Tuesday, ...) - JSON array
-    // Format: ["Monday", "Wednesday", "Friday"]
-    public string DaysOfWeek { get; set; } = "[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\"]";
+    // Ngày trong tuần - Now using enum flags instead of JSON string
+    public DaysOfWeek DaysOfWeek { get; set; } = DaysOfWeek.Weekdays;
     
     public string? TimeZone { get; set; }
     

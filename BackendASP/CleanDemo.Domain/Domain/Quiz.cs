@@ -12,7 +12,7 @@ namespace CleanDemo.Domain.Entities
         public string? Instructions { get; set; } // Hướng dẫn làm bài
 
         public TypeQuiz Type { get; set; } = TypeQuiz.Practice; 
-        public StatusQuiz Status { get; set; } = StatusQuiz.Publish;
+        public StatusQuiz Status { get; set; } = StatusQuiz.Open;
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
         public int? OrderIndex { get; set; }
