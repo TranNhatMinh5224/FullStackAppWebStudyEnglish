@@ -11,6 +11,7 @@ using LearningEnglish.Application.Mappings;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Service;
 using LearningEnglish.Application.Service.PaymentProcessors;
+using LearningEnglish.Application.Validators;
 using LearningEnglish.Infrastructure.Repositories;
 using LearningEnglish.Infrastructure.Services;
 
@@ -113,6 +114,8 @@ builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<IModuleRepository, ModuleRepository>();
+builder.Services.AddScoped<ILectureRepository, LectureRepository>();
+builder.Services.AddScoped<IFlashCardRepository, FlashCardRepository>();
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
@@ -125,6 +128,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAdminCourseService, AdminCourseService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<IModuleService, ModuleService>();
+builder.Services.AddScoped<ILectureService, LectureService>();
+builder.Services.AddScoped<IFlashCardService, FlashCardService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
@@ -151,7 +156,7 @@ builder.Services.AddScoped<TeacherPackagePaymentProcessor>();
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
-builder.Services.AddValidatorsFromAssemblyContaining<LearningEnglish.Application.Validators.CreateModuleDtoValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateLectureDtoValidator>();
 
 // Build app
 var app = builder.Build();
