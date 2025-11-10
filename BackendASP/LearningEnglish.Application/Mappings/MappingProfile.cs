@@ -85,6 +85,39 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<UpdateTeacherPackageDto, TeacherPackage>();
             CreateMap<TeacherPackage, TeacherPackageDto>();
 
+            // Lecture mappings
+            CreateMap<Lecture, LectureDto>()
+                .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty))
+                .ForMember(dest => dest.ParentTitle, opt => opt.MapFrom(src => src.Parent != null ? src.Parent.Title : string.Empty))
+                .ForMember(dest => dest.ChildrenCount, opt => opt.MapFrom(src => src.Children.Count))
+                .ForMember(dest => dest.AssessmentCount, opt => opt.MapFrom(src => src.Assessments.Count));
+
+            CreateMap<Lecture, ListLectureDto>()
+                .ForMember(dest => dest.ChildrenCount, opt => opt.MapFrom(src => src.Children.Count));
+
+            CreateMap<Lecture, LectureTreeDto>()
+                .ForMember(dest => dest.ChildrenCount, opt => opt.MapFrom(src => src.Children.Count))
+                .ForMember(dest => dest.Children, opt => opt.Ignore()); // Sẽ build trong service
+
+            CreateMap<CreateLectureDto, Lecture>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+
+            CreateMap<UpdateLectureDto, Lecture>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<Lecture, LectureWithProgressDto>()
+                .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty))
+                .ForMember(dest => dest.ParentTitle, opt => opt.MapFrom(src => src.Parent != null ? src.Parent.Title : string.Empty))
+                .ForMember(dest => dest.ChildrenCount, opt => opt.MapFrom(src => src.Children.Count))
+                .ForMember(dest => dest.AssessmentCount, opt => opt.MapFrom(src => src.Assessments.Count))
+                .ForMember(dest => dest.IsCompleted, opt => opt.Ignore())
+                .ForMember(dest => dest.ProgressPercentage, opt => opt.Ignore())
+                .ForMember(dest => dest.StartedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.CompletedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.TimeSpentSeconds, opt => opt.Ignore());
+
             // TeacherSubscription mappings
             CreateMap<TeacherSubscription, ResPurchaseTeacherPackageDto>()
             .ForMember(dest => dest.IdTeacherPackage, opt => opt.MapFrom(src => src.TeacherSubscriptionId))
@@ -95,7 +128,34 @@ namespace LearningEnglish.Application.Mappings
             .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate))
             .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate));
 
+            // FlashCard mappings
+            CreateMap<FlashCard, FlashCardDto>()
+                .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty))
+                .ForMember(dest => dest.ReviewCount, opt => opt.Ignore()) // Sẽ tính trong service
+                .ForMember(dest => dest.SuccessRate, opt => opt.Ignore()) // Sẽ tính trong service
+                .ForMember(dest => dest.CurrentLevel, opt => opt.Ignore()) // Sẽ tính trong service
+                .ForMember(dest => dest.NextReviewAt, opt => opt.Ignore()) // Sẽ tính trong service
+                .ForMember(dest => dest.LastReviewedAt, opt => opt.Ignore()); // Sẽ tính trong service
 
+            CreateMap<FlashCard, ListFlashCardDto>()
+                .ForMember(dest => dest.ReviewCount, opt => opt.Ignore()) // Sẽ tính trong service
+                .ForMember(dest => dest.SuccessRate, opt => opt.Ignore()) // Sẽ tính trong service
+                .ForMember(dest => dest.CurrentLevel, opt => opt.Ignore()); // Sẽ tính trong service
+
+            CreateMap<CreateFlashCardDto, FlashCard>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+
+            CreateMap<UpdateFlashCardDto, FlashCard>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<FlashCard, FlashCardWithProgressDto>()
+                .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty))
+                .ForMember(dest => dest.CurrentLevel, opt => opt.Ignore()) // Sẽ tính trong service
+                .ForMember(dest => dest.NextReviewAt, opt => opt.Ignore()) // Sẽ tính trong service
+                .ForMember(dest => dest.ReviewCount, opt => opt.Ignore()) // Sẽ tính trong service
+                .ForMember(dest => dest.SuccessRate, opt => opt.Ignore()); // Sẽ tính trong service
 
         }
     }
