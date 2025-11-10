@@ -14,18 +14,16 @@ namespace CleanDemo.Domain.Entities
         // Lần thử thứ mấy (1, 2, 3...)
         public int AttemptNumber { get; set; }
 
-        public DateTime StartedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? SubmittedAt { get; set; }
-        public StatusQuizAttempt Status { get; set; } = StatusQuizAttempt.InProgress;
+    public DateTime StartedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? SubmittedAt { get; set; }
+    public StatusQuizAttempt Status { get; set; } = StatusQuizAttempt.InProgress;
 
-        public int Score { get; set; }
-        public int MaxScore { get; set; }
-        public double Percentage { get; set; }
-        public bool IsPassed { get; set; }
+    public decimal Score { get; set; }
+    public decimal MaxScore { get; set; }
+    public decimal Percentage { get; set; }
+    public bool IsPassed { get; set; }
 
-        public int TimeSpentSeconds { get; set; }
-
-        // JSON backup của tất cả câu trả lời
+    public int TimeSpentSeconds { get; set; }        // JSON backup của tất cả câu trả lời
         public string? AnswersSnapshot { get; set; }
 
         // Review từ giáo viên (cho essay questions, assignments)

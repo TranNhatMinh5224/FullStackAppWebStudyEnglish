@@ -2,6 +2,6 @@ namespace CleanDemo.Domain.Enums;
 
 public enum CourseType
 {
-    System,
-    Teacher
+    System = 1,
+    Teacher = 2
 }

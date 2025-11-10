@@ -2,7 +2,7 @@ namespace CleanDemo.Domain.Enums;
 
 public enum StatusAccount
 {
-    Active,
-    Inactive,
-    Suspended
+    Active = 1,
+    Inactive = 2,
+    Suspended = 3
 }

@@ -5,7 +5,7 @@ public class FlashCardReview
 {
     public int FlashCardReviewId { get; set; }
     public int UserId { get; set; }
-    public int VocabularyId { get; set; }  // Đổi từ FlashCardId thành VocabularyId
+    public int FlashCardId { get; set; }
 
     // Điểm đánh giá (0-5): 0=Quên hoàn toàn, 5=Nhớ hoàn hảo
     public int Quality { get; set; } = 0;

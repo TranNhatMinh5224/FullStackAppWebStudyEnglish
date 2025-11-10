@@ -11,7 +11,7 @@ namespace CleanDemo.Domain.Entities
 
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
-
+       
         public DateTime? OpenAt { get; set; }
         public DateTime? DueAt { get; set; }
         public TimeSpan? TimeLimit { get; set; }

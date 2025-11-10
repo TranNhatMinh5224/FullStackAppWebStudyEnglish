@@ -2,8 +2,8 @@ namespace CleanDemo.Domain.Enums;
 
 public enum CourseStatus
 {
-    Draft,
-    Published,
-    Archived,
-    Deleted
+    Draft = 1,
+    Published = 2,
+    Archived = 3,
+    Deleted = 4
 }

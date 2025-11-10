@@ -11,18 +11,19 @@ namespace CleanDemo.Domain.Entities
         public string? Description { get; set; }
         public string? Instructions { get; set; } // Hướng dẫn làm bài
 
-        public TypeQuiz Type { get; set; } = TypeQuiz.Practice; // Practice, MiniTest, FinalExam
+        public TypeQuiz Type { get; set; } = TypeQuiz.Practice; 
+        public StatusQuiz Status { get; set; } = StatusQuiz.Publish;
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
         public int? OrderIndex { get; set; }
-        public StatusQuiz Status { get; set; } = StatusQuiz.Open;
+       
 
         // Han thoi gian lam bai thi
 
-        // public int? TimeLimit { get; set; } // Thoi gian lam bai
+       
         public DateTime? StartTime { get; set; } // Thoi gian bat dau
         public DateTime? EndTime { get; set; } // Thoi gian ket thuc
-        // public DateTime? DueAt { get; set; } // Han nop bai
+        
 
         // Hien thi cau tra loi sau khi nop bai
         public bool? ShowAnswersAfterSubmit { get; set; } = true; // Hien dap an sau khi nop bai
@@ -52,15 +53,4 @@ namespace CleanDemo.Domain.Entities
 
     }
 }
-public enum TypeQuiz
-{
-    Practice,
-    MiniTest,
-    FinalExam
-}
-public enum StatusQuiz
-{
-    Open,
-    Closed,
-    Archived
-}
+

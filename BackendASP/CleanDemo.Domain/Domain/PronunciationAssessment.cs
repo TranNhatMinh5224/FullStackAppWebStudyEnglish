@@ -5,7 +5,7 @@ public class PronunciationAssessment
 {
     public int PronunciationAssessmentId { get; set; }
     public int UserId { get; set; }
-    public int? VocabularyId { get; set; }      // Đổi từ FlashCardId thành VocabularyId
+    public int? FlashCardId { get; set; }
     public int? AssignmentId { get; set; }      
 
     // Văn bản cần đọc

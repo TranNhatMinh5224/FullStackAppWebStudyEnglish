@@ -22,7 +22,7 @@ public class EssaySubmission
 
 
     // Feedback từ teacher
-
+    public int? GraderId { get; set; }
     public string? TeacherFeedback { get; set; }
     public string? PrivateNotes { get; set; }
 

@@ -3,7 +3,7 @@ namespace CleanDemo.Domain.Entities;
 // FlashCard đơn giản - chỉ lưu thông tin cơ bản của từ vựng
 public class FlashCard
 {
-    public int VocabularyId { get; set; }
+    public int FlashCardId { get; set; }
     public int? ModuleId { get; set; }
 
     // Thông tin cốt lõi của từ vựng

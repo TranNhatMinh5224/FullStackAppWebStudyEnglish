@@ -11,6 +11,7 @@ namespace CleanDemo.Domain.Entities
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
         public CourseType Type { get; set; } = CourseType.System;
+        public CourseStatus Status { get; set; } = CourseStatus.Draft;
         public decimal? Price { get; set; }
         public int? TeacherId { get; set; }
         public string? ClassCode { get; set; }
