@@ -31,9 +31,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(ClaimTypes.Role)?.Value ?? "";
         }
 
-        /// <summary>
-        /// Lấy thông tin lecture theo ID với chi tiết
-        /// </summary>
+
+        // Lấy thông tin lecture theo ID với chi tiết
+
         [HttpGet("{lectureId}")]
         public async Task<IActionResult> GetLecture(int lectureId)
         {
@@ -54,9 +54,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Lấy tất cả lecture theo module ID
-        /// </summary>
+
+        // Lấy tất cả lecture theo module ID
+
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetLecturesByModule(int moduleId)
         {
@@ -74,9 +74,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Lấy cấu trúc cây lecture theo module ID
-        /// </summary>
+
+        // Lấy cấu trúc cây lecture theo module ID
+
         [HttpGet("module/{moduleId}/tree")]
         public async Task<IActionResult> GetLectureTree(int moduleId)
         {
@@ -94,9 +94,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Tạo lecture mới
-        /// </summary>
+
+        // Tạo lecture mới
+
         [HttpPost]
         public async Task<IActionResult> CreateLecture([FromBody] CreateLectureDto createLectureDto)
         {
@@ -120,9 +120,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Cập nhật lecture (Admin có thể cập nhật bất kỳ, Teacher chỉ lecture của mình)
-        /// </summary>
+
+        // Cập nhật lecture (Admin có thể cập nhật bất kỳ, Teacher chỉ lecture của mình)
         [HttpPut("{lectureId}")]
         public async Task<IActionResult> UpdateLecture(int lectureId, [FromBody] UpdateLectureDto updateLectureDto)
         {
@@ -152,9 +151,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Xóa lecture (Admin có thể xóa bất kỳ, Teacher chỉ lecture của mình)
-        /// </summary>
+
+        // Xóa lecture (Admin có thể xóa bất kỳ, Teacher chỉ lecture của mình)
+
         [HttpDelete("{lectureId}")]
         public async Task<IActionResult> DeleteLecture(int lectureId)
         {
@@ -183,9 +182,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Sắp xếp lại thứ tự lecture
-        /// </summary>
+
+        // Sắp xếp lại thứ tự lecture
+
         [HttpPost("reorder")]
         public async Task<IActionResult> ReorderLectures([FromBody] List<ReorderLectureDto> reorderDtos)
         {
