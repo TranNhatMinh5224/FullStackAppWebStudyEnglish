@@ -14,6 +14,7 @@ using LearningEnglish.Application.Service.PaymentProcessors;
 using LearningEnglish.Infrastructure.Repositories;
 using LearningEnglish.Infrastructure.Services;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Load configuration (appsettings + environment)
@@ -111,17 +112,19 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
+builder.Services.AddScoped<IModuleRepository, ModuleRepository>();
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ITeacherPackageRepository, TeacherPackageRepository>();
 builder.Services.AddScoped<ITeacherSubscriptionRepository, TeacherSubscriptionRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-// builder.Services.AddScoped<IMiniTestRepository, MiniTestRepository>(); // Not implemented yet
+
 
 // Service layer
 builder.Services.AddScoped<IAdminCourseService, AdminCourseService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
+builder.Services.AddScoped<IModuleService, ModuleService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
@@ -144,6 +147,11 @@ builder.Services.AddScoped<IPaymentProcessorFactory, PaymentProcessorFactory>();
 builder.Services.AddScoped<IPaymentNotificationService, PaymentNotificationService>();
 builder.Services.AddScoped<CoursePaymentProcessor>();
 builder.Services.AddScoped<TeacherPackagePaymentProcessor>();
+
+// FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssemblyContaining<LearningEnglish.Application.Validators.CreateModuleDtoValidator>();
 
 // Build app
 var app = builder.Build();
