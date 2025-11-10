@@ -10,7 +10,7 @@ namespace LearningEnglish.Infrastructure.Data
         // DbSets
         public DbSet<User> Users => Set<User>();
         public DbSet<Role> Roles => Set<Role>();
-        public DbSet<UserRole> UserRoles => Set<UserRole>();
+       
         public DbSet<Course> Courses => Set<Course>();
         public DbSet<Lesson> Lessons => Set<Lesson>();
         public DbSet<Module> Modules => Set<Module>();
@@ -70,43 +70,24 @@ namespace LearningEnglish.Infrastructure.Data
                 e.HasIndex(r => r.Name).IsUnique();
             });
 
-            // ===== UserRole (JOIN) =====
-            modelBuilder.Entity<UserRole>(e =>
-            {
-                e.ToTable("UserRoles");
-
-                // Composite PK
-                e.HasKey(ur => new { ur.UserId, ur.RoleId });
-
-                // FK: UserRole -> User
-                e.HasOne(ur => ur.User)
-                 .WithMany(u => u.UserRoles)
-                 .HasForeignKey(ur => ur.UserId)
-                 .OnDelete(DeleteBehavior.Cascade);
-
-                // FK: UserRole -> Role
-                e.HasOne(ur => ur.Role)
-                 .WithMany(r => r.UserRoles)
-                 .HasForeignKey(ur => ur.RoleId)
-                 .OnDelete(DeleteBehavior.Cascade);
-
-                e.HasIndex(ur => ur.RoleId);
-            });
-
-            // ===== Skip navigations Users <-> Roles thông qua UserRole =====
+            // ===== User-Role Many-to-Many =====
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Roles)
                 .WithMany(r => r.Users)
-                .UsingEntity<UserRole>(
-                    j => j.HasOne(ur => ur.Role)
-                          .WithMany(r => r.UserRoles)
-                          .HasForeignKey(ur => ur.RoleId),
-                    j => j.HasOne(ur => ur.User)
-                          .WithMany(u => u.UserRoles)
-                          .HasForeignKey(ur => ur.UserId),
-                    j => j.ToTable("UserRoles")
-                );
+                .UsingEntity(
+                    "UserRoles",
+                    l => l.HasOne(typeof(Role)).WithMany().HasForeignKey("RoleId"),
+                    r => r.HasOne(typeof(User)).WithMany().HasForeignKey("UserId"),
+                    j => j.HasKey("UserId", "RoleId"));
 
+            // ===== User-Role Many-to-Many =====
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Roles)
+                .WithMany(r => r.Users)
+                .UsingEntity(
+                    "UserRoles",
+                    l => l.HasOne(typeof(Role)).WithMany().HasForeignKey("RoleId"),
+                    r => r.HasOne(typeof(User)).WithMany().HasForeignKey("UserId"));
             
             // Course
             modelBuilder.Entity<Course>(e =>
@@ -497,7 +478,7 @@ namespace LearningEnglish.Infrastructure.Data
                 e.ToTable("UserCourses");
                 e.HasIndex(uc => new { uc.UserId, uc.CourseId }).IsUnique();
                 e.HasOne(uc => uc.User)
-                 .WithMany(u => u.UserCourses)
+                 .WithMany()
                  .HasForeignKey(uc => uc.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(uc => uc.Course)
@@ -558,9 +539,9 @@ namespace LearningEnglish.Infrastructure.Data
                 }
             );
 
-            // Gán role Admin cho user 1
-            modelBuilder.Entity<UserRole>().HasData(
-                new UserRole { UserId = 1, RoleId = 1 }
+            // Gán role Admin cho user 1 (sử dụng junction table)
+            modelBuilder.Entity("UserRoles").HasData(
+                new { UserId = 1, RoleId = 1 }
             );
         }
     }

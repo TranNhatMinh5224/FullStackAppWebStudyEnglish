@@ -40,28 +40,28 @@ namespace LearningEnglish.Infrastructure.Repositories
             await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
         public async Task<bool> UpdateRoleTeacher(int userId)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            var user = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
             if (user == null)
             {
                 return false;
             }
 
-
-            var existingUserRole = await _context.UserRoles
-                .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == 2);
-            if (existingUserRole != null)
+            // Check if user already has Teacher role
+            if (user.Roles.Any(r => r.RoleId == 2))
             {
-
                 return true;
             }
 
-            UserRole userRole = new UserRole
+            // Get Teacher role
+            var teacherRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == 2);
+            if (teacherRole != null)
             {
-                UserId = userId,
-                RoleId = 2
-            };
-            _context.UserRoles.Add(userRole);
-            await _context.SaveChangesAsync();
+                user.Roles.Add(teacherRole);
+                await _context.SaveChangesAsync();
+            }
+            
             return true;
         }
         // Implement cho phương thức lấy role theo userId
@@ -85,8 +85,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             var teachers = await _context.Users
             .Include(u => u.Roles)
-            .Include(u => u.UserRoles)
-            .Where(u => u.UserRoles.Any(ur => ur.RoleId == 2))
+            .Where(u => u.Roles.Any(r => r.RoleId == 2))
             .ToListAsync();
             return teachers;
         }

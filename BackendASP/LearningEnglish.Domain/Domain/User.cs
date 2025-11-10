@@ -18,11 +18,11 @@ public class User
     public int? CurrentTeacherSubscriptionId { get; set; }
 
     // Many-to-many
-    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
-    public ICollection<Role> Roles { get; set; } = new List<Role>();
+
+    public List<Role> Roles { get; set; } = new List<Role>();
 
     // Các nav khác…
-    public List<UserCourse> UserCourses { get; set; } = new();
+
     public List<Course> CreatedCourses { get; set; } = new();
     public List<CourseProgress> CourseProgresses { get; set; } = new();
 
@@ -45,7 +45,7 @@ public class User
     public List<QuizUserAnswer> QuizUserAnswers { get; set; } = new();
     public List<EssaySubmission> EssaySubmissions { get; set; } = new();
     public List<PronunciationAssessment> PronunciationAssessments { get; set; } = new();
-    
+
     // Navigation for reviewed items (as teacher/reviewer)
     public List<QuizAttempt> ReviewedQuizAttempts { get; set; } = new();
     public List<EssaySubmission> GradedEssaySubmissions { get; set; } = new();

@@ -7,6 +7,6 @@ public class Role
     public string Name { get; set; } = string.Empty;
 
     // Many-to-many
-    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
-    public ICollection<User> Users { get; set; } = new List<User>();
+
+    public List<User> Users { get; set; } = new List<User>();
 }

@@ -238,54 +238,54 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-              
-                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
-                    if (course == null)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 404;
-                        response.Message = "Không tìm thấy khóa học";
-                        return response;
-                    }
 
-                 
-                    if (userRole == "Admin")
-                    {
-                        response.StatusCode = 200;
-                        response.Data = _mapper.Map<LessonDto>(lesson);
-                    }
-                   
-                    else if (userRole == "Teacher")
-                    {
-                        if (course.Type != CourseType.Teacher || course.TeacherId != userId)
-                        {
-                            response.Success = false;
-                            response.StatusCode = 403;
-                            response.Message = "Bạn chỉ có thể xem bài học của khóa học do mình tạo";
-                            return response;
-                        }
-                    }
-                   
-                    else if (userRole == "Student")
-                    {
-                        bool isEnrolled = await _courseRepository.IsUserEnrolled(course.CourseId, userId);
-                        if (!isEnrolled)
-                        {
-                            response.Success = false;
-                            response.StatusCode = 403;
-                            response.Message = "Bài học này thuộc khóa học mà bạn chưa đăng ký, xin vui lòng đăng ký để xem những bài học mà bạn muốn.";
-                            return response;
-                        }
-                    }
-                    
-                    else
+                var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+
+                if (userRole == "Admin")
+                {
+                    response.StatusCode = 200;
+                    response.Data = _mapper.Map<LessonDto>(lesson);
+                }
+
+                else if (userRole == "Teacher")
+                {
+                    if (course.Type != CourseType.Teacher || course.TeacherId != userId)
                     {
                         response.Success = false;
                         response.StatusCode = 403;
-                        response.Message = "Không có quyền truy cập";
+                        response.Message = "Bạn chỉ có thể xem bài học của khóa học do mình tạo";
                         return response;
                     }
-                
+                }
+
+                else if (userRole == "Student")
+                {
+                    bool isEnrolled = await _courseRepository.IsUserEnrolled(course.CourseId, userId);
+                    if (!isEnrolled)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Bài học này thuộc khóa học mà bạn chưa đăng ký, xin vui lòng đăng ký để xem những bài học mà bạn muốn.";
+                        return response;
+                    }
+                }
+
+                else
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Không có quyền truy cập";
+                    return response;
+                }
+
 
                 response.StatusCode = 200;
                 response.Data = _mapper.Map<LessonDto>(lesson);
@@ -317,7 +317,8 @@ namespace LearningEnglish.Application.Service
                 // Cập nhật trực tiếp entity đã tồn tại 
                 lesson.Title = dto.Title;
                 lesson.Description = dto.Description;
-
+                lesson.UpdatedAt = DateTime.UtcNow;
+                lesson.OrderIndex = dto.OrderIndex ?? lesson.OrderIndex;
                 await _lessonRepository.UpdateLesson(lesson);
                 response.StatusCode = 200;
                 response.Message = "Cập nhật bài học thành công";
