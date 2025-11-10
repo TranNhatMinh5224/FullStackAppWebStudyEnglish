@@ -1,6 +1,7 @@
 using AutoMapper;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.DTOs;
+using LearningEnglish.Application.DTOS;
 
 namespace LearningEnglish.Application.Mappings
 {
@@ -41,6 +42,33 @@ namespace LearningEnglish.Application.Mappings
             // Lesson mappings
             CreateMap<Lesson, LessonDto>();
             CreateMap<Lesson, ListLessonDto>();
+
+            // Module mappings
+            CreateMap<Module, ModuleDto>()
+                .ForMember(dest => dest.LessonTitle, opt => opt.MapFrom(src => src.Lesson != null ? src.Lesson.Title : string.Empty))
+                .ForMember(dest => dest.LectureCount, opt => opt.MapFrom(src => src.Lectures.Count))
+                .ForMember(dest => dest.FlashCardCount, opt => opt.MapFrom(src => src.FlashCards.Count))
+                .ForMember(dest => dest.AssessmentCount, opt => opt.MapFrom(src => src.Assessments.Count));
+
+            CreateMap<Module, ListModuleDto>();
+
+            CreateMap<CreateModuleDto, Module>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+
+            CreateMap<UpdateModuleDto, Module>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<Module, ModuleWithProgressDto>()
+                .ForMember(dest => dest.LessonTitle, opt => opt.MapFrom(src => src.Lesson != null ? src.Lesson.Title : string.Empty))
+                .ForMember(dest => dest.LectureCount, opt => opt.MapFrom(src => src.Lectures.Count))
+                .ForMember(dest => dest.FlashCardCount, opt => opt.MapFrom(src => src.FlashCards.Count))
+                .ForMember(dest => dest.AssessmentCount, opt => opt.MapFrom(src => src.Assessments.Count))
+                .ForMember(dest => dest.IsCompleted, opt => opt.Ignore())
+                .ForMember(dest => dest.ProgressPercentage, opt => opt.Ignore())
+                .ForMember(dest => dest.StartedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.CompletedAt, opt => opt.Ignore());
 
             // User mappings
             CreateMap<User, UserDto>()
