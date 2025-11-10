@@ -74,6 +74,7 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Email là bắt buộc";
                     return response;
                 }
+                //
 
                 var user = await _userRepository.GetUserByEmailAsync(email);
                 
@@ -81,7 +82,7 @@ namespace LearningEnglish.Application.Service
                 {
                     response.StatusCode = 200;
                     response.Data = true;
-                    response.Message = "Email khôi phục mật khẩu đã được gửi";
+                    response.Message = "Email này chưa được đăng ký trong hệ thống";
                     return response;
                 }
 
@@ -106,8 +107,16 @@ namespace LearningEnglish.Application.Service
                 response.Data = true;
                 response.Message = "Email khôi phục mật khẩu đã được gửi";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                // Log chi tiết exception để debug
+                Console.WriteLine($"[ERROR] ForgotPasswordAsync Exception: {ex.Message}");
+                Console.WriteLine($"[ERROR] StackTrace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"[ERROR] InnerException: {ex.InnerException.Message}");
+                }
+                
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Đã xảy ra lỗi hệ thống";

@@ -55,12 +55,8 @@ namespace LearningEnglish.Infrastructure.Data
                 e.ToTable("Users");
                 e.HasIndex(u => u.Email).IsUnique();
 
-                // CurrentTeacherSubscription (nullable)
-                e.HasOne(u => u.CurrentTeacherSubscription)
-                 .WithMany()
-                 .HasForeignKey(u => u.CurrentTeacherSubscriptionId)
-                 .IsRequired(false)
-                 .OnDelete(DeleteBehavior.SetNull);
+                // CurrentTeacherSubscription configuration removed
+                // since CurrentTeacherSubscription property is not in User entity
             });
 
             // ===== Role =====
@@ -279,6 +275,7 @@ namespace LearningEnglish.Infrastructure.Data
             // QuizAttempt
             modelBuilder.Entity<QuizAttempt>(e =>
             {
+                e.HasKey(qa => qa.AttemptId);
                 e.ToTable("QuizAttempts");
                 e.HasOne(qa => qa.Quiz)
                  .WithMany(q => q.Attempts)
@@ -336,6 +333,7 @@ namespace LearningEnglish.Infrastructure.Data
             // EssaySubmission
             modelBuilder.Entity<EssaySubmission>(e =>
             {
+                e.HasKey(es => es.SubmissionId);
                 e.ToTable("EssaySubmissions");
                 e.HasOne(es => es.Assessment)
                  .WithMany(a => a.EssaySubmissions)

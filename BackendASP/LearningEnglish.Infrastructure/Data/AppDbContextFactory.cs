@@ -12,7 +12,7 @@ namespace LearningEnglish.Infrastructure.Data
         {
             // Load appsettings.json
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "CleanDemo.API"))
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "LearningEnglish.API"))
                 .AddJsonFile("appsettings.json", optional: false)
                 .AddJsonFile("appsettings.Development.json", optional: true)
                 .Build();
@@ -20,7 +20,7 @@ namespace LearningEnglish.Infrastructure.Data
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
             // Read connection string from appsettings.json
-            var connectionString = configuration.GetConnectionString("MyConnection");
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
             
             if (string.IsNullOrEmpty(connectionString))
             {

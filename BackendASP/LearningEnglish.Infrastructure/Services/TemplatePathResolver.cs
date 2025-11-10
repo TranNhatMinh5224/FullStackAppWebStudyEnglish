@@ -9,7 +9,7 @@ namespace LearningEnglish.Infrastructure.Services
         public TemplatePathResolver()
         {
             // Look for templates in the Infrastructure project's Templates folder
-            _basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "CleanDemo.Infrastructure", "Templates");
+            _basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "LearningEnglish.Infrastructure", "Templates");
 
             // Fallback to current directory if development path doesn't exist
             if (!Directory.Exists(_basePath))
