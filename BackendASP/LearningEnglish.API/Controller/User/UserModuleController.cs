@@ -26,7 +26,7 @@ namespace LearningEnglish.API.Controller.User
         }
 
         /// <summary>
-        /// Get module with user progress
+        /// Lấy thông tin module với tiến độ của user
         /// </summary>
         [HttpGet("{moduleId}")]
         public async Task<IActionResult> GetModuleWithProgress(int moduleId)
@@ -43,7 +43,7 @@ namespace LearningEnglish.API.Controller.User
         }
 
         /// <summary>
-        /// Get all modules in a lesson with progress
+        /// Lấy tất cả module trong lesson với tiến độ
         /// </summary>
         [HttpGet("lesson/{lessonId}")]
         public async Task<IActionResult> GetModulesWithProgress(int lessonId)
@@ -57,52 +57,6 @@ namespace LearningEnglish.API.Controller.User
             }
 
             return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Get next module for user
-        /// </summary>
-        [HttpGet("{moduleId}/next")]
-        public async Task<IActionResult> GetNextModule(int moduleId)
-        {
-            var userId = GetCurrentUserId();
-            var result = await _moduleService.GetNextModuleAsync(moduleId, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Get previous module for user
-        /// </summary>
-        [HttpGet("{moduleId}/previous")]
-        public async Task<IActionResult> GetPreviousModule(int moduleId)
-        {
-            var userId = GetCurrentUserId();
-            var result = await _moduleService.GetPreviousModuleAsync(moduleId, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Check if user can access module
-        /// </summary>
-        [HttpGet("{moduleId}/access")]
-        public async Task<IActionResult> CheckAccess(int moduleId)
-        {
-            var userId = GetCurrentUserId();
-            var result = await _moduleService.CanUserAccessModuleAsync(moduleId, userId);
-
-            return Ok(result);
         }
     }
 }

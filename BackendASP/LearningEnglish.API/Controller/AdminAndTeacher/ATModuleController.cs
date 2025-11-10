@@ -26,8 +26,13 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
+        private string GetCurrentUserRole()
+        {
+            return User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+        }
+
         /// <summary>
-        /// Get module by ID with details
+        /// Lấy thông tin module theo ID với chi tiết
         /// </summary>
         [HttpGet("{moduleId}")]
         public async Task<IActionResult> GetModule(int moduleId)
@@ -44,7 +49,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         /// <summary>
-        /// Get all modules by lesson ID
+        /// Lấy tất cả module theo lesson ID
         /// </summary>
         [HttpGet("lesson/{lessonId}")]
         public async Task<IActionResult> GetModulesByLesson(int lessonId)
@@ -61,14 +66,21 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         /// <summary>
-        /// Create new module
+        /// Tạo module mới
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> CreateModule([FromBody] CreateModuleDto createModuleDto)
         {
+            // Kiểm tra validation data đầu vào
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new 
+                { 
+                    success = false,
+                    statusCode = 400,
+                    message = "Dữ liệu đầu vào không hợp lệ",
+                    errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)
+                });
             }
 
             var userId = GetCurrentUserId();
@@ -83,169 +95,71 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         /// <summary>
-        /// Update existing module
+        /// Cập nhật module (Admin có thể cập nhật bất kỳ, Teacher chỉ module của mình)
         /// </summary>
         [HttpPut("{moduleId}")]
         public async Task<IActionResult> UpdateModule(int moduleId, [FromBody] UpdateModuleDto updateModuleDto)
         {
+            // Kiểm tra validation data đầu vào
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new 
+                { 
+                    success = false,
+                    statusCode = 400,
+                    message = "Dữ liệu đầu vào không hợp lệ",
+                    errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)
+                });
             }
 
             var userId = GetCurrentUserId();
-            var result = await _moduleService.UpdateModuleAsync(moduleId, updateModuleDto, userId);
+            var userRole = GetCurrentUserRole();
+            var result = await _moduleService.UpdateModuleWithAuthorizationAsync(moduleId, updateModuleDto, userId, userRole);
 
             if (result.Success)
             {
                 return Ok(result);
             }
 
+            if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+
+            if (result.StatusCode == 403)
+            {
+                return StatusCode(403, result);
+            }
+
             return BadRequest(result);
         }
 
         /// <summary>
-        /// Delete module
+        /// Xóa module (Admin có thể xóa bất kỳ, Teacher chỉ module của mình)
         /// </summary>
         [HttpDelete("{moduleId}")]
         public async Task<IActionResult> DeleteModule(int moduleId)
         {
             var userId = GetCurrentUserId();
-            var result = await _moduleService.DeleteModuleAsync(moduleId, userId);
+            var userRole = GetCurrentUserRole();
+            var result = await _moduleService.DeleteModuleWithAuthorizationAsync(moduleId, userId, userRole);
 
             if (result.Success)
             {
                 return Ok(result);
             }
 
-            return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Reorder modules in a lesson
-        /// </summary>
-        [HttpPut("lesson/{lessonId}/reorder")]
-        public async Task<IActionResult> ReorderModules(int lessonId, [FromBody] List<ReorderModuleDto> reorderItems)
-        {
-            if (!ModelState.IsValid)
+            if (result.StatusCode == 404)
             {
-                return BadRequest(ModelState);
+                return NotFound(result);
             }
 
-            var userId = GetCurrentUserId();
-            var result = await _moduleService.ReorderModulesAsync(lessonId, reorderItems, userId);
-
-            if (result.Success)
+            if (result.StatusCode == 403)
             {
-                return Ok(result);
+                return StatusCode(403, result);
             }
 
             return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Get next module
-        /// </summary>
-        [HttpGet("{moduleId}/next")]
-        public async Task<IActionResult> GetNextModule(int moduleId)
-        {
-            var userId = GetCurrentUserId();
-            var result = await _moduleService.GetNextModuleAsync(moduleId, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Get previous module
-        /// </summary>
-        [HttpGet("{moduleId}/previous")]
-        public async Task<IActionResult> GetPreviousModule(int moduleId)
-        {
-            var userId = GetCurrentUserId();
-            var result = await _moduleService.GetPreviousModuleAsync(moduleId, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Bulk delete modules
-        /// </summary>
-        [HttpDelete("bulk")]
-        public async Task<IActionResult> BulkDeleteModules([FromBody] List<int> moduleIds)
-        {
-            if (moduleIds == null || !moduleIds.Any())
-            {
-                return BadRequest("Module IDs are required");
-            }
-
-            var userId = GetCurrentUserId();
-            var result = await _moduleService.BulkDeleteModulesAsync(moduleIds, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Duplicate modules to another lesson
-        /// </summary>
-        [HttpPost("duplicate")]
-        public async Task<IActionResult> DuplicateModules([FromBody] BulkModuleOperationDto bulkOperation)
-        {
-            if (!ModelState.IsValid || !bulkOperation.TargetLessonId.HasValue)
-            {
-                return BadRequest("Target lesson ID is required for duplication");
-            }
-
-            var userId = GetCurrentUserId();
-            var result = await _moduleService.DuplicateModulesToLessonAsync(
-                bulkOperation.ModuleIds, 
-                bulkOperation.TargetLessonId.Value, 
-                userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Check if user can access module
-        /// </summary>
-        [HttpGet("{moduleId}/access")]
-        public async Task<IActionResult> CheckModuleAccess(int moduleId)
-        {
-            var userId = GetCurrentUserId();
-            var result = await _moduleService.CanUserAccessModuleAsync(moduleId, userId);
-
-            return Ok(result);
-        }
-
-        /// <summary>
-        /// Check if user can manage module
-        /// </summary>
-        [HttpGet("{moduleId}/manage")]
-        public async Task<IActionResult> CheckModuleManagement(int moduleId)
-        {
-            var userId = GetCurrentUserId();
-            var result = await _moduleService.CanUserManageModuleAsync(moduleId, userId);
-
-            return Ok(result);
         }
     }
 }
