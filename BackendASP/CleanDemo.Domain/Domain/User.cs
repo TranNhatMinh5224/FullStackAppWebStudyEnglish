@@ -24,6 +24,7 @@ public class User
     // Các nav khác…
     public List<UserCourse> UserCourses { get; set; } = new();
     public List<Course> CreatedCourses { get; set; } = new();
+    public List<CourseProgress> CourseProgresses { get; set; } = new();
 
     public List<TeacherSubscription> TeacherSubscriptions { get; set; } = new();
 

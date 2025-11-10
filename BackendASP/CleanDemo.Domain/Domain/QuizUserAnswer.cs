@@ -16,8 +16,8 @@ namespace CleanDemo.Domain.Entities
 
         // Kết quả chấm cho câu này
         public bool? IsCorrect { get; set; }     // null = chưa chấm
-        public int MaxPoints { get; set; }       // bạn đang dùng int điểm → giữ nguyên style
-        public int PointsEarned { get; set; }
+        public decimal MaxPoints { get; set; }   // Changed from int to decimal for consistency
+        public decimal PointsEarned { get; set; } // Changed from int to decimal for consistency
 
         public string? Feedback { get; set; }    // phản hồi riêng từng câu (nếu có)
         public DateTime AnsweredAt { get; set; } = DateTime.UtcNow;

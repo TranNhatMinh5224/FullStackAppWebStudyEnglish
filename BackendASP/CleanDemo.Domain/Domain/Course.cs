@@ -25,6 +25,7 @@ namespace CleanDemo.Domain.Entities
         public User? Teacher { get; set; }
         public List<Lesson> Lessons { get; set; } = new();
         public List<UserCourse> UserCourses { get; set; } = new();
+        public List<CourseProgress> CourseProgresses { get; set; } = new();
 
 
 
