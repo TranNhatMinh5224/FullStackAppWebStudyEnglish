@@ -31,10 +31,23 @@ public class User
 
     public List<RefreshToken> RefreshTokens { get; set; } = new();
     public List<PasswordResetToken> PasswordResetTokens { get; set; } = new();
-    public List<Progress> ProgressRecords { get; set; } = new();
-    public List<ReviewWord> ReviewWords { get; set; } = new();
-    public List<PronunciationScore> PronunciationScores { get; set; } = new();
     public List<Payment> Payments { get; set; } = new();
+
+    // Additional Navigation Properties
+    public List<ActivityLog> ActivityLogs { get; set; } = new();
+    public List<StudyReminder> StudyReminders { get; set; } = new();
+    public List<Streak> Streaks { get; set; } = new();
+    public List<LessonCompletion> LessonCompletions { get; set; } = new();
+    public List<ModuleCompletion> ModuleCompletions { get; set; } = new();
+    public List<FlashCardReview> FlashCardReviews { get; set; } = new();
+    public List<QuizAttempt> QuizAttempts { get; set; } = new();
+    public List<QuizUserAnswer> QuizUserAnswers { get; set; } = new();
+    public List<EssaySubmission> EssaySubmissions { get; set; } = new();
+    public List<PronunciationAssessment> PronunciationAssessments { get; set; } = new();
+    
+    // Navigation for reviewed items (as teacher/reviewer)
+    public List<QuizAttempt> ReviewedQuizAttempts { get; set; } = new();
+    public List<EssaySubmission> GradedEssaySubmissions { get; set; } = new();
 
     public void SetPassword(string password) =>
         PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);

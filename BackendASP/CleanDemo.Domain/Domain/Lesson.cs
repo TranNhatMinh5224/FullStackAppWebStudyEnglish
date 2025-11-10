@@ -6,10 +6,15 @@ public class Lesson
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public int CourseId { get; set; }
+    public int OrderIndex { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    
+
 
     // Navigation Properties
     public Course? Course { get; set; }
-    public List<Vocabulary> Vocabularies { get; set; } = new();
-    public List<MiniTest> MiniTests { get; set; } = new();
-    public List<Progress> ProgressRecords { get; set; } = new();
+    public List<Module> Modules { get; set; } = new();
+    public List<LessonCompletion> LessonCompletions { get; set; } = new();
+    public List<Assessment> Assessments { get; set; } = new();
 }
