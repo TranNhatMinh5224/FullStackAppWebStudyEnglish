@@ -71,7 +71,7 @@ namespace LearningEnglish.API.Controllers.Admin
             return Ok(result.Data);
         }
         // Controller lấy danh sách học sinh theo all course
-        [HttpGet("admin/getall-students-by-all-courses")]
+        [HttpGet("getall-students-by-all-courses")]
         public async Task<IActionResult> GetStudentsByAllCourses()
         {
             var result = await _userManagementService.GetStudentsByAllCoursesAsync();
