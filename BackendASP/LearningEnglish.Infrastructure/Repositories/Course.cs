@@ -184,7 +184,7 @@ namespace LearningEnglish.Infrastructure.Repositories
 
 
         //Hủy đăng ký khóa học
-        public async Task UnenrollUserFromCourse(int userId, int courseId)
+        public async Task UnenrollUserFromCourse(int courseId, int userId)
         {
             var enrollment = await _context.UserCourses
                 .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.CourseId == courseId);
