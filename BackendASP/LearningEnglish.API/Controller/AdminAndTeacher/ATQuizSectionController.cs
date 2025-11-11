@@ -1,9 +1,7 @@
-using FluentValidation;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controllers.AdminAndTeacher
 {
@@ -13,17 +11,10 @@ namespace LearningEnglish.API.Controllers.AdminAndTeacher
     public class QuizSectionController : ControllerBase
     {
         private readonly IQuizSectionService _quizSectionService;
-        private readonly IValidator<CreateQuizSectionDto> _createValidator;
-        private readonly IValidator<UpdateQuizSectionDto> _updateValidator;
 
-        public QuizSectionController(
-            IQuizSectionService quizSectionService,
-            IValidator<CreateQuizSectionDto> createValidator,
-            IValidator<UpdateQuizSectionDto> updateValidator)
+        public QuizSectionController(IQuizSectionService quizSectionService)
         {
             _quizSectionService = quizSectionService;
-            _createValidator = createValidator;
-            _updateValidator = updateValidator;
         }
 
         /// <summary>
@@ -36,10 +27,10 @@ namespace LearningEnglish.API.Controllers.AdminAndTeacher
         {
             try
             {
-                var validationResult = await _createValidator.ValidateAsync(createDto);
-                if (!validationResult.IsValid)
+                // FluentValidation tự động validate với ModelState
+                if (!ModelState.IsValid)
                 {
-                    return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
+                    return BadRequest(ModelState);
                 }
 
                 var result = await _quizSectionService.CreateQuizSectionAsync(createDto);
@@ -103,10 +94,10 @@ namespace LearningEnglish.API.Controllers.AdminAndTeacher
         {
             try
             {
-                var validationResult = await _updateValidator.ValidateAsync(updateDto);
-                if (!validationResult.IsValid)
+                // FluentValidation tự động validate với ModelState
+                if (!ModelState.IsValid)
                 {
-                    return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
+                    return BadRequest(ModelState);
                 }
 
                 var result = await _quizSectionService.UpdateQuizSectionAsync(id, updateDto);
