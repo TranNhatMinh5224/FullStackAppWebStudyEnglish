@@ -43,7 +43,6 @@ namespace LearningEnglish.Infrastructure.Repositories
                             .ThenInclude(lesson => lesson!.Course)
                     .Include(l => l.Parent)
                     .Include(l => l.Children)
-                    .Include(l => l.Assessments)
                     .FirstOrDefaultAsync(l => l.LectureId == lectureId);
             }
             catch (Exception ex)
@@ -80,7 +79,6 @@ namespace LearningEnglish.Infrastructure.Repositories
                     .Include(l => l.Module)
                     .Include(l => l.Parent)
                     .Include(l => l.Children)
-                    .Include(l => l.Assessments)
                     .Where(l => l.ModuleId == moduleId)
                     .OrderBy(l => l.OrderIndex)
                     .ThenBy(l => l.CreatedAt)

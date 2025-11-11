@@ -149,6 +149,7 @@ namespace LearningEnglish.Infrastructure.Data
             modelBuilder.Entity<Assessment>(e =>
             {
                 e.ToTable("Assessments");
+                e.Property(a => a.TotalPoints).HasPrecision(18, 2);
                 e.HasOne(a => a.Module)
                  .WithMany(m => m.Assessments)
                  .HasForeignKey(a => a.ModuleId)
@@ -331,6 +332,9 @@ namespace LearningEnglish.Infrastructure.Data
             {
                 e.HasKey(es => es.SubmissionId);
                 e.ToTable("EssaySubmissions");
+                e.Property(es => es.Score).HasPrecision(18, 2);
+                e.Property(es => es.MaxScore).HasPrecision(18, 2);
+                e.Property(es => es.Percentage).HasPrecision(5, 2);
                 e.HasOne(es => es.Assessment)
                  .WithMany(a => a.EssaySubmissions)
                  .HasForeignKey(es => es.AssessmentId)
@@ -413,6 +417,7 @@ namespace LearningEnglish.Infrastructure.Data
                 e.HasOne(pa => pa.FlashCard)
                  .WithMany(fc => fc.PronunciationAssessments)
                  .HasForeignKey(pa => pa.FlashCardId)
+                 .IsRequired(false)
                  .OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(pa => pa.Assignment)
                  .WithMany(a => a.PronunciationAssessments)

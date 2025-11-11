@@ -23,7 +23,7 @@ namespace LearningEnglish.Domain.Entities
 
 
 
-        // audit
+        
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
@@ -33,7 +33,5 @@ namespace LearningEnglish.Domain.Entities
         public List<Lecture> Children { get; set; } = new();
 
         public Module? Module { get; set; }
-
-        public List<Assessment> Assessments { get; set; } = new();
     }
 }

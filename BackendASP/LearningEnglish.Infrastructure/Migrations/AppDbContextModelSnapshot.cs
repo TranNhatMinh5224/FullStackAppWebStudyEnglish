@@ -92,12 +92,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
-                    b.Property<int?>("LectureId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("LessonId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("ModuleId")
                         .HasColumnType("integer");
 
@@ -115,13 +109,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("TotalPoints")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.HasKey("AssessmentId");
-
-                    b.HasIndex("LectureId");
-
-                    b.HasIndex("LessonId");
 
                     b.HasIndex("ModuleId");
 
@@ -272,16 +263,19 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal?>("MaxScore")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal?>("Percentage")
-                        .HasColumnType("numeric");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
 
                     b.Property<string>("PrivateNotes")
                         .HasColumnType("text");
 
                     b.Property<decimal?>("Score")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -1403,7 +1397,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             Email = "minhxoandev@gmail.com",
                             FirstName = "Admin",
                             LastName = "System",
-                            PasswordHash = "$2a$11$qtVZzqYtzD5/FFSi08zP8e.OtnDU0TZW02BWonuONhls/oyYdA/BO",
+                            PasswordHash = "$2a$11$aAdqdwlS/2UDm12WuWt2j.CxGf7am8ccLrbNc.j5.VL0EnbUuL.PS",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -1503,23 +1497,11 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Assessment", b =>
                 {
-                    b.HasOne("LearningEnglish.Domain.Entities.Lecture", null)
-                        .WithMany("Assessments")
-                        .HasForeignKey("LectureId");
-
-                    b.HasOne("LearningEnglish.Domain.Entities.Lesson", "Lesson")
-                        .WithMany("Assessments")
-                        .HasForeignKey("LessonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("LearningEnglish.Domain.Entities.Module", "Module")
                         .WithMany("Assessments")
                         .HasForeignKey("ModuleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Lesson");
 
                     b.Navigation("Module");
                 });
@@ -2042,15 +2024,11 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Lecture", b =>
                 {
-                    b.Navigation("Assessments");
-
                     b.Navigation("Children");
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Lesson", b =>
                 {
-                    b.Navigation("Assessments");
-
                     b.Navigation("LessonCompletions");
 
                     b.Navigation("Modules");

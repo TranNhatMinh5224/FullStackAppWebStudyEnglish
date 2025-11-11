@@ -90,7 +90,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty))
                 .ForMember(dest => dest.ParentTitle, opt => opt.MapFrom(src => src.Parent != null ? src.Parent.Title : string.Empty))
                 .ForMember(dest => dest.ChildrenCount, opt => opt.MapFrom(src => src.Children.Count))
-                .ForMember(dest => dest.AssessmentCount, opt => opt.MapFrom(src => src.Assessments.Count));
+                .ForMember(dest => dest.AssessmentCount, opt => opt.Ignore()); // Assessment không còn thuộc về Lecture
 
             CreateMap<Lecture, ListLectureDto>()
                 .ForMember(dest => dest.ChildrenCount, opt => opt.MapFrom(src => src.Children.Count));
@@ -111,7 +111,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty))
                 .ForMember(dest => dest.ParentTitle, opt => opt.MapFrom(src => src.Parent != null ? src.Parent.Title : string.Empty))
                 .ForMember(dest => dest.ChildrenCount, opt => opt.MapFrom(src => src.Children.Count))
-                .ForMember(dest => dest.AssessmentCount, opt => opt.MapFrom(src => src.Assessments.Count))
+                .ForMember(dest => dest.AssessmentCount, opt => opt.Ignore()) // Assessment không còn thuộc về Lecture
                 .ForMember(dest => dest.IsCompleted, opt => opt.Ignore())
                 .ForMember(dest => dest.ProgressPercentage, opt => opt.Ignore())
                 .ForMember(dest => dest.StartedAt, opt => opt.Ignore())
