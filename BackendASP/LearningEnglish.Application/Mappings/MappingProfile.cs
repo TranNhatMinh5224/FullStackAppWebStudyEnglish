@@ -157,6 +157,13 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.ReviewCount, opt => opt.Ignore()) // Sẽ tính trong service
                 .ForMember(dest => dest.SuccessRate, opt => opt.Ignore()); // Sẽ tính trong service
 
+            // Assessment mappings
+            CreateMap<Assessment, AssessmentDto>()
+                .ForMember(dest => dest.ModuleTitle, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty));
+
+            CreateMap<CreateAssessmentDto, Assessment>()
+                .ForMember(dest => dest.AssessmentId, opt => opt.Ignore());
+
         }
     }
 }

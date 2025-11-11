@@ -153,10 +153,6 @@ namespace LearningEnglish.Infrastructure.Data
                  .WithMany(m => m.Assessments)
                  .HasForeignKey(a => a.ModuleId)
                  .OnDelete(DeleteBehavior.Cascade);
-                e.HasOne(a => a.Lesson)
-                 .WithMany(l => l.Assessments)
-                 .HasForeignKey(a => a.LessonId)
-                 .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Quiz
