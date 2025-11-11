@@ -75,15 +75,6 @@ namespace LearningEnglish.Infrastructure.Data
                     l => l.HasOne(typeof(Role)).WithMany().HasForeignKey("RoleId"),
                     r => r.HasOne(typeof(User)).WithMany().HasForeignKey("UserId"),
                     j => j.HasKey("UserId", "RoleId"));
-
-            // ===== User-Role Many-to-Many =====
-            modelBuilder.Entity<User>()
-                .HasMany(u => u.Roles)
-                .WithMany(r => r.Users)
-                .UsingEntity(
-                    "UserRoles",
-                    l => l.HasOne(typeof(Role)).WithMany().HasForeignKey("RoleId"),
-                    r => r.HasOne(typeof(User)).WithMany().HasForeignKey("UserId"));
             
             // Course
             modelBuilder.Entity<Course>(e =>
