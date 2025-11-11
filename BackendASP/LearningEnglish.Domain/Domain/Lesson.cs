@@ -16,5 +16,4 @@ public class Lesson
     public Course? Course { get; set; }
     public List<Module> Modules { get; set; } = new();
     public List<LessonCompletion> LessonCompletions { get; set; } = new();
-    public List<Assessment> Assessments { get; set; } = new();
 }

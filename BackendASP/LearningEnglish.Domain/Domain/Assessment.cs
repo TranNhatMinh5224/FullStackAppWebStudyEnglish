@@ -7,7 +7,6 @@ namespace LearningEnglish.Domain.Entities
         public int AssessmentId { get; set; }
 
         public int ModuleId { get; set; }
-        public int LessonId { get; set; }
 
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
@@ -22,7 +21,6 @@ namespace LearningEnglish.Domain.Entities
         
         // Navigation Properties
         public Module? Module { get; set; }
-        public Lesson? Lesson { get; set; }
         public List<Essay> Essays { get; set; } = new List<Essay>();
         public List<Quiz> Quizzes { get; set; } = new List<Quiz>();
         public List<EssaySubmission> EssaySubmissions { get; set; } = new();

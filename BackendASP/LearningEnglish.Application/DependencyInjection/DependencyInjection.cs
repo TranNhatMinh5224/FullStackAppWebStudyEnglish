@@ -15,6 +15,7 @@ namespace LearningEnglish.Application.DependencyInjection
             services.AddScoped<IModuleService, ModuleService>();
             services.AddScoped<ILectureService, LectureService>();
             services.AddScoped<IFlashCardService, FlashCardService>();
+            services.AddScoped<IAssessmentService, AssessmentService>();
 
             // AutoMapper is configured in Program.cs
 
