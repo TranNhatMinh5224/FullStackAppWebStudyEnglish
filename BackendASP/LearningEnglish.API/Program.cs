@@ -123,6 +123,7 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ITeacherPackageRepository, TeacherPackageRepository>();
 builder.Services.AddScoped<ITeacherSubscriptionRepository, TeacherSubscriptionRepository>();
 builder.Services.AddScoped<IQuizSectionRepository, QuizSectionRepository>();
+builder.Services.AddScoped<IQuizGroupRepository, QuizGroupRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
@@ -149,6 +150,7 @@ builder.Services.AddScoped<ITemplatePathResolver, TemplatePathResolver>();
 builder.Services.AddScoped<IUserCourseService, UserCourseService>();
 builder.Services.AddScoped<IEnrollmentQueryService, EnrollmentQueryService>();
 builder.Services.AddScoped<IQuizSectionService, QuizSectionService>();
+builder.Services.AddScoped<IQuizGroupService, QuizGroupService>();
 
 // Payment related services
 builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
