@@ -38,9 +38,20 @@ namespace LearningEnglish.Application.Validators.AssessmentValidators
                 .WithMessage("Thời gian mở phải trước thời gian đóng");
 
             RuleFor(x => x.TimeLimit)
-                .GreaterThan(TimeSpan.Zero)
-                .When(x => x.TimeLimit.HasValue)
-                .WithMessage("Thời gian giới hạn phải lớn hơn 0");
+                .Must(BeValidTimeSpan)
+                .When(x => !string.IsNullOrEmpty(x.TimeLimit))
+                .WithMessage("Thời gian giới hạn phải có định dạng hợp lệ (HH:MM:SS) và lớn hơn 0");
+        }
+
+        private static bool BeValidTimeSpan(string? timeLimit)
+        {
+            if (string.IsNullOrEmpty(timeLimit))
+                return true;
+
+            if (!TimeSpan.TryParse(timeLimit, out var timespan))
+                return false;
+
+            return timespan > TimeSpan.Zero;
         }
     }
 }

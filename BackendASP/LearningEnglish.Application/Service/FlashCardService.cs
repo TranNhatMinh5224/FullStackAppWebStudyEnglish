@@ -398,7 +398,7 @@ namespace LearningEnglish.Application.Service
 
 
         // + Validate dữ liệu flashcard
-        public async Task<ServiceResponse<bool>> ValidateFlashCardDataAsync(CreateFlashCardDto createDto)
+        public Task<ServiceResponse<bool>> ValidateFlashCardDataAsync(CreateFlashCardDto createDto)
         {
             var response = new ServiceResponse<bool>();
 
@@ -409,14 +409,14 @@ namespace LearningEnglish.Application.Service
                 {
                     response.Success = false;
                     response.Message = "Từ vựng không được để trống";
-                    return response;
+                    return Task.FromResult(response);
                 }
 
                 if (string.IsNullOrWhiteSpace(createDto.Meaning))
                 {
                     response.Success = false;
                     response.Message = "Nghĩa của từ không được để trống";
-                    return response;
+                    return Task.FromResult(response);
                 }
 
                 // Validate word length
@@ -424,7 +424,7 @@ namespace LearningEnglish.Application.Service
                 {
                     response.Success = false;
                     response.Message = "Từ vựng không được vượt quá 100 ký tự";
-                    return response;
+                    return Task.FromResult(response);
                 }
 
                 // Validate meaning length
@@ -432,7 +432,7 @@ namespace LearningEnglish.Application.Service
                 {
                     response.Success = false;
                     response.Message = "Nghĩa của từ không được vượt quá 500 ký tự";
-                    return response;
+                    return Task.FromResult(response);
                 }
 
                 response.Data = true;
@@ -445,7 +445,7 @@ namespace LearningEnglish.Application.Service
                 response.Message = "Có lỗi xảy ra khi kiểm tra dữ liệu";
             }
 
-            return response;
+            return Task.FromResult(response);
         }
 
     }
