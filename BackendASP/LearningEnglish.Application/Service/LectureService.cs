@@ -134,6 +134,9 @@ namespace LearningEnglish.Application.Service
         public async Task<ServiceResponse<LectureDto>> CreateLectureAsync(CreateLectureDto createLectureDto, int createdByUserId)
         {
             var response = new ServiceResponse<LectureDto>();
+            
+            _logger.LogInformation("Starting CreateLectureAsync. ModuleId: {ModuleId}, ParentLectureId: {ParentId}, Title: {Title}", 
+                createLectureDto.ModuleId, createLectureDto.ParentLectureId, createLectureDto.Title);
 
             try
             {
@@ -147,16 +150,33 @@ namespace LearningEnglish.Application.Service
                 // Kiểm tra parent hợp lệ nếu có
                 if (createLectureDto.ParentLectureId.HasValue)
                 {
-                    // Tạo lecture tạm để kiểm tra
-                    var tempLecture = new Lecture { ModuleId = createLectureDto.ModuleId };
-                    var isValidParent = await _lectureRepository.IsValidParentAsync(0, createLectureDto.ParentLectureId);
+                    _logger.LogInformation("Checking parent lecture with ID: {ParentId}", createLectureDto.ParentLectureId.Value);
                     
-                    if (!isValidParent)
+                    // Kiểm tra parent lecture có tồn tại không
+                    var parentLecture = await _lectureRepository.GetByIdAsync(createLectureDto.ParentLectureId.Value);
+                    
+                    if (parentLecture == null)
                     {
+                        _logger.LogWarning("Parent lecture not found with ID: {ParentId}", createLectureDto.ParentLectureId.Value);
                         response.Success = false;
-                        response.Message = "Parent lecture không hợp lệ";
+                        response.Message = "Parent lecture không tồn tại";
                         return response;
                     }
+                    
+                    _logger.LogInformation("Parent lecture found. ParentModuleId: {ParentModuleId}, CurrentModuleId: {CurrentModuleId}", 
+                        parentLecture.ModuleId, createLectureDto.ModuleId);
+                    
+                    // Kiểm tra parent và lecture mới phải cùng module
+                    if (parentLecture.ModuleId != createLectureDto.ModuleId)
+                    {
+                        _logger.LogWarning("Module mismatch. Parent ModuleId: {ParentModuleId}, Current ModuleId: {CurrentModuleId}", 
+                            parentLecture.ModuleId, createLectureDto.ModuleId);
+                        response.Success = false;
+                        response.Message = "Parent lecture phải thuộc cùng module";
+                        return response;
+                    }
+                    
+                    _logger.LogInformation("Parent validation passed successfully");
                 }
 
                 var lecture = _mapper.Map<Lecture>(createLectureDto);
@@ -201,11 +221,28 @@ namespace LearningEnglish.Application.Service
                 // Kiểm tra parent hợp lệ nếu có thay đổi
                 if (updateLectureDto.ParentLectureId.HasValue && updateLectureDto.ParentLectureId != existingLecture.ParentLectureId)
                 {
-                    var isValidParent = await _lectureRepository.IsValidParentAsync(lectureId, updateLectureDto.ParentLectureId);
-                    if (!isValidParent)
+                    // Không thể tự trỏ vào chính mình
+                    if (updateLectureDto.ParentLectureId.Value == lectureId)
                     {
                         response.Success = false;
-                        response.Message = "Parent lecture không hợp lệ";
+                        response.Message = "Lecture không thể là parent của chính mình";
+                        return response;
+                    }
+
+                    // Kiểm tra parent lecture có tồn tại không
+                    var parentLecture = await _lectureRepository.GetByIdAsync(updateLectureDto.ParentLectureId.Value);
+                    if (parentLecture == null)
+                    {
+                        response.Success = false;
+                        response.Message = "Parent lecture không tồn tại";
+                        return response;
+                    }
+                    
+                    // Kiểm tra parent và lecture phải cùng module
+                    if (parentLecture.ModuleId != existingLecture.ModuleId)
+                    {
+                        response.Success = false;
+                        response.Message = "Parent lecture phải thuộc cùng module";
                         return response;
                     }
                 }

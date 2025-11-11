@@ -15,10 +15,8 @@ namespace LearningEnglish.Application.Interface
         Task<bool> ExistsAsync(int lectureId);
 
         // Tree structure operations
-        Task<List<Lecture>> GetChildrenAsync(int parentLectureId);
         Task<List<Lecture>> GetTreeByModuleIdAsync(int moduleId);
         Task<bool> HasChildrenAsync(int lectureId);
-        Task<bool> IsValidParentAsync(int lectureId, int? parentLectureId);
 
         // Helper operations
         Task<int> GetMaxOrderIndexAsync(int moduleId, int? parentLectureId = null);

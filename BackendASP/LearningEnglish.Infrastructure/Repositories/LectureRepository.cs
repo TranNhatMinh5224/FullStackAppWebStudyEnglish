@@ -164,23 +164,6 @@ namespace LearningEnglish.Infrastructure.Repositories
             }
         }
 
-        // + Lấy danh sách con của lecture
-        public async Task<List<Lecture>> GetChildrenAsync(int parentLectureId)
-        {
-            try
-            {
-                return await _context.Lectures
-                    .Where(l => l.ParentLectureId == parentLectureId)
-                    .OrderBy(l => l.OrderIndex)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách con của lecture với ID: {ParentLectureId}", parentLectureId);
-                throw;
-            }
-        }
-
         // + Lấy cấu trúc cây lecture theo module
         public async Task<List<Lecture>> GetTreeByModuleIdAsync(int moduleId)
         {
@@ -209,30 +192,6 @@ namespace LearningEnglish.Infrastructure.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi kiểm tra lecture có con với ID: {LectureId}", lectureId);
-                throw;
-            }
-        }
-
-        // + Kiểm tra parent hợp lệ
-        public async Task<bool> IsValidParentAsync(int lectureId, int? parentLectureId)
-        {
-            try
-            {
-                if (parentLectureId == null) return true;
-                if (lectureId == parentLectureId) return false; // Không thể là parent của chính mình
-
-                var lecture = await GetByIdAsync(lectureId);
-                var parent = await GetByIdAsync(parentLectureId.Value);
-                
-                if (lecture == null || parent == null) return false;
-                if (lecture.ModuleId != parent.ModuleId) return false; // Phải cùng module
-
-                // TODO: Kiểm tra không tạo vòng lặp (circular reference)
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi kiểm tra parent hợp lệ: LectureId={LectureId}, ParentId={ParentLectureId}", lectureId, parentLectureId);
                 throw;
             }
         }
