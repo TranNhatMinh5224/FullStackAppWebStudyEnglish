@@ -16,7 +16,6 @@ namespace LearningEnglish.Application.DTOs
         public StatusQuiz Status { get; set; }
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
-        public int? OrderIndex { get; set; }
 
 
         // Han thoi gian lam bai thi
@@ -60,7 +59,6 @@ namespace LearningEnglish.Application.DTOs
         public StatusQuiz Status { get; set; } = StatusQuiz.Open;
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
-        public int? OrderIndex { get; set; }
     }
     public class QuizUpdateDto : QuizCreateDto
     {

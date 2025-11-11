@@ -15,7 +15,7 @@ namespace LearningEnglish.Domain.Entities
         public int QuizSectionId { get; set; }
 
         public int Points { get; set; } = 10;
-        public int OrderIndex { get; set; }
+
 
         // Cho dạng trắc nghiệm
         public string? CorrectAnswer { get; set; }

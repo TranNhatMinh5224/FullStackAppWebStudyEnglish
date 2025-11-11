@@ -15,7 +15,7 @@ namespace LearningEnglish.Domain.Entities
         public StatusQuiz Status { get; set; } = StatusQuiz.Open;
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
-        public int? OrderIndex { get; set; }
+        
        
 
         // Han thoi gian lam bai thi
