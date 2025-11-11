@@ -6,7 +6,7 @@ namespace LearningEnglish.Domain.Entities
 
         public string Text { get; set; } = string.Empty;
         public bool IsCorrect { get; set; }
-        public int OrderIndex { get; set; } = 1;
+
 
         public int QuestionId { get; set; }
 

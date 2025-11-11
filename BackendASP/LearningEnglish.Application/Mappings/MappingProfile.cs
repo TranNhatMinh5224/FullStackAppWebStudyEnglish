@@ -166,6 +166,15 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.AssessmentId, opt => opt.Ignore())
                 .ForMember(dest => dest.TimeLimit, opt => opt.MapFrom(src => ParseTimeSpan(src.TimeLimit)));
 
+            // QuizSection mappings
+            CreateMap<QuizSection, QuizSectionDto>();
+            CreateMap<CreateQuizSectionDto, QuizSection>()
+                .ForMember(dest => dest.QuizSectionId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Quiz, opt => opt.Ignore())
+                .ForMember(dest => dest.QuizGroups, opt => opt.Ignore());
+
         }
 
         private static TimeSpan? ParseTimeSpan(string? timeLimitString)
