@@ -140,6 +140,8 @@ namespace LearningEnglish.API.Controller.User
                     Message = "Lấy tiến trình học FlashCard thành công"
                 };
 
+                await Task.CompletedTask; // Giữ async signature cho tương lai
+
                 return Ok(result);
             }
             catch (Exception ex)
@@ -169,6 +171,8 @@ namespace LearningEnglish.API.Controller.User
                     Data = true,
                     Message = "Reset tiến trình FlashCard thành công"
                 };
+
+                await Task.CompletedTask; // Giữ async signature cho tương lai
 
                 return Ok(result);
             }

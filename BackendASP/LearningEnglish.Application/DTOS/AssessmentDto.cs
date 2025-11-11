@@ -8,7 +8,12 @@ namespace LearningEnglish.Application.DTOs
         public string? Description { get; set; }
         public DateTime? OpenAt { get; set; }
         public DateTime? DueAt { get; set; }
-        public TimeSpan? TimeLimit { get; set; }
+        
+        /// <summary>
+        /// Time limit in format "HH:MM:SS" (e.g., "01:30:00" for 1 hour 30 minutes)
+        /// </summary>
+        public string? TimeLimit { get; set; }
+        
         public bool IsPublished { get; set; } = false;
         public decimal TotalPoints { get; set; }
         public int PassingScore { get; set; }
@@ -27,7 +32,12 @@ namespace LearningEnglish.Application.DTOs
 
         public DateTime? OpenAt { get; set; }
         public DateTime? DueAt { get; set; }
-        public TimeSpan? TimeLimit { get; set; }
+        
+        /// <summary>
+        /// Time limit in format "HH:MM:SS" (e.g., "01:30:00" for 1 hour 30 minutes)
+        /// </summary>
+        public string? TimeLimit { get; set; }
+        
         public bool IsPublished { get; set; } = false;
         public decimal TotalPoints { get; set; }
         public int PassingScore { get; set; }

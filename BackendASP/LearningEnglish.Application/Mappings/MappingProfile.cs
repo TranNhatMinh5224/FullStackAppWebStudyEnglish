@@ -159,11 +159,24 @@ namespace LearningEnglish.Application.Mappings
 
             // Assessment mappings
             CreateMap<Assessment, AssessmentDto>()
-                .ForMember(dest => dest.ModuleTitle, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty));
+                .ForMember(dest => dest.ModuleTitle, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty))
+                .ForMember(dest => dest.TimeLimit, opt => opt.MapFrom(src => src.TimeLimit.HasValue ? src.TimeLimit.Value.ToString(@"hh\:mm\:ss") : null));
 
             CreateMap<CreateAssessmentDto, Assessment>()
-                .ForMember(dest => dest.AssessmentId, opt => opt.Ignore());
+                .ForMember(dest => dest.AssessmentId, opt => opt.Ignore())
+                .ForMember(dest => dest.TimeLimit, opt => opt.MapFrom(src => ParseTimeSpan(src.TimeLimit)));
 
+        }
+
+        private static TimeSpan? ParseTimeSpan(string? timeLimitString)
+        {
+            if (string.IsNullOrEmpty(timeLimitString))
+                return null;
+
+            if (TimeSpan.TryParse(timeLimitString, out var timespan))
+                return timespan;
+
+            return null;
         }
     }
 }

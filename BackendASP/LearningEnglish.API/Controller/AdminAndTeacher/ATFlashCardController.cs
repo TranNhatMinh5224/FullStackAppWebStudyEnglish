@@ -289,6 +289,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                     Message = "Từ vựng hợp lệ"
                 };
 
+                await Task.CompletedTask; // Giữ async signature cho tương lai
+
                 return Ok(result);
             }
             catch (Exception ex)
