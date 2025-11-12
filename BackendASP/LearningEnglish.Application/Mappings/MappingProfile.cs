@@ -166,52 +166,22 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.AssessmentId, opt => opt.Ignore())
                 .ForMember(dest => dest.TimeLimit, opt => opt.MapFrom(src => ParseTimeSpan(src.TimeLimit)));
 
-            // QuizSection mappings
-            CreateMap<QuizSection, QuizSectionDto>();
-            CreateMap<CreateQuizSectionDto, QuizSection>()
-                .ForMember(dest => dest.QuizSectionId, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.Quiz, opt => opt.Ignore())
-                .ForMember(dest => dest.QuizGroups, opt => opt.Ignore());
+            // Essay mappings
+            CreateMap<Essay, EssayDto>()
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()));
 
-            // QuizGroup mappings
-            CreateMap<QuizGroup, QuizGroupDto>();
-            CreateMap<CreateQuizGroupDto, QuizGroup>()
-                .ForMember(dest => dest.QuizGroupId, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.QuizSection, opt => opt.Ignore())
-                .ForMember(dest => dest.Questions, opt => opt.Ignore())
-                .ForMember(dest => dest.QuizQuestionGroupMedias, opt => opt.Ignore());
+            CreateMap<CreateEssayDto, Essay>()
+                .ForMember(dest => dest.EssayId, opt => opt.Ignore())
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Domain.Enums.TypeAssessment.Essay));
 
-            // Question mappings
-            CreateMap<QuestionCreateDto, Question>()
-                .ForMember(dest => dest.QuestionId, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.QuizSection, opt => opt.Ignore())
-                .ForMember(dest => dest.QuizGroup, opt => opt.Ignore())
-                .ForMember(dest => dest.UserAnswers, opt => opt.Ignore());
+            // EssaySubmission mappings
+            CreateMap<EssaySubmission, EssaySubmissionDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
 
-            CreateMap<Question, QuestionReadDto>();
-
-            CreateMap<QuestionUpdateDto, Question>()
-                .ForMember(dest => dest.QuestionId, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.QuizSection, opt => opt.Ignore())
-                .ForMember(dest => dest.QuizGroup, opt => opt.Ignore())
-                .ForMember(dest => dest.UserAnswers, opt => opt.Ignore());
-
-            // AnswerOption mappings
-            CreateMap<AnswerOptionCreateDto, AnswerOption>()
-                .ForMember(dest => dest.AnswerOptionId, opt => opt.Ignore())
-                .ForMember(dest => dest.QuestionId, opt => opt.Ignore())
-                .ForMember(dest => dest.Question, opt => opt.Ignore())
-                .ForMember(dest => dest.UserAnswerOptions, opt => opt.Ignore());
-
-            CreateMap<AnswerOption, AnswerOptionReadDto>();
+            CreateMap<CreateEssaySubmissionDto, EssaySubmission>()
+                .ForMember(dest => dest.SubmissionId, opt => opt.Ignore())
+                .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Domain.Enums.StatusSubmission.Submitted));
 
         }
 
