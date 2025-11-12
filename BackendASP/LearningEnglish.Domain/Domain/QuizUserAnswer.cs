@@ -4,30 +4,28 @@ namespace LearningEnglish.Domain.Entities
     {
         public int QuizUserAnswerId { get; set; }
         public int QuizAttemptId { get; set; }
-        public int UserId { get; set; }          // để truy vấn nhanh theo user
+        public int UserId { get; set; }      // để truy vấn nhanh theo user
         public int QuestionId { get; set; }
 
-        // Dành cho MCQ/TrueFalse (chọn 1)
-        public int? SelectedOptionId { get; set; }
+        // MCQ/TrueFalse (chọn 1)
+        public int? SelectedOptionId { get; set; } // Lưu đáp án đã chọn
 
-        // Dành cho MultipleAnswers / các dạng phức tạp (FillBlank/Matching/Ordering/ShortAnswer)
-        // Lưu JSON: ví dụ { "blanks":[{"index":1,"text":"goes"}], "pairs":[["dog","con chó"]], "order":[2,1,3,4], "text":"cold" }
-        public string? AnswerDataJson { get; set; }
+        public string? AnswerDataJson { get; set; } // Lưu trữ dữ liệu câu trả lời dạng JSON (cho câu điền khuyết, tự luận, sắp xếp, ghép đôi, nhiều đáp án…)
 
-        // Kết quả chấm cho câu này
-        public bool? IsCorrect { get; set; }     // null = chưa chấm
-        public decimal MaxPoints { get; set; }   // Changed from int to decimal for consistency
-        public decimal PointsEarned { get; set; } // Changed from int to decimal for consistency
+        // Kết quả chấm
+        public bool? IsCorrect { get; set; }      // câu trả lời đúng/sai
+        public decimal MaxPoints { get; set; }    // lưu lại điểm tối đa tại thời điểm attempt
+        public decimal PointsEarned { get; set; } // điểm đạt được 
 
-        public string? Feedback { get; set; }    // phản hồi riêng từng câu (nếu có)
-        public DateTime AnsweredAt { get; set; } = DateTime.UtcNow;
-        public int TimeSpentSeconds { get; set; } = 0;
+       
+        public DateTime AnsweredAt { get; set; } = DateTime.UtcNow; // thời gian trả lời
+        // public int TimeSpentSeconds { get; set; } = 0;  
 
         // Navigation
         public QuizAttempt QuizAttempt { get; set; } = null!;
         public User User { get; set; } = null!;
         public Question Question { get; set; } = null!;
         public AnswerOption? SelectedOption { get; set; }
-        public List<QuizUserAnswerOption> SelectedOptions { get; set; } = new(); // cho MultipleAnswers
+        public List<QuizUserAnswerOption> SelectedOptions { get; set; } = new(); 
     }
 }

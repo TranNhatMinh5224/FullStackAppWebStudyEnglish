@@ -2,39 +2,40 @@ using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Domain.Entities
 {
-
-    // Lần làm bài quiz/test của học sinh
-    // Dùng cho: quiz trong lesson, quiz trong module, quiz tổng hợp
+    // QuizAttempt - Lưu trữ thông tin về lần làm bài quiz của học viên
     public class QuizAttempt
     {
         public int AttemptId { get; set; }
         public int QuizId { get; set; }
         public int UserId { get; set; }
 
-        // Lần thử thứ mấy (1, 2, 3...)
-        public int AttemptNumber { get; set; }
+        public int AttemptNumber { get; set; } = 1; // Lần làm bài thứ mấy
 
-    public DateTime StartedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? SubmittedAt { get; set; }
-    public StatusQuizAttempt Status { get; set; } = StatusQuizAttempt.InProgress;
+        public DateTime StartedAt { get; set; } = DateTime.UtcNow; // Thời gian bắt đầu làm bài 
+        public DateTime? SubmittedAt { get; set; } // Thời gian nộp bài 
+        public StatusQuizAttempt Status { get; set; } = StatusQuizAttempt.InProgress; // Trạng thái bài làm
 
-    public decimal Score { get; set; }
-    public decimal MaxScore { get; set; }
-    public decimal Percentage { get; set; }
-    public bool IsPassed { get; set; }
+        public decimal Score { get; set; } // Điểm số đạt được
+        public decimal MaxScore { get; set; } // Điểm tối đa
+        public decimal Percentage { get; set; } // Tỷ lệ phần trăm
+        public bool IsPassed { get; set; } // Đã vượt qua hay chưa
 
-    public int TimeSpentSeconds { get; set; }        // JSON backup của tất cả câu trả lời
-        public string? AnswersSnapshot { get; set; }
+        public int TimeSpentSeconds { get; set; } // Tổng thời gian làm bài 
 
-        // Review từ giáo viên (cho essay questions, assignments)
-        public DateTime? ReviewedAt { get; set; }
-        public string? TeacherFeedback { get; set; }
-        public int? ReviewedBy { get; set; }
+        public string? ShuffleSeedJson { get; set; } // Dùng để tái lập thứ tự đã xáo trộn câu/đáp án
 
-        // Navigation Properties
-        public Quiz Quiz { get; set; } = null!;
-        public User User { get; set; } = null!;
-        public User? Reviewer { get; set; }
-        public List<QuizUserAnswer> Answers { get; set; } = new();
+        // Snapshot toàn bộ câu trả lời (backup)
+        public string? AnswersSnapshot { get; set; } // Lưu trữ toàn bộ câu trả lời dạng JSON
+
+
+        public DateTime? ReviewedAt { get; set; } // Thời gian giáo viên chấm bài
+        public string? TeacherFeedback { get; set; } // Phản hồi của giáo viên
+        public int? ReviewedBy { get; set; } // Ai đã chấm bài
+
+        // Navigation
+        public Quiz Quiz { get; set; } = null!; // Thuộc về Quiz nào
+        public User User { get; set; } = null!; // Học viên làm bài
+        public User? Reviewer { get; set; } // Giáo viên chấm bài
+        public List<QuizUserAnswer> Answers { get; set; } = new(); // Câu trả lời chi tiết
     }
 }

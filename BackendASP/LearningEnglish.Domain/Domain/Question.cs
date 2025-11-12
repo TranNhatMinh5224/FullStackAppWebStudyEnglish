@@ -1,3 +1,4 @@
+
 using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Domain.Entities
@@ -7,26 +8,27 @@ namespace LearningEnglish.Domain.Entities
         public int QuestionId { get; set; }
 
         public TypeQuestion Type { get; set; } = TypeQuestion.MultipleChoice;
+        public string StemText { get; set; } = string.Empty; // Câu hỏi dạng text thuần
+        public string? StemHtml { get; set; } // Câu hỏi dạng  text/HTML
 
-        public string StemText { get; set; } = string.Empty;
-        public string? StemHtml { get; set; }
+        public int QuizGroupId { get; set; } // Thuộc về QuizGroup nào
+        public int QuizSectionId { get; set; } // Thuộc về QuizSection nào
 
-        public int QuizGroupId { get; set; }
-        public int QuizSectionId { get; set; }
+        public decimal Points { get; set; } = 10m; // Điểm câu hỏi
+        public ScoringStrategy Scoring { get; set; } = ScoringStrategy.AllOrNothing; // Chiến lược chấm điểm
 
-        public int Points { get; set; } = 10;
-        public int OrderIndex { get; set; }
 
-        // Cho dạng trắc nghiệm
-        public string? CorrectAnswer { get; set; }
 
-        public string? Explanation { get; set; }
+        public string? CorrectAnswersJson { get; set; } // Đáp án đúng (cho câu nhiều đáp án, ghép đôi, sắp xếp) 
 
-        // Media đính kèm (ảnh/audio/video)
+        public string? Explanation { get; set; } // Giải thích đáp án
+
+        // Media cho câu hỏi (ảnh/audio/video)
         public string? MediaUrl { get; set; }
-        public string? MediaType { get; set; }
+        public string? MediaType { get; set; } // "image/png","audio/mpeg","video/mp4"
 
-        public string MetadataJson { get; set; } = "{}"; // tuỳ chọn, cho loại câu hỏi đặc biệt
+        // Cấu hình đặc thù theo Type (matching/order/fillblank nhiều ô…)
+        public string MetadataJson { get; set; } = "{}"; // Lưu trữ dữ liệu cấu hình dạng JSON 
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

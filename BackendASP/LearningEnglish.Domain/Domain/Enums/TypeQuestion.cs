@@ -2,13 +2,13 @@ namespace LearningEnglish.Domain.Enums
 {
     public enum TypeQuestion
     {
-        MultipleChoice = 0,
-        MultipleAnswers = 1,
-        TrueFalse = 2,
-        FillBlank = 3,
-        Matching = 4,
-        Ordering = 5,
-        ShortAnswer = 6,
-        ImageChoice = 7
+        MultipleChoice = 0, // chọn 1 đáp án đúng
+        MultipleAnswers = 1, // chọn nhiều đáp án đúng
+        TrueFalse = 2, // đúng/sai
+        FillBlank = 3, // điền vào chỗ trống
+        Matching = 4, // nối từ/cụm từ
+        Ordering = 5, // sắp xếp thứ tự
+        ShortAnswer = 6, // câu trả lời ngắn
+        ImageChoice = 7 // chọn hình ảnh
     }
 }

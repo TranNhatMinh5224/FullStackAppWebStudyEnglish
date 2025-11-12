@@ -124,6 +124,10 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ITeacherPackageRepository, TeacherPackageRepository>();
 builder.Services.AddScoped<ITeacherSubscriptionRepository, TeacherSubscriptionRepository>();
+builder.Services.AddScoped<IQuizSectionRepository, QuizSectionRepository>();
+builder.Services.AddScoped<IQuizGroupRepository, QuizGroupRepository>();
+builder.Services.AddScoped<IQuizRepository, QuizRepository>();
+builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
@@ -151,6 +155,10 @@ builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddScoped<ITemplatePathResolver, TemplatePathResolver>();
 builder.Services.AddScoped<IUserCourseService, UserCourseService>();
 builder.Services.AddScoped<IEnrollmentQueryService, EnrollmentQueryService>();
+builder.Services.AddScoped<IQuizSectionService, QuizSectionService>();
+builder.Services.AddScoped<IQuizGroupService, QuizGroupService>();
+builder.Services.AddScoped<IQuizService, QuizService>();
+builder.Services.AddScoped<IQuestionService, QuestionService>();
 
 // Payment related services
 builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
