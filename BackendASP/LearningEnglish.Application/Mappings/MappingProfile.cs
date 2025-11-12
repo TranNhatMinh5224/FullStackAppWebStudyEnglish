@@ -185,6 +185,34 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Questions, opt => opt.Ignore())
                 .ForMember(dest => dest.QuizQuestionGroupMedias, opt => opt.Ignore());
 
+            // Question mappings
+            CreateMap<QuestionCreateDto, Question>()
+                .ForMember(dest => dest.QuestionId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.QuizSection, opt => opt.Ignore())
+                .ForMember(dest => dest.QuizGroup, opt => opt.Ignore())
+                .ForMember(dest => dest.UserAnswers, opt => opt.Ignore());
+
+            CreateMap<Question, QuestionReadDto>();
+
+            CreateMap<QuestionUpdateDto, Question>()
+                .ForMember(dest => dest.QuestionId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.QuizSection, opt => opt.Ignore())
+                .ForMember(dest => dest.QuizGroup, opt => opt.Ignore())
+                .ForMember(dest => dest.UserAnswers, opt => opt.Ignore());
+
+            // AnswerOption mappings
+            CreateMap<AnswerOptionCreateDto, AnswerOption>()
+                .ForMember(dest => dest.AnswerOptionId, opt => opt.Ignore())
+                .ForMember(dest => dest.QuestionId, opt => opt.Ignore())
+                .ForMember(dest => dest.Question, opt => opt.Ignore())
+                .ForMember(dest => dest.UserAnswerOptions, opt => opt.Ignore());
+
+            CreateMap<AnswerOption, AnswerOptionReadDto>();
+
         }
 
         private static TimeSpan? ParseTimeSpan(string? timeLimitString)

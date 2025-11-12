@@ -1,10 +1,13 @@
 namespace LearningEnglish.Domain.Entities
 {
-    
+    // QuizUserAnswerOption - Lưu trữ các tùy chọn đáp án đã chọn cho câu trả lời của học viên (dùng cho MultipleAnswers, Ordering)
     public class QuizUserAnswerOption
     {
         public int QuizUserAnswerId { get; set; }
         public int AnswerOptionId { get; set; }
+
+        // Hỗ trợ Ordering (thứ tự học viên chọn/kéo thả)
+        public int? SelectedOrder { get; set; }
 
         // Navigation
         public QuizUserAnswer QuizUserAnswer { get; set; } = null!;
