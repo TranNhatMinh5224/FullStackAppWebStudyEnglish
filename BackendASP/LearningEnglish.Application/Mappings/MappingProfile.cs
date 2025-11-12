@@ -166,6 +166,23 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.AssessmentId, opt => opt.Ignore())
                 .ForMember(dest => dest.TimeLimit, opt => opt.MapFrom(src => ParseTimeSpan(src.TimeLimit)));
 
+            // Essay mappings
+            CreateMap<Essay, EssayDto>()
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()));
+
+            CreateMap<CreateEssayDto, Essay>()
+                .ForMember(dest => dest.EssayId, opt => opt.Ignore())
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Domain.Enums.TypeAssessment.Essay));
+
+            // EssaySubmission mappings
+            CreateMap<EssaySubmission, EssaySubmissionDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+
+            CreateMap<CreateEssaySubmissionDto, EssaySubmission>()
+                .ForMember(dest => dest.SubmissionId, opt => opt.Ignore())
+                .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Domain.Enums.StatusSubmission.Submitted));
+
         }
 
         private static TimeSpan? ParseTimeSpan(string? timeLimitString)
