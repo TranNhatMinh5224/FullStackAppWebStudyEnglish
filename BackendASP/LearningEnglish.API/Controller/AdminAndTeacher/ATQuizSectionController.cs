@@ -17,11 +17,7 @@ namespace LearningEnglish.API.Controllers.AdminAndTeacher
             _quizSectionService = quizSectionService;
         }
 
-        /// <summary>
-        /// Tạo phần quiz mới
-        /// </summary>
-        /// <param name="createDto">Thông tin phần quiz mới</param>
-        /// <returns>Phần quiz đã tạo</returns>
+
         [HttpPost]
         public async Task<IActionResult> CreateQuizSection([FromBody] CreateQuizSectionDto createDto)
         {
