@@ -14,12 +14,12 @@ namespace LearningEnglish.Application.Service
             _serviceProvider = serviceProvider;
         }
 
-        public IPaymentProcessor GetProcessor(TypeProduct productType)
+        public IPaymentProcessor GetProcessor(ProductType productType)
         {
             return productType switch
             {
-                TypeProduct.Course => _serviceProvider.GetRequiredService<CoursePaymentProcessor>(),
-                TypeProduct.TeacherPackage => _serviceProvider.GetRequiredService<TeacherPackagePaymentProcessor>(),
+                ProductType.Course => _serviceProvider.GetRequiredService<CoursePaymentProcessor>(),
+                ProductType.TeacherPackage => _serviceProvider.GetRequiredService<TeacherPackagePaymentProcessor>(),
                 _ => throw new NotSupportedException($"Product type {productType} is not supported")
             };
         }

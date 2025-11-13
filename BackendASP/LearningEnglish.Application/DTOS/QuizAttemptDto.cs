@@ -55,7 +55,7 @@ namespace LearningEnglish.Application.DTOs
     {
         public int QuestionId { get; set; }
         public string QuestionText { get; set; } = string.Empty;
-        public TypeQuestion Type { get; set; }
+        public QuestionType Type { get; set; }
         public decimal Points { get; set; }
         public int OrderIndex { get; set; }
         public string? Hint { get; set; }
@@ -81,7 +81,7 @@ namespace LearningEnglish.Application.DTOs
         public int AttemptNumber { get; set; }
         public DateTime StartedAt { get; set; }
         public DateTime? SubmittedAt { get; set; }
-        public StatusQuizAttempt Status { get; set; }
+        public QuizAttemptStatus Status { get; set; }
         public int TimeSpentSeconds { get; set; }
         public List<AttemptAnswerDto> Answers { get; set; } = new();
     }
@@ -129,7 +129,7 @@ namespace LearningEnglish.Application.DTOs
         public decimal MaxScore { get; set; }
         public decimal Percentage { get; set; }
         public bool IsPassed { get; set; }
-        public StatusQuizAttempt Status { get; set; }
+        public QuizAttemptStatus Status { get; set; }
         public List<AttemptAnswerDto> Answers { get; set; } = new();
         public string? TeacherFeedback { get; set; }
     }

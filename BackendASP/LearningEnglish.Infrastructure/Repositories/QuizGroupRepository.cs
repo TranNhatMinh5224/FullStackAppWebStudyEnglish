@@ -19,7 +19,6 @@ namespace LearningEnglish.Infrastructure.Repositories
             return await _context.QuizGroups
                 .Include(qg => qg.QuizSection)
                 .Include(qg => qg.Questions)
-                .Include(qg => qg.QuizQuestionGroupMedias)
                 .FirstOrDefaultAsync(qg => qg.QuizGroupId == quizGroupId);
         }
 
@@ -27,7 +26,6 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             return await _context.QuizGroups
                 .Include(qg => qg.Questions)
-                .Include(qg => qg.QuizQuestionGroupMedias)
                 .Where(qg => qg.QuizSectionId == quizSectionId)
                 .OrderBy(qg => qg.CreatedAt)
                 .ToListAsync();

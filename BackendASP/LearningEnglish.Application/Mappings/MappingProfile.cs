@@ -1,7 +1,6 @@
 using AutoMapper;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.DTOs;
-using LearningEnglish.Application.DTOS;
 
 namespace LearningEnglish.Application.Mappings
 {
@@ -172,7 +171,7 @@ namespace LearningEnglish.Application.Mappings
 
             CreateMap<CreateEssayDto, Essay>()
                 .ForMember(dest => dest.EssayId, opt => opt.Ignore())
-                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Domain.Enums.TypeAssessment.Essay));
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Domain.Enums.AssessmentType.Essay));
 
             // EssaySubmission mappings
             CreateMap<EssaySubmission, EssaySubmissionDto>()
@@ -181,7 +180,7 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<CreateEssaySubmissionDto, EssaySubmission>()
                 .ForMember(dest => dest.SubmissionId, opt => opt.Ignore())
                 .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Domain.Enums.StatusSubmission.Submitted));
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Domain.Enums.SubmissionStatus.Submitted));
 
             // Quiz mappings
             CreateMap<Quiz, QuizDto>()

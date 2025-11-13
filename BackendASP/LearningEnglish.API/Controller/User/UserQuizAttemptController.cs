@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.Interface;
-using LearningEnglish.Application.DTOS;
+using LearningEnglish.Application.DTOs;
 using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User

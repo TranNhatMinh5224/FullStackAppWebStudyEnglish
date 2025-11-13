@@ -1,5 +1,5 @@
 using FluentValidation;
-using LearningEnglish.Application.DTOS;
+using LearningEnglish.Application.DTOs;
 using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Application.Validators.ModuleValidators

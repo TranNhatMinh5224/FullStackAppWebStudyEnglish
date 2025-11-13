@@ -42,7 +42,6 @@ namespace LearningEnglish.Infrastructure.Data
         public DbSet<Streak> Streaks => Set<Streak>();
         public DbSet<StudyReminder> StudyReminders => Set<StudyReminder>();
         public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
-        public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
 
 
 
@@ -449,21 +448,6 @@ namespace LearningEnglish.Infrastructure.Data
                  .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // MediaAsset
-            modelBuilder.Entity<MediaAsset>(e =>
-            {
-                e.ToTable("MediaAssets");
-            });
-
-            // Configure many-to-many relationship between MediaAsset and QuizGroup
-            modelBuilder.Entity<MediaAsset>()
-                .HasMany(ma => ma.QuizGroups)
-                .WithMany(qg => qg.QuizQuestionGroupMedias)
-                .UsingEntity(
-                    "QuizGroupMediaAssets",
-                    l => l.HasOne(typeof(QuizGroup)).WithMany().HasForeignKey("QuizGroupId"),
-                    r => r.HasOne(typeof(MediaAsset)).WithMany().HasForeignKey("MediaAssetId"));
-
             // UserCourse
             modelBuilder.Entity<UserCourse>(e =>
             {
@@ -527,7 +511,7 @@ namespace LearningEnglish.Infrastructure.Data
                     PhoneNumber = "0257554479",
                     CreatedAt = fixedCreated,
                     UpdatedAt = fixedCreated,
-                    Status = LearningEnglish.Domain.Enums.StatusAccount.Active
+                    Status = LearningEnglish.Domain.Enums.AccountStatus.Active
                 }
             );
 

@@ -9,7 +9,7 @@ namespace LearningEnglish.Application.Interface
         Task<Payment?> GetPaymentByIdAsync(int paymentId);
         Task<IEnumerable<Payment>> GetPaymentsByUserAsync(int userId);
         Task<Payment?> GetSuccessfulPaymentByUserAndCourseAsync(int userId, int courseId);
-        Task<Payment?> GetSuccessfulPaymentByUserAndProductAsync(int userId, int productId, TypeProduct productType);
+        Task<Payment?> GetSuccessfulPaymentByUserAndProductAsync(int userId, int productId, ProductType productType);
         Task UpdatePaymentStatusAsync(Payment payment);
         Task<int> SaveChangesAsync();
     }

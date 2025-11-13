@@ -17,6 +17,5 @@ namespace LearningEnglish.Domain.Entities
         // Navigation Properties
         public List<Question> Questions { get; set; } = new();
         public QuizSection? QuizSection { get; set; }
-        
     }
 }

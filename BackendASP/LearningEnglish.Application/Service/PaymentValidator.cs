@@ -27,7 +27,7 @@ namespace LearningEnglish.Application.Service
             _logger = logger;
         }
 
-        public async Task<ServiceResponse<decimal>> ValidateProductAsync(int productId, TypeProduct productType)
+        public async Task<ServiceResponse<decimal>> ValidateProductAsync(int productId, ProductType productType)
         {
             var response = new ServiceResponse<decimal>();
 
@@ -35,10 +35,10 @@ namespace LearningEnglish.Application.Service
             {
                 switch (productType)
                 {
-                    case TypeProduct.Course:
+                    case ProductType.Course:
                         return await ValidateCourseAsync(productId);
 
-                    case TypeProduct.TeacherPackage:
+                    case ProductType.TeacherPackage:
                         return await ValidateTeacherPackageAsync(productId);
 
                     default:
@@ -122,7 +122,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        public async Task<ServiceResponse<bool>> ValidateUserPaymentAsync(int userId, int productId, TypeProduct productType)
+        public async Task<ServiceResponse<bool>> ValidateUserPaymentAsync(int userId, int productId, ProductType productType)
         {
             var response = new ServiceResponse<bool>();
 

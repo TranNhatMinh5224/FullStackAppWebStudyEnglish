@@ -6,7 +6,7 @@ namespace LearningEnglish.Application.DTOs
     public class QuestionCreateDto
     {
         // Thông tin cơ bản
-        public TypeQuestion Type { get; set; } = TypeQuestion.MultipleChoice;
+        public QuestionType Type { get; set; } = QuestionType.MultipleChoice;
         public string StemText { get; set; } = string.Empty;
         public string? StemHtml { get; set; }
 
@@ -44,7 +44,7 @@ namespace LearningEnglish.Application.DTOs
     public class QuestionReadDto
     {
         public int QuestionId { get; set; }
-        public TypeQuestion Type { get; set; }
+        public QuestionType Type { get; set; }
         public string StemText { get; set; } = string.Empty;
         public string? StemHtml { get; set; }
 

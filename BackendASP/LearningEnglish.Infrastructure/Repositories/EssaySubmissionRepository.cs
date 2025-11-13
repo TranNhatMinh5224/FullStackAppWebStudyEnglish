@@ -18,7 +18,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<EssaySubmission> CreateSubmissionAsync(EssaySubmission submission)
         {
             submission.SubmittedAt = DateTime.UtcNow;
-            submission.Status = StatusSubmission.Submitted;
+            submission.Status = SubmissionStatus.Submitted;
 
             _context.EssaySubmissions.Add(submission);
             await _context.SaveChangesAsync();

@@ -9,17 +9,17 @@ namespace LearningEnglish.Application.Service
     public class QuizScoringService
     {
         // Dictionary lưu các strategy theo loại câu hỏi
-        private readonly Dictionary<TypeQuestion, IScoringStrategy> _strategies;
+        private readonly Dictionary<QuestionType, IScoringStrategy> _strategies;
 
         // Constructor: đăng ký các strategy
         public QuizScoringService()
         {
-            _strategies = new Dictionary<TypeQuestion, IScoringStrategy>
+            _strategies = new Dictionary<QuestionType, IScoringStrategy>
             {
-                { TypeQuestion.MultipleChoice, new MultipleChoiceScoringStrategy() },
-                { TypeQuestion.MultipleAnswers, new MultipleAnswersScoringStrategy() },
-                { TypeQuestion.TrueFalse, new TrueFalseScoringStrategy() },
-                // { TypeQuestion.Essay, new EssayScoringStrategy() }
+                { QuestionType.MultipleChoice, new MultipleChoiceScoringStrategy() },
+                { QuestionType.MultipleAnswers, new MultipleAnswersScoringStrategy() },
+                { QuestionType.TrueFalse, new TrueFalseScoringStrategy() },
+                // { QuestionType.Essay, new EssayScoringStrategy() }
             };
         }
 

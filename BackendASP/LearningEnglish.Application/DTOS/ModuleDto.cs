@@ -10,7 +10,7 @@ namespace LearningEnglish.Application.DTOs
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int OrderIndex { get; set; }
-        public ModuleContentType ContentType { get; set; }
+        public ModuleType ContentType { get; set; }
         public string ContentTypeName => ContentType.ToString();
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
@@ -32,7 +32,7 @@ namespace LearningEnglish.Application.DTOs
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int OrderIndex { get; set; }
-        public ModuleContentType ContentType { get; set; }
+        public ModuleType ContentType { get; set; }
         public string ContentTypeName => ContentType.ToString();
         public DateTime CreatedAt { get; set; }
     }
@@ -44,7 +44,7 @@ namespace LearningEnglish.Application.DTOs
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int OrderIndex { get; set; }
-        public ModuleContentType ContentType { get; set; }
+        public ModuleType ContentType { get; set; }
     }
 
     // DTO for updating existing module
@@ -53,7 +53,7 @@ namespace LearningEnglish.Application.DTOs
         public string? Name { get; set; }
         public string? Description { get; set; }
         public int? OrderIndex { get; set; }
-        public ModuleContentType? ContentType { get; set; }
+        public ModuleType? ContentType { get; set; }
     }
 
     // DTO for module with progress info for users

@@ -50,7 +50,7 @@ namespace LearningEnglish.Application.Service
 
                 // Map DTO to Entity
                 var essay = _mapper.Map<Essay>(dto);
-                essay.Type = TypeAssessment.Essay;
+                essay.Type = AssessmentType.Essay;
 
                 // Tạo Essay
                 var createdEssay = await _essayRepository.CreateEssayAsync(essay);

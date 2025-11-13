@@ -40,7 +40,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<bool> UserHasActiveAttemptAsync(int quizId, int userId)
         {
             return await _context.QuizAttempts
-                .AnyAsync(a => a.QuizId == quizId && a.UserId == userId && a.Status == StatusQuizAttempt.InProgress);
+                .AnyAsync(a => a.QuizId == quizId && a.UserId == userId && a.Status == QuizAttemptStatus.InProgress);
         }
 
         // Lấy attempt mới nhất (có AttemptNumber lớn nhất) để kiểm tra số lần làm bài

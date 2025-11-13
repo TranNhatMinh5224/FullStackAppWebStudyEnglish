@@ -119,7 +119,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                if (user.Status == StatusAccount.Inactive)
+                if (user.Status == AccountStatus.Inactive)
                 {
                     response.Success = false;
                     response.StatusCode = 400;
@@ -127,7 +127,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                user.Status = StatusAccount.Inactive;
+                user.Status = AccountStatus.Inactive;
                 user.UpdatedAt = DateTime.UtcNow;
                 await _userRepository.UpdateUserAsync(user);
                 await _userRepository.SaveChangesAsync();
@@ -160,7 +160,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                if (user.Status == StatusAccount.Active)
+                if (user.Status == AccountStatus.Active)
                 {
                     response.Success = false;
                     response.StatusCode = 400;
@@ -168,7 +168,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                user.Status = StatusAccount.Active;
+                user.Status = AccountStatus.Active;
                 user.UpdatedAt = DateTime.UtcNow;
                 await _userRepository.UpdateUserAsync(user);
                 await _userRepository.SaveChangesAsync();
@@ -193,7 +193,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var users = await _userRepository.GetAllUsersAsync();
-                var blocked = users.Where(u => u.Status == StatusAccount.Inactive).ToList();
+                var blocked = users.Where(u => u.Status == AccountStatus.Inactive).ToList();
                 response.StatusCode = 200;
                 response.Success = true;
                 response.Data = _mapper.Map<List<UserDto>>(blocked);
