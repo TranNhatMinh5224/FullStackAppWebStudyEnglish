@@ -24,6 +24,7 @@ namespace LearningEnglish.Infrastructure.Data
         public DbSet<Question> Questions => Set<Question>();
         public DbSet<AnswerOption> AnswerOptions => Set<AnswerOption>();
         public DbSet<QuizAttempt> QuizAttempts => Set<QuizAttempt>();
+        public DbSet<QuizAttemptResult> QuizAttemptResults => Set<QuizAttemptResult>();
         public DbSet<QuizUserAnswer> QuizUserAnswers => Set<QuizUserAnswer>();
         public DbSet<QuizUserAnswerOption> QuizUserAnswerOptions => Set<QuizUserAnswerOption>();
         public DbSet<EssaySubmission> EssaySubmissions => Set<EssaySubmission>();
@@ -273,11 +274,20 @@ namespace LearningEnglish.Infrastructure.Data
                  .WithMany(u => u.QuizAttempts)
                  .HasForeignKey(qa => qa.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
-                e.HasOne(qa => qa.Reviewer)
-                 .WithMany(u => u.ReviewedQuizAttempts)
-                 .HasForeignKey(qa => qa.ReviewedBy)
-                 .IsRequired(false)
-                 .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // QuizAttemptResult
+            modelBuilder.Entity<QuizAttemptResult>(e =>
+            {
+                e.HasKey(qar => qar.ResultId);
+                e.ToTable("QuizAttemptResults");
+                e.Property(qar => qar.Score).HasPrecision(18, 2);
+                e.Property(qar => qar.MaxScore).HasPrecision(18, 2);
+                e.Property(qar => qar.Percentage).HasPrecision(5, 2);
+                e.Property(qar => qar.ManualScore).HasPrecision(18, 2);
+                
+                // Không config navigation - để entities độc lập
+                // Chỉ có FK AttemptId, ReviewedBy
             });
 
             // QuizUserAnswer
@@ -297,7 +307,7 @@ namespace LearningEnglish.Infrastructure.Data
                  .HasForeignKey(qua => qua.QuestionId)
                  .OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(qua => qua.SelectedOption)
-                 .WithMany(ao => ao.UserAnswers)
+                 .WithMany() 
                  .HasForeignKey(qua => qua.SelectedOptionId)
                  .IsRequired(false)
                  .OnDelete(DeleteBehavior.SetNull);
@@ -323,9 +333,6 @@ namespace LearningEnglish.Infrastructure.Data
             {
                 e.HasKey(es => es.SubmissionId);
                 e.ToTable("EssaySubmissions");
-                e.Property(es => es.Score).HasPrecision(18, 2);
-                e.Property(es => es.MaxScore).HasPrecision(18, 2);
-                e.Property(es => es.Percentage).HasPrecision(5, 2);
                 e.HasOne(es => es.Assessment)
                  .WithMany(a => a.EssaySubmissions)
                  .HasForeignKey(es => es.AssessmentId)
@@ -334,11 +341,6 @@ namespace LearningEnglish.Infrastructure.Data
                  .WithMany(u => u.EssaySubmissions)
                  .HasForeignKey(es => es.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
-                e.HasOne(es => es.Grader)
-                 .WithMany(u => u.GradedEssaySubmissions)
-                 .HasForeignKey(es => es.GraderId)
-                 .IsRequired(false)
-                 .OnDelete(DeleteBehavior.SetNull);
             });
 
             // ModuleCompletion

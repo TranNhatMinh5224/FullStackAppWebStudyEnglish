@@ -128,6 +128,7 @@ builder.Services.AddScoped<IQuizSectionRepository, QuizSectionRepository>();
 builder.Services.AddScoped<IQuizGroupRepository, QuizGroupRepository>();
 builder.Services.AddScoped<IQuizRepository, QuizRepository>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+builder.Services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
@@ -159,6 +160,7 @@ builder.Services.AddScoped<IQuizSectionService, QuizSectionService>();
 builder.Services.AddScoped<IQuizGroupService, QuizGroupService>();
 builder.Services.AddScoped<IQuizService, QuizService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IQuizAttemptService, QuizAttemptService>();
 
 // Payment related services
 builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();

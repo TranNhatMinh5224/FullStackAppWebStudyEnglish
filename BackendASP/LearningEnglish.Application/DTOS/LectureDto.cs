@@ -1,6 +1,6 @@
 using LearningEnglish.Domain.Enums;
 
-namespace LearningEnglish.Application.DTOS
+namespace LearningEnglish.Application.DTOs
 {
     // DTO for Lecture response
     public class LectureDto

@@ -7,7 +7,7 @@ namespace LearningEnglish.Domain.Entities
     {
         public int QuestionId { get; set; }
 
-        public TypeQuestion Type { get; set; } = TypeQuestion.MultipleChoice;
+        public QuestionType Type { get; set; } = QuestionType.MultipleChoice;
         public string StemText { get; set; } = string.Empty; // Câu hỏi dạng text thuần
         public string? StemHtml { get; set; } // Câu hỏi dạng  text/HTML
 
@@ -25,7 +25,7 @@ namespace LearningEnglish.Domain.Entities
 
         // Media cho câu hỏi (ảnh/audio/video)
         public string? MediaUrl { get; set; }
-        public string? MediaType { get; set; } // "image/png","audio/mpeg","video/mp4"
+        public string? MediaType { get; set; }
 
         // Cấu hình đặc thù theo Type (matching/order/fillblank nhiều ô…)
         public string MetadataJson { get; set; } = "{}"; // Lưu trữ dữ liệu cấu hình dạng JSON 

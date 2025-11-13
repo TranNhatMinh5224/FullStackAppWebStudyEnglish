@@ -12,25 +12,9 @@ public class EssaySubmission
     // Nội dung bài làm
     public string? TextContent { get; set; }
     public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
-    public StatusSubmission Status { get; set; } = StatusSubmission.Submitted;
+    public SubmissionStatus Status { get; set; } = SubmissionStatus.Submitted;
 
-
-    // Chấm điểm
-    public decimal? Score { get; set; }
-    public decimal? MaxScore { get; set; }
-    public decimal? Percentage { get; set; }
-
-
-    // Feedback từ teacher
-    public int? GraderId { get; set; }
-    public string? TeacherFeedback { get; set; }
-    public string? PrivateNotes { get; set; }
-
-
+    // Navigation properties
     public User User { get; set; } = null!;
-    public User? Grader { get; set; } // Teacher chấm bài
     public Assessment Assessment { get; set; } = null!;
-
-
-
 }

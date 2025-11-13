@@ -6,7 +6,7 @@ public class LessonCompletion
     public int LessonCompletionId { get; set; }
     public int UserId { get; set; }
     public int LessonId { get; set; }
-    // ===== EXISTING FIELDS =====
+
     // % hoàn thành lesson (0-100) - Auto calculated from modules
     public float CompletionPercentage { get; set; } = 0;
 

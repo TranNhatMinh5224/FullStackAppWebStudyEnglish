@@ -14,7 +14,7 @@ public class User
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    public StatusAccount Status { get; set; } = StatusAccount.Active;
+    public AccountStatus Status { get; set; } = AccountStatus.Active;
     public int? CurrentTeacherSubscriptionId { get; set; }
 
     // Many-to-many
@@ -48,7 +48,6 @@ public class User
 
     // Navigation for reviewed items (as teacher/reviewer)
     public List<QuizAttempt> ReviewedQuizAttempts { get; set; } = new();
-    public List<EssaySubmission> GradedEssaySubmissions { get; set; } = new();
 
     public void SetPassword(string password) =>
         PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);

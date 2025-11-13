@@ -6,6 +6,9 @@ namespace LearningEnglish.Domain.Entities
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int QuizSectionId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string? ImgUrl { get; set; }
+        public string? VideoUrl { get; set; }
         public float SumScore { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -14,6 +17,6 @@ namespace LearningEnglish.Domain.Entities
         // Navigation Properties
         public List<Question> Questions { get; set; } = new();
         public QuizSection? QuizSection { get; set; }
-        public List<MediaAsset> QuizQuestionGroupMedias { get; set; } = new();
+        
     }
 }

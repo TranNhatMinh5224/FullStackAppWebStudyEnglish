@@ -9,7 +9,7 @@ namespace LearningEnglish.Domain.Entities
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
 
-        public TypeAssessment Type { get; set; } = TypeAssessment.Essay;
+        public AssessmentType Type { get; set; } = AssessmentType.Essay;
         
         // Navigation Properties
         public Assessment? Assessment { get; set; }

@@ -83,10 +83,13 @@ namespace LearningEnglish.Infrastructure.Migrations
                 {
                     AnswerOptionId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    QuestionId = table.Column<int>(type: "integer", nullable: false),
                     Text = table.Column<string>(type: "text", nullable: false),
                     IsCorrect = table.Column<bool>(type: "boolean", nullable: false),
-                    OrderIndex = table.Column<int>(type: "integer", nullable: false),
-                    QuestionId = table.Column<int>(type: "integer", nullable: false)
+                    MediaUrl = table.Column<string>(type: "text", nullable: true),
+                    MediaType = table.Column<string>(type: "text", nullable: true),
+                    Feedback = table.Column<string>(type: "text", nullable: true),
+                    OrderIndex = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -150,7 +153,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     Status = table.Column<int>(type: "integer", nullable: false),
                     TotalQuestions = table.Column<int>(type: "integer", nullable: false),
                     PassingScore = table.Column<int>(type: "integer", nullable: true),
-                    OrderIndex = table.Column<int>(type: "integer", nullable: true),
                     StartTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     EndTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ShowAnswersAfterSubmit = table.Column<bool>(type: "boolean", nullable: true),
@@ -182,7 +184,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     QuizId = table.Column<int>(type: "integer", nullable: false),
                     Title = table.Column<string>(type: "text", nullable: false),
-                    OrderIndex = table.Column<int>(type: "integer", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -205,10 +207,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
-                    OrderIndex = table.Column<int>(type: "integer", nullable: false),
                     QuizSectionId = table.Column<int>(type: "integer", nullable: false),
                     SumScore = table.Column<float>(type: "real", nullable: false),
-                    ShuffleQuestions = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -234,9 +234,9 @@ namespace LearningEnglish.Infrastructure.Migrations
                     StemHtml = table.Column<string>(type: "text", nullable: true),
                     QuizGroupId = table.Column<int>(type: "integer", nullable: false),
                     QuizSectionId = table.Column<int>(type: "integer", nullable: false),
-                    Points = table.Column<int>(type: "integer", nullable: false),
-                    OrderIndex = table.Column<int>(type: "integer", nullable: false),
-                    CorrectAnswer = table.Column<string>(type: "text", nullable: true),
+                    Points = table.Column<decimal>(type: "numeric", nullable: false),
+                    Scoring = table.Column<int>(type: "integer", nullable: false),
+                    CorrectAnswersJson = table.Column<string>(type: "text", nullable: true),
                     Explanation = table.Column<string>(type: "text", nullable: true),
                     MediaUrl = table.Column<string>(type: "text", nullable: true),
                     MediaType = table.Column<string>(type: "text", nullable: true),
@@ -450,12 +450,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     TextContent = table.Column<string>(type: "text", nullable: true),
                     SubmittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    Score = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                    MaxScore = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                    Percentage = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: true),
-                    GraderId = table.Column<int>(type: "integer", nullable: true),
-                    TeacherFeedback = table.Column<string>(type: "text", nullable: true),
-                    PrivateNotes = table.Column<string>(type: "text", nullable: true),
                     EssayId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
@@ -641,6 +635,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                     Percentage = table.Column<decimal>(type: "numeric", nullable: false),
                     IsPassed = table.Column<bool>(type: "boolean", nullable: false),
                     TimeSpentSeconds = table.Column<int>(type: "integer", nullable: false),
+                    ShuffleSeedJson = table.Column<string>(type: "text", nullable: true),
                     AnswersSnapshot = table.Column<string>(type: "text", nullable: true),
                     ReviewedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     TeacherFeedback = table.Column<string>(type: "text", nullable: true),
@@ -662,7 +657,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                 columns: table => new
                 {
                     QuizUserAnswerId = table.Column<int>(type: "integer", nullable: false),
-                    AnswerOptionId = table.Column<int>(type: "integer", nullable: false)
+                    AnswerOptionId = table.Column<int>(type: "integer", nullable: false),
+                    SelectedOrder = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -689,9 +685,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                     IsCorrect = table.Column<bool>(type: "boolean", nullable: true),
                     MaxPoints = table.Column<decimal>(type: "numeric", nullable: false),
                     PointsEarned = table.Column<decimal>(type: "numeric", nullable: false),
-                    Feedback = table.Column<string>(type: "text", nullable: true),
-                    AnsweredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    TimeSpentSeconds = table.Column<int>(type: "integer", nullable: false)
+                    AnsweredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -744,8 +738,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     LongestStreak = table.Column<int>(type: "integer", nullable: false),
                     LastActivityDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     CurrentStreakStartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    FreezeCount = table.Column<int>(type: "integer", nullable: false),
-                    LastFreezeUsedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     TotalActiveDays = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -911,7 +903,7 @@ namespace LearningEnglish.Infrastructure.Migrations
             migrationBuilder.InsertData(
                 table: "Users",
                 columns: new[] { "UserId", "CreatedAt", "CurrentTeacherSubscriptionId", "CurrentTeacherSubscriptionTeacherSubscriptionId", "Email", "FirstName", "LastName", "PasswordHash", "PhoneNumber", "Status", "UpdatedAt" },
-                values: new object[] { 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, "minhxoandev@gmail.com", "Admin", "System", "$2a$11$ubTGrOnENRP3e3ttteDxvevv.n/Y1IYRcm8DTufjI7N1mrpmBs/Hm", "0257554479", 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) });
+                values: new object[] { 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, "minhxoandev@gmail.com", "Admin", "System", "$2a$11$ZP/HBJSsNaaNg5SjLF82AOceTB0jEP66XzcteOkzE2eWSEVUiL1Be", "0257554479", 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) });
 
             migrationBuilder.InsertData(
                 table: "UserRoles",
@@ -962,11 +954,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                 name: "IX_EssaySubmissions_EssayId",
                 table: "EssaySubmissions",
                 column: "EssayId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EssaySubmissions_GraderId",
-                table: "EssaySubmissions",
-                column: "GraderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_EssaySubmissions_UserId",
@@ -1240,14 +1227,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                 name: "FK_Courses_Users_TeacherId",
                 table: "Courses",
                 column: "TeacherId",
-                principalTable: "Users",
-                principalColumn: "UserId",
-                onDelete: ReferentialAction.SetNull);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_EssaySubmissions_Users_GraderId",
-                table: "EssaySubmissions",
-                column: "GraderId",
                 principalTable: "Users",
                 principalColumn: "UserId",
                 onDelete: ReferentialAction.SetNull);

@@ -13,8 +13,7 @@ namespace LearningEnglish.Domain.Entities
         public string? MediaType { get; set; } // "image/png", "audio/mpeg", ...
 
         public string? Feedback { get; set; }   // phản hồi theo option
-        public int OrderIndex { get; set; } = 0; // lưu thứ tự gốc
-
+      
         // Navigation
         public Question? Question { get; set; }
         public List<QuizUserAnswerOption> UserAnswerOptions { get; set; } = new();

@@ -17,7 +17,7 @@ namespace LearningEnglish.Domain.Entities
 
 
         public string Title { get; set; } = string.Empty;
-        public TypeLecture Type { get; set; } = TypeLecture.Content;
+        public LectureType Type { get; set; } = LectureType.Content;
         public string? MarkdownContent { get; set; }
         public string RenderedHtml { get; set; } = string.Empty;
 

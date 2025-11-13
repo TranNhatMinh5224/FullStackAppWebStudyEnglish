@@ -6,7 +6,7 @@ namespace LearningEnglish.Domain.Entities
         public int QuizUserAnswerId { get; set; }
         public int AnswerOptionId { get; set; }
 
-        // Hỗ trợ Ordering (thứ tự học viên chọn/kéo thả)
+        
         public int? SelectedOrder { get; set; }
 
         // Navigation

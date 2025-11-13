@@ -1,6 +1,6 @@
 namespace LearningEnglish.Domain.Enums
 {
-    public enum TypeQuiz
+    public enum QuizType
     {
         Practice = 1,
         MiniTest = 2,

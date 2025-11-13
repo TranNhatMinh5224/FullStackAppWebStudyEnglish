@@ -1,6 +1,7 @@
 namespace LearningEnglish.Domain.Enums;
 
-public enum TypeLecture
+public enum LectureType
+
 {
     Content = 1,
     Video = 2,

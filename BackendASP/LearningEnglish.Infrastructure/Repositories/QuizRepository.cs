@@ -1,8 +1,9 @@
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
-using LearningEnglish.Domain.Enums;
 using LearningEnglish.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+
 namespace LearningEnglish.Infrastructure.Repositories
 {
     public class QuizRepository : IQuizRepository
@@ -47,6 +48,33 @@ namespace LearningEnglish.Infrastructure.Repositories
                 await _context.SaveChangesAsync();
             }
         }
-    }
+            
+        // Kiểm tra tồn tại Sections và Groups
+        public async Task<bool> HasSectionsAsync(int quizId)
+        {
+            return await _context.QuizSections.AnyAsync(qs => qs.QuizId == quizId);
+        }
+        // Kiểm tra tồn tại Groups trong Quiz
 
+        public async Task<bool> HasGroupsAsync(int quizId)
+        {
+
+            return await _context.QuizGroups
+                .AnyAsync(qg => _context.QuizSections
+                    .Any(qs => qs.QuizSectionId == qg.QuizSectionId && qs.QuizId == quizId));
+        }
+        // Lấy đầy đủ cấu trúc Quiz với Sections, Groups, Questions và Options
+        public async Task<Quiz?> GetFullQuizAsync(int quizId)
+        {
+    
+            return await _context.Quizzes
+                .AsNoTracking()
+                .Where(q => q.QuizId == quizId) 
+                .Include(q => q.QuizSections)
+                    .ThenInclude(s => s.QuizGroups)
+                        .ThenInclude(g => g.Questions)
+                            .ThenInclude(qn => qn.Options)
+                .FirstOrDefaultAsync();
+        }
+    }
 }

@@ -1,6 +1,6 @@
 namespace LearningEnglish.Domain.Enums
 {
-    public enum StatusQuiz
+    public enum QuizStatus
     {
        Open = 1,
        Closed = 2,

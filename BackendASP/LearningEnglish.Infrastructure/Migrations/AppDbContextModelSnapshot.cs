@@ -55,8 +55,17 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AnswerOptionId"));
 
+                    b.Property<string>("Feedback")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsCorrect")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("MediaType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MediaUrl")
+                        .HasColumnType("text");
 
                     b.Property<int>("OrderIndex")
                         .HasColumnType("integer");
@@ -259,32 +268,11 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int?>("EssayId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("GraderId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("MaxScore")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal?>("Percentage")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
-                    b.Property<string>("PrivateNotes")
-                        .HasColumnType("text");
-
-                    b.Property<decimal?>("Score")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("TeacherFeedback")
-                        .HasColumnType("text");
 
                     b.Property<string>("TextContent")
                         .HasColumnType("text");
@@ -297,8 +285,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.HasIndex("AssessmentId");
 
                     b.HasIndex("EssayId");
-
-                    b.HasIndex("GraderId");
 
                     b.HasIndex("UserId");
 
@@ -752,7 +738,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("QuestionId"));
 
-                    b.Property<string>("CorrectAnswer")
+                    b.Property<string>("CorrectAnswersJson")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
@@ -771,16 +757,16 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Points")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Points")
+                        .HasColumnType("numeric");
 
                     b.Property<int>("QuizGroupId")
                         .HasColumnType("integer");
 
                     b.Property<int>("QuizSectionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Scoring")
                         .HasColumnType("integer");
 
                     b.Property<string>("StemHtml")
@@ -913,6 +899,9 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<decimal>("Score")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("ShuffleSeedJson")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -962,9 +951,6 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<int>("QuizSectionId")
                         .HasColumnType("integer");
-
-                    b.Property<bool>("ShuffleQuestions")
-                        .HasColumnType("boolean");
 
                     b.Property<float>("SumScore")
                         .HasColumnType("real");
@@ -1024,9 +1010,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<DateTime>("AnsweredAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Feedback")
-                        .HasColumnType("text");
-
                     b.Property<bool?>("IsCorrect")
                         .HasColumnType("boolean");
 
@@ -1043,9 +1026,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int?>("SelectedOptionId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TimeSpentSeconds")
                         .HasColumnType("integer");
 
                     b.Property<int>("UserId")
@@ -1070,6 +1050,9 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("AnswerOptionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SelectedOrder")
                         .HasColumnType("integer");
 
                     b.HasKey("QuizUserAnswerId", "AnswerOptionId");
@@ -1164,13 +1147,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<DateTime?>("CurrentStreakStartDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("FreezeCount")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("LastActivityDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("LastFreezeUsedDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("LongestStreak")
@@ -1391,7 +1368,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             Email = "minhxoandev@gmail.com",
                             FirstName = "Admin",
                             LastName = "System",
-                            PasswordHash = "$2a$11$O4hNRF3Awrf1MEDMOpEZLeu3OYQF71Wz8rydnsnud11dvzaAo4.Aa",
+                            PasswordHash = "$2a$11$ZP/HBJSsNaaNg5SjLF82AOceTB0jEP66XzcteOkzE2eWSEVUiL1Be",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -1552,11 +1529,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .WithMany("EssaySubmissions")
                         .HasForeignKey("EssayId");
 
-                    b.HasOne("LearningEnglish.Domain.Entities.User", "Grader")
-                        .WithMany("GradedEssaySubmissions")
-                        .HasForeignKey("GraderId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("LearningEnglish.Domain.Entities.User", "User")
                         .WithMany("EssaySubmissions")
                         .HasForeignKey("UserId")
@@ -1564,8 +1536,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Assessment");
-
-                    b.Navigation("Grader");
 
                     b.Navigation("User");
                 });
@@ -1815,7 +1785,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("LearningEnglish.Domain.Entities.AnswerOption", "SelectedOption")
-                        .WithMany("UserAnswers")
+                        .WithMany()
                         .HasForeignKey("SelectedOptionId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -1980,8 +1950,6 @@ namespace LearningEnglish.Infrastructure.Migrations
             modelBuilder.Entity("LearningEnglish.Domain.Entities.AnswerOption", b =>
                 {
                     b.Navigation("UserAnswerOptions");
-
-                    b.Navigation("UserAnswers");
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Assessment", b =>
@@ -2089,8 +2057,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("EssaySubmissions");
 
                     b.Navigation("FlashCardReviews");
-
-                    b.Navigation("GradedEssaySubmissions");
 
                     b.Navigation("LessonCompletions");
 

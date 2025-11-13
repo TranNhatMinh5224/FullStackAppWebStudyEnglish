@@ -1,6 +1,6 @@
 namespace LearningEnglish.Domain.Enums
 {
-    public enum TypeQuestion
+    public enum QuestionType
     {
         MultipleChoice = 0, // chọn 1 đáp án đúng
         MultipleAnswers = 1, // chọn nhiều đáp án đúng

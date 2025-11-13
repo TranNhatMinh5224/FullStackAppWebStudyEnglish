@@ -1,6 +1,6 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
-using LearningEnglish.Application.DTOS;
+using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;

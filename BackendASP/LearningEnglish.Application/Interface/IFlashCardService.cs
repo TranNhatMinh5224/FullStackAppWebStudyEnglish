@@ -1,4 +1,4 @@
-using LearningEnglish.Application.DTOS;
+using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common;
 
 namespace LearningEnglish.Application.Interface

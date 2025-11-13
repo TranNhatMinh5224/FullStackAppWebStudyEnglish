@@ -1,4 +1,4 @@
-namespace LearningEnglish.Application.DTOS
+namespace LearningEnglish.Application.DTOs
 {
     // DTO for FlashCard response
     public class FlashCardDto

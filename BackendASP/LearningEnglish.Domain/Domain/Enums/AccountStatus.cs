@@ -1,6 +1,6 @@
 namespace LearningEnglish.Domain.Enums;
 
-public enum StatusAccount
+public enum AccountStatus
 {
     Active = 1,
     Inactive = 2,

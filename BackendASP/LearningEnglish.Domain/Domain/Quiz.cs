@@ -11,16 +11,17 @@ namespace LearningEnglish.Domain.Entities
         public string? Description { get; set; }
         public string? Instructions { get; set; } // Hướng dẫn làm bài
 
-        public TypeQuiz Type { get; set; } = TypeQuiz.Practice; 
-        public StatusQuiz Status { get; set; } = StatusQuiz.Open;
+        public QuizType Type { get; set; } = QuizType.Practice; 
+        public QuizStatus Status { get; set; } = QuizStatus.Open;
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
+        
         
        
 
         // Han thoi gian lam bai thi
 
-       
+
         public DateTime? StartTime { get; set; } // Thoi gian bat dau
         public DateTime? EndTime { get; set; } // Thoi gian ket thuc
         

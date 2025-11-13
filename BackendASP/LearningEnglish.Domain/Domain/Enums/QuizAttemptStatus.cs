@@ -1,6 +1,6 @@
 namespace LearningEnglish.Domain.Enums
 {
-    public enum StatusQuizAttempt
+    public enum QuizAttemptStatus
     {
         InProgress = 1,
         Submitted = 2,

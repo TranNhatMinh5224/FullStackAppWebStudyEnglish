@@ -11,5 +11,6 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<List<QuizDto>>> GetQuizzesByAssessmentIdAsync(int assessmentId);
         Task<ServiceResponse<QuizDto>> UpdateQuizAsync(int quizId, QuizUpdateDto quiz);
         Task<ServiceResponse<bool>> DeleteQuizAsync(int quizId);
+       
     }
 }

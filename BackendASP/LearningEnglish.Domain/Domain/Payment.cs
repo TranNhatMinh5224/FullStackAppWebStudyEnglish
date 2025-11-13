@@ -9,7 +9,7 @@ public class Payment
 
     public string? PaymentMethod { get; set; } = string.Empty;
 
-    public TypeProduct ProductType { get; set; }
+    public ProductType ProductType { get; set; }
     public int ProductId { get; set; }
 
     public decimal Amount { get; set; }

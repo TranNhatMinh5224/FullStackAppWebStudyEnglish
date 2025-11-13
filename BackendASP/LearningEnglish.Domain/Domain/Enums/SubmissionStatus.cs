@@ -1,6 +1,6 @@
 namespace LearningEnglish.Domain.Enums
 {
-    public enum StatusSubmission
+    public enum SubmissionStatus
     {
         Submitted = 1,
         UnderReview = 2,

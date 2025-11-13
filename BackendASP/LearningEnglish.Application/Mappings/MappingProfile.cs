@@ -183,7 +183,77 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Domain.Enums.StatusSubmission.Submitted));
 
+            // Quiz mappings
+            CreateMap<Quiz, QuizDto>()
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+
+            CreateMap<QuizCreateDto, Quiz>()
+                .ForMember(dest => dest.QuizId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+
+            CreateMap<QuizUpdateDto, Quiz>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            // QuizSection mappings
+            CreateMap<QuizSection, QuizSectionDto>();
+            CreateMap<QuizSection, ListQuizSectionDto>();
+
+            CreateMap<CreateQuizSectionDto, QuizSection>()
+                .ForMember(dest => dest.QuizSectionId, opt => opt.Ignore());
+
+            CreateMap<UpdateQuizSectionDto, QuizSection>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+                
+            // QuizGroup mappings
+            CreateMap<QuizGroup, QuizGroupDto>();
+            CreateMap<CreateQuizGroupDto, QuizGroup>()
+                .ForMember(dest => dest.QuizGroupId, opt => opt.Ignore());
+            CreateMap<UpdateQuizGroupDto, QuizGroup>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            // Question mappings
+            CreateMap<Question, QuestionReadDto>()
+                .ForMember(dest => dest.Options, opt => opt.MapFrom(src => src.Options));
+
+            CreateMap<QuestionCreateDto, Question>()
+                .ForMember(dest => dest.QuestionId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.Options, opt => opt.MapFrom(src => src.Options));
+
+            CreateMap<QuestionUpdateDto, Question>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.Options, opt => opt.MapFrom(src => src.Options))
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            // AnswerOption mappings
+            CreateMap<AnswerOption, AnswerOptionReadDto>();
+
+            CreateMap<AnswerOptionCreateDto, AnswerOption>()
+                .ForMember(dest => dest.AnswerOptionId, opt => opt.Ignore())
+                .ForMember(dest => dest.QuestionId, opt => opt.Ignore());
+
+            // QuizAttempt mappings
+            CreateMap<QuizAttempt, QuizAttemptDto>()
+                .ForMember(dest => dest.Answers, opt => opt.MapFrom(src => src.Answers));
+
+            CreateMap<QuizAttempt, QuizAttemptResultDto>()
+                .ForMember(dest => dest.Answers, opt => opt.MapFrom(src => src.Answers));
+
+            // QuizUserAnswer to AttemptAnswerDto
+            CreateMap<QuizUserAnswer, AttemptAnswerDto>()
+                .ForMember(dest => dest.SelectedOptionIds, opt => opt.MapFrom(src => 
+                    src.SelectedOptionId.HasValue 
+                        ? new List<int> { src.SelectedOptionId.Value }
+                        : src.SelectedOptions.Select(so => so.AnswerOptionId).ToList()))
+                .ForMember(dest => dest.AnswerText, opt => opt.MapFrom(src => src.AnswerDataJson))
+                .ForMember(dest => dest.PointsAwarded, opt => opt.MapFrom(src => (decimal?)src.PointsEarned));
+
         }
+           
 
         private static TimeSpan? ParseTimeSpan(string? timeLimitString)
         {
