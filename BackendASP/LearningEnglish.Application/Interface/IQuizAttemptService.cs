@@ -9,7 +9,7 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<StartQuizAttemptResponseDto>> StartAttemptAsync(int userId, StartQuizAttemptRequestDto request);
         
         // Update câu trả lời realtime
-        // Task<ServiceResponse<bool>> UpdateAnswerAsync(int userId, int attemptId, UpdateAnswerDto answerDto);
+        Task<ServiceResponse<bool>> UpdateAnswerAsync(int userId, int attemptId, UpdateAnswerDto answerDto);
         
         // Lấy trạng thái attempt
         Task<ServiceResponse<QuizAttemptDto>> GetAttemptAsync(int userId, int attemptId);

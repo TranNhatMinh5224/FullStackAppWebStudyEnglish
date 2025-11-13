@@ -36,7 +36,7 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Email hoặc mật khẩu không đúng";
                     return response;
                 }
-                if (user.Status == StatusAccount.Inactive)
+                if (user.Status == AccountStatus.Inactive)
                 {
                     response.Success = false;
                     response.StatusCode = 403;

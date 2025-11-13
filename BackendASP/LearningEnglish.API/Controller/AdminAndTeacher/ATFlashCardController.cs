@@ -1,5 +1,5 @@
 using LearningEnglish.Application.Common;
-using LearningEnglish.Application.DTOS;
+using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

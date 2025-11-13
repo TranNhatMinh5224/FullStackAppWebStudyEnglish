@@ -10,7 +10,7 @@ namespace LearningEnglish.Application.DTOs
         public int OrderIndex { get; set; }
         public string? NumberingLabel { get; set; }
         public string Title { get; set; } = string.Empty;
-        public TypeLecture Type { get; set; }
+        public LectureType Type { get; set; }
         public string TypeName => Type.ToString();
         public string? MarkdownContent { get; set; }
         public string RenderedHtml { get; set; } = string.Empty;
@@ -37,7 +37,7 @@ namespace LearningEnglish.Application.DTOs
         public int OrderIndex { get; set; }
         public string? NumberingLabel { get; set; }
         public string Title { get; set; } = string.Empty;
-        public TypeLecture Type { get; set; }
+        public LectureType Type { get; set; }
         public string TypeName => Type.ToString();
         public DateTime CreatedAt { get; set; }
         public int? ParentLectureId { get; set; }
@@ -51,7 +51,7 @@ namespace LearningEnglish.Application.DTOs
         public int OrderIndex { get; set; }
         public string? NumberingLabel { get; set; }
         public string Title { get; set; } = string.Empty;
-        public TypeLecture Type { get; set; } = TypeLecture.Content;
+        public LectureType Type { get; set; } = LectureType.Content;
         public string? MarkdownContent { get; set; }
         public int? ParentLectureId { get; set; }
     }
@@ -62,7 +62,7 @@ namespace LearningEnglish.Application.DTOs
         public int? OrderIndex { get; set; }
         public string? NumberingLabel { get; set; }
         public string? Title { get; set; }
-        public TypeLecture? Type { get; set; }
+        public LectureType? Type { get; set; }
         public string? MarkdownContent { get; set; }
         public int? ParentLectureId { get; set; }
     }

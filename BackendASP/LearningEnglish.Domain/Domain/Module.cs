@@ -12,7 +12,7 @@ namespace LearningEnglish.Domain.Entities
         public int OrderIndex { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        public ModuleContentType ContentType { get; set; }
+        public ModuleType ContentType { get; set; }
 
         // Navigation Properties
         public Lesson? Lesson { get; set; }

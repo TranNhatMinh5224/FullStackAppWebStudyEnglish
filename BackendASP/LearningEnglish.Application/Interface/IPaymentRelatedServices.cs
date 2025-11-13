@@ -6,8 +6,8 @@ namespace LearningEnglish.Application.Interface
 {
     public interface IPaymentValidator
     {
-        Task<ServiceResponse<decimal>> ValidateProductAsync(int productId, TypeProduct productType);
-        Task<ServiceResponse<bool>> ValidateUserPaymentAsync(int userId, int productId, TypeProduct productType);
+        Task<ServiceResponse<decimal>> ValidateProductAsync(int productId, ProductType productType);
+        Task<ServiceResponse<bool>> ValidateUserPaymentAsync(int userId, int productId, ProductType productType);
     }
     
     public interface IPostPaymentProcessor

@@ -59,7 +59,7 @@ namespace LearningEnglish.Application.Service
                     UserId = userId,
                     TextContent = dto.TextContent,
                     SubmittedAt = DateTime.UtcNow,
-                    Status = StatusSubmission.Submitted
+                    Status = SubmissionStatus.Submitted
                 };
 
                 var createdSubmission = await _essaySubmissionRepository.CreateSubmissionAsync(submission);

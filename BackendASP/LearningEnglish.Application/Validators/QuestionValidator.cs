@@ -39,12 +39,12 @@ namespace LearningEnglish.Application.Validators
             RuleFor(x => x.Options)
                 .NotEmpty()
                 .WithMessage("Phải có ít nhất 1 đáp án.")
-                .When(x => x.Type == TypeQuestion.MultipleChoice || x.Type == TypeQuestion.MultipleAnswers);
+                .When(x => x.Type == QuestionType.MultipleChoice || x.Type == QuestionType.MultipleAnswers);
 
             RuleFor(x => x.Options)
                 .Must(options => options.Count >= 2)
                 .WithMessage("Câu hỏi trắc nghiệm phải có ít nhất 2 đáp án.")
-                .When(x => x.Type == TypeQuestion.MultipleChoice || x.Type == TypeQuestion.MultipleAnswers);
+                .When(x => x.Type == QuestionType.MultipleChoice || x.Type == QuestionType.MultipleAnswers);
 
             RuleFor(x => x.Options)
                 .Must(options => options.Any(o => o.IsCorrect))
@@ -54,7 +54,7 @@ namespace LearningEnglish.Application.Validators
             RuleFor(x => x.Options)
                 .Must(options => options.Count(o => o.IsCorrect) == 1)
                 .WithMessage("Câu hỏi một đáp án chỉ được có đúng 1 đáp án đúng.")
-                .When(x => x.Type == TypeQuestion.MultipleChoice && x.Options != null && x.Options.Any());
+                .When(x => x.Type == QuestionType.MultipleChoice && x.Options != null && x.Options.Any());
 
             RuleFor(x => x.Explanation)
                 .MaximumLength(2000)

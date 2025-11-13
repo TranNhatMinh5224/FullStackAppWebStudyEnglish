@@ -12,8 +12,8 @@ namespace LearningEnglish.Application.DTOs
         public string? Description { get; set; }
         public string? Instructions { get; set; }
 
-        public TypeQuiz Type { get; set; }
-        public StatusQuiz Status { get; set; }
+        public QuizType Type { get; set; }
+        public QuizStatus Status { get; set; }
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
 
@@ -55,8 +55,8 @@ namespace LearningEnglish.Application.DTOs
         public string? Description { get; set; }
         public string? Instructions { get; set; }
 
-        public TypeQuiz Type { get; set; } = TypeQuiz.Practice;
-        public StatusQuiz Status { get; set; } = StatusQuiz.Open;
+        public QuizType Type { get; set; } = QuizType.Practice;
+        public QuizStatus Status { get; set; } = QuizStatus.Open;
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
     }

@@ -1,7 +1,7 @@
 namespace LearningEnglish.Domain.Enums;
 
 // Loại nội dung trong Module
-public enum ModuleContentType
+public enum ModuleType
 {
     Lecture = 1,
     Quiz = 2,

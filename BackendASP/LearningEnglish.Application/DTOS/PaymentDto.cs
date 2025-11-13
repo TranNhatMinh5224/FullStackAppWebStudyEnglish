@@ -6,14 +6,14 @@ namespace LearningEnglish.Application.DTOs
     public class requestPayment
     {
         public int ProductId { get; set; }
-        public TypeProduct typeproduct { get; set; }
+        public ProductType typeproduct { get; set; }
 
     }
     // tạo thông tin thanh toán trả về cho client
     public class CreateInforPayment
     {
         public int PaymentId { get; set; }
-        public TypeProduct ProductType { get; set; }
+        public ProductType ProductType { get; set; }
         public int ProductId { get; set; }
 
         public decimal Amount { get; set; }
@@ -26,7 +26,7 @@ namespace LearningEnglish.Application.DTOs
         public int PaymentId { get; set; }
 
         public int ProductId { get; set; }
-        public TypeProduct ProductType { get; set; }
+        public ProductType ProductType { get; set; }
         public decimal Amount { get; set; }
         public string PaymentMethod { get; set; } = string.Empty;
 
