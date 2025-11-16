@@ -16,8 +16,6 @@ namespace LearningEnglish.Application.DTOs
 
         // Điểm & chiến lược chấm
         public decimal Points { get; set; } = 10m;
-        public ScoringStrategy Scoring { get; set; } = ScoringStrategy.AllOrNothing;
-
         public string? CorrectAnswersJson { get; set; }
 
         public string MetadataJson { get; set; } = "{}";
@@ -52,8 +50,6 @@ namespace LearningEnglish.Application.DTOs
         public int QuizSectionId { get; set; }
 
         public decimal Points { get; set; }
-        public ScoringStrategy Scoring { get; set; }
-
         public string? CorrectAnswersJson { get; set; }
         public string MetadataJson { get; set; } = "{}";
 

@@ -26,4 +26,6 @@ namespace LearningEnglish.Domain.Entities
         public List<EssaySubmission> EssaySubmissions { get; set; } = new();
         public List<PronunciationAssessment> PronunciationAssessments { get; set; } = new();
     }
+   
+   
 }

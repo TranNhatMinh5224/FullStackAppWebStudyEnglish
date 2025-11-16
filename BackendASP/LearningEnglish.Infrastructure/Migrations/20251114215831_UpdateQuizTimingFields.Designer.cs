@@ -3,6 +3,7 @@ using System;
 using LearningEnglish.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LearningEnglish.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251114215831_UpdateQuizTimingFields")]
+    partial class UpdateQuizTimingFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -838,14 +841,14 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AttemptId"));
 
+                    b.Property<string>("AnswersSnapshot")
+                        .HasColumnType("text");
+
                     b.Property<int>("AttemptNumber")
                         .HasColumnType("integer");
 
                     b.Property<int>("QuizId")
                         .HasColumnType("integer");
-
-                    b.Property<string>("ScoresJson")
-                        .HasColumnType("text");
 
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp with time zone");
@@ -859,9 +862,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int>("TimeSpentSeconds")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("TotalScore")
-                        .HasColumnType("numeric");
-
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
@@ -872,6 +872,56 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("QuizAttempts", (string)null);
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizAttemptResult", b =>
+                {
+                    b.Property<int>("ResultId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ResultId"));
+
+                    b.Property<int>("AttemptId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("FinalizedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsPassed")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal?>("ManualScore")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("MaxScore")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("Percentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ReviewedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Score")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("ScoredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TeacherFeedback")
+                        .HasColumnType("text");
+
+                    b.HasKey("ResultId");
+
+                    b.ToTable("QuizAttemptResults", (string)null);
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizGroup", b =>
@@ -947,6 +997,72 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.HasIndex("QuizId");
 
                     b.ToTable("QuizSections", (string)null);
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizUserAnswer", b =>
+                {
+                    b.Property<int>("QuizUserAnswerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("QuizUserAnswerId"));
+
+                    b.Property<string>("AnswerDataJson")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("AnsweredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool?>("IsCorrect")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("MaxPoints")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("PointsEarned")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("QuestionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("QuizAttemptId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SelectedOptionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("QuizUserAnswerId");
+
+                    b.HasIndex("QuestionId");
+
+                    b.HasIndex("QuizAttemptId");
+
+                    b.HasIndex("SelectedOptionId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("QuizUserAnswers", (string)null);
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizUserAnswerOption", b =>
+                {
+                    b.Property<int>("QuizUserAnswerId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AnswerOptionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SelectedOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("QuizUserAnswerId", "AnswerOptionId");
+
+                    b.HasIndex("AnswerOptionId");
+
+                    b.ToTable("QuizUserAnswerOptions", (string)null);
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.RefreshToken", b =>
@@ -1252,7 +1368,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             Email = "minhxoandev@gmail.com",
                             FirstName = "Admin",
                             LastName = "System",
-                            PasswordHash = "$2a$11$gJwViVxF4axlFYfZ3otCfOZmh3x6K/pq7OIBXP7xEsixfU8xuM9M2",
+                            PasswordHash = "$2a$11$bSP9prsXLW/Yl203BHkmDulABm1tombFo5zhV4MP2eqJgWFf.rr9O",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -1632,6 +1748,59 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("Quiz");
                 });
 
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizUserAnswer", b =>
+                {
+                    b.HasOne("LearningEnglish.Domain.Entities.Question", "Question")
+                        .WithMany("UserAnswers")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearningEnglish.Domain.Entities.QuizAttempt", "QuizAttempt")
+                        .WithMany("Answers")
+                        .HasForeignKey("QuizAttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearningEnglish.Domain.Entities.AnswerOption", "SelectedOption")
+                        .WithMany()
+                        .HasForeignKey("SelectedOptionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("LearningEnglish.Domain.Entities.User", "User")
+                        .WithMany("QuizUserAnswers")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Question");
+
+                    b.Navigation("QuizAttempt");
+
+                    b.Navigation("SelectedOption");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizUserAnswerOption", b =>
+                {
+                    b.HasOne("LearningEnglish.Domain.Entities.AnswerOption", "AnswerOption")
+                        .WithMany("UserAnswerOptions")
+                        .HasForeignKey("AnswerOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearningEnglish.Domain.Entities.QuizUserAnswer", "QuizUserAnswer")
+                        .WithMany("SelectedOptions")
+                        .HasForeignKey("QuizUserAnswerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AnswerOption");
+
+                    b.Navigation("QuizUserAnswer");
+                });
+
             modelBuilder.Entity("LearningEnglish.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("LearningEnglish.Domain.Entities.User", "User")
@@ -1742,6 +1911,11 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.AnswerOption", b =>
+                {
+                    b.Navigation("UserAnswerOptions");
+                });
+
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Assessment", b =>
                 {
                     b.Navigation("EssaySubmissions");
@@ -1800,6 +1974,8 @@ namespace LearningEnglish.Infrastructure.Migrations
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Question", b =>
                 {
                     b.Navigation("Options");
+
+                    b.Navigation("UserAnswers");
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Quiz", b =>
@@ -1807,6 +1983,11 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("Attempts");
 
                     b.Navigation("QuizSections");
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizAttempt", b =>
+                {
+                    b.Navigation("Answers");
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizGroup", b =>
@@ -1817,6 +1998,11 @@ namespace LearningEnglish.Infrastructure.Migrations
             modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizSection", b =>
                 {
                     b.Navigation("QuizGroups");
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizUserAnswer", b =>
+                {
+                    b.Navigation("SelectedOptions");
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.TeacherPackage", b =>
@@ -1847,6 +2033,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("PronunciationAssessments");
 
                     b.Navigation("QuizAttempts");
+
+                    b.Navigation("QuizUserAnswers");
 
                     b.Navigation("RefreshTokens");
 

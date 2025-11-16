@@ -50,12 +50,4 @@ namespace LearningEnglish.Application.DTOs
         public float SumScore { get; set; }
         public int QuestionCount { get; set; }
     }
-
-    public class QuestionDto
-    {
-        public int QuestionId { get; set; }
-        public string StemText { get; set; } = string.Empty;
-        public string? StemHtml { get; set; }
-        public int Points { get; set; }
-    }
 }

@@ -9,25 +9,32 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LearningEnglish.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class AddCurrentTeacherSubscriptionConfig : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "MediaAssets",
+                name: "QuizAttemptResults",
                 columns: table => new
                 {
-                    MediaAssetId = table.Column<int>(type: "integer", nullable: false)
+                    ResultId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    FileName = table.Column<string>(type: "text", nullable: false),
-                    Url = table.Column<string>(type: "text", nullable: false),
-                    ContentType = table.Column<string>(type: "text", nullable: false),
-                    SizeInBytes = table.Column<long>(type: "bigint", nullable: false)
+                    AttemptId = table.Column<int>(type: "integer", nullable: false),
+                    Score = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    MaxScore = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    Percentage = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: false),
+                    IsPassed = table.Column<bool>(type: "boolean", nullable: false),
+                    ScoredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ManualScore = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
+                    ReviewedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    TeacherFeedback = table.Column<string>(type: "text", nullable: true),
+                    ReviewedBy = table.Column<int>(type: "integer", nullable: true),
+                    FinalizedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_MediaAssets", x => x.MediaAssetId);
+                    table.PrimaryKey("PK_QuizAttemptResults", x => x.ResultId);
                 });
 
             migrationBuilder.CreateTable(
@@ -88,8 +95,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                     IsCorrect = table.Column<bool>(type: "boolean", nullable: false),
                     MediaUrl = table.Column<string>(type: "text", nullable: true),
                     MediaType = table.Column<string>(type: "text", nullable: true),
-                    Feedback = table.Column<string>(type: "text", nullable: true),
-                    OrderIndex = table.Column<int>(type: "integer", nullable: false)
+                    Feedback = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -208,6 +214,9 @@ namespace LearningEnglish.Infrastructure.Migrations
                     Name = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
                     QuizSectionId = table.Column<int>(type: "integer", nullable: false),
+                    Title = table.Column<string>(type: "text", nullable: false),
+                    ImgUrl = table.Column<string>(type: "text", nullable: true),
+                    VideoUrl = table.Column<string>(type: "text", nullable: true),
                     SumScore = table.Column<float>(type: "real", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -259,30 +268,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                         principalTable: "QuizSections",
                         principalColumn: "QuizSectionId",
                         onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "QuizGroupMediaAssets",
-                columns: table => new
-                {
-                    MediaAssetId = table.Column<int>(type: "integer", nullable: false),
-                    QuizGroupId = table.Column<int>(type: "integer", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_QuizGroupMediaAssets", x => new { x.MediaAssetId, x.QuizGroupId });
-                    table.ForeignKey(
-                        name: "FK_QuizGroupMediaAssets_MediaAssets_MediaAssetId",
-                        column: x => x.MediaAssetId,
-                        principalTable: "MediaAssets",
-                        principalColumn: "MediaAssetId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_QuizGroupMediaAssets_QuizGroups_QuizGroupId",
-                        column: x => x.QuizGroupId,
-                        principalTable: "QuizGroups",
-                        principalColumn: "QuizGroupId",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -630,16 +615,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     SubmittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    Score = table.Column<decimal>(type: "numeric", nullable: false),
-                    MaxScore = table.Column<decimal>(type: "numeric", nullable: false),
-                    Percentage = table.Column<decimal>(type: "numeric", nullable: false),
-                    IsPassed = table.Column<bool>(type: "boolean", nullable: false),
                     TimeSpentSeconds = table.Column<int>(type: "integer", nullable: false),
-                    ShuffleSeedJson = table.Column<string>(type: "text", nullable: true),
-                    AnswersSnapshot = table.Column<string>(type: "text", nullable: true),
-                    ReviewedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    TeacherFeedback = table.Column<string>(type: "text", nullable: true),
-                    ReviewedBy = table.Column<int>(type: "integer", nullable: true)
+                    AnswersSnapshot = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -819,17 +796,17 @@ namespace LearningEnglish.Infrastructure.Migrations
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    CurrentTeacherSubscriptionId = table.Column<int>(type: "integer", nullable: true),
-                    CurrentTeacherSubscriptionTeacherSubscriptionId = table.Column<int>(type: "integer", nullable: true)
+                    CurrentTeacherSubscriptionId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.UserId);
                     table.ForeignKey(
-                        name: "FK_Users_TeacherSubscriptions_CurrentTeacherSubscriptionTeache~",
-                        column: x => x.CurrentTeacherSubscriptionTeacherSubscriptionId,
+                        name: "FK_Users_TeacherSubscriptions_CurrentTeacherSubscriptionId",
+                        column: x => x.CurrentTeacherSubscriptionId,
                         principalTable: "TeacherSubscriptions",
-                        principalColumn: "TeacherSubscriptionId");
+                        principalColumn: "TeacherSubscriptionId",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -902,8 +879,8 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             migrationBuilder.InsertData(
                 table: "Users",
-                columns: new[] { "UserId", "CreatedAt", "CurrentTeacherSubscriptionId", "CurrentTeacherSubscriptionTeacherSubscriptionId", "Email", "FirstName", "LastName", "PasswordHash", "PhoneNumber", "Status", "UpdatedAt" },
-                values: new object[] { 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, null, "minhxoandev@gmail.com", "Admin", "System", "$2a$11$ZP/HBJSsNaaNg5SjLF82AOceTB0jEP66XzcteOkzE2eWSEVUiL1Be", "0257554479", 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) });
+                columns: new[] { "UserId", "CreatedAt", "CurrentTeacherSubscriptionId", "Email", "FirstName", "LastName", "PasswordHash", "PhoneNumber", "Status", "UpdatedAt" },
+                values: new object[] { 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "minhxoandev@gmail.com", "Admin", "System", "$2a$11$AtRcrt2q0pTC8LtenmbwC.PaSuXLJYdhPTSyaqAPDQY.bcyeVN/vm", "0257554479", 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) });
 
             migrationBuilder.InsertData(
                 table: "UserRoles",
@@ -1061,19 +1038,9 @@ namespace LearningEnglish.Infrastructure.Migrations
                 column: "QuizId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_QuizAttempts_ReviewedBy",
-                table: "QuizAttempts",
-                column: "ReviewedBy");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_QuizAttempts_UserId",
                 table: "QuizAttempts",
                 column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_QuizGroupMediaAssets_QuizGroupId",
-                table: "QuizGroupMediaAssets",
-                column: "QuizGroupId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_QuizGroups_QuizSectionId",
@@ -1173,9 +1140,9 @@ namespace LearningEnglish.Infrastructure.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Users_CurrentTeacherSubscriptionTeacherSubscriptionId",
+                name: "IX_Users_CurrentTeacherSubscriptionId",
                 table: "Users",
-                column: "CurrentTeacherSubscriptionTeacherSubscriptionId");
+                column: "CurrentTeacherSubscriptionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
@@ -1288,14 +1255,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_QuizAttempts_Users_ReviewedBy",
-                table: "QuizAttempts",
-                column: "ReviewedBy",
-                principalTable: "Users",
-                principalColumn: "UserId",
-                onDelete: ReferentialAction.SetNull);
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_QuizAttempts_Users_UserId",
                 table: "QuizAttempts",
                 column: "UserId",
@@ -1391,7 +1350,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                 name: "PronunciationAssessments");
 
             migrationBuilder.DropTable(
-                name: "QuizGroupMediaAssets");
+                name: "QuizAttemptResults");
 
             migrationBuilder.DropTable(
                 name: "QuizUserAnswerOptions");
@@ -1416,9 +1375,6 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "FlashCards");
-
-            migrationBuilder.DropTable(
-                name: "MediaAssets");
 
             migrationBuilder.DropTable(
                 name: "QuizUserAnswers");

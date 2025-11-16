@@ -18,7 +18,7 @@ namespace LearningEnglish.API.Controller.User
 
         // Lấy thông tin đầy đủ của Quiz theo ID (dành cho học sinh)
         [HttpGet("Quizz/{AssessmentId}")]
-        public async Task<IActionResult> GetFullQuiz(int assessmentId)
+        public async Task<IActionResult> GetQuizInformation(int assessmentId)
         {
             var result = await _quizService.GetQuizzesByAssessmentIdAsync(assessmentId);
 
@@ -30,6 +30,7 @@ namespace LearningEnglish.API.Controller.User
 
             return NotFound(result);
         }
+
         [HttpGet("quiz/{quizId}")]
         public async Task<IActionResult> GetQuizById(int quizId)
         {
@@ -42,6 +43,6 @@ namespace LearningEnglish.API.Controller.User
 
             return NotFound(result);
         }
-        
+
     }
 }

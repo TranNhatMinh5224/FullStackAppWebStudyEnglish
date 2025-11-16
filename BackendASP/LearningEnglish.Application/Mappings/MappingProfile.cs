@@ -236,20 +236,18 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.QuestionId, opt => opt.Ignore());
 
             // QuizAttempt mappings
-            CreateMap<QuizAttempt, QuizAttemptDto>()
-                .ForMember(dest => dest.Answers, opt => opt.MapFrom(src => src.Answers));
+            CreateMap<QuizAttempt, QuizAttemptDto>();
 
-            CreateMap<QuizAttempt, QuizAttemptResultDto>()
-                .ForMember(dest => dest.Answers, opt => opt.MapFrom(src => src.Answers));
+            CreateMap<QuizAttempt, QuizAttemptResultDto>();
 
-            // QuizUserAnswer to AttemptAnswerDto
-            CreateMap<QuizUserAnswer, AttemptAnswerDto>()
-                .ForMember(dest => dest.SelectedOptionIds, opt => opt.MapFrom(src => 
-                    src.SelectedOptionId.HasValue 
-                        ? new List<int> { src.SelectedOptionId.Value }
-                        : src.SelectedOptions.Select(so => so.AnswerOptionId).ToList()))
-                .ForMember(dest => dest.AnswerText, opt => opt.MapFrom(src => src.AnswerDataJson))
-                .ForMember(dest => dest.PointsAwarded, opt => opt.MapFrom(src => (decimal?)src.PointsEarned));
+            // QuizUserAnswer to AttemptAnswerDto - Bỏ vì không lưu answers
+            // CreateMap<QuizUserAnswer, AttemptAnswerDto>()
+            //     .ForMember(dest => dest.SelectedOptionIds, opt => opt.MapFrom(src => 
+            //         src.SelectedOptionId.HasValue 
+            //             ? new List<int> { src.SelectedOptionId.Value }
+            //         : src.SelectedOptions.Select(so => so.AnswerOptionId).ToList()))
+            //     .ForMember(dest => dest.AnswerText, opt => opt.MapFrom(src => src.AnswerDataJson))
+            //     .ForMember(dest => dest.PointsAwarded, opt => opt.MapFrom(src => (decimal?)src.PointsEarned));
 
         }
            

@@ -32,10 +32,6 @@ namespace LearningEnglish.Application.Validators
                 .LessThanOrEqualTo(1000)
                 .WithMessage("Điểm số không được vượt quá 1000.");
 
-            RuleFor(x => x.Scoring)
-                .IsInEnum()
-                .WithMessage("Chiến lược chấm điểm không hợp lệ.");
-
             RuleFor(x => x.Options)
                 .NotEmpty()
                 .WithMessage("Phải có ít nhất 1 đáp án.")

@@ -1,4 +1,3 @@
-
 using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Domain.Entities
@@ -15,10 +14,6 @@ namespace LearningEnglish.Domain.Entities
         public int QuizSectionId { get; set; } // Thuộc về QuizSection nào
 
         public decimal Points { get; set; } = 10m; // Điểm câu hỏi
-        public ScoringStrategy Scoring { get; set; } = ScoringStrategy.AllOrNothing; // Chiến lược chấm điểm
-
-
-
         public string? CorrectAnswersJson { get; set; } // Đáp án đúng (cho câu nhiều đáp án, ghép đôi, sắp xếp) 
 
         public string? Explanation { get; set; } // Giải thích đáp án
@@ -37,6 +32,5 @@ namespace LearningEnglish.Domain.Entities
         public QuizSection? QuizSection { get; set; }
         public QuizGroup? QuizGroup { get; set; }
         public List<AnswerOption> Options { get; set; } = new();
-        public List<QuizUserAnswer> UserAnswers { get; set; } = new();
     }
 }

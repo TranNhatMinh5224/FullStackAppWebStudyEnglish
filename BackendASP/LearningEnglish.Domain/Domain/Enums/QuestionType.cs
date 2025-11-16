@@ -8,7 +8,6 @@ namespace LearningEnglish.Domain.Enums
         FillBlank = 3, // điền vào chỗ trống
         Matching = 4, // nối từ/cụm từ
         Ordering = 5, // sắp xếp thứ tự
-        ShortAnswer = 6, // câu trả lời ngắn
-        ImageChoice = 7 // chọn hình ảnh
+      
     }
 }

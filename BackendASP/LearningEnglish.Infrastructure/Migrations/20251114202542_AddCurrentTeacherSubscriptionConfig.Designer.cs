@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LearningEnglish.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251112022201_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251114202542_AddCurrentTeacherSubscriptionConfig")]
+    partial class AddCurrentTeacherSubscriptionConfig
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -69,9 +69,6 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<string>("MediaUrl")
                         .HasColumnType("text");
-
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("integer");
 
                     b.Property<int>("QuestionId")
                         .HasColumnType("integer");
@@ -515,34 +512,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.ToTable("LessonCompletions", (string)null);
                 });
 
-            modelBuilder.Entity("LearningEnglish.Domain.Entities.MediaAsset", b =>
-                {
-                    b.Property<int>("MediaAssetId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MediaAssetId"));
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("SizeInBytes")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("MediaAssetId");
-
-                    b.ToTable("MediaAssets", (string)null);
-                });
-
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Module", b =>
                 {
                     b.Property<int>("ModuleId")
@@ -881,29 +850,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int>("AttemptNumber")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("IsPassed")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal>("MaxScore")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("Percentage")
-                        .HasColumnType("numeric");
-
                     b.Property<int>("QuizId")
                         .HasColumnType("integer");
-
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("ReviewedBy")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Score")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("ShuffleSeedJson")
-                        .HasColumnType("text");
 
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp with time zone");
@@ -913,9 +861,6 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("TeacherFeedback")
-                        .HasColumnType("text");
 
                     b.Property<int>("TimeSpentSeconds")
                         .HasColumnType("integer");
@@ -927,11 +872,59 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.HasIndex("QuizId");
 
-                    b.HasIndex("ReviewedBy");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("QuizAttempts", (string)null);
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizAttemptResult", b =>
+                {
+                    b.Property<int>("ResultId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ResultId"));
+
+                    b.Property<int>("AttemptId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("FinalizedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsPassed")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal?>("ManualScore")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("MaxScore")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("Percentage")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ReviewedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Score")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("ScoredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TeacherFeedback")
+                        .HasColumnType("text");
+
+                    b.HasKey("ResultId");
+
+                    b.ToTable("QuizAttemptResults", (string)null);
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.QuizGroup", b =>
@@ -948,6 +941,9 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<string>("ImgUrl")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -958,8 +954,15 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<float>("SumScore")
                         .HasColumnType("real");
 
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("text");
 
                     b.HasKey("QuizGroupId");
 
@@ -1325,9 +1328,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int?>("CurrentTeacherSubscriptionId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("CurrentTeacherSubscriptionTeacherSubscriptionId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -1356,7 +1356,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.HasKey("UserId");
 
-                    b.HasIndex("CurrentTeacherSubscriptionTeacherSubscriptionId");
+                    b.HasIndex("CurrentTeacherSubscriptionId");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -1371,7 +1371,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             Email = "minhxoandev@gmail.com",
                             FirstName = "Admin",
                             LastName = "System",
-                            PasswordHash = "$2a$11$ZP/HBJSsNaaNg5SjLF82AOceTB0jEP66XzcteOkzE2eWSEVUiL1Be",
+                            PasswordHash = "$2a$11$AtRcrt2q0pTC8LtenmbwC.PaSuXLJYdhPTSyaqAPDQY.bcyeVN/vm",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -1408,21 +1408,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("UserCourses", (string)null);
-                });
-
-            modelBuilder.Entity("QuizGroupMediaAssets", b =>
-                {
-                    b.Property<int>("MediaAssetId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("QuizGroupId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("MediaAssetId", "QuizGroupId");
-
-                    b.HasIndex("QuizGroupId");
-
-                    b.ToTable("QuizGroupMediaAssets");
                 });
 
             modelBuilder.Entity("UserRoles", b =>
@@ -1733,11 +1718,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("LearningEnglish.Domain.Entities.User", "Reviewer")
-                        .WithMany("ReviewedQuizAttempts")
-                        .HasForeignKey("ReviewedBy")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("LearningEnglish.Domain.Entities.User", "User")
                         .WithMany("QuizAttempts")
                         .HasForeignKey("UserId")
@@ -1745,8 +1725,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Quiz");
-
-                    b.Navigation("Reviewer");
 
                     b.Navigation("User");
                 });
@@ -1889,7 +1867,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                 {
                     b.HasOne("LearningEnglish.Domain.Entities.TeacherSubscription", "CurrentTeacherSubscription")
                         .WithMany()
-                        .HasForeignKey("CurrentTeacherSubscriptionTeacherSubscriptionId");
+                        .HasForeignKey("CurrentTeacherSubscriptionId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("CurrentTeacherSubscription");
                 });
@@ -1918,21 +1897,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("Payment");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("QuizGroupMediaAssets", b =>
-                {
-                    b.HasOne("LearningEnglish.Domain.Entities.MediaAsset", null)
-                        .WithMany()
-                        .HasForeignKey("MediaAssetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LearningEnglish.Domain.Entities.QuizGroup", null)
-                        .WithMany()
-                        .HasForeignKey("QuizGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("UserRoles", b =>
@@ -2076,8 +2040,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("QuizUserAnswers");
 
                     b.Navigation("RefreshTokens");
-
-                    b.Navigation("ReviewedQuizAttempts");
 
                     b.Navigation("Streaks");
 

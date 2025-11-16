@@ -20,10 +20,8 @@ namespace LearningEnglish.Domain.Entities
        
 
         // Han thoi gian lam bai thi
-
-
-        public DateTime? StartTime { get; set; } // Thoi gian bat dau
-        public DateTime? EndTime { get; set; } // Thoi gian ket thuc
+        public int? Duration { get; set; } // Thoi gian lam bai (phut)
+        public DateTime? AvailableFrom { get; set; } // Thoi gian bat dau co the lam bai
         
 
         // Hien thi cau tra loi sau khi nop bai
@@ -39,7 +37,7 @@ namespace LearningEnglish.Domain.Entities
         // Practice settings (for vocab exercises, grammar practice)
         public bool? AllowUnlimitedAttempts { get; set; } = false; // Cho phép làm lại không giới hạn
         public int? MaxAttempts { get; set; } // Số lần làm tối đa
-        public bool? ShowCorrectAnswersDuringAttempt { get; set; } = false; // Hiện đáp án ngay khi làm (cho practice)
+       
 
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

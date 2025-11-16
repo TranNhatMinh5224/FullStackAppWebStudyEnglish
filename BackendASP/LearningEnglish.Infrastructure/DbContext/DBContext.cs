@@ -24,13 +24,6 @@ namespace LearningEnglish.Infrastructure.Data
         public DbSet<Question> Questions => Set<Question>();
         public DbSet<AnswerOption> AnswerOptions => Set<AnswerOption>();
         public DbSet<QuizAttempt> QuizAttempts => Set<QuizAttempt>();
-        public DbSet<QuizAttemptResult> QuizAttemptResults => Set<QuizAttemptResult>();
-        public DbSet<QuizUserAnswer> QuizUserAnswers => Set<QuizUserAnswer>();
-        public DbSet<QuizUserAnswerOption> QuizUserAnswerOptions => Set<QuizUserAnswerOption>();
-        public DbSet<EssaySubmission> EssaySubmissions => Set<EssaySubmission>();
-        public DbSet<UserCourse> UserCourses => Set<UserCourse>();
-        public DbSet<TeacherPackage> TeacherPackages => Set<TeacherPackage>();
-        public DbSet<TeacherSubscription> TeacherSubscriptions => Set<TeacherSubscription>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
         public DbSet<Payment> Payments => Set<Payment>();
@@ -42,6 +35,10 @@ namespace LearningEnglish.Infrastructure.Data
         public DbSet<Streak> Streaks => Set<Streak>();
         public DbSet<StudyReminder> StudyReminders => Set<StudyReminder>();
         public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
+        public DbSet<EssaySubmission> EssaySubmissions => Set<EssaySubmission>();
+        public DbSet<UserCourse> UserCourses => Set<UserCourse>();
+        public DbSet<TeacherPackage> TeacherPackages => Set<TeacherPackage>();
+        public DbSet<TeacherSubscription> TeacherSubscriptions => Set<TeacherSubscription>();
 
 
 
@@ -55,8 +52,11 @@ namespace LearningEnglish.Infrastructure.Data
                 e.ToTable("Users");
                 e.HasIndex(u => u.Email).IsUnique();
 
-                // CurrentTeacherSubscription configuration removed
-                // since CurrentTeacherSubscription property is not in User entity
+                e.HasOne(u => u.CurrentTeacherSubscription)
+                 .WithMany()
+                 .HasForeignKey(u => u.CurrentTeacherSubscriptionId)
+                 .IsRequired(false)
+                 .OnDelete(DeleteBehavior.SetNull);
             });
 
             // ===== Role =====
@@ -195,12 +195,12 @@ namespace LearningEnglish.Infrastructure.Data
                  .WithMany()
                  .HasForeignKey(q => q.QuizSectionId)
                  .IsRequired(false)
-                 .OnDelete(DeleteBehavior.SetNull);
+                 .OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(q => q.QuizGroup)
                  .WithMany(qg => qg.Questions)
                  .HasForeignKey(q => q.QuizGroupId)
                  .IsRequired(false)
-                 .OnDelete(DeleteBehavior.SetNull);
+                 .OnDelete(DeleteBehavior.Cascade);
             });
 
             // AnswerOption
@@ -263,8 +263,8 @@ namespace LearningEnglish.Infrastructure.Data
             // QuizAttempt
             modelBuilder.Entity<QuizAttempt>(e =>
             {
-                e.HasKey(qa => qa.AttemptId);
                 e.ToTable("QuizAttempts");
+                e.HasKey(qa => qa.AttemptId);
                 e.HasOne(qa => qa.Quiz)
                  .WithMany(q => q.Attempts)
                  .HasForeignKey(qa => qa.QuizId)
@@ -275,57 +275,25 @@ namespace LearningEnglish.Infrastructure.Data
                  .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // QuizAttemptResult
-            modelBuilder.Entity<QuizAttemptResult>(e =>
-            {
-                e.HasKey(qar => qar.ResultId);
-                e.ToTable("QuizAttemptResults");
-                e.Property(qar => qar.Score).HasPrecision(18, 2);
-                e.Property(qar => qar.MaxScore).HasPrecision(18, 2);
-                e.Property(qar => qar.Percentage).HasPrecision(5, 2);
-                e.Property(qar => qar.ManualScore).HasPrecision(18, 2);
-                
-                // Không config navigation - để entities độc lập
-                // Chỉ có FK AttemptId, ReviewedBy
-            });
+            // QuizUserAnswer - Bỏ vì không lưu answers
+            // modelBuilder.Entity<QuizUserAnswer>(e =>
+            // {
+            //     e.ToTable("QuizUserAnswers");
+            //     e.HasOne(qua => qua.QuizAttempt)
+            //      .WithMany(qa => qa.Answers)
+            //      .HasForeignKey(qua => qua.QuizAttemptId)
+            //      .OnDelete(DeleteBehavior.Cascade);
+            //     e.HasOne(qua => qua.User)
+            //      .WithMany(u => u.QuizUserAnswers)
+            //      .HasForeignKey(qua => qua.UserId)
+            //      .OnDelete(DeleteBehavior.Cascade);
+            //     e.HasOne(qua => qua.Question)
+            //      .WithMany(q => q.UserAnswers)
+            //      .HasForeignKey(qua => qua.QuestionId)
+            //      .OnDelete(DeleteBehavior.Cascade);
+            // });
 
-            // QuizUserAnswer
-            modelBuilder.Entity<QuizUserAnswer>(e =>
-            {
-                e.ToTable("QuizUserAnswers");
-                e.HasOne(qua => qua.QuizAttempt)
-                 .WithMany(qa => qa.Answers)
-                 .HasForeignKey(qua => qua.QuizAttemptId)
-                 .OnDelete(DeleteBehavior.Cascade);
-                e.HasOne(qua => qua.User)
-                 .WithMany(u => u.QuizUserAnswers)
-                 .HasForeignKey(qua => qua.UserId)
-                 .OnDelete(DeleteBehavior.Cascade);
-                e.HasOne(qua => qua.Question)
-                 .WithMany(q => q.UserAnswers)
-                 .HasForeignKey(qua => qua.QuestionId)
-                 .OnDelete(DeleteBehavior.Cascade);
-                e.HasOne(qua => qua.SelectedOption)
-                 .WithMany() 
-                 .HasForeignKey(qua => qua.SelectedOptionId)
-                 .IsRequired(false)
-                 .OnDelete(DeleteBehavior.SetNull);
-            });
 
-            // QuizUserAnswerOption
-            modelBuilder.Entity<QuizUserAnswerOption>(e =>
-            {
-                e.ToTable("QuizUserAnswerOptions");
-                e.HasKey(quao => new { quao.QuizUserAnswerId, quao.AnswerOptionId });
-                e.HasOne(quao => quao.QuizUserAnswer)
-                 .WithMany(qua => qua.SelectedOptions)
-                 .HasForeignKey(quao => quao.QuizUserAnswerId)
-                 .OnDelete(DeleteBehavior.Cascade);
-                e.HasOne(quao => quao.AnswerOption)
-                 .WithMany(ao => ao.UserAnswerOptions)
-                 .HasForeignKey(quao => quao.AnswerOptionId)
-                 .OnDelete(DeleteBehavior.Cascade);
-            });
 
             // EssaySubmission
             modelBuilder.Entity<EssaySubmission>(e =>

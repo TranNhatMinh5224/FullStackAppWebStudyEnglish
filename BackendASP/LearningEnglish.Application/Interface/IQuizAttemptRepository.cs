@@ -4,10 +4,18 @@ namespace LearningEnglish.Application.Interface
 {
     public interface IQuizAttemptRepository
     {
-        Task<QuizAttempt?> GetAttemptByIdAsync(int attemptId);
-        Task<QuizAttempt> CreateAttemptAsync(QuizAttempt attempt);
-        Task UpdateAttemptAsync(QuizAttempt attempt);
-        Task<bool> UserHasActiveAttemptAsync(int quizId, int userId);
-        Task<QuizAttempt?> GetLatestAttemptAsync(int quizId, int userId); // Lấy attempt mới nhất để check AttemptNumber
+
+        Task AddQuizAttemptAsync(QuizAttempt attempt); //  Thêm phương thức để thêm một QuizAttempt mới
+        Task<QuizAttempt?> GetByIdAsync(int attemptId); // Phương thức để lấy QuizAttempt theo ID
+        Task UpdateQuizAttemptAsync(QuizAttempt attempt); // Phương thức để cập nhật QuizAttempt
+        Task DeleteQuizAttemptAsync(int attemptId); // Phương thức để xóa QuizAttempt
+         // Lấy tất cả attempts của user cho một quiz
+        Task<List<QuizAttempt>> GetByUserAndQuizAsync(int userId, int quizId);
+
+        // Lấy attempts đang InProgress của user
+        Task<QuizAttempt?> GetActiveAttemptAsync(int userId, int quizId);
+
+        Task SaveChangesAsync(); // Phương thức để lưu các thay đổi vào cơ sở dữ liệu
+
     }
 }

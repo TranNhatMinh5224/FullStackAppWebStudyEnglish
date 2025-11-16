@@ -9,12 +9,15 @@ namespace LearningEnglish.Application.Service
     public class QuizService : IQuizService
     {
         private readonly IQuizRepository _quizRepository;
+        private readonly IAssessmentRepository _assessmentRepository;
         private readonly IMapper _mapper;
-        public QuizService(IQuizRepository quizRepository, IMapper mapper)
+        public QuizService(IQuizRepository quizRepository, IAssessmentRepository assessmentRepository, IMapper mapper)
         {
             _quizRepository = quizRepository;
+            _assessmentRepository = assessmentRepository;
             _mapper = mapper;
         }
+        // Get quiz by id
         public async Task<ServiceResponse<QuizDto>> GetQuizByIdAsync(int quizId)
         {
             var response = new ServiceResponse<QuizDto>();
@@ -49,6 +52,7 @@ namespace LearningEnglish.Application.Service
 
 
         }
+        // Get quizzes by assessment id 
         public async Task<ServiceResponse<List<QuizDto>>> GetQuizzesByAssessmentIdAsync(int assessmentId)
         {
             var response = new ServiceResponse<List<QuizDto>>();
@@ -68,11 +72,22 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Create new quiz
         public async Task<ServiceResponse<QuizDto>> CreateQuizAsync(QuizCreateDto quizDto)
         {
             var response = new ServiceResponse<QuizDto>();
             try
             {
+                // Validation: Check if Assessment exists
+                var assessment = await _assessmentRepository.GetAssessmentById(quizDto.AssessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.Message = "Assessment not found";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
                 var quiz = _mapper.Map<Quiz>(quizDto);
                 await _quizRepository.AddQuizAsync(quiz);
                 response.Data = _mapper.Map<QuizDto>(quiz);
@@ -88,6 +103,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Update quiz
         public async Task<ServiceResponse<QuizDto>> UpdateQuizAsync(int quizId, QuizUpdateDto quizDto)
         {
             var response = new ServiceResponse<QuizDto>();
@@ -118,6 +134,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Delete quiz
         public async Task<ServiceResponse<bool>> DeleteQuizAsync(int quizId)
         {
             var response = new ServiceResponse<bool>();

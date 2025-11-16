@@ -5,7 +5,7 @@ namespace LearningEnglish.Domain.Entities
         public int AnswerOptionId { get; set; }
         public int QuestionId { get; set; }
 
-        public string Text { get; set; } = string.Empty; // có thể để trống nếu đáp án là ảnh
+        public string? Text { get; set; } // có thể để trống nếu đáp án là ảnh
         public bool IsCorrect { get; set; }
 
         // Hỗ trợ ImageChoice hoặc đáp án có media
@@ -13,9 +13,8 @@ namespace LearningEnglish.Domain.Entities
         public string? MediaType { get; set; } // "image/png", "audio/mpeg", ...
 
         public string? Feedback { get; set; }   // phản hồi theo option
-      
+
         // Navigation
         public Question? Question { get; set; }
-        public List<QuizUserAnswerOption> UserAnswerOptions { get; set; } = new();
     }
 }

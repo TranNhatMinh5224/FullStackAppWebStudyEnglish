@@ -2,29 +2,24 @@ using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Domain.Entities
 {
-    // QuizAttempt - Lưu trữ thông tin về lần làm bài quiz của học viên
     public class QuizAttempt
     {
         public int AttemptId { get; set; }
         public int QuizId { get; set; }
         public int UserId { get; set; }
-
         public int AttemptNumber { get; set; } // Lần làm bài thứ mấy
 
-        public DateTime StartedAt { get; set; } = DateTime.UtcNow; // Thời gian bắt đầu làm bài 
-        public DateTime? SubmittedAt { get; set; } // Thời gian nộp bài 
-        public QuizAttemptStatus Status { get; set; } = QuizAttemptStatus.InProgress; // Trạng thái bài làm
+        public DateTime StartedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? SubmittedAt { get; set; }
+        public QuizAttemptStatus Status { get; set; } = QuizAttemptStatus.InProgress;
 
-        public int TimeSpentSeconds { get; set; } // Tổng thời gian làm bài 
+        public int TimeSpentSeconds { get; set; } // Thời gian làm bài
+        public decimal TotalScore { get; set; } = 0; // Điểm tổng, update real-time
 
-       
+        // JSON lưu điểm từng câu (ví dụ: {"1": 5, "2": 0}) để sum nhanh
+        public string? ScoresJson { get; set; }
 
-      
-        public string? AnswersSnapshot { get; set; } // Lưu trữ toàn bộ câu trả lời dạng JSON
-
-        // Navigation
-        public Quiz Quiz { get; set; } = null!; // Thuộc về Quiz nào
-        public User User { get; set; } = null!; // Học viên làm bài
-        public List<QuizUserAnswer> Answers { get; set; } = new(); // Câu trả lời chi tiết
+        public Quiz Quiz { get; set; } = null!;
+        public User User { get; set; } = null!;
     }
 }

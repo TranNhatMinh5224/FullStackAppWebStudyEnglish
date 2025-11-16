@@ -42,12 +42,9 @@ public class User
     public List<ModuleCompletion> ModuleCompletions { get; set; } = new();
     public List<FlashCardReview> FlashCardReviews { get; set; } = new();
     public List<QuizAttempt> QuizAttempts { get; set; } = new();
-    public List<QuizUserAnswer> QuizUserAnswers { get; set; } = new();
     public List<EssaySubmission> EssaySubmissions { get; set; } = new();
     public List<PronunciationAssessment> PronunciationAssessments { get; set; } = new();
 
-    // Navigation for reviewed items (as teacher/reviewer)
-    public List<QuizAttempt> ReviewedQuizAttempts { get; set; } = new();
 
     public void SetPassword(string password) =>
         PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
