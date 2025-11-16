@@ -15,6 +15,12 @@ namespace LearningEnglish.Application.Interface
         // Lấy attempts đang InProgress của user
         Task<QuizAttempt?> GetActiveAttemptAsync(int userId, int quizId);
 
+        // Lấy tất cả attempts đang InProgress (cho auto-submit)
+        Task<List<QuizAttempt>> GetInProgressAttemptsAsync();
+
+        // Lấy tất cả attempts của một quiz (cho admin/teacher)
+        Task<List<QuizAttempt>> GetByQuizIdAsync(int quizId);
+
         Task SaveChangesAsync(); // Phương thức để lưu các thay đổi vào cơ sở dữ liệu
 
     }

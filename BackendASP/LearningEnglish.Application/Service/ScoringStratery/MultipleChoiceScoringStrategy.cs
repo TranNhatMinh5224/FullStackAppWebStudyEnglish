@@ -11,8 +11,10 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
         // get {
         //     return QuestionType.MultipleChoice;
         // }
-        public decimal CalculateScore(Question question, object userAnswer)
+        public decimal CalculateScore(Question question, object? userAnswer)
         {
+            if (userAnswer == null) return 0m;
+
             int selectedOptionId = (int)userAnswer; 
             var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
             if (correctOption != null && correctOption.AnswerOptionId == selectedOptionId)

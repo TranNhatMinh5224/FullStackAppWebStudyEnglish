@@ -8,7 +8,7 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
     {
         public QuestionType Type => QuestionType.MultipleAnswers;
 
-        public decimal CalculateScore(Question question, object userAnswer)
+        public decimal CalculateScore(Question question, object? userAnswer)
 
         {
             if (userAnswer == null)

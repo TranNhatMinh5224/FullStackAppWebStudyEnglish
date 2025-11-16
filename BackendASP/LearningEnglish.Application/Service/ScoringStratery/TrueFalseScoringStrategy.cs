@@ -8,8 +8,10 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
     {
         public QuestionType Type => QuestionType.TrueFalse;
 
-        public decimal CalculateScore(Question question, object userAnswer)
+        public decimal CalculateScore(Question question, object? userAnswer)
         {
+            if (userAnswer == null) return 0m;
+
             // User answer có thể là int (optionId) hoặc bool
             int? selectedOptionId = null;
             if (userAnswer is int id)

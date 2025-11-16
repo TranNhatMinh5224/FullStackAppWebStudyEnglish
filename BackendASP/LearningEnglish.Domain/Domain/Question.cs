@@ -10,8 +10,8 @@ namespace LearningEnglish.Domain.Entities
         public string StemText { get; set; } = string.Empty; // Câu hỏi dạng text thuần
         public string? StemHtml { get; set; } // Câu hỏi dạng  text/HTML
 
-        public int QuizGroupId { get; set; } // Thuộc về QuizGroup nào
-        public int QuizSectionId { get; set; } // Thuộc về QuizSection nào
+        public int? QuizGroupId { get; set; } // Thuộc về QuizGroup nào
+        public int? QuizSectionId { get; set; } // Thuộc về QuizSection nào
 
         public decimal Points { get; set; } = 10m; // Điểm câu hỏi
         public string? CorrectAnswersJson { get; set; } // Đáp án đúng (cho câu nhiều đáp án, ghép đôi, sắp xếp) 

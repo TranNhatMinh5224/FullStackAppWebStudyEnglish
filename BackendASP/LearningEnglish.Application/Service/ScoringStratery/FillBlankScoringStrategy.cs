@@ -10,10 +10,10 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
     {
         public QuestionType Type => QuestionType.FillBlank;
 
-        public decimal CalculateScore(Question question, object userAnswer)
+        public decimal CalculateScore(Question question, object? userAnswer)
         {
             // Chuẩn hóa câu trả lời của học sinh
-            string userAnswerStr = Convert.ToString(userAnswer ?? string.Empty)
+            string userAnswerStr = (userAnswer != null ? Convert.ToString(userAnswer) : string.Empty)
                                         .Trim()
                                         .ToLower();
 
@@ -22,7 +22,7 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
 
             foreach (var correctAnswer in correctAnswersList)
             {
-                if (userAnswerStr == (correctAnswer ?? string.Empty).Trim().ToLower())
+                if (userAnswerStr == (correctAnswer?.Trim() ?? string.Empty).ToLower())
                 {
                     return question.Points;
                 }

@@ -62,6 +62,7 @@ namespace LearningEnglish.Application.DTOs
         public int SectionId { get; set; }
         public string Title { get; set; } = string.Empty;  // Tên section (Listening, Reading)
         public List<AttemptQuizGroupDto> QuizGroups { get; set; } = new();
+        public List<QuestionDto> Questions { get; set; } = new();  // Questions không thuộc group
     }
 
     // DTO cho group trong section (dùng cho attempt)
@@ -79,7 +80,9 @@ namespace LearningEnglish.Application.DTOs
         public string QuestionText { get; set; } = string.Empty;
         public QuestionType Type { get; set; }
         public decimal Points { get; set; }
-        public List<AnswerOptionDto> Options { get; set; } = new();  
+        public bool IsAnswered { get; set; } = false;  // Đánh dấu đã trả lời
+        public decimal? CurrentScore { get; set; }     // Điểm hiện tại (nếu đã trả lời)
+        public List<AnswerOptionDto> Options { get; set; } = new();
     }
 
     // DTO cho đáp án (không include IsCorrect)
@@ -94,5 +97,13 @@ namespace LearningEnglish.Application.DTOs
     {
         public int QuestionId { get; set; }
         public object? UserAnswer { get; set; }  // Câu trả lời (List<int> cho MCQ, string cho Essay)
+    }
+    public class ResultQuizDto
+    {
+        bool IsPassed { get; set; }
+        int? TotalScore { get; set; }
+        int? TotalCorrectAnswers { get; set; }
+        int? TotalQuestions { get; set; }
+        decimal Percentage { get; set; }
     }
 }

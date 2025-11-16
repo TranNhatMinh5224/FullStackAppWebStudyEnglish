@@ -90,6 +90,15 @@ namespace LearningEnglish.Application.Service
 
                 var quiz = _mapper.Map<Quiz>(quizDto);
                 await _quizRepository.AddQuizAsync(quiz);
+
+                // Tính toán TotalPossibleScore sau khi tạo quiz
+                var fullQuiz = await _quizRepository.GetFullQuizAsync(quiz.QuizId);
+                if (fullQuiz != null)
+                {
+                    quiz.TotalPossibleScore = CalculateTotalPossibleScore(fullQuiz);
+                    await _quizRepository.UpdateQuizAsync(quiz);
+                }
+
                 response.Data = _mapper.Map<QuizDto>(quiz);
                 response.StatusCode = 201;
                 return response;
@@ -121,6 +130,15 @@ namespace LearningEnglish.Application.Service
 
                 _mapper.Map(quizDto, existingQuiz);
                 await _quizRepository.UpdateQuizAsync(existingQuiz);
+
+                // Tính toán lại TotalPossibleScore sau khi update
+                var fullQuiz = await _quizRepository.GetFullQuizAsync(existingQuiz.QuizId);
+                if (fullQuiz != null)
+                {
+                    existingQuiz.TotalPossibleScore = CalculateTotalPossibleScore(fullQuiz);
+                    await _quizRepository.UpdateQuizAsync(existingQuiz);
+                }
+
                 response.Data = _mapper.Map<QuizDto>(existingQuiz);
                 response.StatusCode = 200;
                 return response;
@@ -168,5 +186,23 @@ namespace LearningEnglish.Application.Service
         }
 
 
+        private decimal CalculateTotalPossibleScore(Quiz quiz)
+        {
+            decimal maxScore = 0;
+            foreach (var section in quiz.QuizSections)
+            {
+                // Questions trong groups
+                foreach (var group in section.QuizGroups)
+                {
+                    maxScore += group.Questions.Sum(q => q.Points);
+                }
+                // Standalone questions
+                if (section.Questions != null)
+                {
+                    maxScore += section.Questions.Sum(q => q.Points);
+                }
+            }
+            return maxScore;
+        }
     }
 }

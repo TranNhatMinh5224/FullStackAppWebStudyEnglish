@@ -11,18 +11,19 @@ namespace LearningEnglish.Domain.Entities
         public string? Description { get; set; }
         public string? Instructions { get; set; } // Hướng dẫn làm bài
 
-        public QuizType Type { get; set; } = QuizType.Practice; 
+        public QuizType Type { get; set; } = QuizType.Practice;
         public QuizStatus Status { get; set; } = QuizStatus.Open;
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
-        
-        
-       
+        public decimal TotalPossibleScore { get; set; } // Tổng điểm tối đa của bài quiz
+
+
+
 
         // Han thoi gian lam bai thi
         public int? Duration { get; set; } // Thoi gian lam bai (phut)
         public DateTime? AvailableFrom { get; set; } // Thoi gian bat dau co the lam bai
-        
+
 
         // Hien thi cau tra loi sau khi nop bai
         public bool? ShowAnswersAfterSubmit { get; set; } = true; // Hien dap an sau khi nop bai
@@ -35,9 +36,8 @@ namespace LearningEnglish.Domain.Entities
         public bool? ShuffleAnswers { get; set; } = true;
 
         // Practice settings (for vocab exercises, grammar practice)
-        public bool? AllowUnlimitedAttempts { get; set; } = false; // Cho phép làm lại không giới hạn
         public int? MaxAttempts { get; set; } // Số lần làm tối đa
-       
+
 
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

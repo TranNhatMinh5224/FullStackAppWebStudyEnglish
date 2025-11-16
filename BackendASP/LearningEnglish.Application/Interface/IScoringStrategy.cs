@@ -5,6 +5,6 @@ namespace LearningEnglish.Application.Interface.Strategies
     public interface IScoringStrategy
     {
         QuestionType Type { get; }
-        decimal CalculateScore(Question question, object userAnswer);
+        decimal CalculateScore(Question question, object? userAnswer);
     }
 }

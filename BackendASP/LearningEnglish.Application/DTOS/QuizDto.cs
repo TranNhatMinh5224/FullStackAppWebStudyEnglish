@@ -16,6 +16,7 @@ namespace LearningEnglish.Application.DTOs
         public QuizStatus Status { get; set; }
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
+        public decimal TotalPossibleScore { get; set; }
 
 
         // Han thoi gian lam bai thi

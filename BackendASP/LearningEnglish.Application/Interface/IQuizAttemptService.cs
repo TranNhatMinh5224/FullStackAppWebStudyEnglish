@@ -5,10 +5,21 @@ namespace LearningEnglish.Application.Interface
 {
     public interface IQuizAttemptService
     {
-        Task<ServiceResponse<QuizAttemptDto>> StartQuizAttemptAsync(int quizId, int userId);
-        Task<ServiceResponse<decimal>> UpdateScoreAsync(int attemptId, decimal newScore);
+        // chuc nang bat dau lam bai thi quiz
+        Task<ServiceResponse<QuizAttemptWithQuestionsDto>> StartQuizAttemptAsync(int quizId, int userId);
 
-        // chuc nang nop bai thi quiz
+        // cap nhat diem cho cau hoi 
+        Task<ServiceResponse<decimal>> UpdateScoreAsync(int attemptId, UpdateScoreRequestDto request);
+
+        // submit bai thi
         Task<ServiceResponse<QuizAttemptResultDto>> SubmitQuizAttemptAsync(int attemptId);
+
+        // kiem tra va auto-submit neu het thoi gian
+        Task<ServiceResponse<bool>> CheckAndAutoSubmitExpiredAttemptsAsync();
+
+        // Chức năng resume quiz attempt
+        Task<ServiceResponse<QuizAttemptWithQuestionsDto>> ResumeQuizAttemptAsync(int attemptId);
+
+
     }
 }
