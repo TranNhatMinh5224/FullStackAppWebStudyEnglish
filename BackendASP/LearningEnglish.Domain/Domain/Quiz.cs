@@ -16,6 +16,7 @@ namespace LearningEnglish.Domain.Entities
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
         public decimal TotalPossibleScore { get; set; } // Tổng điểm tối đa của bài quiz
+        
 
 
 
