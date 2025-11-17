@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LearningEnglish.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251115074607_RemoveUnusedQuizEntities")]
-    partial class RemoveUnusedQuizEntities
+    [Migration("20251116170120_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -74,7 +74,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Text")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("AnswerOptionId");
@@ -738,9 +737,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int>("QuizSectionId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Scoring")
-                        .HasColumnType("integer");
-
                     b.Property<string>("StemHtml")
                         .HasColumnType("text");
 
@@ -1255,7 +1251,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             Email = "minhxoandev@gmail.com",
                             FirstName = "Admin",
                             LastName = "System",
-                            PasswordHash = "$2a$11$gJwViVxF4axlFYfZ3otCfOZmh3x6K/pq7OIBXP7xEsixfU8xuM9M2",
+                            PasswordHash = "$2a$11$W5GIp6dq1SFRDRew5iB30.jKlS8TXFg6YRCKGhQIGN2WY2R/yqaQm",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
