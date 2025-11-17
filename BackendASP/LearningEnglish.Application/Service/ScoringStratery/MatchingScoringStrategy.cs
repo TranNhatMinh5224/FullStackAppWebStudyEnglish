@@ -10,8 +10,10 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
     {
         public QuestionType Type => QuestionType.Matching;
 
-        public decimal CalculateScore(Question question, object userAnswer)
+        public decimal CalculateScore(Question question, object? userAnswer)
         {
+            if (userAnswer == null) return 0m;
+
             if (userAnswer is Dictionary<int, int> userMatches)
             {
                 var correctMatches = ScoringHelper.ParseCorrectMatches(question.CorrectAnswersJson);

@@ -12,5 +12,6 @@ namespace LearningEnglish.Domain.Entities
         // Navigation Properties
         public Quiz? Quiz { get; set; }
         public List<QuizGroup> QuizGroups { get; set; } = new();
+        public List<Question> Questions { get; set; } = new();  // Questions không thuộc group
     }
 }

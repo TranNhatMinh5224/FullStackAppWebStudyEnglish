@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.Hosting;
 
 using LearningEnglish.Infrastructure.Data;
 using LearningEnglish.Application.Mappings;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Service;
 using LearningEnglish.Application.Service.PaymentProcessors;
+using LearningEnglish.Application.Service.ScoringStrategies;
 using LearningEnglish.Application.Validators;
 using LearningEnglish.Infrastructure.Repositories;
 using LearningEnglish.Infrastructure.Services;
@@ -159,6 +161,8 @@ builder.Services.AddScoped<IQuizSectionService, QuizSectionService>();
 builder.Services.AddScoped<IQuizGroupService, QuizGroupService>();
 builder.Services.AddScoped<IQuizService, QuizService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IQuizAttemptService, QuizAttemptService>();
+builder.Services.AddScoped<IQuizAttemptAdminService, QuizAttemptAdminService>();
 
 // Payment related services
 builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
@@ -171,6 +175,17 @@ builder.Services.AddScoped<TeacherPackagePaymentProcessor>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateLectureDtoValidator>();
+
+// Scoring strategies
+builder.Services.AddScoped<FillBlankScoringStrategy>();
+builder.Services.AddScoped<MultipleChoiceScoringStrategy>();
+builder.Services.AddScoped<TrueFalseScoringStrategy>();
+builder.Services.AddScoped<MultipleAnswersScoringStrategy>();
+builder.Services.AddScoped<MatchingScoringStrategy>();
+builder.Services.AddScoped<OrderingScoringStrategy>();
+
+// Background services
+builder.Services.AddHostedService<QuizAutoSubmitService>();
 
 // Build app
 var app = builder.Build();
