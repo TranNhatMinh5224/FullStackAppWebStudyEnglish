@@ -206,15 +206,15 @@ namespace LearningEnglish.Application.Service
             return sections;
         }
 
-        public async Task<ServiceResponse<decimal>> UpdateScoreAsync(int attemptId, UpdateScoreRequestDto request)
+        public async Task<ServiceResponse<decimal>> UpdateScoreAsync(int quizId  , UpdateScoreRequestDto request)
         {
             var response = new ServiceResponse<decimal>();
 
             try
             {
-                // 1. Lấy attempt
-                var attempt = await _quizAttemptRepository.GetByIdAsync(attemptId);
-                if (attempt == null || attempt.Status != QuizAttemptStatus.InProgress)
+                // 1. Lấy quiz 
+                var quiz =  await _quizRepository.GetQuizByIdAsync(quizId);
+                if (quiz == null)
                 {
                     response.Success = false;
                     response.Message = "Attempt not found or not in progress";

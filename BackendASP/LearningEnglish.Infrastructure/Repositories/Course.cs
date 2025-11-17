@@ -161,14 +161,16 @@ namespace LearningEnglish.Infrastructure.Repositories
                 throw new InvalidOperationException("User already enrolled in this course");
             }
 
-            // Lấy course để kiểm tra và cập nhật EnrollmentCount
-            var course = await _context.Courses.FindAsync(courseId);
+            // Reload course từ DB để lấy EnrollmentCount mới nhất (tránh race condition)
+            var course = await _context.Courses
+                .FirstOrDefaultAsync(c => c.CourseId == courseId);
+            
             if (course == null)
             {
                 throw new InvalidOperationException("Course not found");
             }
 
-            // Sử dụng business logic từ Entity
+            // Sử dụng business logic từ Entity (sẽ throw exception nếu đầy)
             course.EnrollStudent();
 
             var enrollment = new UserCourse

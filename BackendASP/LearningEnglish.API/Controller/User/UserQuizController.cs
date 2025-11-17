@@ -5,7 +5,7 @@ using LearningEnglish.Application.DTOs;
 namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
-    [Route("api/User/Quiz")]
+    [Route("api/User/")]
     [Authorize(Roles = "Student")]
     public class UserQuizController : ControllerBase
     {
@@ -17,7 +17,7 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // Lấy thông tin đầy đủ của Quiz theo ID (dành cho học sinh)
-        [HttpGet("Quizz/{AssessmentId}")]
+        [HttpGet("Quizz/{assessmentId}")]
         public async Task<IActionResult> GetQuizInformation(int assessmentId)
         {
             var result = await _quizService.GetQuizzesByAssessmentIdAsync(assessmentId);

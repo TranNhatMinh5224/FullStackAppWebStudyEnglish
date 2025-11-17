@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
+using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -21,7 +22,8 @@ namespace LearningEnglish.API.Controller.User
         [HttpPost("start/{quizId}")]
         public async Task<IActionResult> StartQuizAttempt(int quizId)
         {
-            var userIdClaim = User.FindFirst("userId")?.Value;
+            // Lấy userId từ token
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             {
                 return Unauthorized(new { message = "Invalid user ID" });
@@ -38,10 +40,10 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // Cập nhật điểm cho câu hỏi (real-time)
-        [HttpPost("update-score/{attemptId}")]
-        public async Task<IActionResult> UpdateScore(int attemptId, [FromBody] UpdateScoreRequestDto request)
+        [HttpPost("update-score/{quizId}")]
+        public async Task<IActionResult> UpdateScore(int quizId, [FromBody] UpdateScoreRequestDto request)
         {
-            var result = await _quizAttemptService.UpdateScoreAsync(attemptId, request);
+            var result = await _quizAttemptService.UpdateScoreAsync(quizId, request);
 
             if (result.Success)
             {

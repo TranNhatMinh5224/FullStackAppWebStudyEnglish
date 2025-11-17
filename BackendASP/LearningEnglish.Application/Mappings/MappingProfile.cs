@@ -238,6 +238,9 @@ namespace LearningEnglish.Application.Mappings
             // QuizAttempt mappings
             CreateMap<QuizAttempt, QuizAttemptDto>();
 
+            CreateMap<QuizAttempt, QuizAttemptWithQuestionsDto>()
+                .ForMember(dest => dest.QuizSections, opt => opt.Ignore()); // Sẽ set trong service
+
             CreateMap<QuizAttempt, QuizAttemptResultDto>();
 
             // QuizUserAnswer to AttemptAnswerDto - Bỏ vì không lưu answers

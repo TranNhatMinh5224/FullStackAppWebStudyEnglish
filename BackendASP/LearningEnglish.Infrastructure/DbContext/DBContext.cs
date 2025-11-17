@@ -192,15 +192,14 @@ namespace LearningEnglish.Infrastructure.Data
             {
                 e.ToTable("Questions");
                 e.HasOne(q => q.QuizSection)
-                 .WithMany()
+                 .WithMany(qs => qs.Questions) // Giả sử QuizSection có List<Question>
                  .HasForeignKey(q => q.QuizSectionId)
-                 .IsRequired(false)
                  .OnDelete(DeleteBehavior.Cascade);
+
                 e.HasOne(q => q.QuizGroup)
                  .WithMany(qg => qg.Questions)
                  .HasForeignKey(q => q.QuizGroupId)
-                 .IsRequired(false)
-                 .OnDelete(DeleteBehavior.Cascade);
+                 .OnDelete(DeleteBehavior.SetNull);
             });
 
             // AnswerOption

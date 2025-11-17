@@ -131,6 +131,7 @@ builder.Services.AddScoped<IQuizSectionRepository, QuizSectionRepository>();
 builder.Services.AddScoped<IQuizGroupRepository, QuizGroupRepository>();
 builder.Services.AddScoped<IQuizRepository, QuizRepository>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+builder.Services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
