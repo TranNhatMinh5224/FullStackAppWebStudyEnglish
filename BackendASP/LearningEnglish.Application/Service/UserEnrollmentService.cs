@@ -163,6 +163,7 @@ namespace LearningEnglish.Application.Service
         public async Task<ServiceResponse<bool>> EnrollInCourseByClassCodeAsync(string classCode, int userId)
         {
             var response = new ServiceResponse<bool>();
+            int? courseId = null;
 
             try
             {
@@ -177,6 +178,8 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                courseId = course.CourseId;
+
                 // Kiểm tra xem user đã đăng ký chưa
                 if (await _courseRepository.IsUserEnrolled(course.CourseId, userId))
                 {
@@ -186,16 +189,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra course có còn chỗ không
-                if (!course.CanJoin())
-                {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = $"Khóa học đã đầy ({course.EnrollmentCount}/{course.MaxStudent}). Không thể đăng ký thêm";
-                    return response;
-                }
-
-                // Đăng ký user vào course
+                // Đăng ký user vào course (kiểm tra CanJoin bên trong với dữ liệu fresh)
                 await _courseRepository.EnrollUserInCourse(userId, course.CourseId);
 
                 response.Success = true;
@@ -204,6 +198,13 @@ namespace LearningEnglish.Application.Service
                 response.Message = "Đăng ký khóa học thành công qua mã lớp học";
 
                 _logger.LogInformation("User {UserId} enrolled in course {CourseId} via class code", userId, course.CourseId);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("maximum capacity reached"))
+            {
+                response.Success = false;
+                response.StatusCode = 400;
+                response.Message = "Bạn không thể tham gia vào lớp này vì khóa học đã đầy học viên";
+                _logger.LogWarning("User {UserId} cannot enroll in course {CourseId} - class is full", userId, courseId);
             }
             catch (Exception ex)
             {
