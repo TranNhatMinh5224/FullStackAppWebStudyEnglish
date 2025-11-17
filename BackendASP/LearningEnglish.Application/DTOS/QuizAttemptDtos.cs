@@ -101,11 +101,14 @@ namespace LearningEnglish.Application.DTOs
     }
 
     // DTO cho request update answer (input từ frontend)
-    public class UpdateAnswerRequestDto
-    {
-        public int QuestionId { get; set; }
-        public object? UserAnswer { get; set; }  // Câu trả lời mới
-    }
+    // NOTE: Class này đã được move sang UserAnswerDtos.cs để tránh conflict
+    // Giữ lại ở đây để backward compatibility, nhưng nên dùng từ UserAnswerDtos.cs
+    // [Obsolete("Use UpdateAnswerRequestDto from UserAnswerDtos.cs")]
+    // public class UpdateAnswerRequestDto
+    // {
+    //     public int QuestionId { get; set; }
+    //     public object? UserAnswer { get; set; }
+    // }
 
     public class ResultQuizDto
     {
