@@ -35,6 +35,13 @@ namespace LearningEnglish.Application.Service
             _userRepository = userRepository;
             _scoringStrategies = scoringStrategies;
             _questionRepository = questionRepository;
+
+            // Debug: kiểm tra strategies được inject
+            Console.WriteLine($"Scoring strategies injected: {scoringStrategies.Count()}");
+            foreach (var strategy in scoringStrategies)
+            {
+                Console.WriteLine($"Strategy: {strategy.GetType().Name} for {strategy.Type}");
+            }
         }
 
         public async Task<ServiceResponse<QuizAttemptWithQuestionsDto>> StartQuizAttemptAsync(int quizId, int userId)
@@ -303,7 +310,8 @@ namespace LearningEnglish.Application.Service
                     ? new Dictionary<int, object>()
                     : System.Text.Json.JsonSerializer.Deserialize<Dictionary<int, object>>(attempt.AnswersJson)!;
                 
-                answers[request.QuestionId] = request.UserAnswer;
+                answers[request.QuestionId] = request.UserAnswer!;
+
                 attempt.AnswersJson = System.Text.Json.JsonSerializer.Serialize(answers);
 
                 // 6. Update ScoresJson (lưu score mới cho câu này)

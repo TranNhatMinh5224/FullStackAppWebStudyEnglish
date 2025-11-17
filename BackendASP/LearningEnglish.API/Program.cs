@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using LearningEnglish.Infrastructure.Data;
 using LearningEnglish.Application.Mappings;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Application.Service;
 using LearningEnglish.Application.Service.PaymentProcessors;
 using LearningEnglish.Application.Service.ScoringStrategies;
@@ -181,12 +182,12 @@ builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateLectureDtoValidator>();
 
 // Scoring strategies
-builder.Services.AddScoped<FillBlankScoringStrategy>();
-builder.Services.AddScoped<MultipleChoiceScoringStrategy>();
-builder.Services.AddScoped<TrueFalseScoringStrategy>();
-builder.Services.AddScoped<MultipleAnswersScoringStrategy>();
-builder.Services.AddScoped<MatchingScoringStrategy>();
-builder.Services.AddScoped<OrderingScoringStrategy>();
+builder.Services.AddScoped<IScoringStrategy, FillBlankScoringStrategy>();
+builder.Services.AddScoped<IScoringStrategy, MultipleChoiceScoringStrategy>();
+builder.Services.AddScoped<IScoringStrategy, TrueFalseScoringStrategy>();
+builder.Services.AddScoped<IScoringStrategy, MultipleAnswersScoringStrategy>();
+builder.Services.AddScoped<IScoringStrategy, MatchingScoringStrategy>();
+builder.Services.AddScoped<IScoringStrategy, OrderingScoringStrategy>();
 
 // Background services
 builder.Services.AddHostedService<QuizAutoSubmitService>();
