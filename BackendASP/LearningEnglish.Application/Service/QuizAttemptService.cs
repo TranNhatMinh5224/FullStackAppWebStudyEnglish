@@ -212,9 +212,9 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // 1. Lấy quiz 
-                var quiz =  await _quizRepository.GetQuizByIdAsync(quizId);
-                if (quiz == null)
+                // 1. Lấy attempt
+                var attempt = await _quizAttemptRepository.GetByIdAsync(request.AttemptId);
+                if (attempt == null || attempt.Status != QuizAttemptStatus.InProgress)
                 {
                     response.Success = false;
                     response.Message = "Attempt not found or not in progress";
@@ -273,6 +273,57 @@ namespace LearningEnglish.Application.Service
                 response.Message = ex.Message;
                 response.StatusCode = 500;
                 return response;
+            }
+        }
+
+        public async Task<ServiceResponse<decimal>> UpdateAnswerAndScoreAsync(int attemptId, UpdateAnswerRequestDto request)
+        {
+            try
+            {
+                // 1. Lấy attempt
+                var attempt = await _quizAttemptRepository.GetByIdAsync(attemptId);
+                if (attempt == null || attempt.Status != QuizAttemptStatus.InProgress)
+                    return new ServiceResponse<decimal> { Success = false, Message = "Attempt not found or not in progress" };
+
+                // 2. Lấy question
+                var question = await _questionRepository.GetQuestionByIdAsync(request.QuestionId);
+                if (question == null)
+                    return new ServiceResponse<decimal> { Success = false, Message = "Question not found" };
+
+                // 3. Tìm scoring strategy
+                var strategy = _scoringStrategies.FirstOrDefault(s => s.Type == question.Type);
+                if (strategy == null)
+                    return new ServiceResponse<decimal> { Success = false, Message = "Scoring strategy not found" };
+
+                // 4. Tính score mới dựa trên answer mới
+                decimal newScore = strategy.CalculateScore(question, request.UserAnswer);
+
+                // 5. Update AnswersJson (lưu answer mới)
+                var answers = string.IsNullOrEmpty(attempt.AnswersJson)
+                    ? new Dictionary<int, object>()
+                    : System.Text.Json.JsonSerializer.Deserialize<Dictionary<int, object>>(attempt.AnswersJson)!;
+                
+                answers[request.QuestionId] = request.UserAnswer;
+                attempt.AnswersJson = System.Text.Json.JsonSerializer.Serialize(answers);
+
+                // 6. Update ScoresJson (lưu score mới cho câu này)
+                var scores = string.IsNullOrEmpty(attempt.ScoresJson)
+                    ? new Dictionary<int, decimal>()
+                    : System.Text.Json.JsonSerializer.Deserialize<Dictionary<int, decimal>>(attempt.ScoresJson)!;
+                scores[request.QuestionId] = newScore;
+                attempt.ScoresJson = System.Text.Json.JsonSerializer.Serialize(scores);
+
+                // 7. Tính lại TotalScore (tổng tất cả scores)
+                attempt.TotalScore = scores.Values.Sum();
+
+                // 8. Lưu attempt
+                await _quizAttemptRepository.UpdateQuizAttemptAsync(attempt);
+
+                return new ServiceResponse<decimal> { Success = true, Data = newScore, Message = "Answer and score updated" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResponse<decimal> { Success = false, Message = ex.Message };
             }
         }
 

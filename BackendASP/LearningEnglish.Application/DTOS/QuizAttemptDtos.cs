@@ -95,9 +95,18 @@ namespace LearningEnglish.Application.DTOs
     // DTO cho request update score (input từ frontend)
     public class UpdateScoreRequestDto
     {
+        public int AttemptId { get; set; }  // Thêm AttemptId để xác định attempt
         public int QuestionId { get; set; }
         public object? UserAnswer { get; set; }  // Câu trả lời (List<int> cho MCQ, string cho Essay)
     }
+
+    // DTO cho request update answer (input từ frontend)
+    public class UpdateAnswerRequestDto
+    {
+        public int QuestionId { get; set; }
+        public object? UserAnswer { get; set; }  // Câu trả lời mới
+    }
+
     public class ResultQuizDto
     {
         bool IsPassed { get; set; }

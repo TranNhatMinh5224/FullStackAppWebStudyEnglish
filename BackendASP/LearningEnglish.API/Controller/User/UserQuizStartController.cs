@@ -80,6 +80,19 @@ namespace LearningEnglish.API.Controller.User
 
             return BadRequest(result);
         }
-       
+
+        // Update câu trả lời và tính điểm ngay lập tức
+        [HttpPost("update-answer/{attemptId}")]
+        public async Task<IActionResult> UpdateAnswerAndScore(int attemptId, [FromBody] UpdateAnswerRequestDto request)
+        {
+            var result = await _quizAttemptService.UpdateAnswerAndScoreAsync(attemptId, request);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
     }
 }

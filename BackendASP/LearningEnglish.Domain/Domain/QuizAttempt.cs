@@ -19,6 +19,9 @@ namespace LearningEnglish.Domain.Entities
         // JSON lưu điểm từng câu (ví dụ: {"1": 5, "2": 0}) để sum nhanh
         public string? ScoresJson { get; set; }
 
+        // JSON lưu câu trả lời của user (ví dụ: {"1": 1, "2": "answer"}) để tính score
+        public string? AnswersJson { get; set; }
+
         public Quiz Quiz { get; set; } = null!;
         public User User { get; set; } = null!;
     }

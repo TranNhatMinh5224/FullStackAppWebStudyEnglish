@@ -11,6 +11,9 @@ namespace LearningEnglish.Application.Interface
         // cap nhat diem cho cau hoi 
         Task<ServiceResponse<decimal>> UpdateScoreAsync(int quizId , UpdateScoreRequestDto request);
 
+        // update cau tra loi va tinh diem ngay lap tuc
+        Task<ServiceResponse<decimal>> UpdateAnswerAndScoreAsync(int attemptId, UpdateAnswerRequestDto request);
+
         // submit bai thi
         Task<ServiceResponse<QuizAttemptResultDto>> SubmitQuizAttemptAsync(int attemptId);
 
