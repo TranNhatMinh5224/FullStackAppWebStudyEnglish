@@ -281,6 +281,23 @@ namespace LearningEnglish.Application.Service
                 // 3. Kiểm tra còn lượt làm bài không
                 var quizAttempts = await _quizAttemptRepository.GetByUserAndQuizAsync(userId, quizId);
 
+                // 3.1. Kiểm tra MaxAttempts nếu có quy định
+                if (quiz.MaxAttempts.HasValue && quiz.MaxAttempts.Value > 0)
+                {
+                    // Đếm số attempts đã submit (Submitted, Graded) - không tính InProgress vì có thể do disconnect
+                    int submittedAttemptsCount = quizAttempts.Count(a => 
+                        a.Status == QuizAttemptStatus.Submitted || 
+                        a.Status == QuizAttemptStatus.Graded ||
+                        a.Status == QuizAttemptStatus.TimeExpired);
+                    
+                    if (submittedAttemptsCount >= quiz.MaxAttempts.Value)
+                    {
+                        response.Success = false;
+                        response.Message = $"Bạn đã hết lượt làm bài. Số lần làm tối đa: {quiz.MaxAttempts.Value}. Bạn đã làm {submittedAttemptsCount} lần.";
+                        response.StatusCode = 403;
+                        return response;
+                    }
+                }
 
                 //  Lấy full quiz để shuffle
                 var quizDetails = await _quizRepository.GetFullQuizAsync(quizId);
