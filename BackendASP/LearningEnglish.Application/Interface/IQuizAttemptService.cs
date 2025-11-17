@@ -9,7 +9,7 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<QuizAttemptWithQuestionsDto>> StartQuizAttemptAsync(int quizId, int userId);
 
         // cap nhat diem cho cau hoi 
-        Task<ServiceResponse<decimal>> UpdateScoreAsync(int attemptId, UpdateScoreRequestDto request);
+        Task<ServiceResponse<decimal>> UpdateScoreAsync(int quizId , UpdateScoreRequestDto request);
 
         // submit bai thi
         Task<ServiceResponse<QuizAttemptResultDto>> SubmitQuizAttemptAsync(int attemptId);
