@@ -27,12 +27,10 @@ namespace LearningEnglish.Application.Service
             _logger = logger;
         }
 
-        /// <summary>
-        /// User đăng ký khóa học (hỗ trợ cả course hệ thống và course teacher tạo)
-        /// - Course miễn phí (Price = 0 hoặc null): Đăng ký trực tiếp
-        /// - Course có phí (Price > 0): Kiểm tra thanh toán trước khi enroll
-        /// - Course Teacher: Kiểm tra thêm giới hạn Teacher Package
-        /// </summary>
+        // User đăng ký khóa học (hỗ trợ cả course hệ thống và course teacher tạo)
+        // - Course miễn phí (Price = 0 hoặc null): Đăng ký trực tiếp
+        // - Course có phí (Price > 0): Kiểm tra thanh toán trước khi enroll
+        // - Course Teacher: Kiểm tra thêm giới hạn Teacher Package
         public async Task<ServiceResponse<bool>> EnrollInCourseAsync(EnrollCourseDto enrollDto, int userId)
         {
             var response = new ServiceResponse<bool>();
@@ -121,9 +119,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        /// <summary>
-        /// User hủy đăng ký khóa học
-        /// </summary>
+        // User hủy đăng ký khóa học
         public async Task<ServiceResponse<bool>> UnenrollFromCourseAsync(int courseId, int userId)
         {
             var response = new ServiceResponse<bool>();

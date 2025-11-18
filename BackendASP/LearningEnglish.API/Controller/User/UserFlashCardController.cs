@@ -9,7 +9,7 @@ namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
     [Route("api/user/[controller]")]
-    [Authorize(Roles = "User")]
+    [Authorize(Roles = "Student")]
     public class UserFlashCardController : ControllerBase
     {
         private readonly IFlashCardService _flashCardService;

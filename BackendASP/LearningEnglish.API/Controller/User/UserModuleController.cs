@@ -25,9 +25,7 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        /// <summary>
-        /// Lấy thông tin module với tiến độ của user
-        /// </summary>
+        // Lấy thông tin module với tiến độ của user
         [HttpGet("{moduleId}")]
         public async Task<IActionResult> GetModuleWithProgress(int moduleId)
         {
@@ -42,9 +40,7 @@ namespace LearningEnglish.API.Controller.User
             return BadRequest(result);
         }
 
-        /// <summary>
-        /// Lấy tất cả module trong lesson với tiến độ
-        /// </summary>
+        // Lấy tất cả module trong lesson với tiến độ
         [HttpGet("lesson/{lessonId}")]
         public async Task<IActionResult> GetModulesWithProgress(int lessonId)
         {

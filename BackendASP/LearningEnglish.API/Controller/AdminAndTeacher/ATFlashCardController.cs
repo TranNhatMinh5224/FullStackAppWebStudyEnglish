@@ -101,7 +101,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
         }
 
-        // POST: api/at/flashcard
+        // Controller Tạo FlashCard
         [HttpPost]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> CreateFlashCard(
             [FromBody] CreateFlashCardDto createFlashCardDto)
@@ -144,7 +144,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
         }
 
-        // PUT: api/at/flashcard/{id}
+        // Controller Cập nhật FlashCard
         [HttpPut("{id}")]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> UpdateFlashCard(
             int id,
@@ -188,7 +188,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
         }
 
-        // DELETE: api/at/flashcard/{id}
+        // Controller Xóa FlashCard
         [HttpDelete("{id}")]
         public async Task<ActionResult<ServiceResponse<bool>>> DeleteFlashCard(int id)
         {
@@ -215,7 +215,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
         }
 
-        // POST: api/at/flashcard/bulk
+        // Controller Tạo FlashCard Hàng loạt(bulk)
         [HttpPost("bulk")]
         public async Task<ActionResult<ServiceResponse<List<FlashCardDto>>>> CreateBulkFlashCards(
             [FromBody] BulkImportFlashCardDto bulkImportDto)
@@ -262,7 +262,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
 
 
-        // GET: api/at/flashcard/validate-word
+        // Controller Kiểm tra Từ vựng
         [HttpGet("validate-word")]
         public async Task<ActionResult<ServiceResponse<bool>>> ValidateWord(
             [FromQuery] string word,

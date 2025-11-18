@@ -25,9 +25,7 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        /// <summary>
-        /// Lấy thông tin lecture theo ID (chỉ đọc)
-        /// </summary>
+        // Lấy thông tin lecture theo ID (chỉ đọc)
         [HttpGet("{lectureId}")]
         public async Task<IActionResult> GetLecture(int lectureId)
         {
@@ -48,9 +46,7 @@ namespace LearningEnglish.API.Controller.User
             }
         }
 
-        /// <summary>
-        /// Lấy danh sách lecture theo module ID (chỉ đọc)
-        /// </summary>
+        // Lấy danh sách lecture theo module ID (chỉ đọc)
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetLecturesByModule(int moduleId)
         {
@@ -68,9 +64,7 @@ namespace LearningEnglish.API.Controller.User
             }
         }
 
-        /// <summary>
-        /// Lấy cấu trúc cây lecture theo module ID (chỉ đọc)
-        /// </summary>
+        // Lấy cấu trúc cây lecture theo module ID (chỉ đọc)
         [HttpGet("module/{moduleId}/tree")]
         public async Task<IActionResult> GetLectureTree(int moduleId)
         {

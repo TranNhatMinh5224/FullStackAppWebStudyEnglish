@@ -31,9 +31,7 @@ namespace LearningEnglish.API.Controller.User
             _completeValidator = completeValidator;
         }
 
-        /// <summary>
-        /// Tạo thông tin thanh toán (Process Payment)
-        /// </summary>
+        // Tạo thông tin thanh toán (Process Payment)
         [HttpPost("process")]
         public async Task<IActionResult> ProcessPayment([FromBody] requestPayment request)
         {
@@ -59,9 +57,7 @@ namespace LearningEnglish.API.Controller.User
             return Ok(result.Data);
         }
 
-        /// <summary>
-        /// Xác nhận thanh toán (Confirm Payment)
-        /// </summary>
+        // Xác nhận thanh toán (Confirm Payment)
         [HttpPost("confirm")]
         public async Task<IActionResult> ConfirmPayment([FromBody] CompletePayment paymentDto)
         {

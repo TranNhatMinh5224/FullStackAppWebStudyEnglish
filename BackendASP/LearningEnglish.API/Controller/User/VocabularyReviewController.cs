@@ -28,9 +28,7 @@ public class VocabularyReviewController : ControllerBase
         return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     }
 
-    /// <summary>
-    /// Lấy danh sách từ vựng cần ôn tập hôm nay
-    /// </summary>
+    // Lấy danh sách từ vựng cần ôn tập hôm nay
     [HttpGet("due")]
     public async Task<IActionResult> GetDueReviews()
     {
@@ -53,9 +51,7 @@ public class VocabularyReviewController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Lấy từ vựng mới để học
-    /// </summary>
+    // Lấy từ vựng mới để học
     [HttpGet("new")]
     public async Task<IActionResult> GetNewCards([FromQuery] int limit = 10)
     {
@@ -78,9 +74,7 @@ public class VocabularyReviewController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Bắt đầu ôn tập một từ vựng
-    /// </summary>
+    // Bắt đầu ôn tập một từ vựng
     [HttpPost("start/{flashCardId}")]
     public async Task<IActionResult> StartReview(int flashCardId)
     {
@@ -103,9 +97,7 @@ public class VocabularyReviewController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Submit kết quả ôn tập (quality score 0-5)
-    /// </summary>
+    // Submit kết quả ôn tập (quality score 0-5)
     [HttpPost("submit/{reviewId}")]
     public async Task<IActionResult> SubmitReview(int reviewId, [FromBody] SubmitReviewRequestDto request)
     {
@@ -136,9 +128,7 @@ public class VocabularyReviewController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Lấy thống kê vocabulary review
-    /// </summary>
+    // Lấy thống kê vocabulary review
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
@@ -161,9 +151,7 @@ public class VocabularyReviewController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Lấy lịch sử ôn tập gần đây
-    /// </summary>
+    // Lấy lịch sử ôn tập gần đây
     [HttpGet("recent")]
     public async Task<IActionResult> GetRecentReviews([FromQuery] int days = 7)
     {
@@ -186,9 +174,7 @@ public class VocabularyReviewController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Reset tiến độ của một từ vựng (khi quên hoàn toàn)
-    /// </summary>
+    // Reset tiến độ của một từ vựng (khi quên hoàn toàn)
     [HttpPost("reset/{flashCardId}")]
     public async Task<IActionResult> ResetCardProgress(int flashCardId)
     {

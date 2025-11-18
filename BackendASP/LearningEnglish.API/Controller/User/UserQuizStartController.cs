@@ -67,23 +67,15 @@ namespace LearningEnglish.API.Controller.User
             return BadRequest(result);
         }
 
-        /// <summary>
-        /// Update câu trả lời và tính điểm ngay lập tức (real-time scoring)
-        /// </summary>
-        /// <param name="attemptId">ID của quiz attempt</param>
-        /// <param name="request">
-        /// Format của UserAnswer theo từng loại câu hỏi:
-        /// - MultipleChoice/TrueFalse: int (optionId) hoặc string "1" → {"questionId": 1, "userAnswer": 1}
-        /// - MultipleAnswers: List&lt;int&gt; hoặc array → {"questionId": 1, "userAnswer": [1, 2, 3]}
-        /// - FillBlank: string → {"questionId": 1, "userAnswer": "answer text"}
-        /// - Matching: Dictionary&lt;int, int&gt; → {"questionId": 1, "userAnswer": {"1": 2, "3": 4}}
-        /// - Ordering: List&lt;int&gt; → {"questionId": 1, "userAnswer": [3, 1, 2, 4]}
-        /// </param>
-        /// <returns>Điểm của câu hỏi này (0 nếu sai, Points nếu đúng)</returns>
-        /// <remarks>
-        /// Khi user làm câu nào, sẽ update answer và chấm điểm luôn.
-        /// Nếu làm đúng rồi sửa lại sai thì điểm sẽ từ có điểm thành 0 điểm.
-        /// </remarks>
+        // Update câu trả lời và tính điểm ngay lập tức (real-time scoring)
+        // Format của UserAnswer theo từng loại câu hỏi:
+        // - MultipleChoice/TrueFalse: int (optionId) → {"questionId": 1, "userAnswer": 1}
+        // - MultipleAnswers: List<int> → {"questionId": 1, "userAnswer": [1, 2, 3]}
+        // - FillBlank: string → {"questionId": 1, "userAnswer": "answer text"}
+        // - Matching: Dictionary<int, int> → {"questionId": 1, "userAnswer": {"1": 2, "3": 4}}
+        // - Ordering: List<int> → {"questionId": 1, "userAnswer": [3, 1, 2, 4]}
+        // Khi user làm câu nào, sẽ update answer và chấm điểm luôn.
+        // Nếu làm đúng rồi sửa lại sai thì điểm sẽ từ có điểm thành 0 điểm.
         [HttpPost("update-answer/{attemptId}")]
         public async Task<IActionResult> UpdateAnswerAndScore(int attemptId, [FromBody] UpdateAnswerRequestDto request)
         {

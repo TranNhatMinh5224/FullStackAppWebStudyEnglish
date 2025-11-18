@@ -61,11 +61,7 @@ namespace LearningEnglish.API.Controllers.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Lấy danh sách phần quiz theo Quiz ID
-        /// </summary>
-        /// <param name="quizId">ID của quiz</param>
-        /// <returns>Danh sách phần quiz</returns>
+        // Lấy danh sách phần quiz theo Quiz ID
         [HttpGet("by-quiz/{quizId}")]
         public async Task<IActionResult> GetQuizSectionsByQuizId(int quizId)
         {
@@ -109,11 +105,7 @@ namespace LearningEnglish.API.Controllers.AdminAndTeacher
             }
         }
 
-        /// <summary>
-        /// Xóa phần quiz
-        /// </summary>
-        /// <param name="id">ID của phần quiz</param>
-        /// <returns>Kết quả xóa</returns>
+        // Xóa phần quiz
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteQuizSection(int id)
         {

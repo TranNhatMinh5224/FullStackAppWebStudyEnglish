@@ -51,9 +51,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// Lấy TeacherPackage của teacher tại thời điểm date (có subscription active)
-        /// </summary>
+        // Lấy TeacherPackage của teacher tại thời điểm date (có subscription active)
         public async Task<TeacherPackage?> GetInformationTeacherpackageAsync(int teacherId, DateTime date)
         {
             var result = await (from tp in _context.TeacherPackages
@@ -68,9 +66,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             return result;
         }
 
-        /// <summary>
-        /// Lấy TeacherPackage hiện tại của teacher (subscription active)
-        /// </summary>
+        // Lấy TeacherPackage hiện tại của teacher (subscription active)
         public async Task<TeacherPackage?> GetInformationTeacherpackage(int teacherId)
         {
             var now = DateTime.UtcNow;

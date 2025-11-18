@@ -4,9 +4,7 @@ using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Application.Validators.QuizAttemptValidators
 {
-    /// <summary>
-    /// Validator cho SingleChoiceAnswerDto (MultipleChoice, TrueFalse)
-    /// </summary>
+    // Validator cho SingleChoiceAnswerDto (MultipleChoice, TrueFalse)
     public class SingleChoiceAnswerDtoValidator : AbstractValidator<SingleChoiceAnswerDto>
     {
         public SingleChoiceAnswerDtoValidator()
@@ -21,9 +19,7 @@ namespace LearningEnglish.Application.Validators.QuizAttemptValidators
         }
     }
 
-    /// <summary>
-    /// Validator cho MultipleChoiceAnswerDto (MultipleAnswers)
-    /// </summary>
+    // Validator cho MultipleChoiceAnswerDto (MultipleAnswers)
     public class MultipleChoiceAnswerDtoValidator : AbstractValidator<MultipleChoiceAnswerDto>
     {
         public MultipleChoiceAnswerDtoValidator()
@@ -42,9 +38,7 @@ namespace LearningEnglish.Application.Validators.QuizAttemptValidators
         }
     }
 
-    /// <summary>
-    /// Validator cho FillBlankAnswerDto
-    /// </summary>
+    // Validator cho FillBlankAnswerDto
     public class FillBlankAnswerDtoValidator : AbstractValidator<FillBlankAnswerDto>
     {
         public FillBlankAnswerDtoValidator()
@@ -61,9 +55,7 @@ namespace LearningEnglish.Application.Validators.QuizAttemptValidators
         }
     }
 
-    /// <summary>
-    /// Validator cho MatchingAnswerDto
-    /// </summary>
+    // Validator cho MatchingAnswerDto
     public class MatchingAnswerDtoValidator : AbstractValidator<MatchingAnswerDto>
     {
         public MatchingAnswerDtoValidator()
@@ -80,9 +72,7 @@ namespace LearningEnglish.Application.Validators.QuizAttemptValidators
         }
     }
 
-    /// <summary>
-    /// Validator cho OrderingAnswerDto
-    /// </summary>
+    // Validator cho OrderingAnswerDto
     public class OrderingAnswerDtoValidator : AbstractValidator<OrderingAnswerDto>
     {
         public OrderingAnswerDtoValidator()

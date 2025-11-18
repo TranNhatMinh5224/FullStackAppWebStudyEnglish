@@ -95,9 +95,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return BadRequest(result);
         }
 
-        /// <summary>
-        /// Cập nhật câu hỏi
-        /// </summary>
+        // Cập nhật câu hỏi
         [HttpPut("update/{questionId}")]
         public async Task<IActionResult> UpdateQuestion(int questionId, [FromBody] QuestionUpdateDto questionUpdateDto)
         {
@@ -111,9 +109,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return BadRequest(result);
         }
 
-        /// <summary>
-        /// Xóa câu hỏi
-        /// </summary>
+        // Xóa câu hỏi
         [HttpDelete("delete/{questionId}")]
         public async Task<IActionResult> DeleteQuestion(int questionId)
         {

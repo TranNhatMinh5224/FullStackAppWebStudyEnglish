@@ -31,9 +31,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
         }
 
-        /// <summary>
-        /// Lấy thông tin module theo ID với chi tiết
-        /// </summary>
+       
+        // Lấy thông tin module theo ID với chi tiết
+        
         [HttpGet("{moduleId}")]
         public async Task<IActionResult> GetModule(int moduleId)
         {
@@ -48,9 +48,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return BadRequest(result);
         }
 
-        /// <summary>
-        /// Lấy tất cả module theo lesson ID
-        /// </summary>
+        // Lấy tất cả module theo lesson ID
         [HttpGet("lesson/{lessonId}")]
         public async Task<IActionResult> GetModulesByLesson(int lessonId)
         {
@@ -65,9 +63,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return BadRequest(result);
         }
 
-        /// <summary>
-        /// Tạo module mới
-        /// </summary>
+        // Tạo module mới
         [HttpPost]
         public async Task<IActionResult> CreateModule([FromBody] CreateModuleDto createModuleDto)
         {
@@ -94,9 +90,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return BadRequest(result);
         }
 
-        /// <summary>
-        /// Cập nhật module (Admin có thể cập nhật bất kỳ, Teacher chỉ module của mình)
-        /// </summary>
+        // Cập nhật module (Admin có thể cập nhật bất kỳ, Teacher chỉ module của mình)
         [HttpPut("{moduleId}")]
         public async Task<IActionResult> UpdateModule(int moduleId, [FromBody] UpdateModuleDto updateModuleDto)
         {
@@ -134,9 +128,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return BadRequest(result);
         }
 
-        /// <summary>
-        /// Xóa module (Admin có thể xóa bất kỳ, Teacher chỉ module của mình)
-        /// </summary>
+        // Xóa module (Admin có thể xóa bất kỳ, Teacher chỉ module của mình)
         [HttpDelete("{moduleId}")]
         public async Task<IActionResult> DeleteModule(int moduleId)
         {

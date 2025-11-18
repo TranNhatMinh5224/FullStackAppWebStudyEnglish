@@ -22,9 +22,7 @@ namespace LearningEnglish.Application.Service
             _logger = logger;
         }
 
-        /// <summary>
-        /// Lấy danh sách khóa học đã đăng ký của user
-        /// </summary>
+        // Lấy danh sách khóa học đã đăng ký của user
         public async Task<ServiceResponse<IEnumerable<CourseResponseDto>>> GetMyEnrolledCoursesAsync(int userId)
         {
             var response = new ServiceResponse<IEnumerable<CourseResponseDto>>();
