@@ -14,6 +14,12 @@ namespace LearningEnglish.Application.DTOs
         public string TypeName => Type.ToString();
         public string? MarkdownContent { get; set; }
         public string RenderedHtml { get; set; } = string.Empty;
+        
+        public string? MediaUrl { get; set; }
+        public string? MediaType { get; set; }
+        public long? MediaSize { get; set; }
+        public int? Duration { get; set; }
+        
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         

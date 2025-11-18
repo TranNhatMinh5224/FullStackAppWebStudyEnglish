@@ -21,7 +21,11 @@ namespace LearningEnglish.Domain.Entities
         public string? MarkdownContent { get; set; }
         public string RenderedHtml { get; set; } = string.Empty;
 
-
+       
+        public string? MediaUrl { get; set; }
+        public string? MediaType { get; set; }
+        public long? MediaSize { get; set; }
+        public int? Duration { get; set; }
 
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

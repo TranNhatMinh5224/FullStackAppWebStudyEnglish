@@ -9,6 +9,11 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string? ImgUrl { get; set; }
         public string? VideoUrl { get; set; }
+        
+        public string? ImgType { get; set; }
+        public string? VideoType { get; set; }
+        public int? VideoDuration { get; set; }
+        
         public float SumScore { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
@@ -26,6 +31,11 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string? ImgUrl { get; set; }
         public string? VideoUrl { get; set; }
+        
+        public string? ImgType { get; set; }
+        public string? VideoType { get; set; }
+        public int? VideoDuration { get; set; }
+        
         public float SumScore { get; set; }
     }
 
@@ -36,6 +46,11 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string? ImgUrl { get; set; }
         public string? VideoUrl { get; set; }
+        
+        public string? ImgType { get; set; }
+        public string? VideoType { get; set; }
+        public int? VideoDuration { get; set; }
+        
         public float SumScore { get; set; }
     }
 
@@ -47,6 +62,11 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string? ImgUrl { get; set; }
         public string? VideoUrl { get; set; }
+        
+        public string? ImgType { get; set; }
+        public string? VideoType { get; set; }
+        public int? VideoDuration { get; set; }
+        
         public float SumScore { get; set; }
         public int QuestionCount { get; set; }
     }

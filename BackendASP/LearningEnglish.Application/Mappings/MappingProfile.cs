@@ -10,29 +10,35 @@ namespace LearningEnglish.Application.Mappings
         {
             // Course mappings - Request DTOs to Entity
             CreateMap<AdminCreateCourseRequestDto, Course>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Img))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
             CreateMap<TeacherCreateCourseRequestDto, Course>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Img))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
             // Course mappings - Entity to Response DTOs
             CreateMap<Course, CourseResponseDto>()
+                .ForMember(dest => dest.Img, opt => opt.MapFrom(src => src.ImageUrl))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
 
             CreateMap<Course, AdminCourseListResponseDto>()
+                .ForMember(dest => dest.Img, opt => opt.MapFrom(src => src.ImageUrl))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
 
             CreateMap<Course, UserCourseListResponseDto>()
+                .ForMember(dest => dest.Img, opt => opt.MapFrom(src => src.ImageUrl))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore()); // Sẽ set trong service
 
             CreateMap<Course, CourseDetailResponseDto>()
+                .ForMember(dest => dest.Img, opt => opt.MapFrom(src => src.ImageUrl))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore())

@@ -10,8 +10,11 @@ public class FlashCard
     public string Word { get; set; } = string.Empty;              // "Beautiful"
     public string Meaning { get; set; } = string.Empty;           // "Đẹp, xinh đẹp"
     public string? Pronunciation { get; set; }                    // "/ˈbjuːtɪfl/"
-    public string? ImageUrl { get; set; }                         // Hình ảnh minh họa
-    public string? AudioUrl { get; set; }                         // File phát âm
+    public string? ImageUrl { get; set; }
+    public string? AudioUrl { get; set; }
+
+    public string? ImageType { get; set; }
+    public string? AudioType { get; set; }
 
     // Metadata cơ bản
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

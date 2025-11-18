@@ -14,6 +14,9 @@ public class PronunciationAssessment
     // URL file audio ghi âm của user
     public string AudioUrl { get; set; } = string.Empty;
 
+    public string? AudioType { get; set; }
+    public long? AudioSize { get; set; }
+
     // Điểm số tổng thể (0-100)
     public float OverallScore { get; set; } = 0;
 

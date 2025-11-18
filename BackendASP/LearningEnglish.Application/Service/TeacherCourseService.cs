@@ -83,7 +83,7 @@ namespace LearningEnglish.Application.Service
                 {
                     Title = requestDto.Title,
                     Description = requestDto.Description,
-                    Img = requestDto.Img,
+                    ImageUrl = requestDto.Img,
                     Type = requestDto.Type,
                     TeacherId = teacherId,
                     ClassCode = classCode,
@@ -169,7 +169,7 @@ namespace LearningEnglish.Application.Service
                 // Cập nhật course
                 course.Title = requestDto.Title;
                 course.Description = requestDto.Description;
-                course.Img = requestDto.Img;
+                course.ImageUrl = requestDto.Img;
                 course.Type = requestDto.Type;
                 course.MaxStudent = requestDto.MaxStudent > 0 ? requestDto.MaxStudent : teacherPackage.MaxStudents;
 

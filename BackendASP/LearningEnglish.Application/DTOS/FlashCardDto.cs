@@ -10,6 +10,10 @@ namespace LearningEnglish.Application.DTOs
         public string? Pronunciation { get; set; }
         public string? ImageUrl { get; set; }
         public string? AudioUrl { get; set; }
+        
+        public string? ImageType { get; set; }
+        public string? AudioType { get; set; }
+        
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
@@ -47,6 +51,9 @@ namespace LearningEnglish.Application.DTOs
         public string? Pronunciation { get; set; }
         public string? ImageUrl { get; set; }
         public string? AudioUrl { get; set; }
+        
+        public string? ImageType { get; set; }
+        public string? AudioType { get; set; }
     }
 
     // DTO for updating existing flashcard

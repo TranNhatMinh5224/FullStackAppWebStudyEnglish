@@ -72,7 +72,7 @@ namespace LearningEnglish.Application.Service
                 {
                     Title = requestDto.Title,
                     Description = requestDto.Description,
-                    Img = requestDto.Img,
+                    ImageUrl = requestDto.Img,
                     Type = requestDto.Type,
                     Price = requestDto.Price,
                     TeacherId = null,
@@ -124,7 +124,7 @@ namespace LearningEnglish.Application.Service
                 // Admin có thể update tất cả courses (System & Teacher)
                 course.Title = requestDto.Title;
                 course.Description = requestDto.Description;
-                course.Img = requestDto.Img;
+                course.ImageUrl = requestDto.Img;
                 course.Price = requestDto.Price;
                 course.MaxStudent = requestDto.MaxStudent;
                 course.IsFeatured = requestDto.IsFeatured;
