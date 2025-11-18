@@ -21,194 +21,7 @@ namespace LearningEnglish.Application.Service
         private readonly IEnumerable<IScoringStrategy> _scoringStrategies;
         private readonly IQuestionRepository _questionRepository;
 
-        // Helper method để deserialize Dictionary<int, decimal> an toàn
-        private Dictionary<int, decimal> DeserializeScoresJson(string? json)
-        {
-            if (string.IsNullOrEmpty(json))
-                return new Dictionary<int, decimal>();
 
-            try
-            {
-                // Deserialize về Dictionary<string, decimal> trước (vì JSON keys luôn là string)
-                var stringDict = JsonSerializer.Deserialize<Dictionary<string, decimal>>(json);
-                if (stringDict == null)
-                    return new Dictionary<int, decimal>();
-
-                // Convert sang Dictionary<int, decimal>
-                return stringDict.ToDictionary(
-                    kvp => int.Parse(kvp.Key),
-                    kvp => kvp.Value
-                );
-            }
-            catch
-            {
-                return new Dictionary<int, decimal>();
-            }
-        }
-
-        // Helper method để deserialize Dictionary<int, object> an toàn
-        private Dictionary<int, object> DeserializeAnswersJson(string? json)
-        {
-            if (string.IsNullOrEmpty(json))
-                return new Dictionary<int, object>();
-
-            try
-            {
-                // Deserialize về Dictionary<string, JsonElement> trước
-                var stringDict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
-                if (stringDict == null)
-                    return new Dictionary<int, object>();
-
-                // Convert sang Dictionary<int, object>
-                var result = new Dictionary<int, object>();
-                foreach (var kvp in stringDict)
-                {
-                    var key = int.Parse(kvp.Key);
-                    // Convert JsonElement về object thực sự
-                    result[key] = ConvertJsonElementToObject(kvp.Value);
-                }
-                return result;
-            }
-            catch
-            {
-                return new Dictionary<int, object>();
-            }
-        }
-
-        // Helper method để normalize userAnswer (convert string sang int, xử lý JsonElement, etc.)
-        private object? NormalizeUserAnswer(object? userAnswer, QuestionType questionType)
-        {
-            if (userAnswer == null)
-                return null;
-
-            // Nếu là JsonElement, convert về object trước
-            if (userAnswer is JsonElement jsonElement)
-            {
-                userAnswer = ConvertJsonElementToObject(jsonElement);
-            }
-
-            // Xử lý theo từng loại câu hỏi
-            switch (questionType)
-            {
-                case QuestionType.MultipleChoice:
-                case QuestionType.TrueFalse:
-                    // Cần int (optionId)
-                    if (userAnswer is int intValue)
-                        return intValue;
-                    if (userAnswer is string stringValue && int.TryParse(stringValue, out int parsedInt))
-                        return parsedInt;
-                    if (userAnswer is long longValue)
-                        return (int)longValue;
-                    if (userAnswer is decimal decimalValue)
-                        return (int)decimalValue;
-                    // Nếu không convert được, trả về nguyên bản
-                    return userAnswer;
-
-                case QuestionType.MultipleAnswers:
-                    // Cần List<int>
-                    if (userAnswer is List<int> intList)
-                        return intList;
-                    if (userAnswer is List<object> objectList)
-                    {
-                        var convertedList = new List<int>();
-                        foreach (var item in objectList)
-                        {
-                            if (item is int i)
-                                convertedList.Add(i);
-                            else if (item is string s && int.TryParse(s, out int parsed))
-                                convertedList.Add(parsed);
-                            else if (item is JsonElement je && je.TryGetInt32(out int jeInt))
-                                convertedList.Add(jeInt);
-                        }
-                        return convertedList;
-                    }
-                    // Nếu là array từ JSON
-                    if (userAnswer is JsonElement jeArray && jeArray.ValueKind == JsonValueKind.Array)
-                    {
-                        var list = new List<int>();
-                        foreach (var item in jeArray.EnumerateArray())
-                        {
-                            if (item.TryGetInt32(out int itemInt))
-                                list.Add(itemInt);
-                        }
-                        return list;
-                    }
-                    return userAnswer;
-
-                case QuestionType.FillBlank:
-                    // Cần string
-                    if (userAnswer is string str)
-                        return str;
-                    return userAnswer?.ToString() ?? string.Empty;
-
-                default:
-                    return userAnswer;
-            }
-        }
-
-        // Helper method để convert JsonElement về object thực sự
-        private object ConvertJsonElementToObject(JsonElement element)
-        {
-            switch (element.ValueKind)
-            {
-                case JsonValueKind.String:
-                    return element.GetString() ?? string.Empty;
-                
-                case JsonValueKind.Number:
-                    // Thử parse thành int trước, nếu không được thì decimal
-                    if (element.TryGetInt32(out int intValue))
-                        return intValue;
-                    if (element.TryGetDecimal(out decimal decimalValue))
-                        return decimalValue;
-                    return element.GetDouble();
-                
-                case JsonValueKind.True:
-                    return true;
-                
-                case JsonValueKind.False:
-                    return false;
-                
-                case JsonValueKind.Array:
-                    // Kiểm tra xem có phải là array of numbers không (List<int>)
-                    var arrayList = element.EnumerateArray().ToList();
-                    if (arrayList.Count == 0)
-                    {
-                        return new List<int>();
-                    }
-                    
-                    var firstElement = arrayList[0];
-                    if (firstElement.ValueKind == JsonValueKind.Number)
-                    {
-                        var intList = new List<int>();
-                        foreach (var item in arrayList)
-                        {
-                            if (item.TryGetInt32(out int itemValue))
-                                intList.Add(itemValue);
-                        }
-                        return intList;
-                    }
-                    // Nếu là array of strings
-                    if (firstElement.ValueKind == JsonValueKind.String)
-                    {
-                        var stringList = new List<string>();
-                        foreach (var item in arrayList)
-                        {
-                            stringList.Add(item.GetString() ?? string.Empty);
-                        }
-                        return stringList;
-                    }
-                    // Fallback: return as JsonElement
-                    return element;
-                
-                case JsonValueKind.Object:
-                    // Nested object, return as JsonElement hoặc có thể deserialize thêm
-                    return element;
-                
-                case JsonValueKind.Null:
-                default:
-                    return null!;
-            }
-        }
 
         public QuizAttemptService(
             IQuizRepository quizRepository,
@@ -460,28 +273,26 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 4. Normalize userAnswer (convert string sang int nếu cần, xử lý JsonElement, etc.)
-                object? normalizedAnswer = NormalizeUserAnswer(request.UserAnswer, question.Type);
-
-                // 5. Tính score mới dựa trên answer mới (real-time scoring)
+                // 4. Tính score mới dựa trên answer mới (real-time scoring)
+                // Strategy sẽ tự normalize answer để đảm bảo an toàn
                 // Nếu làm đúng rồi sửa lại sai thì điểm sẽ từ có điểm thành 0 điểm
-                decimal newScore = strategy.CalculateScore(question, normalizedAnswer);
+                decimal newScore = strategy.CalculateScore(question, request.UserAnswer);
 
-                // 6. Update AnswersJson (lưu answer mới - lưu normalized answer)
-                var answers = DeserializeAnswersJson(attempt.AnswersJson);
-                answers[request.QuestionId] = normalizedAnswer!;
+                // 5. Update AnswersJson (lưu raw answer - Strategy đã tự normalize khi tính điểm)
+                var answers = AnswerNormalizer.DeserializeAnswersJson(attempt.AnswersJson);
+                answers[request.QuestionId] = request.UserAnswer!;
                 attempt.AnswersJson = System.Text.Json.JsonSerializer.Serialize(answers);
 
-                // 7. Update ScoresJson (lưu score mới cho câu này)
+                // 6. Update ScoresJson (lưu score mới cho câu này)
                 // Nếu câu này đã có điểm trước đó, sẽ bị ghi đè bằng điểm mới
-                var scores = DeserializeScoresJson(attempt.ScoresJson);
+                var scores = AnswerNormalizer.DeserializeScoresJson(attempt.ScoresJson);
                 scores[request.QuestionId] = newScore;
                 attempt.ScoresJson = System.Text.Json.JsonSerializer.Serialize(scores);
 
-                // 8. Tính lại TotalScore (tổng tất cả scores)
+                // 7. Tính lại TotalScore (tổng tất cả scores)
                 attempt.TotalScore = scores.Values.Sum();
 
-                // 9. Lưu attempt
+                // 8. Lưu attempt
                 await _quizAttemptRepository.UpdateQuizAttemptAsync(attempt);
 
                 response.Success = true;
@@ -556,7 +367,7 @@ namespace LearningEnglish.Application.Service
                     // Parse ScoresJson để điền ScoresByQuestion
                     if (!string.IsNullOrEmpty(attempt.ScoresJson))
                     {
-                        var scores = DeserializeScoresJson(attempt.ScoresJson);
+                        var scores = AnswerNormalizer.DeserializeScoresJson(attempt.ScoresJson);
                         result.ScoresByQuestion = scores;
                     }
                 }
@@ -690,29 +501,51 @@ namespace LearningEnglish.Application.Service
                 // 5. Áp dụng lại shuffle với cùng seed (attemptId)
                 var shuffledSections = ShuffleQuizForAttempt(quizDetails, attempt.AttemptId);
 
-                // 6. Parse scores hiện tại để đánh dấu câu đã trả lời
-                var currentScores = DeserializeScoresJson(attempt.ScoresJson);
+                // 6. Parse answers từ DB (chỉ load answers, KHÔNG load scores khi đang làm bài)
+                var currentAnswers = AnswerNormalizer.DeserializeAnswersJson(attempt.AnswersJson);
 
-                // 7. Mark questions đã trả lời trong DTO
+                // 7. Populate answers vào questions trong DTO (KHÔNG hiển thị điểm khi InProgress)
+                // Lý do: User không nên biết mình làm đúng hay sai khi đang làm bài
                 foreach (var section in shuffledSections)
                 {
+                    // Questions trong groups
                     foreach (var group in section.QuizGroups)
                     {
                         foreach (var question in group.Questions)
                         {
-                            if (currentScores.ContainsKey(question.QuestionId))
+                            if (currentAnswers.ContainsKey(question.QuestionId))
                             {
                                 question.IsAnswered = true;
-                                question.CurrentScore = currentScores[question.QuestionId];
+                                question.UserAnswer = currentAnswers[question.QuestionId];
+                                
+                                // Normalize answer theo QuestionType để đảm bảo format đúng cho frontend
+                                question.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
+                                    question.UserAnswer, 
+                                    question.Type
+                                );
+                                
+                                // KHÔNG set CurrentScore khi đang làm bài (InProgress)
+                                // Chỉ hiển thị điểm sau khi submit
                             }
                         }
                     }
+                    
+                    // Standalone questions
                     foreach (var question in section.Questions)
                     {
-                        if (currentScores.ContainsKey(question.QuestionId))
+                        if (currentAnswers.ContainsKey(question.QuestionId))
                         {
                             question.IsAnswered = true;
-                            question.CurrentScore = currentScores[question.QuestionId];
+                            question.UserAnswer = currentAnswers[question.QuestionId];
+                            
+                            // Normalize answer theo QuestionType để đảm bảo format đúng cho frontend
+                            question.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
+                                question.UserAnswer, 
+                                question.Type
+                            );
+                            
+                            // KHÔNG set CurrentScore khi đang làm bài (InProgress)
+                            // Chỉ hiển thị điểm sau khi submit
                         }
                     }
                 }

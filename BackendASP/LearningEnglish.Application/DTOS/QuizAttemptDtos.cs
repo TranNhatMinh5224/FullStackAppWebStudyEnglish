@@ -82,6 +82,7 @@ namespace LearningEnglish.Application.DTOs
         public decimal Points { get; set; }
         public bool IsAnswered { get; set; } = false;  // Đánh dấu đã trả lời
         public decimal? CurrentScore { get; set; }     // Điểm hiện tại (nếu đã trả lời)
+        public object? UserAnswer { get; set; }         // Câu trả lời của user (để hiển thị khi resume)
         public List<AnswerOptionDto> Options { get; set; } = new();
     }
 

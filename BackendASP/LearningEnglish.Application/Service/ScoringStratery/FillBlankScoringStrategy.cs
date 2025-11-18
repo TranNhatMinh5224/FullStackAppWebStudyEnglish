@@ -1,4 +1,3 @@
-using System;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Domain.Entities;
@@ -12,8 +11,8 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
 
         public decimal CalculateScore(Question question, object? userAnswer)
         {
-            // Chuẩn hóa câu trả lời của học sinh
-            string userAnswerStr = (userAnswer != null ? Convert.ToString(userAnswer) : string.Empty)
+            // Tự normalize answer về string
+            string userAnswerStr = AnswerNormalizer.NormalizeToString(userAnswer)
                                         .Trim()
                                         .ToLower();
 

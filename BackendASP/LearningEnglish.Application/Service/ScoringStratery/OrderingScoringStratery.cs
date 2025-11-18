@@ -1,6 +1,7 @@
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Interface.Strategies;
+using LearningEnglish.Application.Common.Helpers;
 
 namespace LearningEnglish.Application.Service.ScoringStrategies
 {
@@ -12,12 +13,14 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
         {
             if (userAnswer == null) return 0m;
 
-            if (userAnswer is List<int> userOrder)
-            {
-                var correctOrder = ScoringHelper.ParseCorrectOrder(question.CorrectAnswersJson);
-                if (correctOrder != null && userOrder.SequenceEqual(correctOrder))
-                    return question.Points;  // Đúng thứ tự: full điểm
-            }
+            // Tự normalize answer về List<int>
+            var userOrder = AnswerNormalizer.NormalizeToListInt(userAnswer);
+            if (userOrder == null || userOrder.Count == 0) return 0m;
+
+            var correctOrder = ScoringHelper.ParseCorrectOrder(question.CorrectAnswersJson);
+            if (correctOrder != null && userOrder.SequenceEqual(correctOrder))
+                return question.Points;  // Đúng thứ tự: full điểm
+
             return 0;  // Sai: 0 điểm
         }
     }

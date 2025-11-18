@@ -1,6 +1,7 @@
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Interface.Strategies;
+using LearningEnglish.Application.Common.Helpers;
 
 namespace LearningEnglish.Application.Service.ScoringStrategies
 {
@@ -14,13 +15,13 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
 
             // User answer có thể là int (optionId) hoặc bool
             int? selectedOptionId = null;
-            if (userAnswer is int id)
+            
+            // Thử normalize về int trước
+            selectedOptionId = AnswerNormalizer.NormalizeToInt(userAnswer);
+            
+            // Nếu không được, thử parse từ bool
+            if (!selectedOptionId.HasValue && userAnswer is bool boolAnswer)
             {
-                selectedOptionId = id;
-            }
-            else if (userAnswer is bool boolAnswer)
-            {
-                
                 var trueOption = question.Options.FirstOrDefault(o => o.Text?.ToLower() == "true");
                 var falseOption = question.Options.FirstOrDefault(o => o.Text?.ToLower() == "false");
                 selectedOptionId = boolAnswer ? trueOption?.AnswerOptionId : falseOption?.AnswerOptionId;
