@@ -17,6 +17,9 @@ using LearningEnglish.Application.Service.ScoringStrategies;
 using LearningEnglish.Application.Validators;
 using LearningEnglish.Infrastructure.Repositories;
 using LearningEnglish.Infrastructure.Services;
+using LearningEnglish.Application.Configurations;
+using Microsoft.Extensions.Options;
+using Minio;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -168,6 +171,26 @@ builder.Services.AddScoped<IQuizService, QuizService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IQuizAttemptService, QuizAttemptService>();
 builder.Services.AddScoped<IQuizAttemptAdminService, QuizAttemptAdminService>();
+
+// MinIO Configuration
+builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("MinIO"));
+
+// MinIO Client (Singleton - dùng chung cho toàn bộ app)
+builder.Services.AddSingleton<IMinioClient>(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<MinioOptions>>().Value;
+    var client = new MinioClient()
+        .WithEndpoint(options.Endpoint)
+        .WithCredentials(options.AccessKey, options.SecretKey);
+
+    if (options.UseSSL)
+        client.WithSSL();
+
+    return client.Build();
+});
+
+// File Storage Service
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 
 // Payment related services
 builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();

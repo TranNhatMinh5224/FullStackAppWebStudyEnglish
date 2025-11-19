@@ -2,6 +2,7 @@ using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Utils;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
@@ -15,19 +16,22 @@ namespace LearningEnglish.Application.Service
         private readonly IMapper _mapper;
         private readonly ILogger<TeacherCourseService> _logger;
         private readonly ITeacherPackageRepository _teacherPackageRepository;
+        private readonly IFileStorageService _fileStorageService;
 
         public TeacherCourseService(
             ICourseRepository courseRepository,
             IUserRepository userRepository,
             IMapper mapper,
             ILogger<TeacherCourseService> logger,
-            ITeacherPackageRepository teacherPackageRepository)
+            ITeacherPackageRepository teacherPackageRepository,
+            IFileStorageService fileStorageService)
         {
             _courseRepository = courseRepository;
             _userRepository = userRepository;
             _mapper = mapper;
             _logger = logger;
             _teacherPackageRepository = teacherPackageRepository;
+            _fileStorageService = fileStorageService;
         }
 
         public async Task<ServiceResponse<CourseResponseDto>> CreateCourseAsync(TeacherCreateCourseRequestDto requestDto, int teacherId)
@@ -83,7 +87,6 @@ namespace LearningEnglish.Application.Service
                 {
                     Title = requestDto.Title,
                     Description = requestDto.Description,
-                    ImageUrl = requestDto.Img,
                     Type = requestDto.Type,
                     TeacherId = teacherId,
                     ClassCode = classCode,
@@ -94,10 +97,28 @@ namespace LearningEnglish.Application.Service
 
                 await _courseRepository.AddCourse(course);
 
-                // Dùng Mapper thay manual
+                // Convert temp file → real file nếu có ImageTempKey
+                if (!string.IsNullOrEmpty(requestDto.ImageTempKey))
+                {
+                    var convertResponse = await _fileStorageService.ConvertTempToRealFileAsync(
+                        requestDto.ImageTempKey,
+                        $"courses/{course.CourseId}"
+                    );
+
+                    if (convertResponse.Success && convertResponse.Data != null)
+                    {
+                        course.ImageUrl = convertResponse.Data.RealKey;
+                        await _courseRepository.UpdateCourse(course);
+                    }
+                }
+
+                // Map response và generate URL từ key
                 var courseResponseDto = _mapper.Map<CourseResponseDto>(course);
                 courseResponseDto.LessonCount = 0;
                 courseResponseDto.StudentCount = 0;
+
+                // Generate URL từ key
+                FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
 
                 response.Data = courseResponseDto;
                 response.Message = $"Course created successfully ({currentCourseCount + 1}/{maxCourses} courses)";
@@ -169,16 +190,39 @@ namespace LearningEnglish.Application.Service
                 // Cập nhật course
                 course.Title = requestDto.Title;
                 course.Description = requestDto.Description;
-                course.ImageUrl = requestDto.Img;
                 course.Type = requestDto.Type;
                 course.MaxStudent = requestDto.MaxStudent > 0 ? requestDto.MaxStudent : teacherPackage.MaxStudents;
 
+                // Xử lý file ảnh: xóa file cũ nếu có file mới
+                if (!string.IsNullOrEmpty(requestDto.ImageTempKey))
+                {
+                    // Xóa file cũ nếu có
+                    if (!string.IsNullOrEmpty(course.ImageUrl))
+                    {
+                        await _fileStorageService.DeleteRealFileAsync(course.ImageUrl);
+                    }
+
+                    // Convert temp → real
+                    var convertResponse = await _fileStorageService.ConvertTempToRealFileAsync(
+                        requestDto.ImageTempKey,
+                        $"courses/{course.CourseId}"
+                    );
+
+                    if (convertResponse.Success && convertResponse.Data != null)
+                    {
+                        course.ImageUrl = convertResponse.Data.RealKey;
+                    }
+                }
+
                 await _courseRepository.UpdateCourse(course);
 
-                // Dùng Mapper thay manual
+                // Map response và generate URL từ key
                 var courseResponseDto = _mapper.Map<CourseResponseDto>(course);
                 courseResponseDto.LessonCount = await _courseRepository.CountLessons(courseId);
                 courseResponseDto.StudentCount = await _courseRepository.CountEnrolledUsers(courseId);
+
+                // Generate URL từ key
+                FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
 
                 response.StatusCode = 200;
                 response.Data = courseResponseDto;
@@ -211,9 +255,11 @@ namespace LearningEnglish.Application.Service
                     var courseDto = _mapper.Map<CourseResponseDto>(course);
                     courseDto.LessonCount = await _courseRepository.CountLessons(course.CourseId);
                     courseDto.StudentCount = await _courseRepository.CountEnrolledUsers(course.CourseId);
-
                     courseDtos.Add(courseDto);
                 }
+
+                // Generate URL từ key cho tất cả courses
+                FileUrlHelper.SetImageUrlForCourses(courses, courseDtos, _fileStorageService);
 
                 response.Data = courseDtos;
                 response.Message = "Retrieved teacher's courses successfully";

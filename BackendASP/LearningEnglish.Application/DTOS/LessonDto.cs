@@ -8,6 +8,8 @@ namespace LearningEnglish.Application.DTOs
         public string? Description { get; set; }
         public int CourseId { get; set; }
         public int OrderIndex { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? ImageType { get; set; }
     }
     public class ListLessonDto
     {
@@ -15,6 +17,8 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int OrderIndex { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? ImageType { get; set; }
     }
     public class AdminCreateLessonDto
     {

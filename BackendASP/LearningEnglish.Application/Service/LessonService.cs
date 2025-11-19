@@ -3,6 +3,7 @@ using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 namespace LearningEnglish.Application.Service
@@ -14,19 +15,22 @@ namespace LearningEnglish.Application.Service
         private readonly ICourseRepository _courseRepository;
         private readonly ILogger<LessonService> _logger;
         private readonly ITeacherPackageRepository _teacherPackageRepository;
+        private readonly IFileStorageService _fileStorageService;
 
         public LessonService(
             ILessonRepository lessonRepository,
             IMapper mapper,
             ILogger<LessonService> logger,
             ICourseRepository courseRepository,
-            ITeacherPackageRepository teacherPackageRepository)
+            ITeacherPackageRepository teacherPackageRepository,
+            IFileStorageService fileStorageService)
         {
             _lessonRepository = lessonRepository;
             _mapper = mapper;
             _logger = logger;
             _courseRepository = courseRepository;
             _teacherPackageRepository = teacherPackageRepository;
+            _fileStorageService = fileStorageService;
         }
 
         // admin Thêm Lesson vào Course 
@@ -212,8 +216,13 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var lessons = await _lessonRepository.GetListLessonByCourseId(CourseId);
+                var lessonDtos = lessons.Select(l => _mapper.Map<ListLessonDto>(l)).ToList();
+                
+                // Generate URL từ key cho tất cả lessons
+                FileUrlHelper.SetImageUrlForListLessons(lessons, lessonDtos, _fileStorageService);
+                
                 response.StatusCode = 200;
-                response.Data = lessons.Select(l => _mapper.Map<ListLessonDto>(l)).ToList();
+                response.Data = lessonDtos;
             }
             catch (Exception ex)
             {
@@ -287,8 +296,13 @@ namespace LearningEnglish.Application.Service
                 }
 
 
+                var lessonDto = _mapper.Map<LessonDto>(lesson);
+                
+                // Generate URL từ key
+                FileUrlHelper.SetImageUrlForLesson(lesson, lessonDto, _fileStorageService);
+                
                 response.StatusCode = 200;
-                response.Data = _mapper.Map<LessonDto>(lesson);
+                response.Data = lessonDto;
             }
             catch (Exception ex)
             {

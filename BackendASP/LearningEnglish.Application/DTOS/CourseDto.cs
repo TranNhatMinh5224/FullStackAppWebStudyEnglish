@@ -8,7 +8,7 @@ namespace LearningEnglish.Application.DTOs
     {
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string? Img { get; set; }
+        public string? ImageTempKey { get; set; }
         public string? ImageType { get; set; }
         public decimal? Price { get; set; }
         public int MaxStudent { get; set; }
@@ -21,7 +21,7 @@ namespace LearningEnglish.Application.DTOs
     {
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string? Img { get; set; }
+        public string? ImageTempKey { get; set; }
         public string? ImageType { get; set; }
         public int MaxStudent { get; set; }
         public CourseType Type { get; set; } = CourseType.Teacher;
@@ -41,7 +41,7 @@ namespace LearningEnglish.Application.DTOs
         public int CourseId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string? Img { get; set; }
+        public string? ImageUrl { get; set; }
         public string? ImageType { get; set; }
         public CourseType Type { get; set; }
         public decimal? Price { get; set; }
@@ -63,7 +63,7 @@ namespace LearningEnglish.Application.DTOs
         public int CourseId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string? Img { get; set; }
+        public string? ImageUrl { get; set; }
         public string? ImageType { get; set; }
         public CourseType Type { get; set; }
         public decimal? Price { get; set; }
@@ -83,7 +83,7 @@ namespace LearningEnglish.Application.DTOs
         public int CourseId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string? Img { get; set; }
+        public string? ImageUrl { get; set; }
         public string? ImageType { get; set; }
         public CourseType Type { get; set; }
         public decimal? Price { get; set; }
@@ -101,7 +101,7 @@ namespace LearningEnglish.Application.DTOs
         public int CourseId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string? Img { get; set; }
+        public string? ImageUrl { get; set; }
         public string? ImageType { get; set; }
         public CourseType Type { get; set; }
         public decimal? Price { get; set; }
@@ -128,7 +128,7 @@ namespace LearningEnglish.Application.DTOs
         public int CourseId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string? Img { get; set; }
+        public string? ImageUrl { get; set; }
         public string? ImageType { get; set; }
         public CourseType Type { get; set; }
         public decimal? Price { get; set; }
@@ -146,7 +146,7 @@ namespace LearningEnglish.Application.DTOs
         public int CourseId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string? Img { get; set; }
+        public string? ImageUrl { get; set; }
         public string? ImageType { get; set; }
         public decimal? Price { get; set; }
         public bool IsEnrolled { get; set; }
@@ -175,7 +175,7 @@ namespace LearningEnglish.Application.DTOs
     {
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string? Img { get; set; }
+        public string? ImageTempKey { get; set; }
         public string? ImageType { get; set; }
         public decimal? Price { get; set; }
         public int MaxStudent { get; set; } = 0;
@@ -188,7 +188,7 @@ namespace LearningEnglish.Application.DTOs
     {
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string? Img { get; set; }
+        public string? ImageTempKey { get; set; }
         public string? ImageType { get; set; }
         public int MaxStudent { get; set; } = 0;
         public CourseType Type { get; set; } = CourseType.Teacher;
