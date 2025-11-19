@@ -18,6 +18,8 @@ namespace LearningEnglish.API.Controllers.Admin
             _teacherPackageService = teacherPackageService;
         }
 
+        // Controller lấy ra danh sách gói giáo viên trong hệ thống
+
         [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllTeacherPackages()
@@ -27,6 +29,7 @@ namespace LearningEnglish.API.Controllers.Admin
                 return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
+        // Controller lấy ra gói giáo viên theo ID
 
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin")]
@@ -40,6 +43,7 @@ namespace LearningEnglish.API.Controllers.Admin
                 return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
+        // Controller tạo mới gói giáo viên
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
@@ -53,6 +57,7 @@ namespace LearningEnglish.API.Controllers.Admin
                 return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
+        // Controller cập nhật gói giáo viên
 
         [HttpPut("Update-Teacher-Package{id}")]
         [Authorize(Roles = "Admin")]
@@ -75,6 +80,7 @@ namespace LearningEnglish.API.Controllers.Admin
                 return StatusCode(500, new { Message = "Internal server error", Detail = ex.Message });
             }
         }
+        // Controller xóa gói giáo viên
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteTeacherPackage(int id)

@@ -27,7 +27,7 @@ namespace LearningEnglish.API.Controllers.Admin
             if (!result.Success) return BadRequest(new { message = result.Message });
             return Ok(result.Data);
         }
-        // Controller lấy ra danh sách giáo viên trong hệ thống
+
         // Controller block tài khoản người dùng(teacher và student)
         [HttpPut("block-account/{userId}")]
         public async Task<IActionResult> BlockAccount(int userId)

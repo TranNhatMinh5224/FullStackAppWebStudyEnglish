@@ -44,9 +44,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             return await _context.Courses
                 .Include(c => c.Teacher)
                 .Include(c => c.Lessons)
-                    // .ThenInclude(l => l.Vocabularies) // Property not found
-                // .Include(c => c.Lessons)
-                    // .ThenInclude(l => l.MiniTests) // Property not found
+
                 .Include(c => c.UserCourses)
                 .FirstOrDefaultAsync(c => c.CourseId == courseId);
         }
@@ -164,7 +162,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             // Reload course từ DB để lấy EnrollmentCount mới nhất (tránh race condition)
             var course = await _context.Courses
                 .FirstOrDefaultAsync(c => c.CourseId == courseId);
-            
+
             if (course == null)
             {
                 throw new InvalidOperationException("Course not found");
