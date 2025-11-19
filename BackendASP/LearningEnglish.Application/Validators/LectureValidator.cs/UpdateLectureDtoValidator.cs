@@ -52,6 +52,30 @@ namespace LearningEnglish.Application.Validators
                 .WithMessage("Parent Lecture ID phải lớn hơn 0")
                 .When(x => x.ParentLectureId.HasValue);
 
+            // Validate MediaUrl - nếu có, tối đa 1000 ký tự
+            RuleFor(x => x.MediaUrl)
+                .MaximumLength(1000)
+                .WithMessage("Media URL không được vượt quá 1000 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.MediaUrl));
+
+            // Validate MediaType - nếu có, tối đa 50 ký tự
+            RuleFor(x => x.MediaType)
+                .MaximumLength(50)
+                .WithMessage("Media type không được vượt quá 50 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.MediaType));
+
+            // Validate MediaSize - nếu có phải > 0
+            RuleFor(x => x.MediaSize)
+                .GreaterThan(0)
+                .WithMessage("Media size phải lớn hơn 0")
+                .When(x => x.MediaSize.HasValue);
+
+            // Validate Duration - nếu có phải >= 0
+            RuleFor(x => x.Duration)
+                .GreaterThanOrEqualTo(0)
+                .WithMessage("Duration phải từ 0 trở lên")
+                .When(x => x.Duration.HasValue);
+
             // Đảm bảo ít nhất một field được cập nhật
             RuleFor(x => x)
                 .Must(x => !string.IsNullOrEmpty(x.Title) || 
@@ -59,7 +83,11 @@ namespace LearningEnglish.Application.Validators
                           !string.IsNullOrEmpty(x.NumberingLabel) ||
                           x.Type.HasValue ||
                           !string.IsNullOrEmpty(x.MarkdownContent) ||
-                          x.ParentLectureId.HasValue)
+                          x.ParentLectureId.HasValue ||
+                          !string.IsNullOrEmpty(x.MediaUrl) ||
+                          !string.IsNullOrEmpty(x.MediaType) ||
+                          x.MediaSize.HasValue ||
+                          x.Duration.HasValue)
                 .WithMessage("Phải có ít nhất một trường được cập nhật");
         }
     }

@@ -60,6 +60,10 @@ namespace LearningEnglish.Application.DTOs
         public LectureType Type { get; set; } = LectureType.Content;
         public string? MarkdownContent { get; set; }
         public int? ParentLectureId { get; set; }
+        public string? MediaUrl { get; set; }
+        public string? MediaType { get; set; }
+        public long? MediaSize { get; set; }
+        public int? Duration { get; set; }
     }
 
     // DTO for updating existing lecture
@@ -71,6 +75,10 @@ namespace LearningEnglish.Application.DTOs
         public LectureType? Type { get; set; }
         public string? MarkdownContent { get; set; }
         public int? ParentLectureId { get; set; }
+        public string? MediaUrl { get; set; }
+        public string? MediaType { get; set; }
+        public long? MediaSize { get; set; }
+        public int? Duration { get; set; }
     }
 
     // DTO for lecture with progress info for users

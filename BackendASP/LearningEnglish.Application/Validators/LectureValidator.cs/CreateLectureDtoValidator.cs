@@ -57,6 +57,30 @@ namespace LearningEnglish.Application.Validators
                 .GreaterThan(0)
                 .WithMessage("Parent Lecture ID phải lớn hơn 0")
                 .When(x => x.ParentLectureId.HasValue);
+
+            // Validate MediaUrl - tùy chọn, tối đa 1000 ký tự
+            RuleFor(x => x.MediaUrl)
+                .MaximumLength(1000)
+                .WithMessage("Media URL không được vượt quá 1000 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.MediaUrl));
+
+            // Validate MediaType - tùy chọn, tối đa 50 ký tự
+            RuleFor(x => x.MediaType)
+                .MaximumLength(50)
+                .WithMessage("Media type không được vượt quá 50 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.MediaType));
+
+            // Validate MediaSize - nếu có phải > 0
+            RuleFor(x => x.MediaSize)
+                .GreaterThan(0)
+                .WithMessage("Media size phải lớn hơn 0")
+                .When(x => x.MediaSize.HasValue);
+
+            // Validate Duration - nếu có phải >= 0
+            RuleFor(x => x.Duration)
+                .GreaterThanOrEqualTo(0)
+                .WithMessage("Duration phải từ 0 trở lên")
+                .When(x => x.Duration.HasValue);
         }
     }
 }

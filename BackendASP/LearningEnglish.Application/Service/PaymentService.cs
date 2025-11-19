@@ -142,6 +142,26 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // Validate Amount from DB - Security check to prevent client manipulation
+                if (existingPayment.Amount != paymentDto.Amount)
+                {
+                    _logger.LogWarning("Amount mismatch cho Payment {PaymentId}. Expected: {ExpectedAmount}, Received: {ReceivedAmount}",
+                        paymentDto.PaymentId, existingPayment.Amount, paymentDto.Amount);
+                    response.Success = false;
+                    response.Message = "Số tiền thanh toán không khớp";
+                    return response;
+                }
+
+                // Validate ProductId and ProductType from DB
+                if (existingPayment.ProductId != paymentDto.ProductId || existingPayment.ProductType != paymentDto.ProductType)
+                {
+                    _logger.LogWarning("Product mismatch cho Payment {PaymentId}. Expected: {ExpectedProduct}/{ExpectedType}, Received: {ReceivedProduct}/{ReceivedType}",
+                        paymentDto.PaymentId, existingPayment.ProductId, existingPayment.ProductType, paymentDto.ProductId, paymentDto.ProductType);
+                    response.Success = false;
+                    response.Message = "Thông tin sản phẩm không khớp";
+                    return response;
+                }
+
                 await _unitOfWork.BeginTransactionAsync();
 
                 _logger.LogInformation("Xác nhận thanh toán {PaymentId} cho User {UserId}", paymentDto.PaymentId, userId);

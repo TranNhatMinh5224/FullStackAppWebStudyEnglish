@@ -9,6 +9,7 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public string? ImageType { get; set; }
         public decimal? Price { get; set; }
         public int MaxStudent { get; set; }
         public bool IsFeatured { get; set; } = false;
@@ -21,6 +22,7 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public string? ImageType { get; set; }
         public int MaxStudent { get; set; }
         public CourseType Type { get; set; } = CourseType.Teacher;
     }
@@ -40,6 +42,7 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public string? ImageType { get; set; }
         public CourseType Type { get; set; }
         public decimal? Price { get; set; }
         public int? TeacherId { get; set; }
@@ -61,6 +64,7 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public string? ImageType { get; set; }
         public CourseType Type { get; set; }
         public decimal? Price { get; set; }
         public int? TeacherId { get; set; }
@@ -80,6 +84,7 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public string? ImageType { get; set; }
         public CourseType Type { get; set; }
         public decimal? Price { get; set; }
         public bool IsEnrolled { get; set; }
@@ -97,6 +102,7 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public string? ImageType { get; set; }
         public CourseType Type { get; set; }
         public decimal? Price { get; set; }
         public int? TeacherId { get; set; }
@@ -123,6 +129,7 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public string? ImageType { get; set; }
         public CourseType Type { get; set; }
         public decimal? Price { get; set; }
         public string ClassCode { get; set; } = string.Empty;
@@ -140,6 +147,7 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public string? ImageType { get; set; }
         public decimal? Price { get; set; }
         public bool IsEnrolled { get; set; }
         public string TeacherName { get; set; } = string.Empty;
@@ -168,6 +176,7 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public string? ImageType { get; set; }
         public decimal? Price { get; set; }
         public int MaxStudent { get; set; } = 0;
         public bool IsFeatured { get; set; } = false;
@@ -180,6 +189,7 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Img { get; set; }
+        public string? ImageType { get; set; }
         public int MaxStudent { get; set; } = 0;
         public CourseType Type { get; set; } = CourseType.Teacher;
     }

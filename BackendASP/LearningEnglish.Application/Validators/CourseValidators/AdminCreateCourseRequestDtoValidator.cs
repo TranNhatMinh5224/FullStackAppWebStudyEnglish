@@ -19,6 +19,10 @@ namespace LearningEnglish.Application.Validators.CourseValidators
                 .MaximumLength(500).WithMessage("Image URL must not exceed 500 characters")
                 .When(x => !string.IsNullOrEmpty(x.Img));
 
+            RuleFor(x => x.ImageType)
+                .MaximumLength(50).WithMessage("Image type must not exceed 50 characters")
+                .When(x => !string.IsNullOrEmpty(x.ImageType));
+
             RuleFor(x => x.Price)
                 .GreaterThanOrEqualTo(0).WithMessage("Price must be greater than or equal to 0")
                 .When(x => x.Price.HasValue);
