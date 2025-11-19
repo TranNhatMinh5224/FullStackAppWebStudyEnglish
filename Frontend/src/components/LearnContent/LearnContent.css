@@ -1,0 +1,102 @@
+/* CSS cho LearnContent component */
+.learn-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 500px;
+  padding: 40px 20px;
+}
+
+.learn-content-box {
+  background: white;
+  padding: 60px 50px;
+  border-radius: 25px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  max-width: 600px;
+  min-width: 450px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  margin-top: -150px;
+  margin-right: 80px;
+}
+
+
+.mascot-big {
+  width: 140px;
+  height: 140px;
+  margin-bottom: 25px;
+  animation: bounce 2s infinite;
+}
+
+.slogan {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 35px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.btn-learn {
+  background: linear-gradient(135deg, #23AC38 0%, #4CAF50 100%);
+  color: white;
+  border: none;
+  padding: 18px 35px;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.btn-learn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
+}
+
+.btn-learn:active {
+  transform: translateY(0);
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+
+@media (max-width: 768px) {
+  .learn-content-box {
+    padding: 40px 30px;
+    margin: 0 15px;
+    min-width: auto;
+    max-width: 90%;
+  }
+  
+  .mascot-big {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .slogan {
+    font-size: 18px;
+  }
+  
+  .btn-learn {
+    padding: 15px 30px;
+    font-size: 16px;
+  }
+}
+
+
