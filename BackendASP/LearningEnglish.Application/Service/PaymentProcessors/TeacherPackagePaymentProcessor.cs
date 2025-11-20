@@ -1,13 +1,16 @@
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service.PaymentProcessors
 {
-    public class TeacherPackagePaymentProcessor : IPaymentProcessor
+    public class TeacherPackagePaymentProcessor : IPaymentStrategy
     {
+        public ProductType ProductType => ProductType.TeacherPackage;
+
         private readonly ITeacherPackageRepository _teacherPackageRepository;
         private readonly IUserRepository _userRepository;
         private readonly ITeacherSubscriptionService _teacherSubscriptionService;

@@ -6,8 +6,7 @@ using LearningEnglish.Application.Interface.Strategies;
 using AutoMapper;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Common.Helpers;
-using System.Text.Json;
-using System.Linq;
+
 
 namespace LearningEnglish.Application.Service
 {
@@ -41,11 +40,7 @@ namespace LearningEnglish.Application.Service
             _questionRepository = questionRepository;
 
             // Debug: kiểm tra strategies được inject
-            Console.WriteLine($"Scoring strategies injected: {scoringStrategies.Count()}");
-            foreach (var strategy in scoringStrategies)
-            {
-                Console.WriteLine($"Strategy: {strategy.GetType().Name} for {strategy.Type}");
-            }
+
         }
 
         public async Task<ServiceResponse<QuizAttemptWithQuestionsDto>> StartQuizAttemptAsync(int quizId, int userId)
@@ -98,11 +93,11 @@ namespace LearningEnglish.Application.Service
                 if (quiz.MaxAttempts.HasValue && quiz.MaxAttempts.Value > 0)
                 {
                     // Đếm số attempts đã submit (Submitted, Graded) - không tính InProgress vì có thể do disconnect
-                    int submittedAttemptsCount = quizAttempts.Count(a => 
-                        a.Status == QuizAttemptStatus.Submitted || 
+                    int submittedAttemptsCount = quizAttempts.Count(a =>
+                        a.Status == QuizAttemptStatus.Submitted ||
                         a.Status == QuizAttemptStatus.Graded ||
                         a.Status == QuizAttemptStatus.TimeExpired);
-                    
+
                     if (submittedAttemptsCount >= quiz.MaxAttempts.Value)
                     {
                         response.Success = false;
@@ -356,14 +351,14 @@ namespace LearningEnglish.Application.Service
                 if (quiz.ShowScoreImmediately == true)
                 {
                     result.TotalScore = attempt.TotalScore;
-                    
+
                     // Tính percentage (điểm hiện tại / điểm tối đa có thể)
                     var maxPossibleScore = quiz.TotalPossibleScore;
                     result.Percentage = maxPossibleScore > 0 ? (attempt.TotalScore / maxPossibleScore) * 100 : 0;
-                    
+
                     // Kiểm tra pass/fail
                     result.IsPassed = quiz.PassingScore.HasValue ? attempt.TotalScore >= quiz.PassingScore.Value : false;
-                    
+
                     // Parse ScoresJson để điền ScoresByQuestion
                     if (!string.IsNullOrEmpty(attempt.ScoresJson))
                     {
@@ -517,19 +512,19 @@ namespace LearningEnglish.Application.Service
                             {
                                 question.IsAnswered = true;
                                 question.UserAnswer = currentAnswers[question.QuestionId];
-                                
+
                                 // Normalize answer theo QuestionType để đảm bảo format đúng cho frontend
                                 question.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
-                                    question.UserAnswer, 
+                                    question.UserAnswer,
                                     question.Type
                                 );
-                                
+
                                 // KHÔNG set CurrentScore khi đang làm bài (InProgress)
                                 // Chỉ hiển thị điểm sau khi submit
                             }
                         }
                     }
-                    
+
                     // Standalone questions
                     foreach (var question in section.Questions)
                     {
@@ -537,13 +532,13 @@ namespace LearningEnglish.Application.Service
                         {
                             question.IsAnswered = true;
                             question.UserAnswer = currentAnswers[question.QuestionId];
-                            
+
                             // Normalize answer theo QuestionType để đảm bảo format đúng cho frontend
                             question.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
-                                question.UserAnswer, 
+                                question.UserAnswer,
                                 question.Type
                             );
-                            
+
                             // KHÔNG set CurrentScore khi đang làm bài (InProgress)
                             // Chỉ hiển thị điểm sau khi submit
                         }
@@ -568,11 +563,11 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
         }
-        
+
         private async Task<List<CorrectAnswerDto>> GetCorrectAnswersAsync(int quizId)
         {
             var correctAnswers = new List<CorrectAnswerDto>();
-            
+
             // Lấy tất cả câu hỏi của quiz
             var quizDetails = await _quizRepository.GetFullQuizAsync(quizId);
             if (quizDetails == null) return correctAnswers;
@@ -587,7 +582,7 @@ namespace LearningEnglish.Application.Service
                         correctAnswers.Add(CreateCorrectAnswerDto(question));
                     }
                 }
-                
+
                 if (section.Questions != null)
                 {
                     foreach (var question in section.Questions)
@@ -596,14 +591,14 @@ namespace LearningEnglish.Application.Service
                     }
                 }
             }
-            
+
             return correctAnswers;
         }
 
         private CorrectAnswerDto CreateCorrectAnswerDto(Question question)
         {
             var correctOptions = new List<string>();
-            
+
             // Lấy đáp án đúng dựa trên loại câu hỏi
             if (question.Type == QuestionType.MultipleChoice || question.Type == QuestionType.TrueFalse)
             {
@@ -638,7 +633,7 @@ namespace LearningEnglish.Application.Service
                     }
                 }
             }
-            
+
             return new CorrectAnswerDto
             {
                 QuestionId = question.QuestionId,

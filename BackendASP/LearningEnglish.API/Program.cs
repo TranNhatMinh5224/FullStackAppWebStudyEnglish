@@ -194,10 +194,9 @@ builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 
 // Payment related services
 builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
-builder.Services.AddScoped<IPaymentProcessorFactory, PaymentProcessorFactory>();
 builder.Services.AddScoped<IPaymentNotificationService, PaymentNotificationService>();
-builder.Services.AddScoped<CoursePaymentProcessor>();
-builder.Services.AddScoped<TeacherPackagePaymentProcessor>();
+builder.Services.AddScoped<IPaymentStrategy, CoursePaymentProcessor>();
+builder.Services.AddScoped<IPaymentStrategy, TeacherPackagePaymentProcessor>();
 
 // FluentValidation
 builder.Services.AddFluentValidationAutoValidation();

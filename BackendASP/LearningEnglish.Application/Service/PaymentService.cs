@@ -1,6 +1,7 @@
 using AutoMapper;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -13,7 +14,7 @@ namespace LearningEnglish.Application.Service
     {
         private readonly IPaymentRepository _paymentRepository;
         private readonly IPaymentValidator _paymentValidator;
-        private readonly IPaymentProcessorFactory _processorFactory;
+        private readonly IEnumerable<IPaymentStrategy> _paymentStrategies;
         private readonly IMapper _mapper;
         private readonly ILogger<PaymentService> _logger;
         private readonly IUnitOfWork _unitOfWork;
@@ -21,14 +22,14 @@ namespace LearningEnglish.Application.Service
         public PaymentService(
             IPaymentRepository paymentRepository,
             IPaymentValidator paymentValidator,
-            IPaymentProcessorFactory processorFactory,
+            IEnumerable<IPaymentStrategy> paymentStrategies,
             IMapper mapper,
             ILogger<PaymentService> logger,
             IUnitOfWork unitOfWork)
         {
             _paymentRepository = paymentRepository;
             _paymentValidator = paymentValidator;
-            _processorFactory = processorFactory;
+            _paymentStrategies = paymentStrategies;
             _mapper = mapper;
             _logger = logger;
             _unitOfWork = unitOfWork;
@@ -178,7 +179,16 @@ namespace LearningEnglish.Application.Service
                 // SAU KHI update payment status, mới xử lý post-payment actions
                 try
                 {
-                    var processor = _processorFactory.GetProcessor(existingPayment.ProductType);
+                    var processor = _paymentStrategies.FirstOrDefault(s => s.ProductType == existingPayment.ProductType);
+                    if (processor == null)
+                    {
+                        _logger.LogError("No payment strategy found for product type {ProductType}", existingPayment.ProductType);
+                        response.Success = false;
+                        response.Message = "Loại sản phẩm không được hỗ trợ";
+                        await _unitOfWork.RollbackAsync();
+                        return response;
+                    }
+
                     var postPaymentResult = await processor.ProcessPostPaymentAsync(
                         existingPayment.UserId,
                         existingPayment.ProductId,
