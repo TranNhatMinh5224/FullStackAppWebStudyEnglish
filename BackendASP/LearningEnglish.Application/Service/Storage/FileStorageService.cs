@@ -16,16 +16,16 @@ namespace LearningEnglish.Application.Service
     public class FileStorageService : IFileStorageService
     {
         private readonly MinioOptions _minioOptions;
-        private readonly IMinioClient _minioClient;
+        private readonly IMinioFileStorage _minioFileStorage;
         private readonly ILogger<FileStorageService> _logger;
 
         public FileStorageService(
             IOptions<MinioOptions> minioOptions,
-            IMinioClient minioClient,
+            IMinioFileStorage minioFileStorage,
             ILogger<FileStorageService> logger)
         {
             _minioOptions = minioOptions.Value;
-            _minioClient = minioClient;
+            _minioFileStorage = minioFileStorage;
             _logger = logger;
         }
 
@@ -70,21 +70,14 @@ namespace LearningEnglish.Application.Service
                 // → "temp/abc123-image.jpg"
 
                 // Đảm bảo bucket tồn tại
-                await EnsureBucketExistsAsync(bucketName);
+                await _minioFileStorage.EnsureBucketExistsAsync(bucketName);
 
                 // Upload file
                 using var stream = file.OpenReadStream();
-                var putObjectArgs = new PutObjectArgs()
-                    .WithBucket(bucketName)
-                    .WithObject(tempKey)
-                    .WithStreamData(stream)
-                    .WithObjectSize(file.Length)
-                    .WithContentType(file.ContentType);
-
-                await _minioClient.PutObjectAsync(putObjectArgs);
+                await _minioFileStorage.UploadObjectAsync(bucketName, tempKey, stream, file.Length, file.ContentType);
 
                 // Tạo preview URL
-                var previewUrl = GetFileUrl(bucketName, tempKey); // Private method return string
+                var previewUrl = await _minioFileStorage.GetPresignedUrlAsync(bucketName, tempKey);
 
                 // Trả về key với prefix category để dễ xác định bucket sau này
                 var fullTempKey = $"{fileCategory.ToString().ToLower()}/temp/{uniqueFileName}";
@@ -160,16 +153,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Copy từ temp sang real trong cùng bucket
-                var copySourceArgs = new CopySourceObjectArgs()
-                    .WithBucket(bucketName)
-                    .WithObject(tempKeyInBucket);
-
-                var copyObjectArgs = new CopyObjectArgs()
-                    .WithBucket(bucketName)
-                    .WithObject(realKey)
-                    .WithCopyObjectSource(copySourceArgs);
-
-                await _minioClient.CopyObjectAsync(copyObjectArgs);
+                await _minioFileStorage.CopyObjectAsync(bucketName, tempKeyInBucket, realKey);
 
                 // Xóa file tạm
                 var deleteResponse = await DeleteTempFileAsync(tempKey);
@@ -184,7 +168,7 @@ namespace LearningEnglish.Application.Service
                     : $"{category.ToString().ToLower()}/real/{realFolderPath}/{fileName}";
                 // → "image/real/courses/123/abc123-image.jpg"
 
-                var realUrl = GetFileUrl(bucketName, realKey); // Private method return string
+                var realUrl = await _minioFileStorage.GetPresignedUrlAsync(bucketName, realKey); // Private method return string
 
                 response.Data = new ConvertTempToRealFileResponseDto
                 {
@@ -229,11 +213,7 @@ namespace LearningEnglish.Application.Service
                     ? tempKey.Substring(tempKey.IndexOf("/temp/") + 1)
                     : tempKey;
 
-                var removeObjectArgs = new RemoveObjectArgs()
-                    .WithBucket(bucketName)
-                    .WithObject(keyInBucket);
-
-                await _minioClient.RemoveObjectAsync(removeObjectArgs);
+                await _minioFileStorage.RemoveObjectAsync(bucketName, keyInBucket);
                 
                 response.Data = true;
                 response.StatusCode = 200;
@@ -275,11 +255,7 @@ namespace LearningEnglish.Application.Service
                     ? fileKey.Substring(fileKey.IndexOf("/real/") + 1)
                     : fileKey;
 
-                var removeObjectArgs = new RemoveObjectArgs()
-                    .WithBucket(bucketName)
-                    .WithObject(keyInBucket);
-
-                await _minioClient.RemoveObjectAsync(removeObjectArgs);
+                await _minioFileStorage.RemoveObjectAsync(bucketName, keyInBucket);
                 
                 response.Data = true;
                 response.StatusCode = 200;
@@ -297,7 +273,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        public ServiceResponse<string> GetFileUrl(string fileKey)
+        public async Task<ServiceResponse<string>> GetFileUrl(string fileKey)
         {
             var response = new ServiceResponse<string>();
 
@@ -321,7 +297,7 @@ namespace LearningEnglish.Application.Service
                     ? fileKey.Substring(fileKey.IndexOf("/") + 1)  // Bỏ "image/" hoặc "audio/"
                     : fileKey;
 
-                var url = GetFileUrl(bucketName, keyInBucket);
+                var url = await _minioFileStorage.GetPresignedUrlAsync(bucketName, keyInBucket);
                 
                 response.Data = url;
                 response.StatusCode = 200;
@@ -336,25 +312,6 @@ namespace LearningEnglish.Application.Service
             }
 
             return response;
-        }
-
-        private string GetFileUrl(string bucketName, string keyInBucket)
-        {
-            try
-            {
-                var presignedGetObjectArgs = new PresignedGetObjectArgs()
-                    .WithBucket(bucketName)
-                    .WithObject(keyInBucket)
-                    .WithExpiry(604800); // 7 days
-
-                return _minioClient.PresignedGetObjectAsync(presignedGetObjectArgs).GetAwaiter().GetResult();
-            }
-            catch
-            {
-                // Fallback: direct URL
-                var baseUrl = _minioOptions.BaseUrl.TrimEnd('/');
-                return $"{baseUrl}/{bucketName}/{keyInBucket}";
-            }
         }
 
         public async Task<ServiceResponse<bool>> FileExistsAsync(string fileKey)
@@ -381,7 +338,7 @@ namespace LearningEnglish.Application.Service
                     ? fileKey.Substring(fileKey.IndexOf("/") + 1)
                     : fileKey;
 
-                var exists = await FileExistsAsync(bucketName, keyInBucket);
+                var exists = await _minioFileStorage.ObjectExistsAsync(bucketName, keyInBucket);
                 
                 response.Data = exists;
                 response.StatusCode = 200;
@@ -401,49 +358,12 @@ namespace LearningEnglish.Application.Service
 
         private async Task<bool> FileExistsAsync(string bucketName, string keyInBucket)
         {
-            try
-            {
-                var statObjectArgs = new StatObjectArgs()
-                    .WithBucket(bucketName)
-                    .WithObject(keyInBucket);
-
-                await _minioClient.StatObjectAsync(statObjectArgs);
-                return true;
-            }
-            catch (ObjectNotFoundException)
-            {
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error checking file existence: {Bucket}/{Key}", bucketName, keyInBucket);
-                return false;
-            }
+            return await _minioFileStorage.ObjectExistsAsync(bucketName, keyInBucket);
         }
 
         private async Task EnsureBucketExistsAsync(string bucketName)
         {
-            try
-            {
-                var bucketExistsArgs = new BucketExistsArgs()
-                    .WithBucket(bucketName);
-
-                var found = await _minioClient.BucketExistsAsync(bucketExistsArgs);
-                
-                if (!found)
-                {
-                    var makeBucketArgs = new MakeBucketArgs()
-                        .WithBucket(bucketName);
-
-                    await _minioClient.MakeBucketAsync(makeBucketArgs);
-                    _logger.LogInformation("Created bucket: {BucketName}", bucketName);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error ensuring bucket exists: {BucketName}", bucketName);
-                throw;
-            }
+            await _minioFileStorage.EnsureBucketExistsAsync(bucketName);
         }
     }
 }

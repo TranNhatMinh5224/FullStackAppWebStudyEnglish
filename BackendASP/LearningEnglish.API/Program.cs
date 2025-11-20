@@ -160,6 +160,7 @@ builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddScoped<ITemplatePathResolver, TemplatePathResolver>();
@@ -190,6 +191,7 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
 });
 
 // File Storage Service
+builder.Services.AddScoped<IMinioFileStorage, MinioFileStorage>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 
 // Payment related services

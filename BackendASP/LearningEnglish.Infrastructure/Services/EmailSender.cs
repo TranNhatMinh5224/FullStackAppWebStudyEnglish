@@ -3,16 +3,14 @@ using System.Net.Mail;
 using LearningEnglish.Application.Interface;
 using Microsoft.Extensions.Configuration;
 
-namespace LearningEnglish.Application.Service
+namespace LearningEnglish.Infrastructure.Services
 {
-    public class EmailService : IEmailService
+    public class EmailSender : IEmailSender
     {
-        private readonly IEmailTemplateService _templateService;
         private readonly IConfiguration _configuration;
 
-        public EmailService(IEmailTemplateService templateService, IConfiguration configuration)
+        public EmailSender(IConfiguration configuration)
         {
-            _templateService = templateService;
             _configuration = configuration;
         }
 
@@ -63,32 +61,6 @@ namespace LearningEnglish.Application.Service
             {
                 throw new Exception($"Lỗi khi gửi email: {ex.Message}", ex);
             }
-        }
-
-        public async Task SendOTPEmailAsync(string toEmail, string otpCode, string userName)
-        {
-
-
-            var subject = "Your OTP Code - Catalunya English";
-
-            var body = _templateService.GenerateOTPEmailTemplate(otpCode, userName);
-
-            Console.WriteLine($"[DEBUG] EmailService - Generated email body with template");
-            await SendEmailAsync(toEmail, subject, body);
-        }
-        public async Task SendNotifyJoinCourseAsync(string toEmail, string courseName, string userName)
-        {
-            var subject = "Course Enrollment Confirmation - Catalunya English";
-            var body = _templateService.GenerateNotifyJoinCourseTemplate(courseName, userName);
-            await SendEmailAsync(toEmail, subject, body);
-
-        }
-
-        public async Task SendNotifyPurchaseTeacherPackageAsync(string toEmail, string packageName, string userName, decimal price, DateTime validUntil)
-        {
-            var subject = "Teacher Package Purchase Confirmation - Catalunya English";
-            var body = _templateService.GenerateTeacherPackagePurchaseTemplate(packageName, userName, price, validUntil);
-            await SendEmailAsync(toEmail, subject, body);
         }
     }
 }

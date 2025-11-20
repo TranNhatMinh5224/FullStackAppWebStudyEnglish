@@ -80,9 +80,9 @@ namespace LearningEnglish.API.Controller
 
         // Lấy URL của file (presigned URL)
         [HttpGet("url/{fileKey}")]
-        public IActionResult GetFileUrl(string fileKey)
+        public async Task<IActionResult> GetFileUrl(string fileKey)
         {
-            var response = _fileStorageService.GetFileUrl(fileKey);
+            var response = await _fileStorageService.GetFileUrl(fileKey);
             
             if (response.Success)
                 return Ok(response);

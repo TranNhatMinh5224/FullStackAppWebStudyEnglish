@@ -14,7 +14,7 @@ namespace LearningEnglish.Application.Interface
 
         Task<ServiceResponse<bool>> DeleteRealFileAsync(string fileKey);
 
-        ServiceResponse<string> GetFileUrl(string fileKey);
+        Task<ServiceResponse<string>> GetFileUrl(string fileKey);
 
         Task<ServiceResponse<bool>> FileExistsAsync(string fileKey);
     }

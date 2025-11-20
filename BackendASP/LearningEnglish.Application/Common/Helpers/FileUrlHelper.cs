@@ -8,12 +8,12 @@ namespace LearningEnglish.Application.Common.Helpers
     public static class FileUrlHelper
     {
         // Set ImageUrl cho danh sách Course (dùng generic method)
-        public static void SetImageUrlForCourses(
+        public static async Task SetImageUrlForCourses(
             IEnumerable<Course> courses,
             IEnumerable<CourseResponseDto> courseDtos,
             IFileStorageService fileStorageService)
         {
-            SetImageUrlForList(
+            await SetImageUrlForList(
                 courses,
                 courseDtos,
                 fileStorageService,
@@ -25,12 +25,12 @@ namespace LearningEnglish.Application.Common.Helpers
         }
 
         // Set ImageUrl cho danh sách Course (AdminCourseListResponseDto) - dùng generic method
-        public static void SetImageUrlForAdminCourseList(
+        public static async Task SetImageUrlForAdminCourseList(
             IEnumerable<Course> courses,
             IEnumerable<AdminCourseListResponseDto> courseDtos,
             IFileStorageService fileStorageService)
         {
-            SetImageUrlForList(
+            await SetImageUrlForList(
                 courses,
                 courseDtos,
                 fileStorageService,
@@ -42,12 +42,12 @@ namespace LearningEnglish.Application.Common.Helpers
         }
 
         // Set ImageUrl cho danh sách Course (UserCourseListResponseDto) - dùng generic method
-        public static void SetImageUrlForUserCourseList(
+        public static async Task SetImageUrlForUserCourseList(
             IEnumerable<Course> courses,
             IEnumerable<UserCourseListResponseDto> courseDtos,
             IFileStorageService fileStorageService)
         {
-            SetImageUrlForList(
+            await SetImageUrlForList(
                 courses,
                 courseDtos,
                 fileStorageService,
@@ -59,12 +59,12 @@ namespace LearningEnglish.Application.Common.Helpers
         }
 
         // Set ImageUrl cho single Course (dùng generic method)
-        public static void SetImageUrlForCourse(
+        public static async Task SetImageUrlForCourse(
             Course course,
             CourseResponseDto courseDto,
             IFileStorageService fileStorageService)
         {
-            SetImageUrlForSingle(
+            await SetImageUrlForSingle(
                 course,
                 courseDto,
                 fileStorageService,
@@ -74,12 +74,12 @@ namespace LearningEnglish.Application.Common.Helpers
         }
 
         // Set ImageUrl cho danh sách Lesson (dùng generic method)
-        public static void SetImageUrlForLessons(
+        public static async Task SetImageUrlForLessons(
             IEnumerable<Lesson> lessons,
             IEnumerable<LessonDto> lessonDtos,
             IFileStorageService fileStorageService)
         {
-            SetImageUrlForList(
+            await SetImageUrlForList(
                 lessons,
                 lessonDtos,
                 fileStorageService,
@@ -91,12 +91,12 @@ namespace LearningEnglish.Application.Common.Helpers
         }
 
         // Set ImageUrl cho danh sách Lesson (ListLessonDto) - dùng generic method
-        public static void SetImageUrlForListLessons(
+        public static async Task SetImageUrlForListLessons(
             IEnumerable<Lesson> lessons,
             IEnumerable<ListLessonDto> lessonDtos,
             IFileStorageService fileStorageService)
         {
-            SetImageUrlForList(
+            await SetImageUrlForList(
                 lessons,
                 lessonDtos,
                 fileStorageService,
@@ -108,12 +108,12 @@ namespace LearningEnglish.Application.Common.Helpers
         }
 
         // Set ImageUrl cho single Lesson (dùng generic method)
-        public static void SetImageUrlForLesson(
+        public static async Task SetImageUrlForLesson(
             Lesson lesson,
             LessonDto lessonDto,
             IFileStorageService fileStorageService)
         {
-            SetImageUrlForSingle(
+            await SetImageUrlForSingle(
                 lesson,
                 lessonDto,
                 fileStorageService,
@@ -123,7 +123,7 @@ namespace LearningEnglish.Application.Common.Helpers
         }
 
         // Generic method cho các entity khác (nếu cần)
-        public static void SetImageUrlForList<TEntity, TDto>(
+        public static async Task SetImageUrlForList<TEntity, TDto>(
             IEnumerable<TEntity> entities,
             IEnumerable<TDto> dtos,
             IFileStorageService fileStorageService,
@@ -142,7 +142,7 @@ namespace LearningEnglish.Application.Common.Helpers
                     var imageKey = getImageKey(entity);
                     if (!string.IsNullOrEmpty(imageKey))
                     {
-                        var urlResponse = fileStorageService.GetFileUrl(imageKey);
+                        var urlResponse = await fileStorageService.GetFileUrl(imageKey);
                         if (urlResponse.Success && urlResponse.Data != null)
                         {
                             setImageUrl(dto, urlResponse.Data);
@@ -153,7 +153,7 @@ namespace LearningEnglish.Application.Common.Helpers
         }
 
         // Generic method cho single entity
-        public static void SetImageUrlForSingle<TEntity, TDto>(
+        public static async Task SetImageUrlForSingle<TEntity, TDto>(
             TEntity entity,
             TDto dto,
             IFileStorageService fileStorageService,
@@ -165,7 +165,7 @@ namespace LearningEnglish.Application.Common.Helpers
                 var imageKey = getImageKey(entity);
                 if (!string.IsNullOrEmpty(imageKey))
                 {
-                    var urlResponse = fileStorageService.GetFileUrl(imageKey);
+                    var urlResponse = await fileStorageService.GetFileUrl(imageKey);
                     if (urlResponse.Success && urlResponse.Data != null)
                     {
                         setImageUrl(dto, urlResponse.Data);
