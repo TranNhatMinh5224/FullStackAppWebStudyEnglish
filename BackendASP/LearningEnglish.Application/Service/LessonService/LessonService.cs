@@ -219,7 +219,7 @@ namespace LearningEnglish.Application.Service
                 var lessonDtos = lessons.Select(l => _mapper.Map<ListLessonDto>(l)).ToList();
                 
                 // Generate URL từ key cho tất cả lessons
-                FileUrlHelper.SetImageUrlForListLessons(lessons, lessonDtos, _fileStorageService);
+                await FileUrlHelper.SetImageUrlForListLessons(lessons, lessonDtos, _fileStorageService);
                 
                 response.StatusCode = 200;
                 response.Data = lessonDtos;
@@ -299,7 +299,7 @@ namespace LearningEnglish.Application.Service
                 var lessonDto = _mapper.Map<LessonDto>(lesson);
                 
                 // Generate URL từ key
-                FileUrlHelper.SetImageUrlForLesson(lesson, lessonDto, _fileStorageService);
+                await FileUrlHelper.SetImageUrlForLesson(lesson, lessonDto, _fileStorageService);
                 
                 response.StatusCode = 200;
                 response.Data = lessonDto;

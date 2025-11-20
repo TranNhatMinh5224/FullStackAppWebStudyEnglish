@@ -118,7 +118,7 @@ namespace LearningEnglish.Application.Service
                 courseResponseDto.StudentCount = 0;
 
                 // Generate URL từ key
-                FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
+                await FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
 
                 response.Data = courseResponseDto;
                 response.Message = $"Course created successfully ({currentCourseCount + 1}/{maxCourses} courses)";
@@ -222,7 +222,7 @@ namespace LearningEnglish.Application.Service
                 courseResponseDto.StudentCount = await _courseRepository.CountEnrolledUsers(courseId);
 
                 // Generate URL từ key
-                FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
+                await FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
 
                 response.StatusCode = 200;
                 response.Data = courseResponseDto;
@@ -259,7 +259,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Generate URL từ key cho tất cả courses
-                FileUrlHelper.SetImageUrlForCourses(courses, courseDtos, _fileStorageService);
+                await FileUrlHelper.SetImageUrlForCourses(courses, courseDtos, _fileStorageService);
 
                 response.Data = courseDtos;
                 response.Message = "Retrieved teacher's courses successfully";

@@ -39,7 +39,7 @@ namespace LearningEnglish.Application.Service
                 var courseDtos = _mapper.Map<IEnumerable<UserCourseListResponseDto>>(courses).ToList();
 
                 // Generate URL từ key cho mỗi course
-                FileUrlHelper.SetImageUrlForUserCourseList(courses, courseDtos, _fileStorageService);
+                await FileUrlHelper.SetImageUrlForUserCourseList(courses, courseDtos, _fileStorageService);
 
                 response.StatusCode = 200;
                 response.Data = courseDtos;

@@ -49,7 +49,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Generate URL từ key cho tất cả courses
-                FileUrlHelper.SetImageUrlForAdminCourseList(courses, courseDtos, _fileStorageService);
+                await FileUrlHelper.SetImageUrlForAdminCourseList(courses, courseDtos, _fileStorageService);
 
                 response.StatusCode = 200;
                 response.Data = courseDtos;
@@ -111,7 +111,7 @@ namespace LearningEnglish.Application.Service
                 courseResponseDto.StudentCount = 0;
 
                 // Generate URL từ key
-                FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
+                await FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
 
                 response.StatusCode = 201;
                 response.Data = courseResponseDto;
@@ -185,7 +185,7 @@ namespace LearningEnglish.Application.Service
                     : "System Admin";
 
                 // Generate URL từ key
-                FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
+                await FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
 
                 response.StatusCode = 200;
                 response.Data = courseResponseDto;
