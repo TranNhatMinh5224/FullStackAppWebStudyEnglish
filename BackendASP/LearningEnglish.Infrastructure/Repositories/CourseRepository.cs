@@ -79,9 +79,6 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<IEnumerable<Course>> GetAllCourses()
         {
             return await _context.Courses
-                .Include(c => c.Teacher)
-                .Include(c => c.Lessons)
-                .Include(c => c.UserCourses)
                 .ToListAsync();
         }
 
