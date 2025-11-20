@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: learning-english-db
+    environment:
+      POSTGRES_DB: Db_Test_Elearning
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 05022004
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend-network
+    restart: always
+
+
+  # MinIO (Object Storage)
+  minio:
+    image: minio/minio:latest
+    container_name: learning-english-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - backend-network
+    restart: always
+
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: learning-english-api
+    ports:
+      - "5000:8080"
+    environment:
+      # Cấu hình ASP.NET Core
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      
+      # Kết nối Database (đồng bộ với appsettings.Development.json)
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=Db_Test_Elearning;Username=postgres;Password=05022004;Ssl Mode=Disable;Trust Server Certificate=true
+      
+      # JWT (Token xác thực)
+      - Jwt__Key=TranNhatminh05022004aBcDeFgHiJkLmnOpQr
+      - Jwt__Issuer=ELearningEnglish
+      - Jwt__Audience=ELearningEnglishAudience
+      
+      # Frontend URL
+      - Frontend__BaseUrl=http://localhost:3000
+      
+      # MinIO (Lưu trữ file)
+      - MinIO__Endpoint=minio:9000
+      - MinIO__AccessKey=minioadmin
+      - MinIO__SecretKey=minioadmin
+      - MinIO__UseSSL=false
+      - MinIO__BaseUrl=http://minio:9000
+      
+      # SMTP (Gửi email)
+      - Smtp__Host=smtp.gmail.com
+      - Smtp__Port=587
+      - Smtp__User=minhxoandev@gmail.com
+      - Smtp__Password=ngqrqicmyszmksui
+      - Smtp__EnableSsl=true
+      - Smtp__FromName=E-Learning English Platform
+      
+    # Chờ postgres và minio chạy xong rồi mới chạy backend
+    depends_on:
+      - postgres
+      - minio
+    networks:
+      - backend-network
+    restart: always
+
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  backend-network:
+    driver: bridge
