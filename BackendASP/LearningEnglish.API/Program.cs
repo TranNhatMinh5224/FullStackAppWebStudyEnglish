@@ -17,7 +17,7 @@ using LearningEnglish.Application.Service.ScoringStrategies;
 using LearningEnglish.Application.Validators;
 using LearningEnglish.Infrastructure.Repositories;
 using LearningEnglish.Infrastructure.Services;
-using LearningEnglish.Application.Configurations;
+using LearningEnglish.Application.Cofigurations;
 using Microsoft.Extensions.Options;
 using Minio;
 

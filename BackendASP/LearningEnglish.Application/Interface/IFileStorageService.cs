@@ -1,21 +1,14 @@
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
-using Microsoft.AspNetCore.Http;
 
 namespace LearningEnglish.Application.Interface
 {
     public interface IFileStorageService
     {
-        Task<ServiceResponse<UploadTempFileResponseDto>> UploadTempFileAsync(IFormFile file);
-
-        Task<ServiceResponse<ConvertTempToRealFileResponseDto>> ConvertTempToRealFileAsync(string tempKey, string realFolderPath);
-
-        Task<ServiceResponse<bool>> DeleteTempFileAsync(string tempKey);
-
-        Task<ServiceResponse<bool>> DeleteRealFileAsync(string fileKey);
-
-        Task<ServiceResponse<string>> GetFileUrl(string fileKey);
-
-        Task<ServiceResponse<bool>> FileExistsAsync(string fileKey);
+        Task<ServiceResponse<string>> UploadFileAsync(Stream fileStream, string fileName, string contentType);
+        Task<ServiceResponse<bool>> DeleteFileAsync(string fileUrl);
+        Task<ServiceResponse<Stream>> DownloadFileAsync(string fileUrl);
+        Task<ServiceResponse<string>> GetFileUrlAsync(string fileKey);
+        Task<ServiceResponse<List<string>>> ListFilesAsync(string prefix = "");
     }
 }

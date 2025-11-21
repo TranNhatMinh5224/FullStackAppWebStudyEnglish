@@ -35,65 +35,10 @@ const UserManagement = () => {
         }
       } else if (activeTab === 'students') {
         const result = await AdminService.getStudentsByAllCourses();
-        if (result.success && result.data) {
-          // API returns array of courses, each course has users array
-          // Need to flatten all users from all courses
-          let coursesWithUsers = result.data;
-          
-          // If result.data is wrapped in another object (ServiceResponse), unwrap it
-          if (result.data.success !== undefined && Array.isArray(result.data.data)) {
-            coursesWithUsers = result.data.data;
-          } else if (!Array.isArray(result.data)) {
-            // Check if it's a direct array
-            coursesWithUsers = [];
-          }
-          
-          // Debug: log the structure to understand the data
-          console.log('Courses with users structure:', coursesWithUsers);
-          
-          // Flatten users from all courses into a single array
-          // Remove duplicates by userId
-          const userMap = new Map();
-          
-          if (Array.isArray(coursesWithUsers)) {
-            coursesWithUsers.forEach(course => {
-              // Handle both camelCase and PascalCase property names
-              const users = course.users || course.Users || [];
-              
-              if (Array.isArray(users) && users.length > 0) {
-                users.forEach(user => {
-                  const userId = user.userId || user.UserId;
-                  if (userId) {
-                    if (!userMap.has(userId)) {
-                      // First time seeing this user
-                      userMap.set(userId, {
-                        ...user,
-                        // Store course info
-                        enrolledCourses: [course.title || course.Title || course.courseId || '']
-                      });
-                    } else {
-                      // User already exists, add course to enrolled courses
-                      const existingUser = userMap.get(userId);
-                      const courseTitle = course.title || course.Title || course.courseId || '';
-                      if (!existingUser.enrolledCourses.includes(courseTitle)) {
-                        existingUser.enrolledCourses.push(courseTitle);
-                      }
-                    }
-                  }
-                });
-              }
-            });
-          }
-          
-          // Convert map to array
-          const allStudents = Array.from(userMap.values());
-          console.log('Flattened students:', allStudents);
-          setStudents(allStudents);
+        if (result.success) {
+          setStudents(result.data || []);
         } else {
-          const errorMsg = result.error || result.data?.message || 'Không thể tải danh sách học sinh';
-          console.error('Error loading students:', errorMsg, result);
-          setError(errorMsg);
-          setStudents([]);
+          setError(result.error || 'Không thể tải danh sách học sinh');
         }
       } else if (activeTab === 'blocked') {
         const result = await AdminService.getBlockedAccounts();
@@ -167,58 +112,45 @@ const UserManagement = () => {
             <th>Họ tên</th>
             <th>Email</th>
             <th>Số điện thoại</th>
-            {activeTab === 'students' && <th>Khóa học đã đăng ký</th>}
+            <th>Vai trò</th>
             <th>Trạng thái</th>
             <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
-          {data.map((user) => {
-            const userId = user.userId || user.UserId;
-            const firstName = user.firstName || user.FirstName || '';
-            const lastName = user.lastName || user.LastName || '';
-            const email = user.email || user.Email || '';
-            const phoneNumber = user.phoneNumber || user.PhoneNumber || '-';
-            const status = user.status || user.Status || 'Active';
-            
-            return (
-              <tr key={userId}>
-                <td>{userId}</td>
-                <td>{firstName} {lastName}</td>
-                <td>{email}</td>
-                <td>{phoneNumber || '-'}</td>
-                {activeTab === 'students' && (
-                  <td>
-                    {user.enrolledCourses && user.enrolledCourses.length > 0 
-                      ? user.enrolledCourses.join(', ') 
-                      : '-'}
-                  </td>
+          {data.map((user) => (
+            <tr key={user.userId}>
+              <td>{user.userId}</td>
+              <td>{user.firstName} {user.lastName}</td>
+              <td>{user.email}</td>
+              <td>{user.phoneNumber || '-'}</td>
+              <td>
+                {user.roles?.map(role => role.roleName || role).join(', ') || 'User'}
+              </td>
+              <td>
+                <span className={`status-badge ${user.status === 'Active' ? 'active' : 'blocked'}`}>
+                  {user.status === 'Active' ? 'Hoạt động' : 'Bị khóa'}
+                </span>
+              </td>
+              <td>
+                {user.status === 'Active' ? (
+                  <button 
+                    className="btn-danger"
+                    onClick={() => handleBlock(user.userId)}
+                  >
+                    Khóa
+                  </button>
+                ) : (
+                  <button 
+                    className="btn-success"
+                    onClick={() => handleUnblock(user.userId)}
+                  >
+                    Mở khóa
+                  </button>
                 )}
-                <td>
-                  <span className={`status-badge ${status === 'Active' ? 'active' : 'blocked'}`}>
-                    {status === 'Active' ? 'Hoạt động' : 'Bị khóa'}
-                  </span>
-                </td>
-                <td>
-                  {status === 'Active' ? (
-                    <button 
-                      className="btn-danger"
-                      onClick={() => handleBlock(userId)}
-                    >
-                      Khóa
-                    </button>
-                  ) : (
-                    <button 
-                      className="btn-success"
-                      onClick={() => handleUnblock(userId)}
-                    >
-                      Mở khóa
-                    </button>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     );

@@ -1,6 +1,5 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
-using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using Microsoft.Extensions.Logging;
@@ -12,18 +11,15 @@ namespace LearningEnglish.Application.Service
         private readonly ICourseRepository _courseRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<EnrollmentQueryService> _logger;
-        private readonly IFileStorageService _fileStorageService;
 
         public EnrollmentQueryService(
             ICourseRepository courseRepository,
             IMapper _mapper,
-            ILogger<EnrollmentQueryService> logger,
-            IFileStorageService fileStorageService)
+            ILogger<EnrollmentQueryService> logger)
         {
             _courseRepository = courseRepository;
             this._mapper = _mapper;
             _logger = logger;
-            _fileStorageService = fileStorageService;
         }
 
         // Lấy danh sách khóa học đã đăng ký của user
@@ -43,9 +39,6 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var courseDtos = _mapper.Map<IEnumerable<CourseResponseDto>>(courses).ToList();
-
-                // Generate URL từ key cho mỗi course
-                await FileUrlHelper.SetImageUrlForCourses(courses, courseDtos, _fileStorageService);
 
                 response.Success = true;
                 response.Data = courseDtos;

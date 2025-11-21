@@ -1,14 +1,13 @@
-using Microsoft.AspNetCore.Http;
-
 namespace LearningEnglish.Application.Interface
 {
     public interface IMinioFileStorage
     {
-        Task UploadObjectAsync(string bucketName, string objectName, Stream data, long size, string contentType);
-        Task CopyObjectAsync(string bucketName, string sourceObjectName, string destObjectName);
-        Task RemoveObjectAsync(string bucketName, string objectName);
-        Task<bool> ObjectExistsAsync(string bucketName, string objectName);
-        Task EnsureBucketExistsAsync(string bucketName);
-        Task<string> GetPresignedUrlAsync(string bucketName, string objectName, int expirySeconds = 604800);
+        Task<string> UploadFileAsync(Stream fileStream, string bucketName, string objectName, string contentType);
+        Task<bool> DeleteFileAsync(string bucketName, string objectName);
+        Task<Stream> DownloadFileAsync(string bucketName, string objectName);
+        Task<string> GetFileUrlAsync(string bucketName, string objectName);
+        Task<List<string>> ListFilesAsync(string bucketName, string prefix = "");
+        Task<bool> BucketExistsAsync(string bucketName);
+        Task CreateBucketAsync(string bucketName);
     }
 }

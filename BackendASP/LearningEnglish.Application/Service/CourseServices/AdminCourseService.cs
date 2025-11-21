@@ -2,7 +2,6 @@ using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.Common;
-using LearningEnglish.Application.Common.Helpers;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 
@@ -13,18 +12,16 @@ namespace LearningEnglish.Application.Service
         private readonly ICourseRepository _courseRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<AdminCourseService> _logger;
-        private readonly IFileStorageService _fileStorageService;
 
         public AdminCourseService(
             ICourseRepository courseRepository,
             IMapper mapper,
-            ILogger<AdminCourseService> logger,
-            IFileStorageService fileStorageService)
+            ILogger<AdminCourseService> logger)
         {
             _courseRepository = courseRepository;
             _mapper = mapper;
             _logger = logger;
-            _fileStorageService = fileStorageService;
+            
         }
 
         public async Task<ServiceResponse<IEnumerable<AdminCourseListResponseDto>>> GetAllCoursesAsync()
@@ -49,7 +46,6 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Generate URL từ key cho tất cả courses
-                await FileUrlHelper.SetImageUrlForAdminCourseList(courses, courseDtos, _fileStorageService);
 
                 response.StatusCode = 200;
                 response.Data = courseDtos;
@@ -90,19 +86,7 @@ namespace LearningEnglish.Application.Service
                 await _courseRepository.AddCourse(course);
 
                 // Convert temp file → real file nếu có ImageTempKey
-                if (!string.IsNullOrEmpty(requestDto.ImageTempKey))
-                {
-                    var convertResponse = await _fileStorageService.ConvertTempToRealFileAsync(
-                        requestDto.ImageTempKey,
-                        $"courses/{course.CourseId}"
-                    );
-
-                    if (convertResponse.Success && convertResponse.Data != null)
-                    {
-                        course.ImageUrl = convertResponse.Data.RealKey;
-                        await _courseRepository.UpdateCourse(course);
-                    }
-                }
+                // TODO: Implement file conversion logic here
 
                 // Map response và generate URL từ key
                 var courseResponseDto = _mapper.Map<CourseResponseDto>(course);
@@ -111,7 +95,7 @@ namespace LearningEnglish.Application.Service
                 courseResponseDto.StudentCount = 0;
 
                 // Generate URL từ key
-                await FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
+                // TODO: Implement URL generation logic here
 
                 response.StatusCode = 201;
                 response.Data = courseResponseDto;
@@ -154,25 +138,7 @@ namespace LearningEnglish.Application.Service
                 course.Type = requestDto.Type;
 
                 // Xử lý file ảnh: xóa file cũ nếu có file mới
-                if (!string.IsNullOrEmpty(requestDto.ImageTempKey))
-                {
-                    // Xóa file cũ nếu có
-                    if (!string.IsNullOrEmpty(course.ImageUrl))
-                    {
-                        await _fileStorageService.DeleteRealFileAsync(course.ImageUrl);
-                    }
-
-                    // Convert temp → real
-                    var convertResponse = await _fileStorageService.ConvertTempToRealFileAsync(
-                        requestDto.ImageTempKey,
-                        $"courses/{course.CourseId}"
-                    );
-
-                    if (convertResponse.Success && convertResponse.Data != null)
-                    {
-                        course.ImageUrl = convertResponse.Data.RealKey;
-                    }
-                }
+                // TODO: Implement file handling logic here
 
                 await _courseRepository.UpdateCourse(course);
 
@@ -185,7 +151,7 @@ namespace LearningEnglish.Application.Service
                     : "System Admin";
 
                 // Generate URL từ key
-                await FileUrlHelper.SetImageUrlForCourse(course, courseResponseDto, _fileStorageService);
+                // TODO: Implement URL generation logic here
 
                 response.StatusCode = 200;
                 response.Data = courseResponseDto;
