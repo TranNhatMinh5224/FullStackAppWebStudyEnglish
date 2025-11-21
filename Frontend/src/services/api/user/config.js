@@ -85,5 +85,36 @@ export const API_ENDPOINTS = {
   TEACHER_PACKAGES: {
     LIST: 'user/teacher-packages',
     BY_ID: (id) => `user/teacher-packages/${id}`
+  },
+  ADMIN: {
+    USERS: {
+      ALL: 'admin/auth/users',
+      TEACHERS: 'admin/auth/teachers',
+      STUDENTS_BY_COURSES: 'admin/auth/getall-students-by-all-courses',
+      BLOCKED: 'admin/auth/list-blocked-accounts',
+      BLOCK: (userId) => `admin/auth/block-account/${userId}`,
+      UNBLOCK: (userId) => `admin/auth/unblock-account/${userId}`
+    },
+    COURSES: {
+      ALL: 'admin/all',
+      CREATE: 'admin/create',
+      UPDATE: (courseId) => `admin/${courseId}`,
+      DELETE: (courseId) => `admin/${courseId}`,
+      USERS_BY_COURSE: (courseId) => `getusersbycourse/${courseId}`
+    },
+    TEACHER_PACKAGES: {
+      ALL: 'admin/teacher-packages',
+      BY_ID: (id) => `admin/teacher-packages/${id}`,
+      CREATE: 'admin/teacher-packages',
+      UPDATE: (id) => `admin/teacher-packages/Update-Teacher-Package${id}`,
+      DELETE: (id) => `admin/teacher-packages/${id}`
+    },
+    ASSESSMENTS: {
+      CREATE: 'AdminAndTeacher/Assessment/AdminAssessmentController/create',
+      BY_MODULE: (moduleId) => `AdminAndTeacher/Assessment/AdminAssessmentController/module/${moduleId}`,
+      BY_ID: (assessmentId) => `AdminAndTeacher/Assessment/AdminAssessmentController/${assessmentId}`,
+      UPDATE: (assessmentId) => `AdminAndTeacher/Assessment/AdminAssessmentController/${assessmentId}`,
+      DELETE: (assessmentId) => `AdminAndTeacher/Assessment/AdminAssessmentController/${assessmentId}`
+    }
   }
 };

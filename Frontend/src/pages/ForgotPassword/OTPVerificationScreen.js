@@ -108,10 +108,13 @@ const OTPVerificationScreen = () => {
             verified: true 
           } 
         });
+      } else {
+        // Show error if verification failed
+        setLocalError(result.error || "Mã OTP không chính xác hoặc đã hết hạn!");
       }
     } catch (err) {
       console.error('OTP verification error:', err);
-      setLocalError("Mã OTP không chính xác hoặc đã hết hạn!");
+      setLocalError(err.message || "Mã OTP không chính xác hoặc đã hết hạn!");
     } finally {
       setIsLoading(false);
     }
