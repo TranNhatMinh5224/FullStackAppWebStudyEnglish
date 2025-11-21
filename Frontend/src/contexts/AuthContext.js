@@ -425,13 +425,23 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Mã OTP phải có 6 số');
       }
 
-      // For now, just validate format - actual verification happens in resetPassword
+      // Call backend API to verify OTP
       console.log('OTP verification for:', email, 'with code:', otpCode);
+      const result = await AuthAPI.verifyOTP({
+        email,
+        otpCode
+      });
       
-      return { 
-        success: true, 
-        message: 'Mã OTP hợp lệ' 
-      };
+      if (result.success) {
+        return { 
+          success: true, 
+          message: 'Mã OTP hợp lệ' 
+        };
+      } else {
+        const errorMessage = result.error || result.data?.message || 'Mã OTP không chính xác hoặc đã hết hạn';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
     } catch (err) {
       console.error('Verify OTP error:', err);
       const errorMessage = err.message || 'Mã OTP không hợp lệ';
@@ -465,11 +475,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const resetPassword = async ({ email, otpCode, newPassword }) => {
+  const resetPassword = async ({ email, otpCode, newPassword, confirmPassword }) => {
     try {
       clearError();
       
-      if (!email || !otpCode || !newPassword) {
+      if (!email || !otpCode || !newPassword || !confirmPassword) {
         throw new Error('Thiếu thông tin cần thiết');
       }
 
@@ -477,10 +487,15 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Mật khẩu phải có ít nhất 6 ký tự');
       }
 
+      if (newPassword !== confirmPassword) {
+        throw new Error('Mật khẩu xác nhận không khớp');
+      }
+
       const result = await AuthAPI.resetPassword({
         email,
         otpCode,
-        newPassword
+        newPassword,
+        confirmPassword
       });
 
       return result;

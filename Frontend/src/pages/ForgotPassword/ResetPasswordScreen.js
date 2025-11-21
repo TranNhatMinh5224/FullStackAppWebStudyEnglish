@@ -116,7 +116,8 @@ const ResetPasswordScreen = () => {
       const result = await resetPassword({
         email,
         otpCode,
-        newPassword: formData.newPassword
+        newPassword: formData.newPassword,
+        confirmPassword: formData.confirmPassword
       });
       
       if (result.success) {
@@ -125,10 +126,13 @@ const ResetPasswordScreen = () => {
         setTimeout(() => {
           navigate("/login");
         }, 3000);
+      } else {
+        // Show error if reset failed
+        setLocalError(result.error || "Có lỗi xảy ra khi đặt lại mật khẩu. Vui lòng thử lại!");
       }
     } catch (err) {
       console.error('Reset password error:', err);
-      setLocalError("Có lỗi xảy ra. Vui lòng thử lại!");
+      setLocalError(err.message || "Có lỗi xảy ra. Vui lòng thử lại!");
     } finally {
       setIsLoading(false);
     }
