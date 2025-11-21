@@ -24,14 +24,37 @@ const CourseManagement = () => {
     setError('');
     try {
       const result = await AdminService.getAllCourses();
-      if (result.success) {
-        setCourses(result.data || []);
+      
+      // httpClient wraps the response, so result.data is the ServiceResponse
+      // Check if the ServiceResponse itself is successful
+      if (result.success && result.data) {
+        // If result.data has a success property, it's a ServiceResponse
+        if (result.data.success === false || result.data.success === undefined) {
+          setError(result.data.message || 'Không thể tải danh sách khóa học');
+          setCourses([]);
+          return;
+        }
+        
+        // The actual array is in result.data.data
+        const courseList = Array.isArray(result.data.data) ? result.data.data : 
+                          (Array.isArray(result.data) ? result.data : []);
+        
+        // Map backend fields to frontend fields
+        const mappedCourses = courseList.map(course => ({
+          ...course,
+          courseName: course.title || course.courseName || '',
+          // CourseType.System = 1 (public), CourseType.Teacher = 2 (private)
+          isPublic: course.type === 1 || course.type === 'System' || course.type === undefined
+        }));
+        setCourses(mappedCourses);
       } else {
-        setError(result.error || 'Không thể tải danh sách khóa học');
+        setError(result.error || result.data?.message || 'Không thể tải danh sách khóa học');
+        setCourses([]);
       }
     } catch (err) {
       setError('Có lỗi xảy ra khi tải dữ liệu');
-      console.error(err);
+      console.error('Error loading courses:', err);
+      setCourses([]);
     } finally {
       setLoading(false);
     }
@@ -40,36 +63,58 @@ const CourseManagement = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      const result = await AdminService.createCourse(formData);
+      // Map frontend formData to backend DTO format
+      const courseData = {
+        title: formData.courseName,
+        description: formData.description,
+        price: formData.price || 0,
+        maxStudent: 0, // Default value
+        isFeatured: false, // Default value
+        type: formData.isPublic ? 1 : 2 // 1 = System (public), 2 = Teacher (private)
+      };
+      
+      const result = await AdminService.createCourse(courseData);
       if (result.success) {
         alert('Tạo khóa học thành công');
         setShowCreateForm(false);
         setFormData({ courseName: '', description: '', price: 0, isPublic: true });
         loadCourses();
       } else {
-        alert(result.error || 'Không thể tạo khóa học');
+        const errorMsg = result.error || result.data?.message || 'Không thể tạo khóa học';
+        alert(errorMsg);
       }
     } catch (err) {
       alert('Có lỗi xảy ra');
-      console.error(err);
+      console.error('Error creating course:', err);
     }
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const result = await AdminService.updateCourse(editingCourse.courseId, formData);
+      // Map frontend formData to backend DTO format
+      const courseData = {
+        title: formData.courseName,
+        description: formData.description,
+        price: formData.price || 0,
+        maxStudent: editingCourse?.maxStudent || 0,
+        isFeatured: editingCourse?.isFeatured || false,
+        type: formData.isPublic ? 1 : 2 // 1 = System (public), 2 = Teacher (private)
+      };
+      
+      const result = await AdminService.updateCourse(editingCourse.courseId, courseData);
       if (result.success) {
         alert('Cập nhật khóa học thành công');
         setEditingCourse(null);
         setFormData({ courseName: '', description: '', price: 0, isPublic: true });
         loadCourses();
       } else {
-        alert(result.error || 'Không thể cập nhật khóa học');
+        const errorMsg = result.error || result.data?.message || 'Không thể cập nhật khóa học';
+        alert(errorMsg);
       }
     } catch (err) {
       alert('Có lỗi xảy ra');
-      console.error(err);
+      console.error('Error updating course:', err);
     }
   };
 
@@ -93,10 +138,13 @@ const CourseManagement = () => {
   const startEdit = (course) => {
     setEditingCourse(course);
     setFormData({
-      courseName: course.courseName || '',
+      courseName: course.courseName || course.title || '',
       description: course.description || '',
       price: course.price || 0,
-      isPublic: course.isPublic !== undefined ? course.isPublic : true
+      // Map Type enum to isPublic boolean: 1/System = true, 2/Teacher = false
+      isPublic: course.isPublic !== undefined 
+        ? course.isPublic 
+        : (course.type === 1 || course.type === 'System' || course.type === undefined)
     });
     setShowCreateForm(true);
   };
