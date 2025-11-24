@@ -21,7 +21,7 @@ namespace LearningEnglish.Application.Service
             _courseRepository = courseRepository;
             _mapper = mapper;
             _logger = logger;
-            
+
         }
 
         public async Task<ServiceResponse<IEnumerable<AdminCourseListResponseDto>>> GetAllCoursesAsync()
@@ -85,17 +85,11 @@ namespace LearningEnglish.Application.Service
 
                 await _courseRepository.AddCourse(course);
 
-                // Convert temp file → real file nếu có ImageTempKey
-                // TODO: Implement file conversion logic here
-
-                // Map response và generate URL từ key
                 var courseResponseDto = _mapper.Map<CourseResponseDto>(course);
                 courseResponseDto.TeacherName = "System Admin";
                 courseResponseDto.LessonCount = 0;
                 courseResponseDto.StudentCount = 0;
 
-                // Generate URL từ key
-                // TODO: Implement URL generation logic here
 
                 response.StatusCode = 201;
                 response.Data = courseResponseDto;
@@ -137,21 +131,17 @@ namespace LearningEnglish.Application.Service
                 course.IsFeatured = requestDto.IsFeatured;
                 course.Type = requestDto.Type;
 
-                // Xử lý file ảnh: xóa file cũ nếu có file mới
-                // TODO: Implement file handling logic here
+
 
                 await _courseRepository.UpdateCourse(course);
 
-                // Map response và generate URL từ key
                 var courseResponseDto = _mapper.Map<CourseResponseDto>(course);
                 courseResponseDto.LessonCount = await _courseRepository.CountLessons(courseId);
                 courseResponseDto.StudentCount = await _courseRepository.CountEnrolledUsers(courseId);
-                courseResponseDto.TeacherName = course.Teacher != null 
-                    ? $"{course.Teacher.FirstName} {course.Teacher.LastName}" 
+                courseResponseDto.TeacherName = course.Teacher != null
+                    ? $"{course.Teacher.FirstName} {course.Teacher.LastName}"
                     : "System Admin";
 
-                // Generate URL từ key
-                // TODO: Implement URL generation logic here
 
                 response.StatusCode = 200;
                 response.Data = courseResponseDto;

@@ -3,7 +3,7 @@ using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 
-namespace LearningEnglish.API.Controllers.Admin
+namespace LearningEnglish.API.Controller.Admin
 {
     [ApiController]
     [Route("api/admin/auth")]
