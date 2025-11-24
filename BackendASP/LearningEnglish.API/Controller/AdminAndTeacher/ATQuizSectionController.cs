@@ -3,7 +3,7 @@ using LearningEnglish.Application.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LearningEnglish.API.Controllers.AdminAndTeacher
+namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/admin/quiz-sections")]

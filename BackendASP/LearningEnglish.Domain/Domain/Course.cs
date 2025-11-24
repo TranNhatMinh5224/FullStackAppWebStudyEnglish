@@ -2,7 +2,7 @@ using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Domain.Entities
 {
-    // Tạo Khóa Học (Course) với các thuộc tính như Giá, Giáo Viên, Mô Tả, Hình Ảnh, Số Lượng Học Viên Tối Đa
+
 
     public class Course
     {
