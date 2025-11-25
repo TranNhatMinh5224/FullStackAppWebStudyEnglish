@@ -1,32 +1,51 @@
-namespace LearningEnglish.Domain.Entities;
-
-// Đánh giá phát âm đơn giản
-public class PronunciationAssessment
+namespace LearningEnglish.Domain.Entities
 {
-    public int PronunciationAssessmentId { get; set; }
-    public int UserId { get; set; }
-    public int? FlashCardId { get; set; }
-    public int? AssignmentId { get; set; }      
+    public class PronunciationAssessment
+    {
+        public int PronunciationAssessmentId { get; set; }
+        public int UserId { get; set; }
+        public int? FlashCardId { get; set; }
+        public int? AssignmentId { get; set; }
 
-    // Văn bản cần đọc
-    public string ReferenceText { get; set; } = string.Empty;
+        // Input
+        public string ReferenceText { get; set; } = string.Empty;
+        public string AudioUrl { get; set; } = string.Empty;
+        public string? AudioType { get; set; }
+        public long? AudioSize { get; set; }
+        public float? DurationInSeconds { get; set; }
 
-    // URL file audio ghi âm của user
-    public string AudioUrl { get; set; } = string.Empty;
+        // Output Scores
+        public double AccuracyScore { get; set; } = 0;
+        public double FluencyScore { get; set; } = 0;
+        public double CompletenessScore { get; set; } = 0;
+        public double PronunciationScore { get; set; } = 0;
 
-    public string? AudioType { get; set; }
-    public long? AudioSize { get; set; }
+        public string? RecognizedText { get; set; }
 
-    // Điểm số tổng thể (0-100)
-    public float OverallScore { get; set; } = 0;
+     
+        public string? DetailedResultJson { get; set; }
 
-    // Feedback đơn giản
-    public string? Feedback { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string? AzureRawResponse { get; set; }
 
-    // Navigation Properties
-    public User User { get; set; } = null!;
-    public FlashCard? FlashCard { get; set; }
-    public Assessment? Assignment { get; set; }
+    
+        public string? Feedback { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        public AssessmentStatus Status { get; set; } = AssessmentStatus.Pending;
+
+        public User User { get; set; } = null!;
+        public FlashCard? FlashCard { get; set; }
+        public    Assessment ? Assignment { get; set; }
+    }
+
+    public enum AssessmentStatus
+    {
+        Pending = 0,
+        Processing = 1,
+        Completed = 2,
+        Failed = 3
+    }
 }

@@ -43,6 +43,7 @@ namespace LearningEnglish.Application.DTOs
         public int OrderIndex { get; set; }
         public string? NumberingLabel { get; set; }
         public string Title { get; set; } = string.Empty;
+        public string? MediaUrl { get; set; }
         public LectureType Type { get; set; }
         public string TypeName => Type.ToString();
         public DateTime CreatedAt { get; set; }
@@ -60,7 +61,8 @@ namespace LearningEnglish.Application.DTOs
         public LectureType Type { get; set; } = LectureType.Content;
         public string? MarkdownContent { get; set; }
         public int? ParentLectureId { get; set; }
-        public string? MediaUrl { get; set; }
+        public string? MediaTempKey { get; set; }  // ✅ MỚI THÊM - Temp key from MinIO
+        public string? MediaUrl { get; set; }  // Deprecated - use MediaTempKey instead
         public string? MediaType { get; set; }
         public long? MediaSize { get; set; }
         public int? Duration { get; set; }
@@ -75,7 +77,8 @@ namespace LearningEnglish.Application.DTOs
         public LectureType? Type { get; set; }
         public string? MarkdownContent { get; set; }
         public int? ParentLectureId { get; set; }
-        public string? MediaUrl { get; set; }
+        public string? MediaTempKey { get; set; }  // ✅ MỚI THÊM - Temp key from MinIO
+        public string? MediaUrl { get; set; }  // Deprecated - use MediaTempKey instead
         public string? MediaType { get; set; }
         public long? MediaSize { get; set; }
         public int? Duration { get; set; }

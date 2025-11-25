@@ -37,6 +37,10 @@ namespace LearningEnglish.Application.DTOs
         public int? VideoDuration { get; set; }
         
         public float SumScore { get; set; }
+        
+        // ✅ MỚI THÊM: MinIO temp keys
+        public string? ImgTempKey { get; set; }
+        public string? VideoTempKey { get; set; }
     }
 
     public class UpdateQuizGroupDto
@@ -52,6 +56,10 @@ namespace LearningEnglish.Application.DTOs
         public int? VideoDuration { get; set; }
         
         public float SumScore { get; set; }
+        
+        // ✅ MỚI THÊM: MinIO temp keys
+        public string? ImgTempKey { get; set; }
+        public string? VideoTempKey { get; set; }
     }
 
     public class ListQuizGroupDto

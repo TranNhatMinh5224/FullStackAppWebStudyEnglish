@@ -14,6 +14,13 @@ namespace LearningEnglish.Application.DTOs
         public string? ImageType { get; set; }
         public string? AudioType { get; set; }
         
+        // Thông tin bổ sung
+        public string? PartOfSpeech { get; set; }
+        public string? Example { get; set; }
+        public string? ExampleTranslation { get; set; }
+        public string? Synonyms { get; set; }
+        public string? Antonyms { get; set; }
+        
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
@@ -36,6 +43,9 @@ namespace LearningEnglish.Application.DTOs
         public string Word { get; set; } = string.Empty;
         public string Meaning { get; set; } = string.Empty;
         public string? Pronunciation { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? AudioUrl { get; set; }
+        public string? PartOfSpeech { get; set; }
         public DateTime CreatedAt { get; set; }
         public int ReviewCount { get; set; }
         public decimal SuccessRate { get; set; }
@@ -49,9 +59,15 @@ namespace LearningEnglish.Application.DTOs
         public string Word { get; set; } = string.Empty;
         public string Meaning { get; set; } = string.Empty;
         public string? Pronunciation { get; set; }
-        public string? ImageUrl { get; set; }
-        public string? AudioUrl { get; set; }
         
+        public string? PartOfSpeech { get; set; }
+        public string? Example { get; set; }
+        public string? ExampleTranslation { get; set; }
+        public string? Synonyms { get; set; }
+        public string? Antonyms { get; set; }
+        
+        public string? ImageTempKey { get; set; }
+        public string? AudioTempKey { get; set; }
         public string? ImageType { get; set; }
         public string? AudioType { get; set; }
     }
@@ -62,9 +78,18 @@ namespace LearningEnglish.Application.DTOs
         public string? Word { get; set; }
         public string? Meaning { get; set; }
         public string? Pronunciation { get; set; }
-        public string? ImageUrl { get; set; }
-        public string? AudioUrl { get; set; }
         public int? ModuleId { get; set; }
+        
+        public string? PartOfSpeech { get; set; }
+        public string? Example { get; set; }
+        public string? ExampleTranslation { get; set; }
+        public string? Synonyms { get; set; }
+        public string? Antonyms { get; set; }
+        
+        public string? ImageTempKey { get; set; }
+        public string? AudioTempKey { get; set; }
+        public string? ImageType { get; set; }
+        public string? AudioType { get; set; }
     }
 
     // DTO for flashcard with user progress info

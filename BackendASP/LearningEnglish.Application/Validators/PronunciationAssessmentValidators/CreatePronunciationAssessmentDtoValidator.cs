@@ -14,12 +14,12 @@ namespace LearningEnglish.Application.Validators.PronunciationAssessmentValidato
                 .MaximumLength(500)
                 .WithMessage("Reference text must not exceed 500 characters");
 
-            // Validate AudioUrl - bắt buộc
-            RuleFor(x => x.AudioUrl)
+            // Validate AudioTempKey - bắt buộc
+            RuleFor(x => x.AudioTempKey)
                 .NotEmpty()
-                .WithMessage("Audio URL is required")
-                .MaximumLength(1000)
-                .WithMessage("Audio URL must not exceed 1000 characters");
+                .WithMessage("Audio temp key is required")
+                .MaximumLength(500)
+                .WithMessage("Audio temp key must not exceed 500 characters");
 
             // Validate AudioType - tùy chọn, tối đa 50 ký tự
             RuleFor(x => x.AudioType)

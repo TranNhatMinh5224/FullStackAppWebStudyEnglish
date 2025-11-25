@@ -28,7 +28,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-    .AddJsonFile("appsettings.Docker.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
 
@@ -138,6 +137,10 @@ builder.Services.AddScoped<IQuizGroupRepository, QuizGroupRepository>();
 builder.Services.AddScoped<IQuizRepository, QuizRepository>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
+builder.Services.AddScoped<IPronunciationAssessmentRepository, PronunciationAssessmentRepository>();
+builder.Services.AddScoped<ICourseProgressRepository, CourseProgressRepository>();
+builder.Services.AddScoped<ILessonCompletionRepository, LessonCompletionRepository>();
+builder.Services.AddScoped<IModuleCompletionRepository, ModuleCompletionRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
@@ -148,6 +151,7 @@ builder.Services.AddScoped<IModuleService, ModuleService>();
 builder.Services.AddScoped<ILectureService, LectureService>();
 builder.Services.AddScoped<IFlashCardService, FlashCardService>();
 builder.Services.AddScoped<IVocabularyReviewService, VocabularyReviewService>();
+builder.Services.AddScoped<IStreakRepository, StreakRepository>();
 builder.Services.AddScoped<IStreakService, StreakService>();
 builder.Services.AddScoped<IAssessmentService, AssessmentService>();
 builder.Services.AddScoped<IEssayService, EssayService>();
@@ -174,6 +178,18 @@ builder.Services.AddScoped<IQuizService, QuizService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IQuizAttemptService, QuizAttemptService>();
 builder.Services.AddScoped<IQuizAttemptAdminService, QuizAttemptAdminService>();
+builder.Services.AddScoped<IPronunciationAssessmentService, PronunciationAssessmentService>();
+builder.Services.AddScoped<IDictionaryService, DictionaryService>();
+builder.Services.AddScoped<IUserProgressService, UserProgressService>();
+
+// HttpClient for Dictionary API
+builder.Services.AddHttpClient();
+
+// Oxford Dictionary Configuration
+builder.Services.Configure<OxfordDictionaryOptions>(builder.Configuration.GetSection("OxfordDictionary"));
+
+// Unsplash Configuration
+builder.Services.Configure<UnsplashOptions>(builder.Configuration.GetSection("Unsplash"));
 
 // MinIO Configuration
 builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("MinIO"));
@@ -193,8 +209,13 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
 });
 
 // File Storage Service
-builder.Services.AddScoped<IMinioFileStorage, MinioFileStorage>();
-builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<IMinioFileStorage, LearningEnglish.Infrastructure.MinioFileStorage.MinioFileStorageService>();
+
+// Azure Speech Service
+builder.Services.AddHttpClient<IAzureSpeechService, AzureSpeechService>();
+
+// Background Jobs
+builder.Services.AddScoped<LearningEnglish.Application.Service.BackgroundJobs.TempFileCleanupJob>();
 
 // Payment related services
 builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
@@ -217,16 +238,20 @@ builder.Services.AddScoped<IScoringStrategy, OrderingScoringStrategy>();
 
 // Background services
 builder.Services.AddHostedService<QuizAutoSubmitService>();
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.TempFileCleanupHostedService>();
 
 // Build app
 var app = builder.Build();
 
-// Auto-migrate database
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-}
+// Configure BuildPublicUrl helper for MinIO public URLs
+LearningEnglish.Application.Common.Helpers.BuildPublicUrl.Configure(builder.Configuration);
+
+// Auto-migrate database - TEMPORARILY DISABLED (DNS issue)
+// using (var scope = app.Services.CreateScope())
+// {
+//     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+//     db.Database.Migrate();
+// }
 
 // Middleware pipeline
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")

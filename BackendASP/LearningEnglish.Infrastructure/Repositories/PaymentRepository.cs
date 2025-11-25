@@ -59,6 +59,31 @@ namespace LearningEnglish.Infrastructure.Repositories
             return await _context.SaveChangesAsync();
         }
 
+        // Transaction History
+        public async Task<IEnumerable<Payment>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
+        {
+            return await _context.Payments
+                .Where(p => p.UserId == userId)
+                .OrderByDescending(p => p.PaymentId)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetTransactionCountAsync(int userId)
+        {
+            return await _context.Payments
+                .Where(p => p.UserId == userId)
+                .CountAsync();
+        }
+
+        public async Task<Payment?> GetTransactionDetailAsync(int paymentId, int userId)
+        {
+            return await _context.Payments
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.PaymentId == paymentId && p.UserId == userId);
+        }
+
     }
 }
 

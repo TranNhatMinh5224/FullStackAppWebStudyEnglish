@@ -232,5 +232,115 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+
+        public async Task<ServiceResponse<paginationResponseDto<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
+        {
+            var response = new ServiceResponse<paginationResponseDto<TransactionHistoryDto>>();
+            try
+            {
+                _logger.LogInformation("Getting transaction history for User {UserId}, Page {PageNumber}, Size {PageSize}",
+                    userId, pageNumber, pageSize);
+
+                var totalCount = await _paymentRepository.GetTransactionCountAsync(userId);
+                var payments = await _paymentRepository.GetTransactionHistoryAsync(userId, pageNumber, pageSize);
+
+                var transactionDtos = new List<TransactionHistoryDto>();
+                foreach (var payment in payments)
+                {
+                    var productName = await GetProductNameAsync(payment.ProductId, payment.ProductType);
+                    
+                    transactionDtos.Add(new TransactionHistoryDto
+                    {
+                        PaymentId = payment.PaymentId,
+                        PaymentMethod = payment.PaymentMethod ?? "N/A",
+                        ProductType = payment.ProductType,
+                        ProductId = payment.ProductId,
+                        ProductName = productName,
+                        Amount = payment.Amount,
+                        Status = payment.Status,
+                        CreatedAt = payment.PaidAt ?? DateTime.UtcNow,
+                        PaidAt = payment.PaidAt,
+                        ProviderTransactionId = payment.ProviderTransactionId
+                    });
+                }
+
+                response.Data = new paginationResponseDto<TransactionHistoryDto>
+                {
+                    Items = transactionDtos,
+                    TotalItems = totalCount,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                };
+
+                _logger.LogInformation("Retrieved {Count} transactions for User {UserId}", transactionDtos.Count, userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting transaction history for User {UserId}", userId);
+                response.Success = false;
+                response.Message = "Đã xảy ra lỗi khi lấy lịch sử giao dịch";
+            }
+            return response;
+        }
+
+        public async Task<ServiceResponse<TransactionDetailDto>> GetTransactionDetailAsync(int paymentId, int userId)
+        {
+            var response = new ServiceResponse<TransactionDetailDto>();
+            try
+            {
+                _logger.LogInformation("Getting transaction detail for Payment {PaymentId}, User {UserId}", paymentId, userId);
+
+                var payment = await _paymentRepository.GetTransactionDetailAsync(paymentId, userId);
+                if (payment == null)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy giao dịch";
+                    return response;
+                }
+
+                var productName = await GetProductNameAsync(payment.ProductId, payment.ProductType);
+
+                response.Data = new TransactionDetailDto
+                {
+                    PaymentId = payment.PaymentId,
+                    UserId = payment.UserId,
+                    UserName = payment.User != null ? $"{payment.User.FirstName} {payment.User.LastName}" : "N/A",
+                    UserEmail = payment.User?.Email ?? "N/A",
+                    PaymentMethod = payment.PaymentMethod ?? "N/A",
+                    ProductType = payment.ProductType,
+                    ProductId = payment.ProductId,
+                    ProductName = productName,
+                    Amount = payment.Amount,
+                    Status = payment.Status,
+                    CreatedAt = payment.PaidAt ?? DateTime.UtcNow,
+                    PaidAt = payment.PaidAt,
+                    ProviderTransactionId = payment.ProviderTransactionId
+                };
+
+                _logger.LogInformation("Retrieved transaction detail for Payment {PaymentId}", paymentId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting transaction detail for Payment {PaymentId}", paymentId);
+                response.Success = false;
+                response.Message = "Đã xảy ra lỗi khi lấy chi tiết giao dịch";
+            }
+            return response;
+        }
+
+        private Task<string> GetProductNameAsync(int productId, ProductType productType)
+        {
+            // Return generic product name based on type
+            // For full product details, query Course/TeacherPackage repositories separately
+            var productName = productType switch
+            {
+                ProductType.Course => $"Course #{productId}",
+                ProductType.TeacherPackage => $"Teacher Package #{productId}",
+                _ => "Unknown Product"
+            };
+
+            return Task.FromResult(productName);
+        }
     }
 }

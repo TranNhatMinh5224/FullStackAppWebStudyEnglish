@@ -82,5 +82,73 @@ namespace LearningEnglish.API.Controller.User
 
             return Ok(new { message = "Payment confirmed successfully" });
         }
+
+        /// <summary>
+        /// Get transaction history for authenticated user
+        /// </summary>
+        [HttpGet("history")]
+        public async Task<IActionResult> GetTransactionHistory([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid user credentials" });
+                }
+
+                if (pageNumber < 1)
+                {
+                    return BadRequest(new { message = "Page number must be greater than 0" });
+                }
+
+                if (pageSize < 1 || pageSize > 100)
+                {
+                    return BadRequest(new { message = "Page size must be between 1 and 100" });
+                }
+
+                var result = await _paymentService.GetTransactionHistoryAsync(userId, pageNumber, pageSize);
+                if (!result.Success)
+                {
+                    return BadRequest(new { message = result.Message });
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving transaction history");
+                return StatusCode(500, new { message = "An error occurred while retrieving transaction history" });
+            }
+        }
+
+        /// <summary>
+        /// Get transaction detail by payment ID
+        /// </summary>
+        [HttpGet("transaction/{paymentId}")]
+        public async Task<IActionResult> GetTransactionDetail(int paymentId)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid user credentials" });
+                }
+
+                var result = await _paymentService.GetTransactionDetailAsync(paymentId, userId);
+                if (!result.Success)
+                {
+                    return NotFound(new { message = result.Message });
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving transaction detail for Payment {PaymentId}", paymentId);
+                return StatusCode(500, new { message = "An error occurred while retrieving transaction detail" });
+            }
+        }
     }
 }

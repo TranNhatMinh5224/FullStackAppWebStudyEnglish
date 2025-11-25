@@ -1,5 +1,6 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,9 @@ namespace LearningEnglish.Application.Service
         private readonly ICourseRepository _userCourseRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<UserCourseService> _logger;
+
+        // Đặt bucket + folder cho ảnh khóa học (giống TeacherCourseService)
+        private const string CourseImageBucket = "courses";
 
         public UserCourseService(
             ICourseRepository courseRepository,
@@ -33,6 +37,18 @@ namespace LearningEnglish.Application.Service
                 var courses = await _courseRepository.GetSystemCourses();
 
                 var courseDtos = _mapper.Map<IEnumerable<UserCourseListResponseDto>>(courses).ToList();
+
+                // Generate URL từ key cho tất cả courses
+                foreach (var courseDto in courseDtos)
+                {
+                    if (!string.IsNullOrWhiteSpace(courseDto.ImageUrl))
+                    {
+                        courseDto.ImageUrl = BuildPublicUrl.BuildURL(
+                            CourseImageBucket,
+                            courseDto.ImageUrl
+                        );
+                    }
+                }
 
                 response.StatusCode = 200;
                 response.Data = courseDtos;

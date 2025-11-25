@@ -298,6 +298,9 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FlashCardId"));
 
+                    b.Property<string>("Antonyms")
+                        .HasColumnType("text");
+
                     b.Property<string>("AudioType")
                         .HasColumnType("text");
 
@@ -306,6 +309,12 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Example")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExampleTranslation")
+                        .HasColumnType("text");
 
                     b.Property<string>("ImageType")
                         .HasColumnType("text");
@@ -320,7 +329,13 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int?>("ModuleId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("PartOfSpeech")
+                        .HasColumnType("text");
+
                     b.Property<string>("Pronunciation")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Synonyms")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -688,6 +703,9 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PronunciationAssessmentId"));
 
+                    b.Property<double>("AccuracyScore")
+                        .HasColumnType("double precision");
+
                     b.Property<int?>("AssignmentId")
                         .HasColumnType("integer");
 
@@ -701,8 +719,20 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("AzureRawResponse")
+                        .HasColumnType("text");
+
+                    b.Property<double>("CompletenessScore")
+                        .HasColumnType("double precision");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DetailedResultJson")
+                        .HasColumnType("text");
+
+                    b.Property<float?>("DurationInSeconds")
+                        .HasColumnType("real");
 
                     b.Property<string>("Feedback")
                         .HasColumnType("text");
@@ -710,12 +740,24 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int?>("FlashCardId")
                         .HasColumnType("integer");
 
-                    b.Property<float>("OverallScore")
-                        .HasColumnType("real");
+                    b.Property<double>("FluencyScore")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("PronunciationScore")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("RecognizedText")
+                        .HasColumnType("text");
 
                     b.Property<string>("ReferenceText")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -1293,7 +1335,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             Email = "minhxoandev@gmail.com",
                             FirstName = "Admin",
                             LastName = "System",
-                            PasswordHash = "$2a$11$qE.3sQyI5DgRtZ9gJYDtS.q9DvBbrzL/TkOSCyuRnwvBfKPrpe.Ee",
+                            PasswordHash = "$2a$11$7XGFrU2H5SivR76uUe7EAudxBTkoqZY8AdmcHROqMg/eKG59.NMma",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)

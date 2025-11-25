@@ -23,6 +23,9 @@ namespace LearningEnglish.Application.DTOs
         public string? Explanation { get; set; }
         public string? MediaUrl { get; set; }
         public string? MediaType { get; set; }
+        
+        // ✅ MỚI THÊM: MinIO temp key
+        public string? MediaTempKey { get; set; }
 
         public List<AnswerOptionCreateDto> Options { get; set; } = new();
     }
@@ -35,6 +38,9 @@ namespace LearningEnglish.Application.DTOs
         public string? MediaType { get; set; }
         public int OrderIndex { get; set; } = 0;
         public string? Feedback { get; set; }
+        
+        // ✅ MỚI THÊM: MinIO temp key
+        public string? MediaTempKey { get; set; }
     }
 
     // DTO LẤY DỮ LIỆU 

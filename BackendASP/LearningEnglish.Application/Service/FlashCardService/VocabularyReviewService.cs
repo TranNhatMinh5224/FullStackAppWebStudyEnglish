@@ -1,4 +1,5 @@
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
@@ -300,7 +301,7 @@ public class VocabularyReviewService : IVocabularyReviewService
 
             // Lấy streak info
             var streakResult = await _streakService.GetCurrentStreakAsync(userId);
-            var currentStreak = streakResult.Success ? streakResult.Data : 0;
+            var currentStreak = streakResult.Success && streakResult.Data != null ? streakResult.Data.CurrentStreak : 0;
 
             var stats = new VocabularyStatsDto
             {
@@ -416,7 +417,7 @@ public class VocabularyReviewService : IVocabularyReviewService
     // Helper methods
     private FlashCardDto MapToFlashCardDto(FlashCard flashCard)
     {
-        return new FlashCardDto
+        var dto = new FlashCardDto
         {
             FlashCardId = flashCard.FlashCardId,
             ModuleId = flashCard.ModuleId,
@@ -425,6 +426,11 @@ public class VocabularyReviewService : IVocabularyReviewService
             Pronunciation = flashCard.Pronunciation,
             ImageUrl = flashCard.ImageUrl,
             AudioUrl = flashCard.AudioUrl,
+            PartOfSpeech = flashCard.PartOfSpeech,
+            Example = flashCard.Example,
+            ExampleTranslation = flashCard.ExampleTranslation,
+            Synonyms = flashCard.Synonyms,
+            Antonyms = flashCard.Antonyms,
             CreatedAt = flashCard.CreatedAt,
             UpdatedAt = flashCard.UpdatedAt,
             ReviewCount = 0, // TODO: Calculate from reviews
@@ -433,6 +439,18 @@ public class VocabularyReviewService : IVocabularyReviewService
             NextReviewAt = null,
             CurrentLevel = 0
         };
+
+        // Convert MinIO keys to public URLs
+        if (!string.IsNullOrWhiteSpace(dto.ImageUrl))
+        {
+            dto.ImageUrl = BuildPublicUrl.BuildURL("flashcards", dto.ImageUrl);
+        }
+        if (!string.IsNullOrWhiteSpace(dto.AudioUrl))
+        {
+            dto.AudioUrl = BuildPublicUrl.BuildURL("flashcards", dto.AudioUrl);
+        }
+
+        return dto;
     }
 
     private string GetReviewStatus(FlashCardReview review)

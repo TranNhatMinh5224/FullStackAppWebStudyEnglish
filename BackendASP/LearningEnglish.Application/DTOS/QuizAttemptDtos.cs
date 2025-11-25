@@ -70,6 +70,8 @@ namespace LearningEnglish.Application.DTOs
     {
         public int GroupId { get; set; }
         public string Name { get; set; } = string.Empty;  // Tên group (Part 1, Part 2)
+        public string? ImgUrl { get; set; }
+        public string? VideoUrl { get; set; }
         public List<QuestionDto> Questions { get; set; } = new();
     }
 
@@ -78,6 +80,7 @@ namespace LearningEnglish.Application.DTOs
     {
         public int QuestionId { get; set; }
         public string QuestionText { get; set; } = string.Empty;
+        public string? MediaUrl { get; set; }
         public QuestionType Type { get; set; }
         public decimal Points { get; set; }
         public bool IsAnswered { get; set; } = false;  // Đánh dấu đã trả lời
@@ -91,6 +94,7 @@ namespace LearningEnglish.Application.DTOs
     {
         public int OptionId { get; set; }
         public string OptionText { get; set; } = string.Empty;
+        public string? MediaUrl { get; set; }
     }
 
     // DTO cho request update score (input từ frontend)

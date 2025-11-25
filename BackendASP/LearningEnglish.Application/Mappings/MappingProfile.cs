@@ -288,34 +288,8 @@ namespace LearningEnglish.Application.Mappings
             //     .ForMember(dest => dest.AnswerText, opt => opt.MapFrom(src => src.AnswerDataJson))
             //     .ForMember(dest => dest.PointsAwarded, opt => opt.MapFrom(src => (decimal?)src.PointsEarned));
 
-            // PronunciationAssessment mappings
-            CreateMap<PronunciationAssessment, PronunciationAssessmentDto>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? $"{src.User.FirstName} {src.User.LastName}" : string.Empty))
-                .ForMember(dest => dest.FlashCardWord, opt => opt.MapFrom(src => src.FlashCard != null ? src.FlashCard.Word : null));
-
-            CreateMap<PronunciationAssessment, ListPronunciationAssessmentDto>()
-                .ForMember(dest => dest.FlashCardWord, opt => opt.MapFrom(src => src.FlashCard != null ? src.FlashCard.Word : null));
-
-            CreateMap<CreatePronunciationAssessmentDto, PronunciationAssessment>()
-                .ForMember(dest => dest.PronunciationAssessmentId, opt => opt.Ignore())
-                .ForMember(dest => dest.UserId, opt => opt.Ignore()) // Sẽ set trong service
-                .ForMember(dest => dest.OverallScore, opt => opt.Ignore())
-                .ForMember(dest => dest.Feedback, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.User, opt => opt.Ignore())
-                .ForMember(dest => dest.FlashCard, opt => opt.Ignore())
-                .ForMember(dest => dest.Assignment, opt => opt.Ignore());
-
-            CreateMap<UpdatePronunciationAssessmentDto, PronunciationAssessment>()
-                .ForMember(dest => dest.PronunciationAssessmentId, opt => opt.Ignore())
-                .ForMember(dest => dest.UserId, opt => opt.Ignore())
-                .ForMember(dest => dest.FlashCardId, opt => opt.Ignore())
-                .ForMember(dest => dest.AssignmentId, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.User, opt => opt.Ignore())
-                .ForMember(dest => dest.FlashCard, opt => opt.Ignore())
-                .ForMember(dest => dest.Assignment, opt => opt.Ignore())
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            // PronunciationAssessment mappings - using PronunciationAssessmentProfile
+            // Removed old mappings, now using dedicated profile
 
         }
            

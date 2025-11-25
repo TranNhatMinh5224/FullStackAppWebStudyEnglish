@@ -12,13 +12,22 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
     public class FilesController : ControllerBase
     {
         private readonly IMinioFileStorage _minioFileStorage;
+        private readonly ILogger<FilesController> _logger;
 
-        public FilesController(IMinioFileStorage minioFileStorage)
+        // File size limits (in bytes)
+        private const long MAX_IMAGE_SIZE = 2_097_152;      // 2MB
+        private const long MAX_AUDIO_SIZE = 5_242_880;      // 5MB
+        private const long MAX_VIDEO_SIZE = 52_428_800;     // 50MB
+        private const long MAX_DOCUMENT_SIZE = 10_485_760;  // 10MB
+
+        public FilesController(IMinioFileStorage minioFileStorage, ILogger<FilesController> logger)
         {
             _minioFileStorage = minioFileStorage;
+            _logger = logger;
         }
 
         [HttpPost("temp-file")]
+        [RequestSizeLimit(52_428_800)]  // Max 50MB
         public async Task<IActionResult> UploadTemplateFile(IFormFile file, [FromQuery] string bucketName, [FromQuery] string tempFolder = "temp")
         {
             if (file == null || file.Length == 0)
@@ -29,6 +38,18 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             {
                 return BadRequest("Bucket name is required.");
             }
+
+            // Validate file size based on content type
+            var validationResult = ValidateFileSize(file, bucketName);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new { 
+                    success = false,
+                    message = validationResult.ErrorMessage,
+                    maxSize = validationResult.MaxSizeReadable
+                });
+            }
+
             var result = await _minioFileStorage.UpLoadFileTempAsync(file, bucketName, tempFolder);
             if (result.Success)
             {
@@ -37,8 +58,52 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return BadRequest(result);
 
         }
+
+        private (bool IsValid, string ErrorMessage, string MaxSizeReadable) ValidateFileSize(IFormFile file, string bucketName)
+        {
+            var contentType = file.ContentType.ToLower();
+            long maxSize;
+            string fileType;
+            string maxSizeReadable;
+
+            // Determine max size based on content type and bucket
+            if (contentType.StartsWith("image/"))
+            {
+                maxSize = MAX_IMAGE_SIZE;
+                fileType = "Image";
+                maxSizeReadable = "2MB";
+            }
+            else if (contentType.StartsWith("audio/") || bucketName == "flashcards")
+            {
+                maxSize = MAX_AUDIO_SIZE;
+                fileType = "Audio";
+                maxSizeReadable = "5MB";
+            }
+            else if (contentType.StartsWith("video/") || bucketName == "lectures")
+            {
+                maxSize = MAX_VIDEO_SIZE;
+                fileType = "Video";
+                maxSizeReadable = "50MB";
+            }
+            else
+            {
+                maxSize = MAX_DOCUMENT_SIZE;
+                fileType = "File";
+                maxSizeReadable = "10MB";
+            }
+
+            if (file.Length > maxSize)
+            {
+                var currentSizeMB = file.Length / 1024.0 / 1024.0;
+                return (false, 
+                    $"{fileType} file size ({currentSizeMB:F2}MB) exceeds the maximum allowed size of {maxSizeReadable}.",
+                    maxSizeReadable);
+            }
+
+            return (true, string.Empty, maxSizeReadable);
+        }
+
         [HttpDelete("temp-file")]
-        [HttpDelete("temp")]
         public async Task<IActionResult> DeleteTemp(
             [FromQuery] string bucketName,
             [FromQuery] string tempKey)
@@ -49,16 +114,41 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             if (string.IsNullOrWhiteSpace(tempKey))
                 return BadRequest("tempKey is required.");
 
-            // TODO: validate bucketName (whitelist)
-
-            var result = await _minioFileStorage.DeleteFileTempAsync(
+            var result = await _minioFileStorage.DeleteFileAsync(
                 tempKey,
                 bucketName
             );
             if (result.Success)
                 return Ok(result);
             return BadRequest(result);
+        }
 
+        /// <summary>
+        /// Manual trigger cleanup temp files (Admin only)
+        /// </summary>
+        [HttpPost("cleanup-temp")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CleanupTempFiles(
+            [FromServices] LearningEnglish.Application.Service.BackgroundJobs.TempFileCleanupJob cleanupJob)
+        {
+            try
+            {
+                _logger.LogInformation("Manual temp file cleanup triggered by admin");
+                await cleanupJob.CleanupOldTempFilesAsync();
+                return Ok(new { 
+                    success = true,
+                    message = "Temp file cleanup completed successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during manual temp file cleanup");
+                return StatusCode(500, new { 
+                    success = false,
+                    message = "Error during cleanup",
+                    error = ex.Message
+                });
+            }
         }
     }
 }

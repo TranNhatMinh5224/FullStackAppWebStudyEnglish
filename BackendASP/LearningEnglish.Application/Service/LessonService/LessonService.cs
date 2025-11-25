@@ -3,6 +3,7 @@ using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 namespace LearningEnglish.Application.Service
@@ -14,19 +15,26 @@ namespace LearningEnglish.Application.Service
         private readonly ICourseRepository _courseRepository;
         private readonly ILogger<LessonService> _logger;
         private readonly ITeacherPackageRepository _teacherPackageRepository;
+        private readonly IMinioFileStorage _minioFileStorage;
+
+        // Đặt bucket + folder cho ảnh lesson
+        private const string LessonImageBucket = "lessons";
+        private const string LessonImageFolder = "real";
 
         public LessonService(
             ILessonRepository lessonRepository,
             IMapper mapper,
             ILogger<LessonService> logger,
             ICourseRepository courseRepository,
-            ITeacherPackageRepository teacherPackageRepository)
+            ITeacherPackageRepository teacherPackageRepository,
+            IMinioFileStorage minioFileStorage)
         {
             _lessonRepository = lessonRepository;
             _mapper = mapper;
             _logger = logger;
             _courseRepository = courseRepository;
             _teacherPackageRepository = teacherPackageRepository;
+            _minioFileStorage = minioFileStorage;
         }
 
         // admin Thêm Lesson vào Course 
@@ -62,16 +70,72 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Bài học đã tồn tại trong khóa học này";
                     return response;
                 }
+
                 var lesson = new Lesson
                 {
                     Title = dto.Title,
                     Description = dto.Description,
                     CourseId = dto.CourseId
                 };
-                await _lessonRepository.AddLesson(lesson);
+
+                string? committedImageKey = null;
+                
+                // Convert temp file → real file nếu có ImageTempKey
+                if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
+                {
+                    var commitResult = await _minioFileStorage.CommitFileAsync(
+                        dto.ImageTempKey,
+                        LessonImageBucket,
+                        LessonImageFolder
+                    );
+
+                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu ảnh bài học. Vui lòng thử lại.";
+                        return response;
+                    }
+
+                    committedImageKey = commitResult.Data;
+                    lesson.ImageUrl = committedImageKey;
+                    lesson.ImageType = dto.ImageType;
+                }
+
+                try
+                {
+                    await _lessonRepository.AddLesson(lesson);
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error while creating lesson");
+                    
+                    // Rollback MinIO file
+                    if (committedImageKey != null)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(committedImageKey, LessonImageBucket);
+                    }
+                    
+                    response.Success = false;
+                    response.StatusCode = 500;
+                    response.Message = "Lỗi database khi tạo bài học";
+                    return response;
+                }
+
+                // Map response và generate URL từ key
+                var lessonDto = _mapper.Map<LessonDto>(lesson);
+                if (!string.IsNullOrWhiteSpace(lesson.ImageUrl))
+                {
+                    lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
+                        LessonImageBucket,
+                        lesson.ImageUrl
+                    );
+                    lessonDto.ImageType = lesson.ImageType;
+                }
+
                 response.StatusCode = 201;
                 response.Message = "Tạo bài học thành công";
-                response.Data = _mapper.Map<LessonDto>(lesson);
+                response.Data = lessonDto;
             }
             catch (Exception ex)
             {
@@ -147,10 +211,65 @@ namespace LearningEnglish.Application.Service
                     Description = dto.Description,
                     CourseId = dto.CourseId
                 };
-                await _lessonRepository.AddLesson(lesson);
+
+                string? committedImageKey = null;
+                
+                // Convert temp file → real file nếu có ImageTempKey
+                if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
+                {
+                    var commitResult = await _minioFileStorage.CommitFileAsync(
+                        dto.ImageTempKey,
+                        LessonImageBucket,
+                        LessonImageFolder
+                    );
+
+                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu ảnh bài học. Vui lòng thử lại.";
+                        return response;
+                    }
+
+                    committedImageKey = commitResult.Data;
+                    lesson.ImageUrl = committedImageKey;
+                    lesson.ImageType = dto.ImageType;
+                }
+
+                try
+                {
+                    await _lessonRepository.AddLesson(lesson);
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error while creating lesson");
+                    
+                    // Rollback MinIO file
+                    if (committedImageKey != null)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(committedImageKey, LessonImageBucket);
+                    }
+                    
+                    response.Success = false;
+                    response.StatusCode = 500;
+                    response.Message = "Lỗi database khi tạo bài học";
+                    return response;
+                }
+
+                // Map response và generate URL từ key
+                var lessonDto = _mapper.Map<LessonDto>(lesson);
+                if (!string.IsNullOrWhiteSpace(lesson.ImageUrl))
+                {
+                    lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
+                        LessonImageBucket,
+                        lesson.ImageUrl
+                    );
+                    lessonDto.ImageType = lesson.ImageType;
+                }
+
                 response.StatusCode = 201;
                 response.Message = "Tạo bài học thành công";
-                response.Data = _mapper.Map<LessonDto>(lesson);
+                response.Data = lessonDto;
             }
             catch (Exception ex)
             {
@@ -213,6 +332,18 @@ namespace LearningEnglish.Application.Service
 
                 var lessons = await _lessonRepository.GetListLessonByCourseId(CourseId);
                 var lessonDtos = lessons.Select(l => _mapper.Map<ListLessonDto>(l)).ToList();
+                
+                // Generate URL từ key cho tất cả lessons
+                foreach (var lessonDto in lessonDtos)
+                {
+                    if (!string.IsNullOrWhiteSpace(lessonDto.ImageUrl))
+                    {
+                        lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
+                            LessonImageBucket,
+                            lessonDto.ImageUrl
+                        );
+                    }
+                }
                 
                 response.StatusCode = 200;
                 response.Data = lessonDtos;
@@ -291,6 +422,15 @@ namespace LearningEnglish.Application.Service
 
                 var lessonDto = _mapper.Map<LessonDto>(lesson);
                 
+                // Generate URL từ key
+                if (!string.IsNullOrWhiteSpace(lessonDto.ImageUrl))
+                {
+                    lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
+                        LessonImageBucket,
+                        lessonDto.ImageUrl
+                    );
+                }
+                
                 response.StatusCode = 200;
                 response.Data = lessonDto;
             }
@@ -318,15 +458,85 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Cập nhật trực tiếp entity đã tồn tại 
+                // Cập nhật thông tin cơ bản
                 lesson.Title = dto.Title;
                 lesson.Description = dto.Description;
                 lesson.UpdatedAt = DateTime.UtcNow;
                 lesson.OrderIndex = dto.OrderIndex ?? lesson.OrderIndex;
-                await _lessonRepository.UpdateLesson(lesson);
+
+                string? newImageKey = null;
+                string? oldImageKey = !string.IsNullOrWhiteSpace(lesson.ImageUrl) ? lesson.ImageUrl : null;
+                
+                // Xử lý file ảnh: commit new file first
+                if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
+                {
+                    // Commit ảnh mới
+                    var commitResult = await _minioFileStorage.CommitFileAsync(
+                        dto.ImageTempKey,
+                        LessonImageBucket,
+                        LessonImageFolder
+                    );
+
+                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể cập nhật ảnh bài học.";
+                        return response;
+                    }
+
+                    newImageKey = commitResult.Data;
+                    lesson.ImageUrl = newImageKey;
+                    lesson.ImageType = dto.ImageType;
+                }
+
+                try
+                {
+                    await _lessonRepository.UpdateLesson(lesson);
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error while updating lesson");
+                    
+                    // Rollback new image
+                    if (newImageKey != null)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(newImageKey, LessonImageBucket);
+                    }
+                    
+                    response.Success = false;
+                    response.StatusCode = 500;
+                    response.Message = "Lỗi database khi cập nhật bài học";
+                    return response;
+                }
+                
+                // Delete old image only after successful DB update
+                if (oldImageKey != null && newImageKey != null)
+                {
+                    try
+                    {
+                        await _minioFileStorage.DeleteFileAsync(oldImageKey, LessonImageBucket);
+                    }
+                    catch
+                    {
+                        _logger.LogWarning("Failed to delete old lesson image: {ImageUrl}", oldImageKey);
+                    }
+                }
+
+                // Map response và generate URL từ key
+                var lessonDto = _mapper.Map<LessonDto>(lesson);
+                if (!string.IsNullOrWhiteSpace(lesson.ImageUrl))
+                {
+                    lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
+                        LessonImageBucket,
+                        lesson.ImageUrl
+                    );
+                    lessonDto.ImageType = lesson.ImageType;
+                }
+
                 response.StatusCode = 200;
                 response.Message = "Cập nhật bài học thành công";
-                response.Data = _mapper.Map<LessonDto>(lesson);
+                response.Data = lessonDto;
             }
             catch (Exception ex)
             {
@@ -381,6 +591,22 @@ namespace LearningEnglish.Application.Service
                         response.Message = "Loại khóa học không hợp lệ";
                         response.Data = false;
                         return response;
+                }
+
+                // Xóa ảnh lesson trên MinIO nếu có
+                if (!string.IsNullOrWhiteSpace(lesson.ImageUrl))
+                {
+                    try
+                    {
+                        await _minioFileStorage.DeleteFileAsync(
+                            lesson.ImageUrl,
+                            LessonImageBucket
+                        );
+                    }
+                    catch (Exception deleteEx)
+                    {
+                        _logger.LogWarning(deleteEx, "Failed to delete lesson image: {ImageUrl}", lesson.ImageUrl);
+                    }
                 }
 
                 await _lessonRepository.DeleteLesson(lessonId);

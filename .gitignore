@@ -10,12 +10,14 @@
 ###############################################
 # Exclude environment-specific appsettings (often contain secrets)
 **/appsettings.Development.json
+**/appsettings.Docker.json
 **/appsettings.Local.json
 **/appsettings.Test.json
 **/appsettings.Production.json
 
 # Keep template/example files
 !**/appsettings.json.example
+!**/appsettings.Example.json
 
 ###############################################
 # ASP.NET CORE / .NET BUILD ARTIFACTS

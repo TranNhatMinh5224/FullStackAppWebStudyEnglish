@@ -22,26 +22,37 @@ namespace LearningEnglish.Application.Validators
                 .MaximumLength(200).WithMessage("Phiên âm không được vượt quá 200 ký tự")
                 .When(x => !string.IsNullOrEmpty(x.Pronunciation));
 
-            RuleFor(x => x.ImageUrl)
-                .MaximumLength(500).WithMessage("URL hình ảnh không được vượt quá 500 ký tự")
-                .Must(BeAValidUrl).WithMessage("URL hình ảnh không hợp lệ")
-                .When(x => !string.IsNullOrEmpty(x.ImageUrl));
+            RuleFor(x => x.PartOfSpeech)
+                .MaximumLength(50).WithMessage("Từ loại không được vượt quá 50 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.PartOfSpeech));
 
-            RuleFor(x => x.AudioUrl)
-                .MaximumLength(500).WithMessage("URL âm thanh không được vượt quá 500 ký tự")
-                .Must(BeAValidUrl).WithMessage("URL âm thanh không hợp lệ")
-                .When(x => !string.IsNullOrEmpty(x.AudioUrl));
+            RuleFor(x => x.Example)
+                .MaximumLength(500).WithMessage("Câu ví dụ không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.Example));
+
+            RuleFor(x => x.ExampleTranslation)
+                .MaximumLength(500).WithMessage("Dịch câu ví dụ không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.ExampleTranslation));
+
+            RuleFor(x => x.Synonyms)
+                .MaximumLength(500).WithMessage("Từ đồng nghĩa không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.Synonyms));
+
+            RuleFor(x => x.Antonyms)
+                .MaximumLength(500).WithMessage("Từ trái nghĩa không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.Antonyms));
+
+            RuleFor(x => x.ImageTempKey)
+                .MaximumLength(500).WithMessage("Image temp key không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.ImageTempKey));
+
+            RuleFor(x => x.AudioTempKey)
+                .MaximumLength(500).WithMessage("Audio temp key không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.AudioTempKey));
 
             RuleFor(x => x.ModuleId)
                 .GreaterThan(0).WithMessage("ID Module phải là số dương")
                 .When(x => x.ModuleId.HasValue);
-        }
-
-        private static bool BeAValidUrl(string? url)
-        {
-            if (string.IsNullOrEmpty(url)) return true;
-            return Uri.TryCreate(url, UriKind.Absolute, out var result) 
-                   && (result.Scheme == Uri.UriSchemeHttp || result.Scheme == Uri.UriSchemeHttps);
         }
     }
 
@@ -64,22 +75,33 @@ namespace LearningEnglish.Application.Validators
                 .MaximumLength(200).WithMessage("Phiên âm không được vượt quá 200 ký tự")
                 .When(x => !string.IsNullOrEmpty(x.Pronunciation));
 
-            RuleFor(x => x.ImageUrl)
-                .MaximumLength(500).WithMessage("URL hình ảnh không được vượt quá 500 ký tự")
-                .Must(BeAValidUrl).WithMessage("URL hình ảnh không hợp lệ")
-                .When(x => !string.IsNullOrEmpty(x.ImageUrl));
+            RuleFor(x => x.PartOfSpeech)
+                .MaximumLength(50).WithMessage("Từ loại không được vượt quá 50 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.PartOfSpeech));
 
-            RuleFor(x => x.AudioUrl)
-                .MaximumLength(500).WithMessage("URL âm thanh không được vượt quá 500 ký tự")
-                .Must(BeAValidUrl).WithMessage("URL âm thanh không hợp lệ")
-                .When(x => !string.IsNullOrEmpty(x.AudioUrl));
-        }
+            RuleFor(x => x.Example)
+                .MaximumLength(500).WithMessage("Câu ví dụ không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.Example));
 
-        private static bool BeAValidUrl(string? url)
-        {
-            if (string.IsNullOrEmpty(url)) return true;
-            return Uri.TryCreate(url, UriKind.Absolute, out var result) 
-                   && (result.Scheme == Uri.UriSchemeHttp || result.Scheme == Uri.UriSchemeHttps);
+            RuleFor(x => x.ExampleTranslation)
+                .MaximumLength(500).WithMessage("Dịch câu ví dụ không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.ExampleTranslation));
+
+            RuleFor(x => x.Synonyms)
+                .MaximumLength(500).WithMessage("Từ đồng nghĩa không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.Synonyms));
+
+            RuleFor(x => x.Antonyms)
+                .MaximumLength(500).WithMessage("Từ trái nghĩa không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.Antonyms));
+
+            RuleFor(x => x.ImageTempKey)
+                .MaximumLength(500).WithMessage("Image temp key không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.ImageTempKey));
+
+            RuleFor(x => x.AudioTempKey)
+                .MaximumLength(500).WithMessage("Audio temp key không được vượt quá 500 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.AudioTempKey));
         }
     }
 

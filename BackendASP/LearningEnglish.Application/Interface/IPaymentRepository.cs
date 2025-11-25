@@ -12,5 +12,10 @@ namespace LearningEnglish.Application.Interface
         Task<Payment?> GetSuccessfulPaymentByUserAndProductAsync(int userId, int productId, ProductType productType);
         Task UpdatePaymentStatusAsync(Payment payment);
         Task<int> SaveChangesAsync();
+        
+        // Transaction History
+        Task<IEnumerable<Payment>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize);
+        Task<int> GetTransactionCountAsync(int userId);
+        Task<Payment?> GetTransactionDetailAsync(int paymentId, int userId);
     }
 }

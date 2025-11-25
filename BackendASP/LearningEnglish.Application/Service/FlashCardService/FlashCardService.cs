@@ -1,5 +1,6 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
@@ -14,17 +15,24 @@ namespace LearningEnglish.Application.Service
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<FlashCardService> _logger;
+        private readonly IMinioFileStorage _minioFileStorage;
+        
+        // MinIO bucket constants
+        private const string FlashCardBucket = "flashcards";
+        private const string FlashCardFolder = "real";
 
         public FlashCardService(
             IFlashCardRepository flashCardRepository,
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            ILogger<FlashCardService> logger)
+            ILogger<FlashCardService> logger,
+            IMinioFileStorage minioFileStorage)
         {
             _flashCardRepository = flashCardRepository;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
+            _minioFileStorage = minioFileStorage;
         }
 
         // + Kiểm tra quyền teacher với flashcard
@@ -61,6 +69,16 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var flashCardDto = _mapper.Map<FlashCardDto>(flashCard);
+                
+                // Generate URLs từ keys
+                if (!string.IsNullOrWhiteSpace(flashCardDto.ImageUrl))
+                {
+                    flashCardDto.ImageUrl = BuildPublicUrl.BuildURL(FlashCardBucket, flashCardDto.ImageUrl);
+                }
+                if (!string.IsNullOrWhiteSpace(flashCardDto.AudioUrl))
+                {
+                    flashCardDto.AudioUrl = BuildPublicUrl.BuildURL(FlashCardBucket, flashCardDto.AudioUrl);
+                }
                 
                 // Tính toán thống kê review nếu có userId
                 if (userId.HasValue && flashCard.Reviews.Any())
@@ -115,6 +133,19 @@ namespace LearningEnglish.Application.Service
                         dto.CurrentLevel = latestReview?.RepetitionCount ?? 0;
                     }
                 }
+                
+                // Generate URLs cho tất cả flashcards
+                foreach (var dto in flashCardDtos)
+                {
+                    if (!string.IsNullOrWhiteSpace(dto.ImageUrl))
+                    {
+                        dto.ImageUrl = BuildPublicUrl.BuildURL(FlashCardBucket, dto.ImageUrl);
+                    }
+                    if (!string.IsNullOrWhiteSpace(dto.AudioUrl))
+                    {
+                        dto.AudioUrl = BuildPublicUrl.BuildURL(FlashCardBucket, dto.AudioUrl);
+                    }
+                }
 
                 response.Data = flashCardDtos;
                 response.Message = $"Lấy danh sách {flashCards.Count} FlashCard thành công";
@@ -160,8 +191,93 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var flashCard = _mapper.Map<FlashCard>(createFlashCardDto);
-                var createdFlashCard = await _flashCardRepository.CreateAsync(flashCard);
+                string? committedImageKey = null;
+                string? committedAudioKey = null;
+                
+                // Commit ImageTempKey nếu có
+                if (!string.IsNullOrWhiteSpace(createFlashCardDto.ImageTempKey))
+                {
+                    var imageResult = await _minioFileStorage.CommitFileAsync(
+                        createFlashCardDto.ImageTempKey,
+                        FlashCardBucket,
+                        FlashCardFolder
+                    );
+                    
+                    if (!imageResult.Success || string.IsNullOrWhiteSpace(imageResult.Data))
+                    {
+                        _logger.LogError("Failed to commit image: {Error}", imageResult.Message);
+                        response.Success = false;
+                        response.Message = $"Không thể lưu ảnh: {imageResult.Message}";
+                        return response;
+                    }
+                    
+                    committedImageKey = imageResult.Data;
+                    flashCard.ImageUrl = committedImageKey;
+                }
+                
+                // Commit AudioTempKey nếu có
+                if (!string.IsNullOrWhiteSpace(createFlashCardDto.AudioTempKey))
+                {
+                    var audioResult = await _minioFileStorage.CommitFileAsync(
+                        createFlashCardDto.AudioTempKey,
+                        FlashCardBucket,
+                        FlashCardFolder
+                    );
+                    
+                    if (!audioResult.Success || string.IsNullOrWhiteSpace(audioResult.Data))
+                    {
+                        _logger.LogError("Failed to commit audio: {Error}", audioResult.Message);
+                        
+                        // Rollback image nếu đã commit
+                        if (committedImageKey != null)
+                        {
+                            await _minioFileStorage.DeleteFileAsync(committedImageKey, FlashCardBucket);
+                        }
+                        
+                        response.Success = false;
+                        response.Message = $"Không thể lưu audio: {audioResult.Message}";
+                        return response;
+                    }
+                    
+                    committedAudioKey = audioResult.Data;
+                    flashCard.AudioUrl = committedAudioKey;
+                }
+                
+                // Save to database with rollback on failure
+                FlashCard createdFlashCard;
+                try
+                {
+                    createdFlashCard = await _flashCardRepository.CreateAsync(flashCard);
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error while creating flashcard");
+                    
+                    // Rollback MinIO files
+                    if (committedImageKey != null)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(committedImageKey, FlashCardBucket);
+                    }
+                    if (committedAudioKey != null)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(committedAudioKey, FlashCardBucket);
+                    }
+                    
+                    response.Success = false;
+                    response.Message = "Lỗi database khi tạo flashcard";
+                    return response;
+                }
                 var flashCardDto = _mapper.Map<FlashCardDto>(createdFlashCard);
+                
+                // Generate URLs cho response
+                if (!string.IsNullOrWhiteSpace(flashCardDto.ImageUrl))
+                {
+                    flashCardDto.ImageUrl = BuildPublicUrl.BuildURL(FlashCardBucket, flashCardDto.ImageUrl);
+                }
+                if (!string.IsNullOrWhiteSpace(flashCardDto.AudioUrl))
+                {
+                    flashCardDto.AudioUrl = BuildPublicUrl.BuildURL(FlashCardBucket, flashCardDto.AudioUrl);
+                }
 
                 response.Data = flashCardDto;
                 response.Message = "Tạo FlashCard thành công";
@@ -209,9 +325,106 @@ namespace LearningEnglish.Application.Service
 
                 // Cập nhật các trường được gửi lên
                 _mapper.Map(updateFlashCardDto, existingFlashCard);
+                string? newImageKey = null;
+                string? newAudioKey = null;
+                string? oldImageKey = existingFlashCard.ImageUrl;
+                string? oldAudioKey = existingFlashCard.AudioUrl;
+                
+                // Xử lý cập nhật ImageUrl
+                if (!string.IsNullOrWhiteSpace(updateFlashCardDto.ImageTempKey))
+                {
+                    var imageResult = await _minioFileStorage.CommitFileAsync(
+                        updateFlashCardDto.ImageTempKey,
+                        FlashCardBucket,
+                        FlashCardFolder
+                    );
+                    
+                    if (!imageResult.Success || string.IsNullOrWhiteSpace(imageResult.Data))
+                    {
+                        _logger.LogError("Failed to commit new image: {Error}", imageResult.Message);
+                        response.Success = false;
+                        response.Message = $"Không thể lưu ảnh mới: {imageResult.Message}";
+                        return response;
+                    }
+                    
+                    newImageKey = imageResult.Data;
+                    existingFlashCard.ImageUrl = newImageKey;
+                }
+                
+                // Xử lý cập nhật AudioUrl
+                if (!string.IsNullOrWhiteSpace(updateFlashCardDto.AudioTempKey))
+                {
+                    var audioResult = await _minioFileStorage.CommitFileAsync(
+                        updateFlashCardDto.AudioTempKey,
+                        FlashCardBucket,
+                        FlashCardFolder
+                    );
+                    
+                    if (!audioResult.Success || string.IsNullOrWhiteSpace(audioResult.Data))
+                    {
+                        _logger.LogError("Failed to commit new audio: {Error}", audioResult.Message);
+                        
+                        // Rollback new image if committed
+                        if (newImageKey != null)
+                        {
+                            await _minioFileStorage.DeleteFileAsync(newImageKey, FlashCardBucket);
+                            existingFlashCard.ImageUrl = oldImageKey; // Restore old
+                        }
+                        
+                        response.Success = false;
+                        response.Message = $"Không thể lưu audio mới: {audioResult.Message}";
+                        return response;
+                    }
+                    
+                    newAudioKey = audioResult.Data;
+                    existingFlashCard.AudioUrl = newAudioKey;
+                }
 
-                var updatedFlashCard = await _flashCardRepository.UpdateAsync(existingFlashCard);
+                // Update database with rollback on failure
+                FlashCard updatedFlashCard;
+                try
+                {
+                    updatedFlashCard = await _flashCardRepository.UpdateAsync(existingFlashCard);
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error while updating flashcard");
+                    
+                    // Rollback new files
+                    if (newImageKey != null)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(newImageKey, FlashCardBucket);
+                    }
+                    if (newAudioKey != null)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(newAudioKey, FlashCardBucket);
+                    }
+                    
+                    response.Success = false;
+                    response.Message = "Lỗi database khi cập nhật flashcard";
+                    return response;
+                }
+                
+                // Only delete old files after successful DB update
+                if (newImageKey != null && !string.IsNullOrWhiteSpace(oldImageKey))
+                {
+                    await _minioFileStorage.DeleteFileAsync(oldImageKey, FlashCardBucket);
+                }
+                if (newAudioKey != null && !string.IsNullOrWhiteSpace(oldAudioKey))
+                {
+                    await _minioFileStorage.DeleteFileAsync(oldAudioKey, FlashCardBucket);
+                }
                 var flashCardDto = _mapper.Map<FlashCardDto>(updatedFlashCard);
+                
+                // Generate URLs cho response
+                if (!string.IsNullOrWhiteSpace(flashCardDto.ImageUrl))
+                {
+                    flashCardDto.ImageUrl = BuildPublicUrl.BuildURL(FlashCardBucket, flashCardDto.ImageUrl);
+                }
+                if (!string.IsNullOrWhiteSpace(flashCardDto.AudioUrl))
+                {
+                    flashCardDto.AudioUrl = BuildPublicUrl.BuildURL(FlashCardBucket, flashCardDto.AudioUrl);
+                }
 
                 response.Data = flashCardDto;
                 response.Message = "Cập nhật FlashCard thành công";
@@ -233,12 +446,24 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                var exists = await _flashCardRepository.ExistsAsync(flashCardId);
-                if (!exists)
+                var flashCard = await _flashCardRepository.GetByIdAsync(flashCardId);
+                if (flashCard == null)
                 {
                     response.Success = false;
                     response.Message = "Không tìm thấy FlashCard";
                     return response;
+                }
+                
+                // Xóa image từ MinIO nếu có
+                if (!string.IsNullOrWhiteSpace(flashCard.ImageUrl))
+                {
+                    await _minioFileStorage.DeleteFileAsync(FlashCardBucket, flashCard.ImageUrl);
+                }
+                
+                // Xóa audio từ MinIO nếu có
+                if (!string.IsNullOrWhiteSpace(flashCard.AudioUrl))
+                {
+                    await _minioFileStorage.DeleteFileAsync(FlashCardBucket, flashCard.AudioUrl);
                 }
 
                 var deleted = await _flashCardRepository.DeleteAsync(flashCardId);
@@ -363,36 +588,208 @@ namespace LearningEnglish.Application.Service
 
 
 
-        // + Tạo nhiều flashcard cùng lúc
+        // + Tạo nhiều flashcard cùng lúc với xử lý media files
         public async Task<ServiceResponse<List<FlashCardDto>>> CreateBulkFlashCardsAsync(BulkImportFlashCardDto bulkImportDto, int userId, string userRole)
         {
             var response = new ServiceResponse<List<FlashCardDto>>();
+            var committedFiles = new List<(string key, string type)>(); // Track for rollback
 
             try
             {
-                // Validate permissions for the target module
-                // TODO: Add module permission check
-
-                var flashCards = _mapper.Map<List<FlashCard>>(bulkImportDto.FlashCards);
-                foreach (var fc in flashCards)
+                // Validate có flashcards không
+                if (bulkImportDto.FlashCards == null || !bulkImportDto.FlashCards.Any())
                 {
-                    fc.ModuleId = bulkImportDto.ModuleId;
+                    response.Success = false;
+                    response.Message = "Danh sách FlashCard không được để trống";
+                    return response;
                 }
 
-                var createdFlashCards = await _flashCardRepository.CreateBulkAsync(flashCards);
+                _logger.LogInformation("Starting bulk create for {Count} flashcards in module {ModuleId}", 
+                    bulkImportDto.FlashCards.Count, bulkImportDto.ModuleId);
+
+                // Validate từng flashcard
+                foreach (var createDto in bulkImportDto.FlashCards)
+                {
+                    var validation = await ValidateFlashCardDataAsync(createDto);
+                    if (!validation.Success)
+                    {
+                        response.Success = false;
+                        response.Message = $"Flashcard '{createDto.Word}': {validation.Message}";
+                        return response;
+                    }
+                }
+
+                // Kiểm tra từ trùng lặp trong batch
+                var duplicatesInBatch = bulkImportDto.FlashCards
+                    .GroupBy(fc => fc.Word.ToLower())
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key)
+                    .ToList();
+
+                if (duplicatesInBatch.Any())
+                {
+                    response.Success = false;
+                    response.Message = $"Có từ trùng lặp trong danh sách: {string.Join(", ", duplicatesInBatch)}";
+                    return response;
+                }
+
+                // Kiểm tra từ đã tồn tại trong module
+                var existingWords = await _flashCardRepository.GetByModuleIdWithDetailsAsync(bulkImportDto.ModuleId);
+                var existingWordSet = existingWords.Select(fc => fc.Word.ToLower()).ToHashSet();
+                var duplicatesInModule = bulkImportDto.FlashCards
+                    .Where(fc => existingWordSet.Contains(fc.Word.ToLower()))
+                    .Select(fc => fc.Word)
+                    .ToList();
+
+                if (duplicatesInModule.Any() && !bulkImportDto.ReplaceExisting)
+                {
+                    response.Success = false;
+                    response.Message = $"Các từ sau đã tồn tại trong module: {string.Join(", ", duplicatesInModule)}. Sử dụng ReplaceExisting=true để ghi đè.";
+                    return response;
+                }
+
+                // Phase 1: Commit tất cả media files (images + audios)
+                var flashCards = new List<FlashCard>();
+                for (int i = 0; i < bulkImportDto.FlashCards.Count; i++)
+                {
+                    var createDto = bulkImportDto.FlashCards[i];
+                    var flashCard = _mapper.Map<FlashCard>(createDto);
+                    flashCard.ModuleId = bulkImportDto.ModuleId;
+
+                    try
+                    {
+                        // Commit Image nếu có
+                        if (!string.IsNullOrWhiteSpace(createDto.ImageTempKey))
+                        {
+                            var imageResult = await _minioFileStorage.CommitFileAsync(
+                                createDto.ImageTempKey,
+                                FlashCardBucket,
+                                FlashCardFolder
+                            );
+
+                            if (!imageResult.Success || string.IsNullOrWhiteSpace(imageResult.Data))
+                            {
+                                throw new Exception($"Không thể commit image cho từ '{createDto.Word}': {imageResult.Message}");
+                            }
+
+                            flashCard.ImageUrl = imageResult.Data;
+                            committedFiles.Add((imageResult.Data, "image"));
+                            _logger.LogInformation("Committed image for '{Word}': {Key}", createDto.Word, imageResult.Data);
+                        }
+
+                        // Commit Audio nếu có
+                        if (!string.IsNullOrWhiteSpace(createDto.AudioTempKey))
+                        {
+                            var audioResult = await _minioFileStorage.CommitFileAsync(
+                                createDto.AudioTempKey,
+                                FlashCardBucket,
+                                FlashCardFolder
+                            );
+
+                            if (!audioResult.Success || string.IsNullOrWhiteSpace(audioResult.Data))
+                            {
+                                throw new Exception($"Không thể commit audio cho từ '{createDto.Word}': {audioResult.Message}");
+                            }
+
+                            flashCard.AudioUrl = audioResult.Data;
+                            committedFiles.Add((audioResult.Data, "audio"));
+                            _logger.LogInformation("Committed audio for '{Word}': {Key}", createDto.Word, audioResult.Data);
+                        }
+                    }
+                    catch (Exception commitEx)
+                    {
+                        _logger.LogError(commitEx, "Error committing files for flashcard {Index}: {Word}", i + 1, createDto.Word);
+                        
+                        // Rollback tất cả files đã commit
+                        await RollbackCommittedFilesAsync(committedFiles);
+                        
+                        response.Success = false;
+                        response.Message = $"Lỗi khi xử lý file cho từ '{createDto.Word}': {commitEx.Message}";
+                        return response;
+                    }
+
+                    flashCards.Add(flashCard);
+                }
+
+                _logger.LogInformation("All media files committed successfully. Total: {Count} images, {AudioCount} audios", 
+                    committedFiles.Count(f => f.type == "image"), 
+                    committedFiles.Count(f => f.type == "audio"));
+
+                // Phase 2: Bulk insert vào database với transaction
+                List<FlashCard> createdFlashCards;
+                try
+                {
+                    createdFlashCards = await _flashCardRepository.CreateBulkAsync(flashCards);
+                    _logger.LogInformation("Bulk insert successful: {Count} flashcards created", createdFlashCards.Count);
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error during bulk insert for module {ModuleId}", bulkImportDto.ModuleId);
+                    
+                    // Rollback tất cả files đã commit
+                    await RollbackCommittedFilesAsync(committedFiles);
+                    
+                    response.Success = false;
+                    response.Message = "Lỗi database khi lưu FlashCard hàng loạt. Tất cả thay đổi đã được hoàn tác.";
+                    return response;
+                }
+
+                // Phase 3: Map to DTOs và generate public URLs
                 var flashCardDtos = _mapper.Map<List<FlashCardDto>>(createdFlashCards);
+                foreach (var dto in flashCardDtos)
+                {
+                    if (!string.IsNullOrWhiteSpace(dto.ImageUrl))
+                    {
+                        dto.ImageUrl = BuildPublicUrl.BuildURL(FlashCardBucket, dto.ImageUrl);
+                    }
+                    if (!string.IsNullOrWhiteSpace(dto.AudioUrl))
+                    {
+                        dto.AudioUrl = BuildPublicUrl.BuildURL(FlashCardBucket, dto.AudioUrl);
+                    }
+                }
 
                 response.Data = flashCardDtos;
-                response.Message = $"Tạo {createdFlashCards.Count} FlashCard thành công";
+                response.Message = $"Tạo thành công {createdFlashCards.Count} FlashCard cho Module {bulkImportDto.ModuleId}";
+                
+                _logger.LogInformation("Bulk create completed successfully: {Count} flashcards, {FileCount} files", 
+                    createdFlashCards.Count, committedFiles.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi tạo bulk FlashCard cho Module: {ModuleId}", bulkImportDto.ModuleId);
+                _logger.LogError(ex, "Unexpected error during bulk create for Module: {ModuleId}", bulkImportDto.ModuleId);
+                
+                // Rollback files nếu có lỗi
+                await RollbackCommittedFilesAsync(committedFiles);
+                
                 response.Success = false;
                 response.Message = "Có lỗi xảy ra khi tạo FlashCard hàng loạt";
             }
 
             return response;
+        }
+
+        // Helper method để rollback committed files
+        private async Task RollbackCommittedFilesAsync(List<(string key, string type)> committedFiles)
+        {
+            if (!committedFiles.Any())
+            {
+                return;
+            }
+
+            _logger.LogWarning("Rolling back {Count} committed files", committedFiles.Count);
+            
+            foreach (var (key, type) in committedFiles)
+            {
+                try
+                {
+                    await _minioFileStorage.DeleteFileAsync(key, FlashCardBucket);
+                    _logger.LogInformation("Rolled back {Type} file: {Key}", type, key);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to rollback {Type} file: {Key}", type, key);
+                }
+            }
         }
 
 
