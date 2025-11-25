@@ -34,6 +34,7 @@ namespace LearningEnglish.Infrastructure.Data
         public DbSet<PronunciationAssessment> PronunciationAssessments => Set<PronunciationAssessment>();
         public DbSet<Streak> Streaks => Set<Streak>();
         public DbSet<StudyReminder> StudyReminders => Set<StudyReminder>();
+        public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
         public DbSet<EssaySubmission> EssaySubmissions => Set<EssaySubmission>();
         public DbSet<UserCourse> UserCourses => Set<UserCourse>();
@@ -402,6 +403,32 @@ namespace LearningEnglish.Infrastructure.Data
                 e.HasOne(sr => sr.User)
                  .WithMany(u => u.StudyReminders)
                  .HasForeignKey(sr => sr.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Notification
+            modelBuilder.Entity<Notification>(e =>
+            {
+                e.ToTable("Notifications");
+                e.HasKey(n => n.Id);
+
+                e.Property(n => n.Title)
+                 .HasMaxLength(200)
+                 .IsRequired(false);
+
+                e.Property(n => n.Message)
+                 .HasMaxLength(1000)
+                 .IsRequired(false);
+
+                e.Property(n => n.Type)
+                 .IsRequired();
+
+                e.Property(n => n.IsRead)
+                 .HasDefaultValue(false);
+
+                e.HasOne(n => n.User)
+                 .WithMany(u => u.Notifications)
+                 .HasForeignKey(n => n.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
             });
 
