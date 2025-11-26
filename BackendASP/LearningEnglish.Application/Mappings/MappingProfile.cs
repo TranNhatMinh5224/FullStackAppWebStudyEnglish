@@ -10,36 +10,40 @@ namespace LearningEnglish.Application.Mappings
         {
             // Course mappings - Request DTOs to Entity
             CreateMap<AdminCreateCourseRequestDto, Course>()
-                .ForMember(dest => dest.ImageUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.ImageKey, opt => opt.Ignore())
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
             CreateMap<TeacherCreateCourseRequestDto, Course>()
-                .ForMember(dest => dest.ImageUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.ImageKey, opt => opt.Ignore())
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
             // Course mappings - Entity to Response DTOs
             CreateMap<Course, CourseResponseDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
 
             CreateMap<Course, AdminCourseListResponseDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
 
             CreateMap<Course, UserCourseListResponseDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore()); // Sẽ set trong service
 
             CreateMap<Course, CourseDetailResponseDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
@@ -47,6 +51,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Lessons, opt => opt.Ignore());
 
             CreateMap<Course, TeacherCourseResponseDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
@@ -63,20 +68,22 @@ namespace LearningEnglish.Application.Mappings
 
             // Course Update mappings
             CreateMap<AdminUpdateCourseRequestDto, Course>()
-                .ForMember(dest => dest.ImageUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.ImageKey, opt => opt.Ignore())
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<TeacherUpdateCourseRequestDto, Course>()
-                .ForMember(dest => dest.ImageUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.ImageKey, opt => opt.Ignore())
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Lesson mappings
-            CreateMap<Lesson, LessonDto>();
-            CreateMap<Lesson, ListLessonDto>();
+            CreateMap<Lesson, LessonDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey));
+            CreateMap<Lesson, ListLessonDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey));
 
             // Module mappings
             CreateMap<Module, ModuleDto>()
@@ -122,12 +129,14 @@ namespace LearningEnglish.Application.Mappings
 
             // Lecture mappings
             CreateMap<Lecture, LectureDto>()
+                .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => src.MediaKey))
                 .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty))
                 .ForMember(dest => dest.ParentTitle, opt => opt.MapFrom(src => src.Parent != null ? src.Parent.Title : string.Empty))
                 .ForMember(dest => dest.ChildrenCount, opt => opt.MapFrom(src => src.Children.Count))
                 .ForMember(dest => dest.AssessmentCount, opt => opt.Ignore()); // Assessment không còn thuộc về Lecture
 
             CreateMap<Lecture, ListLectureDto>()
+                .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => src.MediaKey))
                 .ForMember(dest => dest.ChildrenCount, opt => opt.MapFrom(src => src.Children.Count));
 
             CreateMap<Lecture, LectureTreeDto>()
@@ -165,6 +174,8 @@ namespace LearningEnglish.Application.Mappings
 
             // FlashCard mappings
             CreateMap<FlashCard, FlashCardDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey)) // Map key to url field
+                .ForMember(dest => dest.AudioUrl, opt => opt.MapFrom(src => src.AudioKey)) // Map key to url field
                 .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty))
                 .ForMember(dest => dest.ReviewCount, opt => opt.Ignore()) // Sẽ tính trong service
                 .ForMember(dest => dest.SuccessRate, opt => opt.Ignore()) // Sẽ tính trong service
@@ -173,6 +184,8 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.LastReviewedAt, opt => opt.Ignore()); // Sẽ tính trong service
 
             CreateMap<FlashCard, ListFlashCardDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey)) // Map key to url field
+                .ForMember(dest => dest.AudioUrl, opt => opt.MapFrom(src => src.AudioKey)) // Map key to url field
                 .ForMember(dest => dest.ReviewCount, opt => opt.Ignore()) // Sẽ tính trong service
                 .ForMember(dest => dest.SuccessRate, opt => opt.Ignore()) // Sẽ tính trong service
                 .ForMember(dest => dest.CurrentLevel, opt => opt.Ignore()); // Sẽ tính trong service
@@ -236,6 +249,20 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<QuizSection, QuizSectionDto>();
             CreateMap<QuizSection, ListQuizSectionDto>();
 
+            // Progress mappings - Basic entity to DTO mappings
+            CreateMap<Module, ModuleProgressDetailDto>()
+                .ForMember(dest => dest.ModuleType, opt => opt.MapFrom(src => src.ContentType.ToString()));
+
+            CreateMap<Lesson, LessonProgressDetailDto>()
+                .ForMember(dest => dest.LessonName, opt => opt.MapFrom(src => src.Title));
+
+            CreateMap<Course, CourseProgressDetailDto>()
+                .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Title))
+                .ForMember(dest => dest.CourseDescription, opt => opt.MapFrom(src => src.Description));
+
+            // Complex mappings with progress data will be handled in services
+            // since they require data from multiple entities and repositories
+
             CreateMap<CreateQuizSectionDto, QuizSection>()
                 .ForMember(dest => dest.QuizSectionId, opt => opt.Ignore());
 
@@ -243,7 +270,9 @@ namespace LearningEnglish.Application.Mappings
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
                 
             // QuizGroup mappings
-            CreateMap<QuizGroup, QuizGroupDto>();
+            CreateMap<QuizGroup, QuizGroupDto>()
+                .ForMember(dest => dest.ImgUrl, opt => opt.MapFrom(src => src.ImgKey))
+                .ForMember(dest => dest.VideoUrl, opt => opt.MapFrom(src => src.VideoKey));
             CreateMap<CreateQuizGroupDto, QuizGroup>()
                 .ForMember(dest => dest.QuizGroupId, opt => opt.Ignore());
             CreateMap<UpdateQuizGroupDto, QuizGroup>()
@@ -251,6 +280,7 @@ namespace LearningEnglish.Application.Mappings
 
             // Question mappings
             CreateMap<Question, QuestionReadDto>()
+                .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => src.MediaKey))
                 .ForMember(dest => dest.Options, opt => opt.MapFrom(src => src.Options));
 
             CreateMap<QuestionCreateDto, Question>()
@@ -265,7 +295,8 @@ namespace LearningEnglish.Application.Mappings
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // AnswerOption mappings
-            CreateMap<AnswerOption, AnswerOptionReadDto>();
+            CreateMap<AnswerOption, AnswerOptionReadDto>()
+                .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => src.MediaKey));
 
             CreateMap<AnswerOptionCreateDto, AnswerOption>()
                 .ForMember(dest => dest.AnswerOptionId, opt => opt.Ignore())

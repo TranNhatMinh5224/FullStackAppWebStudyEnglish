@@ -120,7 +120,7 @@ namespace LearningEnglish.Application.Service
                     }
 
                     committedImageKey = commitResult.Data;
-                    course.ImageUrl = committedImageKey;
+                    course.ImageKey = committedImageKey;
                     course.ImageType = requestDto.ImageType;
                 }
 
@@ -149,11 +149,11 @@ namespace LearningEnglish.Application.Service
                 courseResponseDto.LessonCount = 0;
                 courseResponseDto.StudentCount = 0;
 
-                if (!string.IsNullOrWhiteSpace(course.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
                     courseResponseDto.ImageUrl = BuildPublicUrl.BuildURL(
                         CourseImageBucket,
-                        course.ImageUrl
+                        course.ImageKey
                     );
                     courseResponseDto.ImageType = course.ImageType;
                 }
@@ -241,7 +241,7 @@ namespace LearningEnglish.Application.Service
                 course.MaxStudent = requestDto.MaxStudent > 0 ? requestDto.MaxStudent : teacherPackage.MaxStudents;
 
                 string? newImageKey = null;
-                string? oldImageKey = !string.IsNullOrWhiteSpace(course.ImageUrl) ? course.ImageUrl : null;
+                string? oldImageKey = !string.IsNullOrWhiteSpace(course.ImageKey) ? course.ImageKey : null;
                 
                 // Xử lý file ảnh: commit new first
                 if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))
@@ -262,7 +262,7 @@ namespace LearningEnglish.Application.Service
                     }
 
                     newImageKey = commitResult.Data;
-                    course.ImageUrl = newImageKey;
+                    course.ImageKey = newImageKey;
                     course.ImageType = requestDto.ImageType;
                 }
 
@@ -304,11 +304,11 @@ namespace LearningEnglish.Application.Service
                 courseResponseDto.LessonCount = await _courseRepository.CountLessons(courseId);
                 courseResponseDto.StudentCount = await _courseRepository.CountEnrolledUsers(courseId);
 
-                if (!string.IsNullOrWhiteSpace(course.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
                     courseResponseDto.ImageUrl = BuildPublicUrl.BuildURL(
                         CourseImageBucket,
-                        course.ImageUrl
+                        course.ImageKey
                     );
                     courseResponseDto.ImageType = course.ImageType;
                 }
@@ -347,11 +347,11 @@ namespace LearningEnglish.Application.Service
                     courseDto.StudentCount = await _courseRepository.CountEnrolledUsers(course.CourseId);
 
                     // Generate URL từ key cho tất cả courses
-                    if (!string.IsNullOrWhiteSpace(course.ImageUrl))
+                    if (!string.IsNullOrWhiteSpace(course.ImageKey))
                     {
                         courseDto.ImageUrl = BuildPublicUrl.BuildURL(
                             CourseImageBucket,
-                            course.ImageUrl
+                            course.ImageKey
                         );
                         courseDto.ImageType = course.ImageType;
                     }
@@ -400,18 +400,18 @@ namespace LearningEnglish.Application.Service
 
                 await _courseRepository.DeleteCourse(courseId);
                 // xóa ảnh khóa học trên MinIO nếu có
-                if (!string.IsNullOrWhiteSpace(course.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
                     try
                     {
                         await _minioFileStorage.DeleteFileAsync(
-                            course.ImageUrl,
+                            course.ImageKey,
                             CourseImageBucket
                         );
                     }
                     catch (Exception deleteEx)
                     {
-                        _logger.LogWarning(deleteEx, "Failed to delete course image: {ImageUrl}", course.ImageUrl);
+                        _logger.LogWarning(deleteEx, "Failed to delete course image: {ImageUrl}", course.ImageKey);
                     }
                 }
 

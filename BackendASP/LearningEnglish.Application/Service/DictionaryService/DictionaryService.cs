@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Cofigurations;
@@ -23,6 +24,8 @@ namespace LearningEnglish.Application.Service
         private const string FREE_DICTIONARY_API = "https://api.dictionaryapi.dev/api/v2/entries/en";
         private const string GOOGLE_TRANSLATE_API = "https://translate.googleapis.com/translate_a/single";
         private const string AUDIO_BUCKET_NAME = "flashcard-audio";
+        private const string IMAGE_BUCKET_NAME = "flashcards";
+        private const string FOLDERTEMP = "temp";
 
         public DictionaryService(
             IHttpClientFactory httpClientFactory,
@@ -155,10 +158,11 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
+        // gen flashcard from word 
 
-        public async Task<ServiceResponse<CreateFlashCardDto>> GenerateFlashCardFromWordAsync(string word, int? moduleId = null)
+        public async Task<ServiceResponse<GenerateFlashCardPreviewResponseDto>> GenerateFlashCardFromWordAsync(string word)
         {
-            var response = new ServiceResponse<CreateFlashCardDto>();
+            var response = new ServiceResponse<GenerateFlashCardPreviewResponseDto>();
 
             try
             {
@@ -173,9 +177,8 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var dictData = lookupResult.Data;
-                var flashCard = new CreateFlashCardDto
+                var flashCard = new Domain.Entities.FlashCard
                 {
-                    ModuleId = moduleId,
                     Word = dictData.Word,
                     Pronunciation = dictData.Phonetic
                 };
@@ -218,7 +221,7 @@ namespace LearningEnglish.Application.Service
                     }
                 }
 
-                flashCard.AudioTempKey = audioTempKey;
+                flashCard.AudioKey = audioTempKey;
 
                 // Handle image generation from Unsplash
                 string? imageTempKey = null;
@@ -236,7 +239,7 @@ namespace LearningEnglish.Application.Service
                     _logger.LogWarning(ex, "Failed to download/upload Unsplash image for word: {Word}", word);
                 }
 
-                flashCard.ImageTempKey = imageTempKey;
+                flashCard.ImageKey = imageTempKey;
 
                 // Get first meaning as primary
                 var primaryMeaning = dictData.Meanings.FirstOrDefault();
@@ -294,65 +297,33 @@ namespace LearningEnglish.Application.Service
                     }
                 }
 
-                response.Data = flashCard;
-                response.Message = "FlashCard data generated successfully";
+                // Map to GenerateFlashCardPreviewResponseDto with URLs and temp keys
+                var previewDto = new GenerateFlashCardPreviewResponseDto
+                {
+                    Word = flashCard.Word,
+                    Pronunciation = flashCard.Pronunciation,
+                    PartOfSpeech = flashCard.PartOfSpeech,
+                    Meaning = flashCard.Meaning,
+                    Example = flashCard.Example,
+                    ExampleTranslation = flashCard.ExampleTranslation,
+                    Synonyms = flashCard.Synonyms,
+                    Antonyms = flashCard.Antonyms,
+                    // URLs for preview
+                    AudioUrl = !string.IsNullOrWhiteSpace(flashCard.AudioKey) ? BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, flashCard.AudioKey) : null,
+                    ImageUrl = !string.IsNullOrWhiteSpace(flashCard.ImageKey) ? BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, flashCard.ImageKey) : null,
+                    // Temp keys for create operation
+                    AudioTempKey = flashCard.AudioKey,
+                    ImageTempKey = flashCard.ImageKey
+                };
+
+                response.Data = previewDto;
+                response.Message = "FlashCard generated successfully for review";
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating FlashCard from word: {Word}", word);
                 response.Success = false;
                 response.Message = "An error occurred while generating FlashCard data";
-            }
-
-            return response;
-        }
-
-        public async Task<ServiceResponse<List<DictionaryLookupResultDto>>> BatchLookupWordsAsync(List<string> words, string? targetLanguage = "vi")
-        {
-            var response = new ServiceResponse<List<DictionaryLookupResultDto>>();
-            var results = new List<DictionaryLookupResultDto>();
-
-            try
-            {
-                if (words == null || !words.Any())
-                {
-                    response.Success = false;
-                    response.Message = "Word list cannot be empty";
-                    return response;
-                }
-
-                if (words.Count > 50)
-                {
-                    response.Success = false;
-                    response.Message = "Maximum 50 words per batch";
-                    return response;
-                }
-
-                // Process each word (could be parallelized with SemaphoreSlim for rate limiting)
-                foreach (var word in words)
-                {
-                    var lookupResult = await LookupWordAsync(word, targetLanguage);
-                    if (lookupResult.Success && lookupResult.Data != null)
-                    {
-                        results.Add(lookupResult.Data);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Failed to lookup word: {Word}", word);
-                    }
-
-                    // Small delay to avoid rate limiting
-                    await Task.Delay(100);
-                }
-
-                response.Data = results;
-                response.Message = $"Successfully looked up {results.Count} out of {words.Count} words";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during batch word lookup");
-                response.Success = false;
-                response.Message = "An error occurred during batch lookup";
             }
 
             return response;
@@ -537,7 +508,7 @@ namespace LearningEnglish.Application.Service
                     ContentType = "audio/mpeg"
                 };
 
-                var uploadResult = await _minioService.UpLoadFileTempAsync(formFile, AUDIO_BUCKET_NAME, "temp");
+                var uploadResult = await _minioService.UpLoadFileTempAsync(formFile, AUDIO_BUCKET_NAME, FOLDERTEMP);
                 
                 if (uploadResult.Success && uploadResult.Data != null)
                 {
@@ -767,7 +738,7 @@ namespace LearningEnglish.Application.Service
                     ContentType = "image/jpeg"
                 };
 
-                var uploadResult = await _minioService.UpLoadFileTempAsync(formFile, "flashcards", "temp");
+                var uploadResult = await _minioService.UpLoadFileTempAsync(formFile, IMAGE_BUCKET_NAME, FOLDERTEMP);
                 
                 if (uploadResult.Success && uploadResult.Data != null)
                 {
@@ -780,127 +751,6 @@ namespace LearningEnglish.Application.Service
             }
             
             return null;
-        }
-
-        // DTO classes for Unsplash API response
-        private class UnsplashSearchResponse
-        {
-            public int Total { get; set; }
-            public int TotalPages { get; set; }
-            public List<UnsplashPhoto>? Results { get; set; }
-        }
-
-        private class UnsplashPhoto
-        {
-            public string? Id { get; set; }
-            public string? Description { get; set; }
-            public string? AltDescription { get; set; }
-            public UnsplashUrls? Urls { get; set; }
-            public UnsplashUser? User { get; set; }
-        }
-
-        private class UnsplashUrls
-        {
-            public string? Raw { get; set; }
-            public string? Full { get; set; }
-            public string? Regular { get; set; }
-            public string? Small { get; set; }
-            public string? Thumb { get; set; }
-        }
-
-        private class UnsplashUser
-        {
-            public string? Name { get; set; }
-            public string? Username { get; set; }
-        }
-
-        // DTO classes for Oxford API response
-        private class OxfordApiResponse
-        {
-            public string? Id { get; set; }
-            public List<OxfordResult>? Results { get; set; }
-        }
-
-        private class OxfordResult
-        {
-            public string? Id { get; set; }
-            public string? Language { get; set; }
-            public List<OxfordLexicalEntry>? LexicalEntries { get; set; }
-        }
-
-        private class OxfordLexicalEntry
-        {
-            public List<OxfordEntry>? Entries { get; set; }
-            public OxfordLexicalCategory? LexicalCategory { get; set; }
-            public List<OxfordPronunciation>? Pronunciations { get; set; }
-        }
-
-        private class OxfordLexicalCategory
-        {
-            public string? Id { get; set; }
-            public string? Text { get; set; }
-        }
-
-        private class OxfordPronunciation
-        {
-            public string? AudioFile { get; set; }
-            public string? PhoneticNotation { get; set; }
-            public string? PhoneticSpelling { get; set; }
-        }
-
-        private class OxfordEntry
-        {
-            public List<OxfordSense>? Senses { get; set; }
-        }
-
-        private class OxfordSense
-        {
-            public List<string>? Definitions { get; set; }
-            public List<OxfordExample>? Examples { get; set; }
-            public List<OxfordThesaurusLink>? Synonyms { get; set; }
-            public List<OxfordThesaurusLink>? Antonyms { get; set; }
-        }
-
-        private class OxfordExample
-        {
-            public string? Text { get; set; }
-        }
-
-        private class OxfordThesaurusLink
-        {
-            public string? Id { get; set; }
-            public string? Language { get; set; }
-            public string? Text { get; set; }
-        }
-
-        // DTO classes for Free Dictionary API response
-        private class DictionaryApiResponse
-        {
-            public string? Word { get; set; }
-            public string? Phonetic { get; set; }
-            public List<PhoneticDto>? Phonetics { get; set; }
-            public List<MeaningDto>? Meanings { get; set; }
-            public List<string>? SourceUrls { get; set; }
-        }
-
-        private class PhoneticDto
-        {
-            public string? Text { get; set; }
-            public string? Audio { get; set; }
-        }
-
-        private class MeaningDto
-        {
-            public string? PartOfSpeech { get; set; }
-            public List<DefinitionDto>? Definitions { get; set; }
-            public List<string>? Synonyms { get; set; }
-            public List<string>? Antonyms { get; set; }
-        }
-
-        private class DefinitionDto
-        {
-            public string? Definition { get; set; }
-            public string? Example { get; set; }
         }
     }
 }

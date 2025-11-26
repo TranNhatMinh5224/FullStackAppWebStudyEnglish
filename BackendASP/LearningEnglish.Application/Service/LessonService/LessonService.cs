@@ -98,7 +98,7 @@ namespace LearningEnglish.Application.Service
                     }
 
                     committedImageKey = commitResult.Data;
-                    lesson.ImageUrl = committedImageKey;
+                    lesson.ImageKey = committedImageKey;
                     lesson.ImageType = dto.ImageType;
                 }
 
@@ -124,11 +124,11 @@ namespace LearningEnglish.Application.Service
 
                 // Map response và generate URL từ key
                 var lessonDto = _mapper.Map<LessonDto>(lesson);
-                if (!string.IsNullOrWhiteSpace(lesson.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                 {
                     lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
                         LessonImageBucket,
-                        lesson.ImageUrl
+                        lesson.ImageKey
                     );
                     lessonDto.ImageType = lesson.ImageType;
                 }
@@ -232,7 +232,7 @@ namespace LearningEnglish.Application.Service
                     }
 
                     committedImageKey = commitResult.Data;
-                    lesson.ImageUrl = committedImageKey;
+                    lesson.ImageKey = committedImageKey;
                     lesson.ImageType = dto.ImageType;
                 }
 
@@ -258,11 +258,11 @@ namespace LearningEnglish.Application.Service
 
                 // Map response và generate URL từ key
                 var lessonDto = _mapper.Map<LessonDto>(lesson);
-                if (!string.IsNullOrWhiteSpace(lesson.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                 {
                     lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
                         LessonImageBucket,
-                        lesson.ImageUrl
+                        lesson.ImageKey
                     );
                     lessonDto.ImageType = lesson.ImageType;
                 }
@@ -465,7 +465,7 @@ namespace LearningEnglish.Application.Service
                 lesson.OrderIndex = dto.OrderIndex ?? lesson.OrderIndex;
 
                 string? newImageKey = null;
-                string? oldImageKey = !string.IsNullOrWhiteSpace(lesson.ImageUrl) ? lesson.ImageUrl : null;
+                string? oldImageKey = !string.IsNullOrWhiteSpace(lesson.ImageKey) ? lesson.ImageKey : null;
                 
                 // Xử lý file ảnh: commit new file first
                 if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
@@ -486,7 +486,7 @@ namespace LearningEnglish.Application.Service
                     }
 
                     newImageKey = commitResult.Data;
-                    lesson.ImageUrl = newImageKey;
+                    lesson.ImageKey = newImageKey;
                     lesson.ImageType = dto.ImageType;
                 }
 
@@ -525,11 +525,11 @@ namespace LearningEnglish.Application.Service
 
                 // Map response và generate URL từ key
                 var lessonDto = _mapper.Map<LessonDto>(lesson);
-                if (!string.IsNullOrWhiteSpace(lesson.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                 {
                     lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
                         LessonImageBucket,
-                        lesson.ImageUrl
+                        lesson.ImageKey
                     );
                     lessonDto.ImageType = lesson.ImageType;
                 }
@@ -594,18 +594,18 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Xóa ảnh lesson trên MinIO nếu có
-                if (!string.IsNullOrWhiteSpace(lesson.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                 {
                     try
                     {
                         await _minioFileStorage.DeleteFileAsync(
-                            lesson.ImageUrl,
+                            lesson.ImageKey,
                             LessonImageBucket
                         );
                     }
                     catch (Exception deleteEx)
                     {
-                        _logger.LogWarning(deleteEx, "Failed to delete lesson image: {ImageUrl}", lesson.ImageUrl);
+                        _logger.LogWarning(deleteEx, "Failed to delete lesson image: {ImageUrl}", lesson.ImageKey);
                     }
                 }
 

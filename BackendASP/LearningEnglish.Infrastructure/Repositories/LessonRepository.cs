@@ -64,5 +64,13 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             return await _context.Lessons.CountAsync(l => l.CourseId == courseId);
         }
+
+        public async Task<int?> GetCourseIdByLessonIdAsync(int lessonId)
+        {
+            return await _context.Lessons
+                .Where(l => l.LessonId == lessonId)
+                .Select(l => l.CourseId)
+                .FirstOrDefaultAsync();
+        }
     }
 }

@@ -11,11 +11,11 @@ public class FlashCard
     public string Word { get; set; } = string.Empty;              // "Beautiful"
     public string Meaning { get; set; } = string.Empty;           // "Đẹp, xinh đẹp"
     public string? Pronunciation { get; set; }                    // "/ˈbjuːtɪfl/"
-    public string? ImageUrl { get; set; }
-    public string? AudioUrl { get; set; }
+    public string? ImageKey { get; set; }                         // MinIO object key for image
+    public string? AudioKey { get; set; }                         // MinIO object key for audio
 
-    public string? ImageType { get; set; }
-    public string? AudioType { get; set; }
+    public string? ImageType { get; set; } = "image";
+    public string? AudioType { get; set; } = "audio";
     
     // Thông tin bổ sung
     public string? PartOfSpeech { get; set; }               // Từ loại: Noun, Verb, Adjective...

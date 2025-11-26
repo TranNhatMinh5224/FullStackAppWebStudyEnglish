@@ -50,11 +50,11 @@ namespace LearningEnglish.Application.Service
                     courseDto.TeacherName = course.Teacher?.FirstName + " " + course.Teacher?.LastName ?? "System Admin";
 
                     // Generate URL từ key
-                    if (!string.IsNullOrWhiteSpace(course.ImageUrl))
+                    if (!string.IsNullOrWhiteSpace(course.ImageKey))
                     {
                         courseDto.ImageUrl = BuildPublicUrl.BuildURL(
                             CourseImageBucket,
-                            course.ImageUrl
+                            course.ImageKey
                         );
                         courseDto.ImageType = course.ImageType;
                     }
@@ -118,7 +118,7 @@ namespace LearningEnglish.Application.Service
                     }
 
                     committedImageKey = commitResult.Data;
-                    course.ImageUrl = committedImageKey;
+                    course.ImageKey = committedImageKey;
                     course.ImageType = requestDto.ImageType;
                 }
 
@@ -148,11 +148,11 @@ namespace LearningEnglish.Application.Service
                 courseResponseDto.StudentCount = 0;
 
                 // Generate URL từ key
-                if (!string.IsNullOrWhiteSpace(course.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
                     courseResponseDto.ImageUrl = BuildPublicUrl.BuildURL(
                         CourseImageBucket,
-                        course.ImageUrl
+                        course.ImageKey
                     );
                     courseResponseDto.ImageType = course.ImageType;
                 }
@@ -198,7 +198,7 @@ namespace LearningEnglish.Application.Service
                 course.Type = requestDto.Type;
 
                 string? newImageKey = null;
-                string? oldImageKey = !string.IsNullOrWhiteSpace(course.ImageUrl) ? course.ImageUrl : null;
+                string? oldImageKey = !string.IsNullOrWhiteSpace(course.ImageKey) ? course.ImageKey : null;
                 
                 // Xử lý file ảnh: commit new first
                 if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))
@@ -219,7 +219,7 @@ namespace LearningEnglish.Application.Service
                     }
 
                     newImageKey = commitResult.Data;
-                    course.ImageUrl = newImageKey;
+                    course.ImageKey = newImageKey;
                     course.ImageType = requestDto.ImageType;
                 }
 
@@ -264,11 +264,11 @@ namespace LearningEnglish.Application.Service
                     : "System Admin";
 
                 // Generate URL từ key
-                if (!string.IsNullOrWhiteSpace(course.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
                     courseResponseDto.ImageUrl = BuildPublicUrl.BuildURL(
                         CourseImageBucket,
-                        course.ImageUrl
+                        course.ImageKey
                     );
                     courseResponseDto.ImageType = course.ImageType;
                 }
@@ -307,18 +307,18 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Xóa ảnh khóa học trên MinIO nếu có
-                if (!string.IsNullOrWhiteSpace(course.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
                     try
                     {
                         await _minioFileStorage.DeleteFileAsync(
-                            course.ImageUrl,
+                            course.ImageKey,
                             CourseImageBucket
                         );
                     }
                     catch (Exception deleteEx)
                     {
-                        _logger.LogWarning(deleteEx, "Failed to delete course image: {ImageUrl}", course.ImageUrl);
+                        _logger.LogWarning(deleteEx, "Failed to delete course image: {ImageUrl}", course.ImageKey);
                     }
                 }
 

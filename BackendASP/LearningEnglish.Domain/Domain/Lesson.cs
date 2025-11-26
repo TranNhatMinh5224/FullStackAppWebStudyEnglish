@@ -7,7 +7,7 @@ public class Lesson
     public string? Description { get; set; }
     public int CourseId { get; set; }
     public int OrderIndex { get; set; }
-    public string? ImageUrl { get; set; }
+    public string? ImageKey { get; set; }
     public string? ImageType { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

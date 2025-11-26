@@ -171,7 +171,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
                 _logger.LogInformation("Admin/Teacher {UserId} đang cập nhật FlashCard: {FlashCardId}", userId, id);
 
-                var result = await _flashCardService.UpdateFlashCardWithAuthorizationAsync(
+                var result = await _flashCardService.UpdateFlashCardAsync(
                     id, updateFlashCardDto, userId, userRole);
 
                 if (!result.Success)
@@ -199,7 +199,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
                 _logger.LogInformation("Admin/Teacher {UserId} đang xóa FlashCard: {FlashCardId}", userId, id);
 
-                var result = await _flashCardService.DeleteFlashCardWithAuthorizationAsync(id, userId, userRole);
+                var result = await _flashCardService.DeleteFlashCardAsync(id, userId, userRole);
 
                 if (!result.Success)
                 {

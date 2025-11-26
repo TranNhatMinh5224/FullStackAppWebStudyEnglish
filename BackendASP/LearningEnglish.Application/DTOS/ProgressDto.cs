@@ -1,21 +1,21 @@
 using System;
 using System.Collections.Generic;
 
-namespace LearningEnglish.Application.DTOS
+namespace LearningEnglish.Application.DTOs
 {
     public class UserProgressDashboardDto
     {
         public int UserId { get; set; }
-        public string UserName { get; set; }
+        public string UserName { get; set; } = string.Empty;
         public List<CourseProgressDetailDto> Courses { get; set; } = new();
-        public ProgressStatisticsDto Statistics { get; set; }
+        public ProgressStatisticsDto Statistics { get; set; } = new ProgressStatisticsDto();
     }
 
     public class CourseProgressDetailDto
     {
         public int CourseId { get; set; }
-        public string CourseName { get; set; }
-        public string CourseDescription { get; set; }
+        public string CourseName { get; set; } = string.Empty;
+        public string CourseDescription { get; set; } = string.Empty;
         public decimal ProgressPercentage { get; set; }
         public int CompletedLessons { get; set; }
         public int TotalLessons { get; set; }
@@ -29,7 +29,7 @@ namespace LearningEnglish.Application.DTOS
     public class LessonProgressDetailDto
     {
         public int LessonId { get; set; }
-        public string LessonName { get; set; }
+        public string LessonName { get; set; } = string.Empty;
         public int OrderIndex { get; set; }
         public decimal CompletionPercentage { get; set; }
         public int CompletedModules { get; set; }
@@ -44,8 +44,8 @@ namespace LearningEnglish.Application.DTOS
     public class ModuleProgressDetailDto
     {
         public int ModuleId { get; set; }
-        public string ModuleName { get; set; }
-        public string ModuleType { get; set; }
+        public string ModuleName { get; set; } = string.Empty;
+        public string ModuleType { get; set; } = string.Empty;
         public int OrderIndex { get; set; }
         public bool IsCompleted { get; set; }
         public decimal ProgressPercentage { get; set; }
@@ -69,8 +69,8 @@ namespace LearningEnglish.Application.DTOS
 
     public class CourseProgressSummaryDto
     {
-        public string CourseId { get; set; }
-        public string CourseName { get; set; }
+        public string CourseId { get; set; } = string.Empty;
+        public string CourseName { get; set; } = string.Empty;
         public decimal ProgressPercentage { get; set; }
         public int CompletedLessons { get; set; }
         public int TotalLessons { get; set; }
@@ -80,8 +80,8 @@ namespace LearningEnglish.Application.DTOS
 
     public class LessonProgressSummaryDto
     {
-        public string LessonId { get; set; }
-        public string LessonName { get; set; }
+        public string LessonId { get; set; } = string.Empty;
+        public string LessonName { get; set; } = string.Empty;
         public decimal CompletionPercentage { get; set; }
         public bool IsCompleted { get; set; }
         public DateTime? StartedAt { get; set; }

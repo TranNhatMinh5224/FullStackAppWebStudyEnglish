@@ -62,7 +62,7 @@ namespace LearningEnglish.Application.Service
                         FlashCardId = dto.FlashCardId,
                         AssignmentId = dto.AssignmentId,
                         ReferenceText = dto.ReferenceText,
-                        AudioUrl = audioKey,
+                        AudioKey = audioKey,
                         AudioType = dto.AudioType,
                         AudioSize = dto.AudioSize,
                         DurationInSeconds = dto.DurationInSeconds,
@@ -157,7 +157,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var dto = _mapper.Map<PronunciationAssessmentDto>(assessment);
-                dto.AudioUrl = BuildPublicUrl.BuildURL(BUCKET_NAME, assessment.AudioUrl);
+                dto.AudioUrl = BuildPublicUrl.BuildURL(BUCKET_NAME, assessment.AudioKey);
 
                 response.Success = true;
                 response.Data = dto;
@@ -241,7 +241,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Delete audio file from MinIO
-                await _minioFileStorage.DeleteFileAsync(BUCKET_NAME, assessment.AudioUrl);
+                await _minioFileStorage.DeleteFileAsync(BUCKET_NAME, assessment.AudioKey);
 
                 // Delete from DB
                 await _repository.DeleteAsync(id);

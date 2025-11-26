@@ -14,6 +14,7 @@ namespace LearningEnglish.Application.Interface
         Task<bool> LessonIncourse(string newtitle, int courseId);
         // đếm số lesson trong course 
         Task<int> CountLessonInCourse(int courseId);
+        Task<int?> GetCourseIdByLessonIdAsync(int lessonId);
 
 
     }

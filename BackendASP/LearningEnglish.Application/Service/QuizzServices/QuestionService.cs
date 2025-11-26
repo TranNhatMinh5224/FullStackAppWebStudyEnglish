@@ -222,7 +222,7 @@ namespace LearningEnglish.Application.Service
                     }
                     
                     committedQuestionMediaKey = mediaResult.Data;
-                    question.MediaUrl = committedQuestionMediaKey;
+                    question.MediaKey = committedQuestionMediaKey;
                 }
                 
                 // Commit AnswerOption MediaTempKey nếu có
@@ -259,7 +259,7 @@ namespace LearningEnglish.Application.Service
                         }
                         
                         committedOptionMediaKeys.Add((i, optionResult.Data));
-                        question.Options[i].MediaUrl = optionResult.Data;
+                        question.Options[i].MediaKey = optionResult.Data;
                     }
                 }
                 
@@ -366,8 +366,8 @@ namespace LearningEnglish.Application.Service
                 existingQuestion.UpdatedAt = DateTime.UtcNow;
                 
                 string? newQuestionMediaKey = null;
-                string? oldQuestionMediaKey = !string.IsNullOrWhiteSpace(existingQuestion.MediaUrl) 
-                    ? existingQuestion.MediaUrl 
+                string? oldQuestionMediaKey = !string.IsNullOrWhiteSpace(existingQuestion.MediaKey) 
+                    ? existingQuestion.MediaKey 
                     : null;
                 var newOptionMediaKeys = new List<(int index, string key)>();
                 var oldOptionMediaKeys = new List<(int index, string key)>();
@@ -391,7 +391,7 @@ namespace LearningEnglish.Application.Service
                     }
                     
                     newQuestionMediaKey = questionMediaResult.Data;
-                    existingQuestion.MediaUrl = newQuestionMediaKey;
+                    existingQuestion.MediaKey = newQuestionMediaKey;
                 }
                 
                 // Commit AnswerOption MediaUrls mới
@@ -400,9 +400,9 @@ namespace LearningEnglish.Application.Service
                     if (!string.IsNullOrWhiteSpace(questionUpdateDto.Options[i].MediaTempKey))
                     {
                         // Track old media
-                        if (!string.IsNullOrWhiteSpace(existingQuestion.Options[i].MediaUrl))
+                        if (!string.IsNullOrWhiteSpace(existingQuestion.Options[i].MediaKey))
                         {
-                            oldOptionMediaKeys.Add((i, existingQuestion.Options[i].MediaUrl));
+                            oldOptionMediaKeys.Add((i, existingQuestion.Options[i].MediaKey));
                         }
                         
                         // Commit new media
@@ -435,7 +435,7 @@ namespace LearningEnglish.Application.Service
                         }
                         
                         newOptionMediaKeys.Add((i, optionResult.Data));
-                        existingQuestion.Options[i].MediaUrl = optionResult.Data;
+                        existingQuestion.Options[i].MediaKey = optionResult.Data;
                     }
                 }
                 
@@ -521,17 +521,17 @@ namespace LearningEnglish.Application.Service
                 }
                 
                 // Xóa Question MediaUrl từ MinIO nếu có
-                if (!string.IsNullOrWhiteSpace(question.MediaUrl))
+                if (!string.IsNullOrWhiteSpace(question.MediaKey))
                 {
-                    await _minioFileStorage.DeleteFileAsync(QuestionBucket, question.MediaUrl);
+                    await _minioFileStorage.DeleteFileAsync(QuestionBucket, question.MediaKey);
                 }
                 
                 // Xóa tất cả AnswerOption MediaUrls từ MinIO
                 foreach (var option in question.Options)
                 {
-                    if (!string.IsNullOrWhiteSpace(option.MediaUrl))
+                    if (!string.IsNullOrWhiteSpace(option.MediaKey))
                     {
-                        await _minioFileStorage.DeleteFileAsync(QuestionBucket, option.MediaUrl);
+                        await _minioFileStorage.DeleteFileAsync(QuestionBucket, option.MediaKey);
                     }
                 }
 

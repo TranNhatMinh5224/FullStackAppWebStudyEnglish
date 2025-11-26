@@ -61,10 +61,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<bool>("IsCorrect")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("MediaType")
+                    b.Property<string>("MediaKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("MediaUrl")
+                    b.Property<string>("MediaType")
                         .HasColumnType("text");
 
                     b.Property<int>("QuestionId")
@@ -145,10 +145,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int>("EnrollmentCount")
                         .HasColumnType("integer");
 
-                    b.Property<string>("ImageType")
+                    b.Property<string>("ImageKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImageUrl")
+                    b.Property<string>("ImageType")
                         .HasColumnType("text");
 
                     b.Property<bool>("IsFeatured")
@@ -301,10 +301,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("Antonyms")
                         .HasColumnType("text");
 
-                    b.Property<string>("AudioType")
+                    b.Property<string>("AudioKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("AudioUrl")
+                    b.Property<string>("AudioType")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
@@ -316,10 +316,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("ExampleTranslation")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImageType")
+                    b.Property<string>("ImageKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImageUrl")
+                    b.Property<string>("ImageType")
                         .HasColumnType("text");
 
                     b.Property<string>("Meaning")
@@ -410,13 +410,13 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("MarkdownContent")
                         .HasColumnType("text");
 
+                    b.Property<string>("MediaKey")
+                        .HasColumnType("text");
+
                     b.Property<long?>("MediaSize")
                         .HasColumnType("bigint");
 
                     b.Property<string>("MediaType")
-                        .HasColumnType("text");
-
-                    b.Property<string>("MediaUrl")
                         .HasColumnType("text");
 
                     b.Property<int>("ModuleId")
@@ -471,10 +471,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImageType")
+                    b.Property<string>("ImageKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImageUrl")
+                    b.Property<string>("ImageType")
                         .HasColumnType("text");
 
                     b.Property<int>("OrderIndex")
@@ -761,14 +761,14 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int?>("AssignmentId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("AudioKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<long?>("AudioSize")
                         .HasColumnType("bigint");
 
                     b.Property<string>("AudioType")
-                        .HasColumnType("text");
-
-                    b.Property<string>("AudioUrl")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("AzureRawResponse")
@@ -842,10 +842,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("Explanation")
                         .HasColumnType("text");
 
-                    b.Property<string>("MediaType")
+                    b.Property<string>("MediaKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("MediaUrl")
+                    b.Property<string>("MediaType")
                         .HasColumnType("text");
 
                     b.Property<string>("MetadataJson")
@@ -1014,10 +1014,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImgType")
+                    b.Property<string>("ImgKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImgUrl")
+                    b.Property<string>("ImgType")
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
@@ -1040,10 +1040,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int?>("VideoDuration")
                         .HasColumnType("integer");
 
-                    b.Property<string>("VideoType")
+                    b.Property<string>("VideoKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("VideoUrl")
+                    b.Property<string>("VideoType")
                         .HasColumnType("text");
 
                     b.HasKey("QuizGroupId");
@@ -1387,7 +1387,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             Email = "minhxoandev@gmail.com",
                             FirstName = "Admin",
                             LastName = "System",
-                            PasswordHash = "$2a$11$Q0vzuLX3A0IF67Zd9TtiFefmb79i7tNZg87eOC8wvMGRsogmZU1.G",
+                            PasswordHash = "$2a$11$vaILWwIS4y2wBlk2VwSnR.TpZCsZk6p8/u.fqHD8sSernefdXMBhK",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)

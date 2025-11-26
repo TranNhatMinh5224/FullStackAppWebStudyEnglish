@@ -228,7 +228,7 @@ namespace LearningEnglish.Application.Service
                     }
                     
                     committedMediaKey = mediaResult.Data;
-                    lecture.MediaUrl = committedMediaKey;
+                    lecture.MediaKey = committedMediaKey;
                 }
                 
                 // Render HTML từ Markdown (đơn giản)
@@ -325,7 +325,7 @@ namespace LearningEnglish.Application.Service
                 _mapper.Map(updateLectureDto, existingLecture);
                 
                 string? newMediaKey = null;
-                string? oldMediaKey = !string.IsNullOrWhiteSpace(existingLecture.MediaUrl) ? existingLecture.MediaUrl : null;
+                string? oldMediaKey = !string.IsNullOrWhiteSpace(existingLecture.MediaKey) ? existingLecture.MediaKey : null;
                 
                 // Xử lý cập nhật MediaUrl
                 if (!string.IsNullOrWhiteSpace(updateLectureDto.MediaTempKey))
@@ -346,7 +346,7 @@ namespace LearningEnglish.Application.Service
                     }
                     
                     newMediaKey = mediaResult.Data;
-                    existingLecture.MediaUrl = newMediaKey;
+                    existingLecture.MediaKey = newMediaKey;
                 }
 
                 // Re-render HTML nếu có thay đổi MarkdownContent
@@ -434,9 +434,9 @@ namespace LearningEnglish.Application.Service
                 }
                 
                 // Xóa media từ MinIO nếu có
-                if (!string.IsNullOrWhiteSpace(lecture.MediaUrl))
+                if (!string.IsNullOrWhiteSpace(lecture.MediaKey))
                 {
-                    await _minioFileStorage.DeleteFileAsync(lecture.MediaUrl, LectureMediaBucket);
+                    await _minioFileStorage.DeleteFileAsync(lecture.MediaKey, LectureMediaBucket);
                 }
 
                 var deleted = await _lectureRepository.DeleteAsync(lectureId);
