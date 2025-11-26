@@ -22,7 +22,7 @@ namespace LearningEnglish.Domain.Entities
         public string RenderedHtml { get; set; } = string.Empty;
 
        
-        public string? MediaUrl { get; set; }
+        public string? MediaKey { get; set; }
         public string? MediaType { get; set; }
         public long? MediaSize { get; set; }
         public int? Duration { get; set; }

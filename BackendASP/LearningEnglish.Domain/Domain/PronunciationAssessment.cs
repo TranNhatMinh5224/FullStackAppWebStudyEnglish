@@ -9,7 +9,7 @@ namespace LearningEnglish.Domain.Entities
 
         // Input
         public string ReferenceText { get; set; } = string.Empty;
-        public string AudioUrl { get; set; } = string.Empty;
+        public string AudioKey { get; set; } = string.Empty;
         public string? AudioType { get; set; }
         public long? AudioSize { get; set; }
         public float? DurationInSeconds { get; set; }

@@ -1,5 +1,5 @@
 using LearningEnglish.Application.Common;
-using LearningEnglish.Application.DTOS;
+using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +14,18 @@ namespace LearningEnglish.API.Controller.User
     [Authorize]
     public class UserProgressController : ControllerBase
     {
-        private readonly IUserProgressService _progressService;
+        private readonly IProgressDashboardService _dashboardService;
+        private readonly ICourseProgressService _courseProgressService;
+        private readonly IModuleProgressService _moduleProgressService;
 
-        public UserProgressController(IUserProgressService progressService)
+        public UserProgressController(
+            IProgressDashboardService dashboardService,
+            ICourseProgressService courseProgressService,
+            IModuleProgressService moduleProgressService)
         {
-            _progressService = progressService;
+            _dashboardService = dashboardService;
+            _courseProgressService = courseProgressService;
+            _moduleProgressService = moduleProgressService;
         }
 
         /// <summary>
@@ -39,13 +46,18 @@ namespace LearningEnglish.API.Controller.User
                     });
                 }
 
-                var dashboard = await _progressService.GetUserProgressDashboardAsync(userId);
+                var dashboardResponse = await _dashboardService.GetUserProgressDashboardAsync(userId);
+
+                if (!dashboardResponse.Success)
+                {
+                    return BadRequest(dashboardResponse);
+                }
 
                 return Ok(new ServiceResponse<UserProgressDashboardDto>
                 {
                     Success = true,
                     Message = "Progress dashboard retrieved successfully",
-                    Data = dashboard
+                    Data = dashboardResponse.Data
                 });
             }
             catch (Exception ex)
@@ -76,13 +88,18 @@ namespace LearningEnglish.API.Controller.User
                     });
                 }
 
-                var courseProgress = await _progressService.GetCourseProgressDetailAsync(userId, courseId);
+                var courseProgressResponse = await _courseProgressService.GetCourseProgressDetailAsync(userId, courseId);
+
+                if (!courseProgressResponse.Success)
+                {
+                    return BadRequest(courseProgressResponse);
+                }
 
                 return Ok(new ServiceResponse<CourseProgressDetailDto>
                 {
                     Success = true,
                     Message = "Course progress retrieved successfully",
-                    Data = courseProgress
+                    Data = courseProgressResponse.Data
                 });
             }
             catch (Exception ex)
@@ -113,13 +130,18 @@ namespace LearningEnglish.API.Controller.User
                     });
                 }
 
-                var statistics = await _progressService.GetProgressStatisticsAsync(userId);
+                var statisticsResponse = await _dashboardService.GetProgressStatisticsAsync(userId);
+
+                if (!statisticsResponse.Success)
+                {
+                    return BadRequest(statisticsResponse);
+                }
 
                 return Ok(new ServiceResponse<ProgressStatisticsDto>
                 {
                     Success = true,
                     Message = "Statistics retrieved successfully",
-                    Data = statistics
+                    Data = statisticsResponse.Data
                 });
             }
             catch (Exception ex)
@@ -150,7 +172,12 @@ namespace LearningEnglish.API.Controller.User
                     });
                 }
 
-                await _progressService.StartModuleAsync(userId, moduleId);
+                var startResponse = await _moduleProgressService.StartModuleAsync(userId, moduleId);
+
+                if (!startResponse.Success)
+                {
+                    return BadRequest(startResponse);
+                }
 
                 return Ok(new ServiceResponse<object>
                 {
@@ -186,7 +213,12 @@ namespace LearningEnglish.API.Controller.User
                     });
                 }
 
-                await _progressService.CompleteModuleAsync(userId, moduleId);
+                var completeResponse = await _moduleProgressService.CompleteModuleAsync(userId, moduleId);
+
+                if (!completeResponse.Success)
+                {
+                    return BadRequest(completeResponse);
+                }
 
                 return Ok(new ServiceResponse<object>
                 {

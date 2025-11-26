@@ -19,7 +19,7 @@ namespace LearningEnglish.Domain.Entities
         public string? Explanation { get; set; } // Giải thích đáp án
 
         // Media cho câu hỏi (ảnh/audio/video)
-        public string? MediaUrl { get; set; }
+        public string? MediaKey { get; set; }
         public string? MediaType { get; set; }
 
         // Cấu hình đặc thù theo Type (matching/order/fillblank nhiều ô…)

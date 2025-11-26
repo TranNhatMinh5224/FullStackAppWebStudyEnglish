@@ -9,7 +9,7 @@ namespace LearningEnglish.Domain.Entities
         public bool IsCorrect { get; set; }
 
         // Hỗ trợ ImageChoice hoặc đáp án có media
-        public string? MediaUrl { get; set; }
+        public string? MediaKey { get; set; }
         public string? MediaType { get; set; } // "image/png", "audio/mpeg", ...
 
         public string? Feedback { get; set; }   // phản hồi theo option

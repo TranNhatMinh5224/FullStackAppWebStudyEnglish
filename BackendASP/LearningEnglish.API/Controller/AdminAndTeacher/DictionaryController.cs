@@ -22,7 +22,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         /// <summary>
-        /// Lookup word from dictionary API
+        /// Lookup word in dictionary API - giúp người dùng tra cứu từ trong từ điển
         /// </summary>
         [HttpGet("lookup/{word}")]
         [ProducesResponseType(typeof(DictionaryLookupResultDto), 200)]
@@ -47,10 +47,10 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         /// <summary>
-        /// Generate FlashCard data from word (auto-fill from dictionary)
+        /// Generate FlashCard preview from word - tạo preview flashcard từ 1 từ
         /// </summary>
         [HttpPost("generate-flashcard")]
-        [ProducesResponseType(typeof(CreateFlashCardDto), 200)]
+        [ProducesResponseType(typeof(GenerateFlashCardPreviewResponseDto), 200)]
         public async Task<IActionResult> GenerateFlashCard([FromBody] GenerateFlashCardRequestDto request)
         {
             try
@@ -60,7 +60,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                     return BadRequest(new { message = "Word is required" });
                 }
 
-                var result = await _dictionaryService.GenerateFlashCardFromWordAsync(request.Word, request.ModuleId);
+                var result = await _dictionaryService.GenerateFlashCardFromWordAsync(request.Word);
                 
                 if (!result.Success)
                 {
@@ -75,34 +75,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 return StatusCode(500, new { message = "An error occurred while generating FlashCard" });
             }
         }
-
-        /// <summary>
-        /// Batch lookup multiple words
-        /// </summary>
-        [HttpPost("batch-lookup")]
-        [ProducesResponseType(typeof(List<DictionaryLookupResultDto>), 200)]
-        public async Task<IActionResult> BatchLookup([FromBody] BatchWordLookupRequestDto request)
-        {
-            try
-            {
-                if (request.Words == null || !request.Words.Any())
-                {
-                    return BadRequest(new { message = "Word list cannot be empty" });
-                }
-
-                if (request.Words.Count > 50)
-                {
-                    return BadRequest(new { message = "Maximum 50 words per batch" });
-                }
-
-                var result = await _dictionaryService.BatchLookupWordsAsync(request.Words, request.TargetLanguage);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during batch word lookup");
-                return StatusCode(500, new { message = "An error occurred during batch lookup" });
-            }
-        }
     }
 }
+

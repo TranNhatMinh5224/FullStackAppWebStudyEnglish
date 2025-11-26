@@ -12,14 +12,17 @@ using LearningEnglish.Application.Mappings;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Application.Service;
+using LearningEnglish.Application.Service.ProgressServices;
 using LearningEnglish.Application.Service.PaymentProcessors;
 using LearningEnglish.Application.Service.ScoringStrategies;
+using LearningEnglish.Application.Service.BackgroundJobs;
 using LearningEnglish.Application.Validators;
 using LearningEnglish.Infrastructure.Repositories;
 using LearningEnglish.Infrastructure.Services;
 using LearningEnglish.Application.Cofigurations;
 using Microsoft.Extensions.Options;
 using Minio;
+using LearningEnglish.Infrastructure.MinioFileStorage; 
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -180,7 +183,10 @@ builder.Services.AddScoped<IQuizAttemptService, QuizAttemptService>();
 builder.Services.AddScoped<IQuizAttemptAdminService, QuizAttemptAdminService>();
 builder.Services.AddScoped<IPronunciationAssessmentService, PronunciationAssessmentService>();
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
-builder.Services.AddScoped<IUserProgressService, UserProgressService>();
+builder.Services.AddScoped<ICourseProgressService, CourseProgressService>();
+builder.Services.AddScoped<ILessonProgressService, LessonProgressService>();
+builder.Services.AddScoped<IModuleProgressService, ModuleProgressService>();
+builder.Services.AddScoped<IProgressDashboardService, ProgressDashboardService>();
 
 // HttpClient for Dictionary API
 builder.Services.AddHttpClient();
@@ -209,13 +215,13 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
 });
 
 // File Storage Service
-builder.Services.AddScoped<IMinioFileStorage, LearningEnglish.Infrastructure.MinioFileStorage.MinioFileStorageService>();
+builder.Services.AddScoped<IMinioFileStorage,MinioFileStorageService>();
 
 // Azure Speech Service
 builder.Services.AddHttpClient<IAzureSpeechService, AzureSpeechService>();
 
 // Background Jobs
-builder.Services.AddScoped<LearningEnglish.Application.Service.BackgroundJobs.TempFileCleanupJob>();
+builder.Services.AddScoped<TempFileCleanupJob>();
 
 // Payment related services
 builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
@@ -227,6 +233,9 @@ builder.Services.AddScoped<IPaymentStrategy, TeacherPackagePaymentProcessor>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateLectureDtoValidator>();
+// Explicit validators for notifications and reminders (also discovered via assembly scan)
+builder.Services.AddTransient<FluentValidation.IValidator<LearningEnglish.Application.DTOs.CreateNotificationDto>, LearningEnglish.Application.Validators.NotificationValidators.CreateNotificationDtoValidator>();
+builder.Services.AddTransient<FluentValidation.IValidator<LearningEnglish.Application.DTOs.CreateStudyReminderDto>, LearningEnglish.Application.Validators.StudyReminderValidators.CreateStudyReminderDtoValidator>();
 
 // Scoring strategies
 builder.Services.AddScoped<IScoringStrategy, FillBlankScoringStrategy>();
@@ -238,7 +247,14 @@ builder.Services.AddScoped<IScoringStrategy, OrderingScoringStrategy>();
 
 // Background services
 builder.Services.AddHostedService<QuizAutoSubmitService>();
-builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.TempFileCleanupHostedService>();
+builder.Services.AddHostedService<TempFileCleanupHostedService>();
+builder.Services.AddHostedService<StudyReminderJob>();
+
+// Notification services
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IStudyReminderService, StudyReminderService>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IStudyReminderRepository, StudyReminderRepository>();
 
 // Build app
 var app = builder.Build();

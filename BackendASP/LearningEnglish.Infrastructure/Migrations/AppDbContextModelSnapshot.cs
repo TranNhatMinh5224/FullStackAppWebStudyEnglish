@@ -61,10 +61,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<bool>("IsCorrect")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("MediaType")
+                    b.Property<string>("MediaKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("MediaUrl")
+                    b.Property<string>("MediaType")
                         .HasColumnType("text");
 
                     b.Property<int>("QuestionId")
@@ -145,10 +145,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int>("EnrollmentCount")
                         .HasColumnType("integer");
 
-                    b.Property<string>("ImageType")
+                    b.Property<string>("ImageKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImageUrl")
+                    b.Property<string>("ImageType")
                         .HasColumnType("text");
 
                     b.Property<bool>("IsFeatured")
@@ -301,10 +301,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("Antonyms")
                         .HasColumnType("text");
 
-                    b.Property<string>("AudioType")
+                    b.Property<string>("AudioKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("AudioUrl")
+                    b.Property<string>("AudioType")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
@@ -316,10 +316,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("ExampleTranslation")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImageType")
+                    b.Property<string>("ImageKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImageUrl")
+                    b.Property<string>("ImageType")
                         .HasColumnType("text");
 
                     b.Property<string>("Meaning")
@@ -410,13 +410,13 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("MarkdownContent")
                         .HasColumnType("text");
 
+                    b.Property<string>("MediaKey")
+                        .HasColumnType("text");
+
                     b.Property<long?>("MediaSize")
                         .HasColumnType("bigint");
 
                     b.Property<string>("MediaType")
-                        .HasColumnType("text");
-
-                    b.Property<string>("MediaUrl")
                         .HasColumnType("text");
 
                     b.Property<int>("ModuleId")
@@ -471,10 +471,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImageType")
+                    b.Property<string>("ImageKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImageUrl")
+                    b.Property<string>("ImageType")
                         .HasColumnType("text");
 
                     b.Property<int>("OrderIndex")
@@ -622,6 +622,58 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.ToTable("ModuleCompletions", (string)null);
                 });
 
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EmailSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsEmailSent")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RelatedEntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RelatedEntityType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications", (string)null);
+                });
+
             modelBuilder.Entity("LearningEnglish.Domain.Entities.PasswordResetToken", b =>
                 {
                     b.Property<int>("Id")
@@ -709,14 +761,14 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int?>("AssignmentId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("AudioKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<long?>("AudioSize")
                         .HasColumnType("bigint");
 
                     b.Property<string>("AudioType")
-                        .HasColumnType("text");
-
-                    b.Property<string>("AudioUrl")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("AzureRawResponse")
@@ -790,10 +842,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("Explanation")
                         .HasColumnType("text");
 
-                    b.Property<string>("MediaType")
+                    b.Property<string>("MediaKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("MediaUrl")
+                    b.Property<string>("MediaType")
                         .HasColumnType("text");
 
                     b.Property<string>("MetadataJson")
@@ -962,10 +1014,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImgType")
+                    b.Property<string>("ImgKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("ImgUrl")
+                    b.Property<string>("ImgType")
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
@@ -988,10 +1040,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int?>("VideoDuration")
                         .HasColumnType("integer");
 
-                    b.Property<string>("VideoType")
+                    b.Property<string>("VideoKey")
                         .HasColumnType("text");
 
-                    b.Property<string>("VideoUrl")
+                    b.Property<string>("VideoType")
                         .HasColumnType("text");
 
                     b.HasKey("QuizGroupId");
@@ -1335,7 +1387,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             Email = "minhxoandev@gmail.com",
                             FirstName = "Admin",
                             LastName = "System",
-                            PasswordHash = "$2a$11$7XGFrU2H5SivR76uUe7EAudxBTkoqZY8AdmcHROqMg/eKG59.NMma",
+                            PasswordHash = "$2a$11$vaILWwIS4y2wBlk2VwSnR.TpZCsZk6p8/u.fqHD8sSernefdXMBhK",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -1595,6 +1647,17 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Module");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("LearningEnglish.Domain.Entities.User", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -1924,6 +1987,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("LessonCompletions");
 
                     b.Navigation("ModuleCompletions");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("PasswordResetTokens");
 

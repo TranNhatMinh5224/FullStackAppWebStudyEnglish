@@ -24,25 +24,32 @@ namespace LearningEnglish.Application.DTOs
         public string? Example { get; set; }
     }
 
-    // Request DTO for word lookup
-    public class WordLookupRequestDto
-    {
-        public string Word { get; set; } = string.Empty;
-        public string? TargetLanguage { get; set; } = "vi"; // Vietnamese translation
-    }
-
-    // Request DTO for batch lookup
-    public class BatchWordLookupRequestDto
-    {
-        public List<string> Words { get; set; } = new();
-        public string? TargetLanguage { get; set; } = "vi";
-    }
-
     // Request DTO for auto-generate FlashCard from word
     public class GenerateFlashCardRequestDto
     {
         public string Word { get; set; } = string.Empty;
-        public int? ModuleId { get; set; }
+    
         public bool TranslateToVietnamese { get; set; } = true;
+    }
+
+    // Response DTO for generate FlashCard preview
+    public class GenerateFlashCardPreviewResponseDto
+    {
+        public string Word { get; set; } = string.Empty;
+        public string? Meaning { get; set; }
+        public string? Pronunciation { get; set; }
+        public string? PartOfSpeech { get; set; }
+        public string? Example { get; set; }
+        public string? ExampleTranslation { get; set; }
+        public string? Synonyms { get; set; }
+        public string? Antonyms { get; set; }
+        
+        // URLs for preview
+        public string? AudioUrl { get; set; }
+        public string? ImageUrl { get; set; }
+        
+        // Temp keys for create operation
+        public string? AudioTempKey { get; set; }
+        public string? ImageTempKey { get; set; }
     }
 }

@@ -175,18 +175,18 @@ namespace LearningEnglish.Application.Service
                 {
                     GroupId = g.QuizGroupId,
                     Name = g.Name,
-                    ImgUrl = !string.IsNullOrWhiteSpace(g.ImgUrl) 
-                        ? BuildPublicUrl.BuildURL("quizgroups", g.ImgUrl) 
+                    ImgUrl = !string.IsNullOrWhiteSpace(g.ImgKey) 
+                        ? BuildPublicUrl.BuildURL("quizgroups", g.ImgKey) 
                         : null,
-                    VideoUrl = !string.IsNullOrWhiteSpace(g.VideoUrl) 
-                        ? BuildPublicUrl.BuildURL("quizgroups", g.VideoUrl) 
+                    VideoUrl = !string.IsNullOrWhiteSpace(g.VideoKey) 
+                        ? BuildPublicUrl.BuildURL("quizgroups", g.VideoKey) 
                         : null,
                     Questions = g.Questions.Select(q => new QuestionDto  // Giữ nguyên thứ tự
                     {
                         QuestionId = q.QuestionId,
                         QuestionText = q.StemText,
-                        MediaUrl = !string.IsNullOrWhiteSpace(q.MediaUrl) 
-                            ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaUrl) 
+                        MediaUrl = !string.IsNullOrWhiteSpace(q.MediaKey) 
+                            ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaKey) 
                             : null,
                         Type = q.Type,
                         Points = q.Points,
@@ -196,8 +196,8 @@ namespace LearningEnglish.Application.Service
                         {
                             OptionId = o.AnswerOptionId,
                             OptionText = o.Text ?? string.Empty,
-                            MediaUrl = !string.IsNullOrWhiteSpace(o.MediaUrl) 
-                                ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaUrl) 
+                            MediaUrl = !string.IsNullOrWhiteSpace(o.MediaKey) 
+                                ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaKey) 
                                 : null
                         }).ToList()
                     }).ToList()
@@ -206,8 +206,8 @@ namespace LearningEnglish.Application.Service
                 {
                     QuestionId = q.QuestionId,
                     QuestionText = q.StemText,
-                    MediaUrl = !string.IsNullOrWhiteSpace(q.MediaUrl) 
-                        ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaUrl) 
+                    MediaUrl = !string.IsNullOrWhiteSpace(q.MediaKey) 
+                        ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaKey) 
                         : null,
                     Type = q.Type,
                     Points = q.Points,
@@ -217,8 +217,8 @@ namespace LearningEnglish.Application.Service
                     {
                         OptionId = o.AnswerOptionId,
                         OptionText = o.Text ?? string.Empty,
-                        MediaUrl = !string.IsNullOrWhiteSpace(o.MediaUrl) 
-                            ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaUrl) 
+                        MediaUrl = !string.IsNullOrWhiteSpace(o.MediaKey) 
+                            ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaKey) 
                             : null
                     }).ToList()
                 }).ToList() ?? new List<QuestionDto>()

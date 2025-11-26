@@ -94,6 +94,14 @@ namespace LearningEnglish.Infrastructure.Repositories
             return maxOrder ?? 0;
         }
 
+        public async Task<int?> GetLessonIdByModuleIdAsync(int moduleId)
+        {
+            return await _context.Modules
+                .Where(m => m.ModuleId == moduleId)
+                .Select(m => m.LessonId)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<Module?> GetModuleWithCourseAsync(int moduleId)
         {
             return await _context.Modules

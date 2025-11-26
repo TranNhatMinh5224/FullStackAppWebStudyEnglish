@@ -1,6 +1,6 @@
 using System;
 
-namespace LearningEnglish.Application.DTOS
+namespace LearningEnglish.Application.DTOs
 {
     public class StreakDto
     {
@@ -11,7 +11,7 @@ namespace LearningEnglish.Application.DTOS
         public DateTime? LastActivityDate { get; set; }
         public DateTime? CurrentStreakStartDate { get; set; }
         public bool IsActiveToday { get; set; }
-        public string StreakStatus { get; set; } // "Active", "Broken", "New"
+        public string StreakStatus { get; set; } = string.Empty; // "Active", "Broken", "New"
     }
 
     public class StreakHistoryDto
@@ -27,6 +27,6 @@ namespace LearningEnglish.Application.DTOS
         public int NewCurrentStreak { get; set; }
         public int NewLongestStreak { get; set; }
         public bool IsNewRecord { get; set; }
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
     }
 }

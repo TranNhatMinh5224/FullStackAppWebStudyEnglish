@@ -7,8 +7,8 @@ namespace LearningEnglish.Domain.Entities
         public string? Description { get; set; }
         public int QuizSectionId { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string? ImgUrl { get; set; }
-        public string? VideoUrl { get; set; }
+        public string? ImgKey { get; set; }
+        public string? VideoKey { get; set; }
 
         public string? ImgType { get; set; }
         public string? VideoType { get; set; }

@@ -1,6 +1,7 @@
 using LearningEnglish.Application.DTOs;
 using Microsoft.AspNetCore.Http; // for IFormFile
 using LearningEnglish.Application.Interface;
+using Microsoft.Extensions.Logging;
 using AutoMapper;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
@@ -17,11 +18,13 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
     {
         private readonly IMapper _mapper;
         private readonly IMinioClient _minioClient; // client để kết nối với minio server
+        private readonly ILogger<MinioFileStorageService> _logger;
 
-        public MinioFileStorageService(IMapper mapper, IMinioClient minioClient)
+        public MinioFileStorageService(IMapper mapper, IMinioClient minioClient, ILogger<MinioFileStorageService> logger)
         {
             _mapper = mapper;
             _minioClient = minioClient;
+            _logger = logger;
         }
 
         public async Task<ServiceResponse<ResultUploadDto>> UpLoadFileTempAsync(IFormFile file, string BucketName, string? tempFolder = "temp")
@@ -57,7 +60,8 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
                     .WithObjectSize(file.Length) // kích thước file
                     .WithContentType(file.ContentType); // kiểu file 
 
-                await _minioClient.PutObjectAsync(putfile); // upload file lên minio server
+                await _minioClient.PutObjectAsync(putfile); // upload file lên minio serverl
+                _logger?.LogInformation("Uploaded temp object. Bucket={Bucket}, Key={Key}", BucketName, objectKey);
 
                 response.Data = new ResultUploadDto
                 {
@@ -132,6 +136,8 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
             return response;
         }
 
+        
+
         public async Task<ServiceResponse<string>> CommitFileAsync(
             string TempKey,
             string BucketName,
@@ -148,6 +154,8 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
                     response.StatusCode = 400;
                     return response;
                 }
+
+                _logger?.LogInformation("CommitFileAsync called. Bucket={Bucket}, TempKey={TempKey}", BucketName, TempKey);
 
                 // kiểm tra bucket tồn tại
                 if (!await _minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(BucketName)))
@@ -190,6 +198,7 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
                     .WithObject(realKey) // tên object đích
                     .WithCopyObjectSource(SourceCopyObj);
 
+                _logger?.LogInformation("Copying object from temp to real. Source={Source}, Destination={Dest}", TempKey, realKey);
                 await _minioClient.CopyObjectAsync(copyObjectArgs); // thực hiện copy
 
                 // trả về realkey
@@ -214,6 +223,7 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
             }
             catch (MinioException mEx)
             {
+                _logger?.LogError(mEx, "MinIO exception during CommitFileAsync. Bucket={Bucket}, TempKey={TempKey}", BucketName, TempKey);
                 response.Success = false;
                 response.Data = null;
                 response.Message = mEx.Message;
@@ -221,6 +231,7 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex, "Exception during CommitFileAsync. Bucket={Bucket}, TempKey={TempKey}", BucketName, TempKey);
                 response.Success = false;
                 response.Data = null;
                 response.Message = ex.Message;
@@ -229,6 +240,8 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
 
             return response;
         }
+
+        
 
         private async Task EnsureBucketExistsAsync(string bucketName)
         {

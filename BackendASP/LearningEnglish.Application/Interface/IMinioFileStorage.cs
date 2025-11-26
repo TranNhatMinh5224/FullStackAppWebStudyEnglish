@@ -7,6 +7,9 @@ namespace LearningEnglish.Application.Interface
     {
         Task<ServiceResponse<ResultUploadDto>> UpLoadFileTempAsync(IFormFile file, string BucketName, string? tempFolder = "temp");
         Task<ServiceResponse<bool>> DeleteFileAsync(string objectKey, string BucketName);
+        
         Task<ServiceResponse<string>> CommitFileAsync(string TempKey, string BucketName, string CommitFolder);
+
+        
     }
 }
