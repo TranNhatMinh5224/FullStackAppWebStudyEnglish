@@ -17,7 +17,7 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
             var userOrder = AnswerNormalizer.NormalizeToListInt(userAnswer);
             if (userOrder == null || userOrder.Count == 0) return 0m;
 
-            var correctOrder = ScoringHelper.ParseCorrectOrder(question.CorrectAnswersJson);
+            var correctOrder = ScoringHelper.ParseCorrectOrder(question.CorrectAnswersJson, question.Options);
             if (correctOrder != null && userOrder.SequenceEqual(correctOrder))
                 return question.Points;  // Đúng thứ tự: full điểm
 
