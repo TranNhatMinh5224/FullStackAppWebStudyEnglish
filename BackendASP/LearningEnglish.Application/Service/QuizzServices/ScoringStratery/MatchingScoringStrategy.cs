@@ -18,7 +18,7 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
             var userMatches = AnswerNormalizer.NormalizeToDictionaryIntInt(userAnswer);
             if (userMatches == null || userMatches.Count == 0) return 0m;
 
-            var correctMatches = ScoringHelper.ParseCorrectMatches(question.CorrectAnswersJson);
+            var correctMatches = ScoringHelper.ParseCorrectMatches(question.CorrectAnswersJson, question.MetadataJson, question.Options);
             if (correctMatches != null && userMatches.Count == correctMatches.Count)
             {
                 foreach (var pair in userMatches)
