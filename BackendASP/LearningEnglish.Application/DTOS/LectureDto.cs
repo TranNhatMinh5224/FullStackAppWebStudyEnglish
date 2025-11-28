@@ -61,8 +61,9 @@ namespace LearningEnglish.Application.DTOs
         public LectureType Type { get; set; } = LectureType.Content;
         public string? MarkdownContent { get; set; }
         public int? ParentLectureId { get; set; }
-        public string? MediaTempKey { get; set; }  // ✅ MỚI THÊM - Temp key from MinIO
-        public string? MediaUrl { get; set; }  // Deprecated - use MediaTempKey instead
+        
+        // Media handling
+        public string? MediaTempKey { get; set; }  // Temp key from MinIO upload
         public string? MediaType { get; set; }
         public long? MediaSize { get; set; }
         public int? Duration { get; set; }
@@ -77,8 +78,9 @@ namespace LearningEnglish.Application.DTOs
         public LectureType? Type { get; set; }
         public string? MarkdownContent { get; set; }
         public int? ParentLectureId { get; set; }
-        public string? MediaTempKey { get; set; }  // ✅ MỚI THÊM - Temp key from MinIO
-        public string? MediaUrl { get; set; }  // Deprecated - use MediaTempKey instead
+        
+        // Media handling
+        public string? MediaTempKey { get; set; }  // Temp key from MinIO upload
         public string? MediaType { get; set; }
         public long? MediaSize { get; set; }
         public int? Duration { get; set; }

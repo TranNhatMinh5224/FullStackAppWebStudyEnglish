@@ -17,7 +17,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<Notification> GetByIdAsync(int id)
+        public async Task<Notification?> GetByIdAsync(int id)
         {
             return await _context.Notifications.FindAsync(id);
         }

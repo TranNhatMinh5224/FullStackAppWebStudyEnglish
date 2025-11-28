@@ -6,7 +6,7 @@ namespace LearningEnglish.Application.Interface
 {
     public interface INotificationRepository
     {
-        Task<Notification> GetByIdAsync(int id);
+        Task<Notification?> GetByIdAsync(int id);
         Task<IEnumerable<Notification>> GetUserNotificationsAsync(int userId, bool unreadOnly = false, int pageNumber = 1, int pageSize = 20);
         Task<int> GetUnreadCountAsync(int userId);
         Task AddAsync(Notification notification);

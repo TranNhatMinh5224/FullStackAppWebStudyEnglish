@@ -22,7 +22,7 @@ using LearningEnglish.Infrastructure.Services;
 using LearningEnglish.Application.Cofigurations;
 using Microsoft.Extensions.Options;
 using Minio;
-using LearningEnglish.Infrastructure.MinioFileStorage; 
+using LearningEnglish.Infrastructure.MinioFileStorage;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -215,7 +215,7 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
 });
 
 // File Storage Service
-builder.Services.AddScoped<IMinioFileStorage,MinioFileStorageService>();
+builder.Services.AddScoped<IMinioFileStorage, MinioFileStorageService>();
 
 // Azure Speech Service
 builder.Services.AddHttpClient<IAzureSpeechService, AzureSpeechService>();

@@ -43,6 +43,11 @@ namespace LearningEnglish.Application.DTOs
         
         // Nội dung bài làm
         public string? TextContent { get; set; }
+        
+        // File đính kèm
+        public string? AttachmentUrl { get; set; }
+        public string? AttachmentType { get; set; }
+        
         public DateTime SubmittedAt { get; set; }
         public string Status { get; set; } = string.Empty;
         
@@ -57,6 +62,10 @@ namespace LearningEnglish.Application.DTOs
     {
         public int EssayId { get; set; }
         public string? TextContent { get; set; }
+        
+        // File đính kèm (temp key từ MinIO)
+        public string? AttachmentTempKey { get; set; }
+        public string? AttachmentType { get; set; }
     }
 
     
@@ -65,5 +74,9 @@ namespace LearningEnglish.Application.DTOs
     public class UpdateEssaySubmissionDto
     {
         public string? TextContent { get; set; }
+        
+        // File đính kèm (temp key từ MinIO)
+        public string? AttachmentTempKey { get; set; }
+        public string? AttachmentType { get; set; }
     }
 }

@@ -18,7 +18,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<StudyReminder> GetByIdAsync(int id)
+        public async Task<StudyReminder?> GetByIdAsync(int id)
         {
             return await _context.StudyReminders.FindAsync(id);
         }

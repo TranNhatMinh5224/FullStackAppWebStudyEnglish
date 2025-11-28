@@ -21,10 +21,7 @@ namespace LearningEnglish.Application.DTOs
         public int MaxLessons { get; set; }
         public int MaxStudents { get; set; }
     }
-    public class TeacherPackageDetailDto : TeacherPackageDto
-    {
-        public int DurationMonths { get; set; }
-    }
+    
     public class UpdateTeacherPackageDto : CreateTeacherPackageDto
     {
 

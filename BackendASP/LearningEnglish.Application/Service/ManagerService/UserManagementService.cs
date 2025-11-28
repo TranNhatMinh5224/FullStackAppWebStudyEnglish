@@ -1,6 +1,7 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Domain.Enums;
 using AutoMapper;
 
@@ -11,12 +12,22 @@ namespace LearningEnglish.Application.Service
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly ICourseRepository _courseRepository;
+        private readonly IMinioFileStorage _minioFileStorage;
 
-        public UserManagementService(IUserRepository userRepository, IMapper mapper, ICourseRepository courseRepository)
+        // Bucket + folder cho avatar người dùng
+        private const string AvatarBucket = "avatars";
+        private const string AvatarFolder = "real";
+
+        public UserManagementService(
+            IUserRepository userRepository, 
+            IMapper mapper, 
+            ICourseRepository courseRepository,
+            IMinioFileStorage minioFileStorage)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _courseRepository = courseRepository;
+            _minioFileStorage = minioFileStorage;
         }
 
         public async Task<ServiceResponse<UserDto>> GetUserProfileAsync(int userId)
@@ -35,6 +46,12 @@ namespace LearningEnglish.Application.Service
 
                 response.StatusCode = 200;
                 response.Data = _mapper.Map<UserDto>(user);
+
+                // Build URL cho avatar nếu tồn tại
+                if (!string.IsNullOrWhiteSpace(user.AvatarKey))
+                {
+                    response.Data.AvatarUrl = BuildPublicUrl.BuildURL(AvatarBucket, user.AvatarKey);
+                }
             }
             catch (Exception)
             {
@@ -67,6 +84,86 @@ namespace LearningEnglish.Application.Service
                 response.StatusCode = 200;
                 response.Message = "Cập nhật hồ sơ thành công";
                 response.Data = _mapper.Map<UserDto>(user);
+            }
+            catch (Exception)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+
+        public async Task<ServiceResponse<UserDto>> UpdateAvatarAsync(int userId, UpdateAvatarDto dto)
+        {
+            var response = new ServiceResponse<UserDto>();
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy người dùng";
+                    return response;
+                }
+
+                string? committedAvatarKey = null;
+
+                // Convert temp file → real file nếu có AvatarTempKey
+                if (!string.IsNullOrWhiteSpace(dto.AvatarTempKey))
+                {
+                    var commitResult = await _minioFileStorage.CommitFileAsync(
+                        dto.AvatarTempKey,
+                        AvatarBucket,
+                        AvatarFolder
+                    );
+
+                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu avatar. Vui lòng thử lại.";
+                        return response;
+                    }
+
+                    committedAvatarKey = commitResult.Data;
+                    
+                    // Xóa avatar cũ nếu tồn tại
+                    if (!string.IsNullOrWhiteSpace(user.AvatarKey))
+                    {
+                        await _minioFileStorage.DeleteFileAsync(user.AvatarKey, AvatarBucket);
+                    }
+
+                    user.AvatarKey = committedAvatarKey;
+                    user.AvatarType = dto.AvatarType;
+                }
+
+                try
+                {
+                    user.UpdatedAt = DateTime.UtcNow;
+                    await _userRepository.UpdateUserAsync(user);
+                    await _userRepository.SaveChangesAsync();
+                }
+                catch (Exception)
+                {
+                    // Rollback: xóa file đã commit nếu DB thất bại
+                    if (!string.IsNullOrWhiteSpace(committedAvatarKey))
+                    {
+                        await _minioFileStorage.DeleteFileAsync(committedAvatarKey, AvatarBucket);
+                    }
+                    throw;
+                }
+
+                response.StatusCode = 200;
+                response.Message = "Cập nhật avatar thành công";
+                response.Data = _mapper.Map<UserDto>(user);
+
+                // Build URL cho avatar
+                if (!string.IsNullOrWhiteSpace(user.AvatarKey))
+                {
+                    response.Data.AvatarUrl = BuildPublicUrl.BuildURL(AvatarBucket, user.AvatarKey);
+                }
             }
             catch (Exception)
             {

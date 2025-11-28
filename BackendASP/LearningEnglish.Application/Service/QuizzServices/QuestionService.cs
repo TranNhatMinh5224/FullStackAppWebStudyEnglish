@@ -16,7 +16,7 @@ namespace LearningEnglish.Application.Service
         private readonly IMapper _mapper;
         private readonly ILogger<QuestionService> _logger;
         private readonly IMinioFileStorage _minioFileStorage;
-        
+
         // MinIO bucket constants
         private const string QuestionBucket = "questions";
         private const string QuestionFolder = "real";
@@ -53,13 +53,13 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var questionDto = _mapper.Map<QuestionReadDto>(question);
-                
+
                 // Generate URL cho Question MediaUrl
                 if (!string.IsNullOrWhiteSpace(questionDto.MediaUrl))
                 {
                     questionDto.MediaUrl = BuildPublicUrl.BuildURL(QuestionBucket, questionDto.MediaUrl);
                 }
-                
+
                 // Generate URLs cho AnswerOption MediaUrl
                 foreach (var option in questionDto.Options)
                 {
@@ -68,7 +68,7 @@ namespace LearningEnglish.Application.Service
                         option.MediaUrl = BuildPublicUrl.BuildURL(QuestionBucket, option.MediaUrl);
                     }
                 }
-                
+
                 response.Data = questionDto;
                 response.Success = true;
                 response.Message = "Lấy thông tin câu hỏi thành công.";
@@ -93,7 +93,7 @@ namespace LearningEnglish.Application.Service
             {
                 var questions = await _questionRepository.GetQuestionsByQuizGroupIdAsync(quizGroupId);
                 var questionDtos = _mapper.Map<List<QuestionReadDto>>(questions);
-                
+
                 // Generate URLs cho tất cả questions và options
                 foreach (var questionDto in questionDtos)
                 {
@@ -101,7 +101,7 @@ namespace LearningEnglish.Application.Service
                     {
                         questionDto.MediaUrl = BuildPublicUrl.BuildURL(QuestionBucket, questionDto.MediaUrl);
                     }
-                    
+
                     foreach (var option in questionDto.Options)
                     {
                         if (!string.IsNullOrWhiteSpace(option.MediaUrl))
@@ -110,7 +110,7 @@ namespace LearningEnglish.Application.Service
                         }
                     }
                 }
-                
+
                 response.Data = questionDtos;
                 response.Success = true;
                 response.Message = $"Lấy danh sách {questions.Count} câu hỏi thành công.";
@@ -135,7 +135,7 @@ namespace LearningEnglish.Application.Service
             {
                 var questions = await _questionRepository.GetQuestionsByQuizSectionIdAsync(quizSectionId);
                 var questionDtos = _mapper.Map<List<QuestionReadDto>>(questions);
-                
+
                 // Generate URLs cho tất cả questions và options
                 foreach (var questionDto in questionDtos)
                 {
@@ -143,7 +143,7 @@ namespace LearningEnglish.Application.Service
                     {
                         questionDto.MediaUrl = BuildPublicUrl.BuildURL(QuestionBucket, questionDto.MediaUrl);
                     }
-                    
+
                     foreach (var option in questionDto.Options)
                     {
                         if (!string.IsNullOrWhiteSpace(option.MediaUrl))
@@ -152,7 +152,7 @@ namespace LearningEnglish.Application.Service
                         }
                     }
                 }
-                
+
                 response.Data = questionDtos;
                 response.Success = true;
                 response.Message = $"Lấy danh sách {questions.Count} câu hỏi thành công.";
@@ -199,10 +199,10 @@ namespace LearningEnglish.Application.Service
                 var question = _mapper.Map<Question>(questionCreateDto);
                 question.CreatedAt = DateTime.UtcNow;
                 question.UpdatedAt = DateTime.UtcNow;
-                
+
                 string? committedQuestionMediaKey = null;
                 var committedOptionMediaKeys = new List<(int index, string key)>();
-                
+
                 // Commit Question MediaTempKey nếu có
                 if (!string.IsNullOrWhiteSpace(questionCreateDto.MediaTempKey))
                 {
@@ -211,7 +211,7 @@ namespace LearningEnglish.Application.Service
                         QuestionBucket,
                         QuestionFolder
                     );
-                    
+
                     if (!mediaResult.Success || string.IsNullOrWhiteSpace(mediaResult.Data))
                     {
                         _logger.LogError("Failed to commit question media: {Error}", mediaResult.Message);
@@ -220,49 +220,50 @@ namespace LearningEnglish.Application.Service
                         response.StatusCode = 400;
                         return response;
                     }
-                    
+
                     committedQuestionMediaKey = mediaResult.Data;
                     question.MediaKey = committedQuestionMediaKey;
                 }
-                
+
                 // Commit AnswerOption MediaTempKey nếu có
                 for (int i = 0; i < questionCreateDto.Options.Count; i++)
                 {
-                    if (!string.IsNullOrWhiteSpace(questionCreateDto.Options[i].MediaTempKey))
+                    var mediaTempKey = questionCreateDto.Options[i].MediaTempKey;
+                    if (!string.IsNullOrWhiteSpace(mediaTempKey))
                     {
                         var optionResult = await _minioFileStorage.CommitFileAsync(
-                            questionCreateDto.Options[i].MediaTempKey,
+                            mediaTempKey,
                             QuestionBucket,
                             QuestionFolder
                         );
-                        
+
                         if (!optionResult.Success || string.IsNullOrWhiteSpace(optionResult.Data))
                         {
                             _logger.LogError("Failed to commit option {Index} media: {Error}", i, optionResult.Message);
-                            
+
                             // Rollback question media
                             if (committedQuestionMediaKey != null)
                             {
                                 await _minioFileStorage.DeleteFileAsync(committedQuestionMediaKey, QuestionBucket);
                             }
-                            
+
                             // Rollback already committed option media
                             foreach (var (_, key) in committedOptionMediaKeys)
                             {
                                 await _minioFileStorage.DeleteFileAsync(key, QuestionBucket);
                             }
-                            
+
                             response.Success = false;
                             response.Message = $"Không thể lưu media đáp án {i + 1}: {optionResult.Message}";
                             response.StatusCode = 400;
                             return response;
                         }
-                        
+
                         committedOptionMediaKeys.Add((i, optionResult.Data));
                         question.Options[i].MediaKey = optionResult.Data;
                     }
                 }
-                
+
                 // Save to database with rollback
                 Question createdQuestion = question;
                 try
@@ -272,30 +273,32 @@ namespace LearningEnglish.Application.Service
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "Database error while creating question");
-                    
+
                     // Rollback all MinIO files
                     if (committedQuestionMediaKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(committedQuestionMediaKey, QuestionBucket);
                     }
+
                     foreach (var (_, key) in committedOptionMediaKeys)
                     {
                         await _minioFileStorage.DeleteFileAsync(key, QuestionBucket);
                     }
-                    
+
                     response.Success = false;
                     response.Message = "Lỗi database khi tạo câu hỏi";
                     response.StatusCode = 500;
                     return response;
                 }
-                
+
                 var questionDto = _mapper.Map<QuestionReadDto>(createdQuestion);
-                
+
                 // Generate URLs cho response
                 if (!string.IsNullOrWhiteSpace(questionDto.MediaUrl))
                 {
                     questionDto.MediaUrl = BuildPublicUrl.BuildURL(QuestionBucket, questionDto.MediaUrl);
                 }
+
                 foreach (var option in questionDto.Options)
                 {
                     if (!string.IsNullOrWhiteSpace(option.MediaUrl))
@@ -303,7 +306,7 @@ namespace LearningEnglish.Application.Service
                         option.MediaUrl = BuildPublicUrl.BuildURL(QuestionBucket, option.MediaUrl);
                     }
                 }
-                
+
                 response.Data = questionDto;
                 response.Success = true;
                 response.Message = "Tạo câu hỏi thành công.";
@@ -361,18 +364,24 @@ namespace LearningEnglish.Application.Service
                     }
                 }
 
-                // Map changes from DTO to entity
+                // Backup media keys cũ trước khi map
+                string? oldQuestionMediaKey = !string.IsNullOrWhiteSpace(existingQuestion.MediaKey)
+                    ? existingQuestion.MediaKey
+                    : null;
+
+                var optionOldMediaKeys = existingQuestion.Options
+                    .Select(o => o.MediaKey)
+                    .ToList();
+
+                // Map changes from DTO to entity (không làm mất backup)
                 _mapper.Map(questionUpdateDto, existingQuestion);
                 existingQuestion.UpdatedAt = DateTime.UtcNow;
-                
+
                 string? newQuestionMediaKey = null;
-                string? oldQuestionMediaKey = !string.IsNullOrWhiteSpace(existingQuestion.MediaKey) 
-                    ? existingQuestion.MediaKey 
-                    : null;
                 var newOptionMediaKeys = new List<(int index, string key)>();
                 var oldOptionMediaKeys = new List<(int index, string key)>();
-                
-                // Commit Question MediaUrl mới nếu có
+
+                // Commit Question Media mới nếu có
                 if (!string.IsNullOrWhiteSpace(questionUpdateDto.MediaTempKey))
                 {
                     var questionMediaResult = await _minioFileStorage.CommitFileAsync(
@@ -380,7 +389,7 @@ namespace LearningEnglish.Application.Service
                         QuestionBucket,
                         QuestionFolder
                     );
-                    
+
                     if (!questionMediaResult.Success || string.IsNullOrWhiteSpace(questionMediaResult.Data))
                     {
                         _logger.LogError("Failed to commit question media: {Error}", questionMediaResult.Message);
@@ -389,57 +398,61 @@ namespace LearningEnglish.Application.Service
                         response.StatusCode = 400;
                         return response;
                     }
-                    
+
                     newQuestionMediaKey = questionMediaResult.Data;
                     existingQuestion.MediaKey = newQuestionMediaKey;
                 }
-                
-                // Commit AnswerOption MediaUrls mới
+
+                // Commit AnswerOption Media mới
                 for (int i = 0; i < questionUpdateDto.Options.Count && i < existingQuestion.Options.Count; i++)
                 {
-                    if (!string.IsNullOrWhiteSpace(questionUpdateDto.Options[i].MediaTempKey))
+                    var tempKey = questionUpdateDto.Options[i].MediaTempKey;
+                    if (!string.IsNullOrWhiteSpace(tempKey))
                     {
-                        // Track old media
-                        if (!string.IsNullOrWhiteSpace(existingQuestion.Options[i].MediaKey))
-                        {
-                            oldOptionMediaKeys.Add((i, existingQuestion.Options[i].MediaKey));
-                        }
+                        // Backup old media key của option này trước khi thay thế
+                        string? oldMediaKey = (optionOldMediaKeys.Count > i && !string.IsNullOrWhiteSpace(optionOldMediaKeys[i])) 
+                            ? optionOldMediaKeys[i] 
+                            : null;
                         
-                        // Commit new media
+                        if (oldMediaKey != null)
+                        {
+                            oldOptionMediaKeys.Add((i, oldMediaKey));
+                        }
+
                         var optionResult = await _minioFileStorage.CommitFileAsync(
-                            questionUpdateDto.Options[i].MediaTempKey,
+                            tempKey,
                             QuestionBucket,
                             QuestionFolder
                         );
-                        
+
                         if (!optionResult.Success || string.IsNullOrWhiteSpace(optionResult.Data))
                         {
                             _logger.LogError("Failed to commit option {Index} media: {Error}", i, optionResult.Message);
-                            
-                            // Rollback question media if committed
+
+                            // Rollback question media nếu đã commit
                             if (newQuestionMediaKey != null)
                             {
                                 await _minioFileStorage.DeleteFileAsync(newQuestionMediaKey, QuestionBucket);
                             }
-                            
-                            // Rollback already committed option media
+
+                            // Rollback các option media mới đã commit
                             foreach (var (_, key) in newOptionMediaKeys)
                             {
                                 await _minioFileStorage.DeleteFileAsync(key, QuestionBucket);
                             }
-                            
+
                             response.Success = false;
                             response.Message = $"Không thể lưu media đáp án {i + 1}: {optionResult.Message}";
                             response.StatusCode = 400;
                             return response;
                         }
-                        
+
                         newOptionMediaKeys.Add((i, optionResult.Data));
                         existingQuestion.Options[i].MediaKey = optionResult.Data;
                     }
                 }
-                
-                // Save to database with rollback
+
+                // Save to database với rollback
                 try
                 {
                     await _questionRepository.UpdateQuestionAsync(existingQuestion);
@@ -447,40 +460,43 @@ namespace LearningEnglish.Application.Service
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "Database error while updating question");
-                    
+
                     // Rollback all new MinIO files
                     if (newQuestionMediaKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(newQuestionMediaKey, QuestionBucket);
                     }
+
                     foreach (var (_, key) in newOptionMediaKeys)
                     {
                         await _minioFileStorage.DeleteFileAsync(key, QuestionBucket);
                     }
-                    
+
                     response.Success = false;
                     response.Message = "Lỗi database khi cập nhật câu hỏi";
                     response.StatusCode = 500;
                     return response;
                 }
-                
-                // Delete old files only after successful DB update
-                if (oldQuestionMediaKey != null)
+
+                // Delete old files chỉ sau khi DB update thành công
+                if (oldQuestionMediaKey != null && newQuestionMediaKey != null)
                 {
                     await _minioFileStorage.DeleteFileAsync(oldQuestionMediaKey, QuestionBucket);
                 }
+
                 foreach (var (_, key) in oldOptionMediaKeys)
                 {
                     await _minioFileStorage.DeleteFileAsync(key, QuestionBucket);
                 }
 
                 var questionDto = _mapper.Map<QuestionReadDto>(existingQuestion);
-                
+
                 // Generate URLs cho response
                 if (!string.IsNullOrWhiteSpace(questionDto.MediaUrl))
                 {
                     questionDto.MediaUrl = BuildPublicUrl.BuildURL(QuestionBucket, questionDto.MediaUrl);
                 }
+
                 foreach (var option in questionDto.Options)
                 {
                     if (!string.IsNullOrWhiteSpace(option.MediaUrl))
@@ -488,7 +504,7 @@ namespace LearningEnglish.Application.Service
                         option.MediaUrl = BuildPublicUrl.BuildURL(QuestionBucket, option.MediaUrl);
                     }
                 }
-                
+
                 response.Data = questionDto;
                 response.Success = true;
                 response.Message = "Cập nhật câu hỏi thành công.";
@@ -519,19 +535,20 @@ namespace LearningEnglish.Application.Service
                     response.StatusCode = 404;
                     return response;
                 }
-                
-                // Xóa Question MediaUrl từ MinIO nếu có
+
+                // Xóa Question Media từ MinIO nếu có
                 if (!string.IsNullOrWhiteSpace(question.MediaKey))
                 {
-                    await _minioFileStorage.DeleteFileAsync(QuestionBucket, question.MediaKey);
+                    // Giả định chữ ký: DeleteFileAsync(string fileKey, string bucketName)
+                    await _minioFileStorage.DeleteFileAsync(question.MediaKey, QuestionBucket);
                 }
-                
-                // Xóa tất cả AnswerOption MediaUrls từ MinIO
+
+                // Xóa tất cả AnswerOption Media từ MinIO
                 foreach (var option in question.Options)
                 {
                     if (!string.IsNullOrWhiteSpace(option.MediaKey))
                     {
-                        await _minioFileStorage.DeleteFileAsync(QuestionBucket, option.MediaKey);
+                        await _minioFileStorage.DeleteFileAsync(option.MediaKey, QuestionBucket);
                     }
                 }
 
@@ -568,8 +585,15 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Validate all QuizGroup and QuizSection IDs exist
-                var quizGroupIds = questionBulkCreateDto.Questions.Select(q => q.QuizGroupId).Distinct().ToList();
-                var quizSectionIds = questionBulkCreateDto.Questions.Select(q => q.QuizSectionId).Distinct().ToList();
+                var quizGroupIds = questionBulkCreateDto.Questions
+                    .Select(q => q.QuizGroupId)
+                    .Distinct()
+                    .ToList();
+
+                var quizSectionIds = questionBulkCreateDto.Questions
+                    .Select(q => q.QuizSectionId)
+                    .Distinct()
+                    .ToList();
 
                 foreach (var groupId in quizGroupIds)
                 {
@@ -603,8 +627,6 @@ namespace LearningEnglish.Application.Service
                     question.CreatedAt = DateTime.UtcNow;
                     question.UpdatedAt = DateTime.UtcNow;
 
-                    // Map answer options - EF Core sẽ tự động insert cả Options
-                    // vì Options đã được thêm vào question.Options collection qua AutoMapper
                     questions.Add(question);
                 }
 

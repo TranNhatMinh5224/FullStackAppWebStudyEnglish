@@ -57,10 +57,10 @@ namespace LearningEnglish.Application.Validators
                 .WithMessage("Giải thích không được vượt quá 2000 ký tự.")
                 .When(x => !string.IsNullOrEmpty(x.Explanation));
 
-            RuleFor(x => x.MediaUrl)
-                .MaximumLength(500)
-                .WithMessage("URL media không được vượt quá 500 ký tự.")
-                .When(x => !string.IsNullOrEmpty(x.MediaUrl));
+            RuleFor(x => x.MediaType)
+                .MaximumLength(100)
+                .WithMessage("Loại media không được vượt quá 100 ký tự.")
+                .When(x => !string.IsNullOrEmpty(x.MediaType));
 
             RuleForEach(x => x.Options)
                 .SetValidator(new AnswerOptionCreateDtoValidator());
@@ -77,19 +77,15 @@ namespace LearningEnglish.Application.Validators
                 .MaximumLength(1000)
                 .WithMessage("Nội dung đáp án không được vượt quá 1000 ký tự.");
 
-            RuleFor(x => x.OrderIndex)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage("Thứ tự đáp án phải lớn hơn hoặc bằng 0.");
-
             RuleFor(x => x.Feedback)
                 .MaximumLength(1000)
                 .WithMessage("Phản hồi không được vượt quá 1000 ký tự.")
                 .When(x => !string.IsNullOrEmpty(x.Feedback));
 
-            RuleFor(x => x.MediaUrl)
-                .MaximumLength(500)
-                .WithMessage("URL media không được vượt quá 500 ký tự.")
-                .When(x => !string.IsNullOrEmpty(x.MediaUrl));
+            RuleFor(x => x.MediaType)
+                .MaximumLength(100)
+                .WithMessage("Loại media không được vượt quá 100 ký tự.")
+                .When(x => !string.IsNullOrEmpty(x.MediaType));
         }
     }
 

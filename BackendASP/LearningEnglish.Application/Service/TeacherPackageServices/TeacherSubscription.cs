@@ -35,23 +35,53 @@ namespace LearningEnglish.Application.Service
         {
             try
             {
+                DateTime startDate;
+                SubscriptionStatus status;
+
+                // Check if user has an active subscription
+                var existingSubscription = await _teacherSubscriptionRepository.GetActiveSubscriptionAsync(userId);
+                
+                if (existingSubscription != null && existingSubscription.EndDate > DateTime.UtcNow)
+                {
+                    // User has active subscription → Schedule new subscription to start after current ends
+                    startDate = existingSubscription.EndDate.AddDays(1);
+                    status = SubscriptionStatus.Pending; // Will auto-activate when StartDate arrives
+                    
+                    _logger.LogInformation(
+                        "User {UserId} has active subscription until {EndDate}. New subscription scheduled from {StartDate}",
+                        userId, existingSubscription.EndDate, startDate);
+                }
+                else
+                {
+                    // No active subscription or expired → Start immediately
+                    startDate = DateTime.UtcNow;
+                    status = SubscriptionStatus.Active;
+                    
+                    _logger.LogInformation("User {UserId} has no active subscription. New subscription starts immediately.", userId);
+                }
+
                 var teacherSubscription = new TeacherSubscription
                 {
                     UserId = userId,
                     TeacherPackageId = dto.IdTeacherPackage,
-                    StartDate = DateTime.UtcNow,
-                    EndDate = DateTime.UtcNow.AddMonths(12),
-                    Status = SubscriptionStatus.Active
+                    StartDate = startDate,
+                    EndDate = startDate.AddMonths(12),
+                    Status = status
                 };
 
                 await _teacherSubscriptionRepository.AddTeacherSubscriptionAsync(teacherSubscription);
 
                 var resultDto = _mapper.Map<ResPurchaseTeacherPackageDto>(teacherSubscription);
+                
+                string message = status == SubscriptionStatus.Pending
+                    ? $"Teacher package purchased successfully. Will be activated on {startDate:yyyy-MM-dd}."
+                    : "Teacher package purchased and activated successfully.";
+
                 return new ServiceResponse<ResPurchaseTeacherPackageDto>
                 {
                     Data = resultDto,
                     Success = true,
-                    Message = "Teacher package purchased successfully."
+                    Message = message
                 };
             }
             catch (Exception ex)

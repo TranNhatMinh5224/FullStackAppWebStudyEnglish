@@ -27,6 +27,8 @@ namespace LearningEnglish.Application.DTOs
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public string? AvatarUrl { get; set; }
+        public string? AvatarType { get; set; }
     }
     // Dto dành cho phản hồi đăng nhập thành công  
     public class AuthResponseDto
@@ -43,6 +45,13 @@ namespace LearningEnglish.Application.DTOs
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
+    }
+    
+    // Dto riêng cho update avatar
+    public class UpdateAvatarDto
+    {
+        public string AvatarTempKey { get; set; } = string.Empty;
+        public string? AvatarType { get; set; }
     }
     // Dto thay đổi mật khẩu
     public class ChangePasswordDto

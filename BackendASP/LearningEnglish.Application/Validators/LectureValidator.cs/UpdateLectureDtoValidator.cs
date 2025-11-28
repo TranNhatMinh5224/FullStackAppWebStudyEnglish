@@ -52,12 +52,6 @@ namespace LearningEnglish.Application.Validators
                 .WithMessage("Parent Lecture ID phải lớn hơn 0")
                 .When(x => x.ParentLectureId.HasValue);
 
-            // Validate MediaUrl - nếu có, tối đa 1000 ký tự
-            RuleFor(x => x.MediaUrl)
-                .MaximumLength(1000)
-                .WithMessage("Media URL không được vượt quá 1000 ký tự")
-                .When(x => !string.IsNullOrEmpty(x.MediaUrl));
-
             // Validate MediaType - nếu có, tối đa 50 ký tự
             RuleFor(x => x.MediaType)
                 .MaximumLength(50)
@@ -84,7 +78,7 @@ namespace LearningEnglish.Application.Validators
                           x.Type.HasValue ||
                           !string.IsNullOrEmpty(x.MarkdownContent) ||
                           x.ParentLectureId.HasValue ||
-                          !string.IsNullOrEmpty(x.MediaUrl) ||
+                          !string.IsNullOrEmpty(x.MediaTempKey) ||
                           !string.IsNullOrEmpty(x.MediaType) ||
                           x.MediaSize.HasValue ||
                           x.Duration.HasValue)

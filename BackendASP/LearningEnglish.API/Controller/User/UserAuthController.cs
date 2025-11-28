@@ -93,6 +93,23 @@ namespace LearningEnglish.API.Controllers.User
         }
 
         [Authorize]
+        [HttpPut("profile/avatar")]
+        public async Task<IActionResult> UpdateAvatar([FromBody] UpdateAvatarDto dto)
+        {
+            var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                            ?? User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            {
+                return StatusCode(401, new { success = false, message = "Token không hợp lệ" });
+            }
+
+            var result = await _userManagementService.UpdateAvatarAsync(userId, dto);
+            if (!result.Success)
+                return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message });
+            return StatusCode(result.StatusCode, new { success = result.Success, message = result.Message, data = result.Data });
+        }
+
+        [Authorize]
         [HttpPut("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
         {

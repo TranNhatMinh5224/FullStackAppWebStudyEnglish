@@ -150,54 +150,95 @@ namespace LearningEnglish.Infrastructure.Repositories
         // Đăng ký user vào khóa học
         public async Task EnrollUserInCourse(int userId, int courseId)
         {
-            var exists = await IsUserEnrolledInCourse(userId, courseId);
-            if (exists)
+            // Sử dụng transaction để đảm bảo atomicity
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
+            try
             {
-                throw new InvalidOperationException("User already enrolled in this course");
+                var exists = await IsUserEnrolledInCourse(userId, courseId);
+                if (exists)
+                {
+                    throw new InvalidOperationException("User already enrolled in this course");
+                }
+
+                // CRITICAL: Sử dụng raw SQL với ROWLOCK + UPDLOCK để lock row trong transaction
+                // Đảm bảo không có race condition khi nhiều user cùng enroll
+                var course = await _context.Courses
+                    .FromSqlRaw("SELECT * FROM \"Courses\" WHERE \"CourseId\" = {0} FOR UPDATE", courseId)
+                    .FirstOrDefaultAsync();
+
+                if (course == null)
+                {
+                    throw new InvalidOperationException("Course not found");
+                }
+
+                // Kiểm tra lại sau khi lock - đảm bảo chắc chắn không vượt quá
+                if (!course.CanJoin())
+                {
+                    throw new InvalidOperationException($"Cannot enroll: Course is full ({course.EnrollmentCount}/{course.MaxStudent})");
+                }
+
+                // Sử dụng business logic từ Entity (sẽ throw exception nếu đầy)
+                course.EnrollStudent();
+
+                var enrollment = new UserCourse
+                {
+                    UserId = userId,
+                    CourseId = courseId,
+                    JoinedAt = DateTime.UtcNow
+                };
+
+                await _context.UserCourses.AddAsync(enrollment);
+                await _context.SaveChangesAsync();
+                
+                await transaction.CommitAsync();
             }
-
-            // Reload course từ DB để lấy EnrollmentCount mới nhất (tránh race condition)
-            var course = await _context.Courses
-                .FirstOrDefaultAsync(c => c.CourseId == courseId);
-
-            if (course == null)
+            catch
             {
-                throw new InvalidOperationException("Course not found");
+                await transaction.RollbackAsync();
+                throw;
             }
-
-            // Sử dụng business logic từ Entity (sẽ throw exception nếu đầy)
-            course.EnrollStudent();
-
-            var enrollment = new UserCourse
-            {
-                UserId = userId,
-                CourseId = courseId,
-                JoinedAt = DateTime.UtcNow
-            };
-
-            await _context.UserCourses.AddAsync(enrollment);
-            await _context.SaveChangesAsync();
         }
 
 
         //Hủy đăng ký khóa học
         public async Task UnenrollUserFromCourse(int courseId, int userId)
         {
-            var enrollment = await _context.UserCourses
-                .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.CourseId == courseId);
-
-            if (enrollment != null)
+            // Sử dụng transaction để đảm bảo atomicity
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
+            try
             {
-                // Lấy course để cập nhật EnrollmentCount
-                var course = await _context.Courses.FindAsync(courseId);
-                if (course != null)
+                var enrollment = await _context.UserCourses
+                    .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.CourseId == courseId);
+
+                if (enrollment == null)
                 {
-                    // Sử dụng business logic từ Entity
-                    course.UnenrollStudent();
+                    throw new InvalidOperationException("User is not enrolled in this course");
                 }
+
+                // CRITICAL: Lock course row để tránh race condition khi nhiều user cùng unenroll
+                var course = await _context.Courses
+                    .FromSqlRaw("SELECT * FROM \"Courses\" WHERE \"CourseId\" = {0} FOR UPDATE", courseId)
+                    .FirstOrDefaultAsync();
+
+                if (course == null)
+                {
+                    throw new InvalidOperationException("Course not found");
+                }
+
+                // Sử dụng business logic từ Entity
+                course.UnenrollStudent();
 
                 _context.UserCourses.Remove(enrollment);
                 await _context.SaveChangesAsync();
+                
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
             }
         }
 

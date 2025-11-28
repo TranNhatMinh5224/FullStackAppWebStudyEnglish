@@ -29,18 +29,16 @@ namespace LearningEnglish.Application.DTOs
         public string? Description { get; set; }
         public int QuizSectionId { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string? ImgUrl { get; set; }
-        public string? VideoUrl { get; set; }
-        
-        public string? ImgType { get; set; }
-        public string? VideoType { get; set; }
-        public int? VideoDuration { get; set; }
         
         public float SumScore { get; set; }
         
-        // ✅ MỚI THÊM: MinIO temp keys
+        // Media handling
         public string? ImgTempKey { get; set; }
+        public string? ImgType { get; set; }
+        
         public string? VideoTempKey { get; set; }
+        public string? VideoType { get; set; }
+        public int? VideoDuration { get; set; }
     }
 
     public class UpdateQuizGroupDto
@@ -48,18 +46,16 @@ namespace LearningEnglish.Application.DTOs
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string? ImgUrl { get; set; }
-        public string? VideoUrl { get; set; }
-        
-        public string? ImgType { get; set; }
-        public string? VideoType { get; set; }
-        public int? VideoDuration { get; set; }
         
         public float SumScore { get; set; }
         
-        // ✅ MỚI THÊM: MinIO temp keys
+        // Media handling
         public string? ImgTempKey { get; set; }
+        public string? ImgType { get; set; }
+        
         public string? VideoTempKey { get; set; }
+        public string? VideoType { get; set; }
+        public int? VideoDuration { get; set; }
     }
 
     public class ListQuizGroupDto

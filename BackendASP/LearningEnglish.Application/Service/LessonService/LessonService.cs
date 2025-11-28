@@ -331,18 +331,20 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var lessons = await _lessonRepository.GetListLessonByCourseId(CourseId);
-                var lessonDtos = lessons.Select(l => _mapper.Map<ListLessonDto>(l)).ToList();
+                var lessonDtos = new List<ListLessonDto>();
                 
-                // Generate URL từ key cho tất cả lessons
-                foreach (var lessonDto in lessonDtos)
+                // Map và generate URL từ key cho tất cả lessons
+                foreach (var lesson in lessons)
                 {
-                    if (!string.IsNullOrWhiteSpace(lessonDto.ImageUrl))
+                    var lessonDto = _mapper.Map<ListLessonDto>(lesson);
+                    if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                     {
                         lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
                             LessonImageBucket,
-                            lessonDto.ImageUrl
+                            lesson.ImageKey
                         );
                     }
+                    lessonDtos.Add(lessonDto);
                 }
                 
                 response.StatusCode = 200;
@@ -423,11 +425,11 @@ namespace LearningEnglish.Application.Service
                 var lessonDto = _mapper.Map<LessonDto>(lesson);
                 
                 // Generate URL từ key
-                if (!string.IsNullOrWhiteSpace(lessonDto.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                 {
                     lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
                         LessonImageBucket,
-                        lessonDto.ImageUrl
+                        lesson.ImageKey
                     );
                 }
                 

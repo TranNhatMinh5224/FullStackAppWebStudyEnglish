@@ -17,7 +17,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<CourseProgress> GetByUserAndCourseAsync(int userId, int courseId)
+        public async Task<CourseProgress?> GetByUserAndCourseAsync(int userId, int courseId)
         {
             return await _context.CourseProgresses
                 .Include(cp => cp.Course)
@@ -62,7 +62,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<LessonCompletion> GetByUserAndLessonAsync(int userId, int lessonId)
+        public async Task<LessonCompletion?> GetByUserAndLessonAsync(int userId, int lessonId)
         {
             return await _context.LessonCompletions
                 .FirstOrDefaultAsync(lc => lc.UserId == userId && lc.LessonId == lessonId);
@@ -111,7 +111,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<ModuleCompletion> GetByUserAndModuleAsync(int userId, int moduleId)
+        public async Task<ModuleCompletion?> GetByUserAndModuleAsync(int userId, int moduleId)
         {
             return await _context.ModuleCompletions
                 .FirstOrDefaultAsync(mc => mc.UserId == userId && mc.ModuleId == moduleId);

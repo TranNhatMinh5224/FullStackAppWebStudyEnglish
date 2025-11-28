@@ -51,7 +51,8 @@ namespace LearningEnglish.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        // Lấy TeacherPackage của teacher tại thời điểm date (có subscription active)
+        // Lấy TeacherPackage của teacher tại thời điểm date
+        // Tự động lấy subscription đang valid (Active hoặc Pending đã đến ngày)
         public async Task<TeacherPackage?> GetInformationTeacherpackageAsync(int teacherId, DateTime date)
         {
             var result = await (from tp in _context.TeacherPackages
@@ -59,14 +60,15 @@ namespace LearningEnglish.Infrastructure.Repositories
                          where ts.UserId == teacherId 
                                && ts.StartDate <= date 
                                && ts.EndDate >= date
-                               && ts.Status == SubscriptionStatus.Active
+                               && (ts.Status == SubscriptionStatus.Active || ts.Status == SubscriptionStatus.Pending)
                          orderby ts.EndDate descending
                          select tp).FirstOrDefaultAsync();
             
             return result;
         }
 
-        // Lấy TeacherPackage hiện tại của teacher (subscription active)
+        // Lấy TeacherPackage hiện tại của teacher
+        // Tự động lấy subscription đang valid (Active hoặc Pending đã đến ngày)
         public async Task<TeacherPackage?> GetInformationTeacherpackage(int teacherId)
         {
             var now = DateTime.UtcNow;
@@ -75,7 +77,7 @@ namespace LearningEnglish.Infrastructure.Repositories
                          where ts.UserId == teacherId 
                                && ts.StartDate <= now 
                                && ts.EndDate >= now
-                               && ts.Status == SubscriptionStatus.Active
+                               && (ts.Status == SubscriptionStatus.Active || ts.Status == SubscriptionStatus.Pending)
                          orderby ts.EndDate descending
                          select tp).FirstOrDefaultAsync();
             

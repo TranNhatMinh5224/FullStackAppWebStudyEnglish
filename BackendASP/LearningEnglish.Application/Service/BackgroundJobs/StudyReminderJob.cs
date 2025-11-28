@@ -86,13 +86,11 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
                         _logger.LogInformation($"Email reminder sent to user {reminder.UserId}: {reminder.Title}");
                     }
 
-                    // Send push notification if enabled
-                    if (reminder.IsPushEnabled)
-                    {
-                        // TODO: Implement push notification
-                        // await pushNotificationService.SendPushNotificationAsync(reminder.UserId, reminder.Title, reminder.Message);
-                        _logger.LogInformation($"Push reminder sent to user {reminder.UserId}: {reminder.Title}");
-                    }
+                    // Push notifications removed - using email instead
+                    // if (reminder.IsPushEnabled)
+                    // {
+                    //     await pushNotificationService.SendPushNotificationAsync(reminder.UserId, reminder.Title, reminder.Message);
+                    // }
 
                     // Update reminder
                     reminder.LastSentAt = now;

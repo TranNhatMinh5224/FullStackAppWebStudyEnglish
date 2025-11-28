@@ -79,22 +79,32 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Nếu là course của teacher, kiểm tra thêm giới hạn MaxStudents của package
+                // Nếu là course của teacher, kiểm tra package status và giới hạn
                 if (course.Type == CourseType.Teacher && course.TeacherId.HasValue)
                 {
                     var teacherPackage = await _teacherPackageRepository.GetInformationTeacherpackage(course.TeacherId.Value);
-                    if (teacherPackage != null)
+                    
+                    // Check 1: Teacher phải có active package mới nhận students mới
+                    if (teacherPackage == null)
                     {
-                        // Đếm tổng số student hiện tại của teacher (tối ưu hơn)
-                        int totalStudents = await _courseRepository.GetTotalStudentsByTeacher(course.TeacherId.Value);
-
-                        if (totalStudents >= teacherPackage.MaxStudents)
-                        {
-                            response.Success = false;
-                            response.StatusCode = 400;
-                            response.Message = $"Giáo viên đã đạt giới hạn số học sinh ({totalStudents}/{teacherPackage.MaxStudents})";
-                            return response;
-                        }
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Khóa học này hiện không nhận học viên mới. Giáo viên cần gia hạn gói để tiếp tục nhận học viên.";
+                        _logger.LogWarning("Teacher {TeacherId} has no active package. Cannot enroll new students in course {CourseId}", 
+                            course.TeacherId.Value, enrollDto.CourseId);
+                        return response;
+                    }
+                    
+                    // Check 2: Kiểm tra giới hạn MaxStudents của package
+                    int totalStudents = await _courseRepository.GetTotalStudentsByTeacher(course.TeacherId.Value);
+                    if (totalStudents >= teacherPackage.MaxStudents)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = $"Giáo viên đã đạt giới hạn số học sinh ({totalStudents}/{teacherPackage.MaxStudents}). Không thể nhận thêm học viên.";
+                        _logger.LogWarning("Teacher {TeacherId} reached MaxStudents limit ({Total}/{Max})", 
+                            course.TeacherId.Value, totalStudents, teacherPackage.MaxStudents);
+                        return response;
                     }
                 }
 

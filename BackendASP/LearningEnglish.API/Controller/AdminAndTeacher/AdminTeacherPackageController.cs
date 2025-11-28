@@ -59,7 +59,7 @@ namespace LearningEnglish.API.Controller.Admin
         }
         // Controller cập nhật gói giáo viên
 
-        [HttpPut("Update-Teacher-Package{id}")]
+        [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateTeacherPackage(int id, [FromBody] UpdateTeacherPackageDto teacherPackageDto)
         {

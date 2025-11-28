@@ -7,7 +7,7 @@ namespace LearningEnglish.Application.Interface
 {
     public interface IStudyReminderRepository
     {
-        Task<StudyReminder> GetByIdAsync(int id);
+        Task<StudyReminder?> GetByIdAsync(int id);
         Task<IEnumerable<StudyReminder>> GetUserStudyRemindersAsync(int userId);
         Task<IEnumerable<StudyReminder>> GetActiveRemindersForTimeAsync(string time, DaysOfWeek dayOfWeek);
         Task AddAsync(StudyReminder reminder);

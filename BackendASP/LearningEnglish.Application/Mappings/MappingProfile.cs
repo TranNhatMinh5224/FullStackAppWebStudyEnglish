@@ -82,8 +82,26 @@ namespace LearningEnglish.Application.Mappings
             // Lesson mappings
             CreateMap<Lesson, LessonDto>()
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey));
+            
             CreateMap<Lesson, ListLessonDto>()
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey));
+
+            CreateMap<AdminCreateLessonDto, Lesson>()
+                .ForMember(dest => dest.LessonId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.ImageKey, opt => opt.Ignore()); // Set manually in service after commit
+
+            CreateMap<TeacherCreateLessonDto, Lesson>()
+                .ForMember(dest => dest.LessonId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.ImageKey, opt => opt.Ignore()); // Set manually in service after commit
+
+            CreateMap<UpdateLessonDto, Lesson>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.ImageKey, opt => opt.Ignore()) // Set manually in service after commit
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Module mappings
             CreateMap<Module, ModuleDto>()
@@ -115,11 +133,18 @@ namespace LearningEnglish.Application.Mappings
             // User mappings
             CreateMap<User, UserDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarKey))
+                .ForMember(dest => dest.AvatarType, opt => opt.MapFrom(src => src.AvatarType));
+            
             CreateMap<RegisterUserDto, User>()
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
 
             CreateMap<UpdateUserDto, User>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            
+            CreateMap<UpdateAvatarDto, User>()
+                .ForMember(dest => dest.AvatarKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // TeacherPackage mappings
@@ -145,10 +170,12 @@ namespace LearningEnglish.Application.Mappings
 
             CreateMap<CreateLectureDto, Lecture>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.MediaKey, opt => opt.Ignore()); // Set manually in service after commit
 
             CreateMap<UpdateLectureDto, Lecture>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.MediaKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Lecture, LectureWithProgressDto>()
@@ -192,10 +219,14 @@ namespace LearningEnglish.Application.Mappings
 
             CreateMap<CreateFlashCardDto, FlashCard>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.ImageKey, opt => opt.Ignore()) // Set manually in service after commit
+                .ForMember(dest => dest.AudioKey, opt => opt.Ignore()); // Set manually in service after commit
 
             CreateMap<UpdateFlashCardDto, FlashCard>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.ImageKey, opt => opt.Ignore()) // Set manually in service after commit
+                .ForMember(dest => dest.AudioKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<FlashCard, FlashCardWithProgressDto>()
@@ -224,12 +255,18 @@ namespace LearningEnglish.Application.Mappings
 
             // EssaySubmission mappings
             CreateMap<EssaySubmission, EssaySubmissionDto>()
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.AttachmentUrl, opt => opt.MapFrom(src => src.AttachmentKey)); // Will be replaced with URL in service
 
             CreateMap<CreateEssaySubmissionDto, EssaySubmission>()
                 .ForMember(dest => dest.SubmissionId, opt => opt.Ignore())
                 .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Domain.Enums.SubmissionStatus.Submitted));
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Domain.Enums.SubmissionStatus.Submitted))
+                .ForMember(dest => dest.AttachmentKey, opt => opt.Ignore()); // Set manually in service after MinIO commit
+
+            CreateMap<UpdateEssaySubmissionDto, EssaySubmission>()
+                .ForMember(dest => dest.AttachmentKey, opt => opt.Ignore()) // Set manually in service after MinIO commit
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Quiz mappings
             CreateMap<Quiz, QuizDto>()
@@ -273,9 +310,15 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<QuizGroup, QuizGroupDto>()
                 .ForMember(dest => dest.ImgUrl, opt => opt.MapFrom(src => src.ImgKey))
                 .ForMember(dest => dest.VideoUrl, opt => opt.MapFrom(src => src.VideoKey));
+            
             CreateMap<CreateQuizGroupDto, QuizGroup>()
-                .ForMember(dest => dest.QuizGroupId, opt => opt.Ignore());
+                .ForMember(dest => dest.QuizGroupId, opt => opt.Ignore())
+                .ForMember(dest => dest.ImgKey, opt => opt.Ignore()) // Set manually in service after commit
+                .ForMember(dest => dest.VideoKey, opt => opt.Ignore()); // Set manually in service after commit
+            
             CreateMap<UpdateQuizGroupDto, QuizGroup>()
+                .ForMember(dest => dest.ImgKey, opt => opt.Ignore()) // Set manually in service after commit
+                .ForMember(dest => dest.VideoKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // Question mappings
@@ -287,10 +330,12 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.QuestionId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.MediaKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForMember(dest => dest.Options, opt => opt.MapFrom(src => src.Options));
 
             CreateMap<QuestionUpdateDto, Question>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.MediaKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForMember(dest => dest.Options, opt => opt.MapFrom(src => src.Options))
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
@@ -300,7 +345,8 @@ namespace LearningEnglish.Application.Mappings
 
             CreateMap<AnswerOptionCreateDto, AnswerOption>()
                 .ForMember(dest => dest.AnswerOptionId, opt => opt.Ignore())
-                .ForMember(dest => dest.QuestionId, opt => opt.Ignore());
+                .ForMember(dest => dest.QuestionId, opt => opt.Ignore())
+                .ForMember(dest => dest.MediaKey, opt => opt.Ignore()); // Set manually in service after commit
 
             // QuizAttempt mappings
             CreateMap<QuizAttempt, QuizAttemptDto>();

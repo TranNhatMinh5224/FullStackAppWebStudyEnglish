@@ -25,8 +25,15 @@ namespace LearningEnglish.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-
-
-
+        public async Task<TeacherSubscription?> GetActiveSubscriptionAsync(int userId)
+        {
+            var now = DateTime.UtcNow;
+            return await _context.TeacherSubscriptions
+                .Where(ts => ts.UserId == userId 
+                          && ts.Status == Domain.Enums.SubscriptionStatus.Active
+                          && ts.EndDate > now)
+                .OrderByDescending(ts => ts.EndDate)
+                .FirstOrDefaultAsync();
+        }
     }
 }
