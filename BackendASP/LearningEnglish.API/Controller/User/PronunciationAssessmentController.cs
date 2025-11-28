@@ -156,5 +156,29 @@ namespace LearningEnglish.API.Controller.User
 
             return Ok(result);
         }
+
+        /// <summary>
+        /// 🆕 Get progress analytics over time
+        /// </summary>
+        [HttpGet("progress")]
+        public async Task<IActionResult> GetProgressAnalytics([FromQuery] int months = 3)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return Unauthorized(new ServiceResponse<object>
+                {
+                    Success = false,
+                    Message = "User not authenticated"
+                });
+
+            var result = await _service.GetProgressAnalyticsAsync(userId, months);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        // Đã xóa endpoint /comparative và method GetComparativeAnalytics theo yêu cầu
     }
 }

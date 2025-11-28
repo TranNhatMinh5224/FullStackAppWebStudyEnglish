@@ -78,5 +78,24 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .Where(p => p.UserId == userId)
                 .CountAsync();
         }
+
+        // 🆕 Get user assessments since specific date (for progress tracking)
+        public async Task<List<PronunciationAssessment>> GetByUserIdSinceDateAsync(int userId, DateTime sinceDate)
+        {
+            return await _context.PronunciationAssessments
+                .Where(p => p.UserId == userId && p.CreatedAt >= sinceDate)
+                .OrderBy(p => p.CreatedAt)
+                .ToListAsync();
+        }
+
+        // 🆕 Get average scores from all users (for comparative analytics)
+        public async Task<List<double>> GetAllUserAverageScoresAsync()
+        {
+            return await _context.PronunciationAssessments
+                .Where(p => p.Status == AssessmentStatus.Completed)
+                .GroupBy(p => p.UserId)
+                .Select(g => g.Average(p => p.PronunciationScore))
+                .ToListAsync();
+        }
     }
 }

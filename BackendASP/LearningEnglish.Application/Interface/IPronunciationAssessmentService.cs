@@ -38,5 +38,10 @@ namespace LearningEnglish.Application.Interface
         /// Get user statistics
         /// </summary>
         Task<ServiceResponse<object>> GetUserStatisticsAsync(int userId);
+
+        /// <summary>
+        /// 🆕 Get progress analytics over time
+        /// </summary>
+        Task<ServiceResponse<ProgressAnalytics>> GetProgressAnalyticsAsync(int userId, int months = 3);
     }
 }

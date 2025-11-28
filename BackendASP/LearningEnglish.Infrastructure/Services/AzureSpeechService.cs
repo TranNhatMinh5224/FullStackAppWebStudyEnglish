@@ -111,9 +111,15 @@ namespace LearningEnglish.Infrastructure.Services
                         double completenessScore = 0;
                         double pronScore = 0;
                         
+                        // 🆕 Word-level analysis
+                        var words = new List<WordPronunciationDetail>();
+                        var allPhonemeScores = new Dictionary<string, List<double>>();
+                        
                         if (root.TryGetProperty("NBest", out var nBest) && nBest.GetArrayLength() > 0)
                         {
                             var firstResult = nBest[0];
+                            
+                            // Overall scores
                             if (firstResult.TryGetProperty("PronunciationAssessment", out var pronAssessment))
                             {
                                 if (pronAssessment.TryGetProperty("AccuracyScore", out var acc))
@@ -125,7 +131,88 @@ namespace LearningEnglish.Infrastructure.Services
                                 if (pronAssessment.TryGetProperty("PronScore", out var pron))
                                     pronScore = pron.GetDouble();
                             }
+                            
+                            // 🆕 Parse words array
+                            if (firstResult.TryGetProperty("Words", out var wordsArray))
+                            {
+                                foreach (var wordElement in wordsArray.EnumerateArray())
+                                {
+                                    var wordDetail = new WordPronunciationDetail
+                                    {
+                                        Word = wordElement.TryGetProperty("Word", out var wordProp) 
+                                            ? wordProp.GetString() ?? "" : "",
+                                        Offset = wordElement.TryGetProperty("Offset", out var offset) 
+                                            ? offset.GetInt32() : 0,
+                                        Duration = wordElement.TryGetProperty("Duration", out var duration) 
+                                            ? duration.GetInt32() : 0
+                                    };
+                                    
+                                    // Parse word-level pronunciation assessment
+                                    if (wordElement.TryGetProperty("PronunciationAssessment", out var wordPronAssessment))
+                                    {
+                                        wordDetail.AccuracyScore = wordPronAssessment.TryGetProperty("AccuracyScore", out var wordAcc)
+                                            ? wordAcc.GetDouble() : 0;
+                                        wordDetail.ErrorType = wordPronAssessment.TryGetProperty("ErrorType", out var errorType)
+                                            ? errorType.GetString() ?? "None" : "None";
+                                    }
+                                    
+                                    // 🆕 Parse phonemes for each word
+                                    if (wordElement.TryGetProperty("Phonemes", out var phonemesArray))
+                                    {
+                                        foreach (var phonemeElement in phonemesArray.EnumerateArray())
+                                        {
+                                            var phoneme = phonemeElement.TryGetProperty("Phoneme", out var phonemeProp)
+                                                ? phonemeProp.GetString() ?? "" : "";
+                                            var phonemeScore = 0.0;
+                                            
+                                            if (phonemeElement.TryGetProperty("PronunciationAssessment", out var phonemePronAssessment))
+                                            {
+                                                phonemeScore = phonemePronAssessment.TryGetProperty("AccuracyScore", out var pScore)
+                                                    ? pScore.GetDouble() : 0;
+                                            }
+                                            
+                                            var phonemeDetail = new PhonemeDetail
+                                            {
+                                                Phoneme = phoneme,
+                                                PhonemeDisplay = ConvertToDisplayPhoneme(phoneme),
+                                                AccuracyScore = phonemeScore,
+                                                Offset = phonemeElement.TryGetProperty("Offset", out var pOffset) 
+                                                    ? pOffset.GetInt32() : 0,
+                                                Duration = phonemeElement.TryGetProperty("Duration", out var pDuration) 
+                                                    ? pDuration.GetInt32() : 0
+                                            };
+                                            
+                                            wordDetail.Phonemes.Add(phonemeDetail);
+                                            
+                                            // Track phoneme scores for analysis
+                                            if (!string.IsNullOrEmpty(phoneme))
+                                            {
+                                                if (!allPhonemeScores.ContainsKey(phoneme))
+                                                    allPhonemeScores[phoneme] = new List<double>();
+                                                allPhonemeScores[phoneme].Add(phonemeScore);
+                                            }
+                                        }
+                                    }
+                                    
+                                    words.Add(wordDetail);
+                                }
+                            }
                         }
+                        
+                        // 🆕 Analyze problem and strong phonemes
+                        var problemPhonemes = allPhonemeScores
+                            .Where(p => p.Value.Any() && p.Value.Average() < 70)
+                            .OrderBy(p => p.Value.Average())
+                            .Select(p => ConvertToDisplayPhoneme(p.Key))
+                            .Take(5)
+                            .ToList();
+
+                        var strongPhonemes = allPhonemeScores
+                            .Where(p => p.Value.Any() && p.Value.Average() >= 85)
+                            .OrderByDescending(p => p.Value.Average())
+                            .Select(p => ConvertToDisplayPhoneme(p.Key))
+                            .Take(5)
+                            .ToList();
                         
                         return new AzureSpeechAssessmentResult
                         {
@@ -136,11 +223,15 @@ namespace LearningEnglish.Infrastructure.Services
                             PronunciationScore = pronScore,
                             RecognizedText = result.Text,
                             DetailedResultJson = jsonResult,
-                            RawResponse = jsonResult
+                            RawResponse = jsonResult,
+                            Words = words,
+                            ProblemPhonemes = problemPhonemes,
+                            StrongPhonemes = strongPhonemes
                         };
                     }
                     catch (Exception parseEx)
                     {
+                        _logger.LogError(parseEx, "Error parsing Azure speech result");
                         // If parsing fails, return what we have
                         return new AzureSpeechAssessmentResult
                         {
@@ -230,6 +321,65 @@ namespace LearningEnglish.Infrastructure.Services
                 _logger.LogError(ex, "Error generating speech for text: {Text}", text);
                 return null;
             }
+        }
+
+        // 🆕 Helper method: Convert IPA phoneme symbols to user-friendly display format
+        private string ConvertToDisplayPhoneme(string ipaPhoneme)
+        {
+            if (string.IsNullOrEmpty(ipaPhoneme))
+                return ipaPhoneme;
+
+            // Map IPA symbols to readable format
+            var mapping = new Dictionary<string, string>
+            {
+                // Consonants
+                { "θ", "th" },      // think
+                { "ð", "th" },      // this (voiced)
+                { "ʃ", "sh" },      // ship
+                { "ʒ", "zh" },      // measure
+                { "tʃ", "ch" },     // church
+                { "dʒ", "j" },      // judge
+                { "ŋ", "ng" },      // sing
+                { "j", "y" },       // yes
+                
+                // R-colored vowels
+                { "ɜr", "er" },     // bird
+                { "ɝ", "er" },      // bird (alternative)
+                { "ɑr", "ar" },     // car
+                { "ɔr", "or" },     // door
+                { "ɪr", "ir" },     // ear
+                { "ɛr", "air" },    // care
+                { "ʊr", "oor" },    // tour
+                
+                // Diphthongs
+                { "eɪ", "ay" },     // day
+                { "aɪ", "i" },      // my
+                { "ɔɪ", "oy" },     // boy
+                { "aʊ", "ow" },     // how
+                { "oʊ", "o" },      // go
+                { "ɪə", "ear" },    // here
+                { "ɛə", "air" },    // care
+                { "ʊə", "oor" },    // tour
+                
+                // Vowels
+                { "ə", "uh" },      // about (schwa)
+                { "ʌ", "u" },       // cup
+                { "æ", "a" },       // cat
+                { "ɑ", "ah" },      // father
+                { "ɔ", "aw" },      // law
+                { "ɛ", "e" },       // bed
+                { "ɪ", "i" },       // sit
+                { "i", "ee" },      // see
+                { "ʊ", "u" },       // book
+                { "u", "oo" },      // food
+                
+                // Common consonant clusters
+                { "str", "str" },
+                { "spr", "spr" },
+                { "skr", "scr" }
+            };
+
+            return mapping.TryGetValue(ipaPhoneme, out var display) ? display : ipaPhoneme;
         }
     }
 }

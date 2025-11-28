@@ -12,5 +12,9 @@ namespace LearningEnglish.Application.Interface
         Task UpdateAsync(PronunciationAssessment assessment);
         Task DeleteAsync(int id);
         Task<int> CountByUserIdAsync(int userId);
+        
+        // 🆕 Progress tracking methods
+        Task<List<PronunciationAssessment>> GetByUserIdSinceDateAsync(int userId, DateTime sinceDate);
+        Task<List<double>> GetAllUserAverageScoresAsync();
     }
 }

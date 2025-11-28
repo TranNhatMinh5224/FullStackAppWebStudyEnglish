@@ -22,6 +22,10 @@ namespace LearningEnglish.Domain.Entities
 
         public string? RecognizedText { get; set; }
 
+        // 🆕 Store word-level and phoneme analysis as JSON
+        public string? WordsDataJson { get; set; }          // Serialized WordPronunciationDetail[]
+        public string? ProblemPhonemesJson { get; set; }    // Serialized string[] of problem phonemes
+        public string? StrongPhonemesJson { get; set; }     // Serialized string[] of strong phonemes
      
         public string? DetailedResultJson { get; set; }
 
