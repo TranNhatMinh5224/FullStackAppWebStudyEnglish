@@ -300,9 +300,9 @@ namespace LearningEnglish.Infrastructure.Data
             {
                 e.HasKey(es => es.SubmissionId);
                 e.ToTable("EssaySubmissions");
-                e.HasOne(es => es.Assessment)
-                 .WithMany(a => a.EssaySubmissions)
-                 .HasForeignKey(es => es.AssessmentId)
+                e.HasOne(es => es.Essay)
+                 .WithMany(e => e.EssaySubmissions)
+                 .HasForeignKey(es => es.EssayId)
                  .OnDelete(DeleteBehavior.Cascade);
                 e.HasOne(es => es.User)
                  .WithMany(u => u.EssaySubmissions)

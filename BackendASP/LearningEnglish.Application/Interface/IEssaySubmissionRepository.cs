@@ -11,7 +11,7 @@ namespace LearningEnglish.Application.Interface
         Task<List<EssaySubmission>> GetSubmissionsByEssayIdAsync(int essayId);
         Task<List<EssaySubmission>> GetSubmissionsByUserIdAsync(int userId);
         Task<List<EssaySubmission>> GetSubmissionsByAssessmentIdAsync(int assessmentId);
-        Task<EssaySubmission?> GetUserSubmissionForEssayAsync(int userId, int assessmentId);
+        Task<EssaySubmission?> GetUserSubmissionForEssayAsync(int userId, int essayId);
         Task<EssaySubmission> UpdateSubmissionAsync(EssaySubmission submission);
         Task DeleteSubmissionAsync(int submissionId);
         

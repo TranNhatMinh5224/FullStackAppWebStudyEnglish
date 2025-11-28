@@ -38,7 +38,7 @@ namespace LearningEnglish.Application.DTOs
     public class EssaySubmissionDto
     {
         public int SubmissionId { get; set; }
-        public int AssessmentId { get; set; }
+        public int EssayId { get; set; }
         public int UserId { get; set; }
         
         // Nội dung bài làm
@@ -48,14 +48,14 @@ namespace LearningEnglish.Application.DTOs
         
         // Navigation properties
         public UserDto? User { get; set; }
-        public AssessmentDto? Assessment { get; set; }
+        public EssayDto? Essay { get; set; }
     }
 
 
     // DTO cho tạo submission mới
     public class CreateEssaySubmissionDto
     {
-        public int AssessmentId { get; set; }
+        public int EssayId { get; set; }
         public string? TextContent { get; set; }
     }
 

@@ -33,17 +33,18 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // Kiểm tra Assessment có tồn tại không
-                if (!await _essaySubmissionRepository.AssessmentExistsAsync(dto.AssessmentId))
+                // Kiểm tra Essay có tồn tại không
+                var essay = await _essayRepository.GetEssayByIdAsync(dto.EssayId);
+                if (essay == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Assessment không tồn tại";
+                    response.Message = "Essay không tồn tại";
                     return response;
                 }
 
                 // Kiểm tra học sinh đã nộp bài chưa
-                var existingSubmission = await _essaySubmissionRepository.GetUserSubmissionForEssayAsync(userId, dto.AssessmentId);
+                var existingSubmission = await _essaySubmissionRepository.GetUserSubmissionForEssayAsync(userId, dto.EssayId);
                 if (existingSubmission != null)
                 {
                     response.Success = false;
@@ -55,7 +56,7 @@ namespace LearningEnglish.Application.Service
                 // Tạo submission
                 var submission = new EssaySubmission
                 {
-                    AssessmentId = dto.AssessmentId,
+                    EssayId = dto.EssayId,
                     UserId = userId,
                     TextContent = dto.TextContent,
                     SubmittedAt = DateTime.UtcNow,
@@ -181,25 +182,34 @@ namespace LearningEnglish.Application.Service
             }
         }
         // Implement cho phương thức lấy ra xem học sinh đã nộp bài cho Essay nào đó chưa(1 bài tự luận cụ thể)
-        public async Task<ServiceResponse<EssaySubmissionDto?>> GetUserSubmissionForEssayAsync(int userId, int assessmentId)
+        public async Task<ServiceResponse<EssaySubmissionDto?>> GetUserSubmissionForEssayAsync(int userId, int essayId)
         {
             var response = new ServiceResponse<EssaySubmissionDto?>();
 
             try
             {
-                var submission = await _essaySubmissionRepository.GetUserSubmissionForEssayAsync(userId, assessmentId);
-                var submissionDto = submission != null ? _mapper.Map<EssaySubmissionDto>(submission) : null;
+                var submission = await _essaySubmissionRepository.GetUserSubmissionForEssayAsync(userId, essayId);
+                
+                if (submission == null)
+                {
+                    response.Success = true;
+                    response.StatusCode = 200;
+                    response.Message = "User chưa nộp bài cho Essay này";
+                    response.Data = null;
+                    return response;
+                }
 
+                var submissionDto = _mapper.Map<EssaySubmissionDto>(submission);
                 response.Success = true;
                 response.StatusCode = 200;
-                response.Message = submission != null ? "Lấy submission của user thành công" : "User chưa nộp bài cho Essay này";
+                response.Message = "Lấy submission thành công";
                 response.Data = submissionDto;
 
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy submission của user {UserId} cho Assessment {AssessmentId}", userId, assessmentId);
+                _logger.LogError(ex, "Lỗi khi lấy submission của user {UserId} cho Essay {EssayId}", userId, essayId);
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Lỗi hệ thống khi lấy submission";

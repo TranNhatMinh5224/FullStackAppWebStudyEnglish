@@ -35,20 +35,17 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             return await _context.EssaySubmissions
                 .Include(s => s.User)
-                .Include(s => s.Assessment)
-                    .ThenInclude(a => a.Module)
+                .Include(s => s.Essay)
+                    .ThenInclude(e => e.Assessment)
+                        .ThenInclude(a => a.Module)
                 .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
         }
 
         public async Task<List<EssaySubmission>> GetSubmissionsByEssayIdAsync(int essayId)
         {
-            // Lấy Assessment ID từ Essay ID
-            var essay = await _context.Essays.FirstOrDefaultAsync(e => e.EssayId == essayId);
-            if (essay == null) return new List<EssaySubmission>();
-
             return await _context.EssaySubmissions
                 .Include(s => s.User)
-                .Where(s => s.AssessmentId == essay.AssessmentId)
+                .Where(s => s.EssayId == essayId)
                 .OrderByDescending(s => s.SubmittedAt)
                 .ToListAsync();
         }
@@ -56,8 +53,8 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<List<EssaySubmission>> GetSubmissionsByUserIdAsync(int userId)
         {
             return await _context.EssaySubmissions
-                .Include(s => s.Assessment)
-                    .ThenInclude(a => a.Essays)
+                .Include(s => s.Essay)
+                    .ThenInclude(e => e.Assessment)
                 .Where(s => s.UserId == userId)
                 .OrderByDescending(s => s.SubmittedAt)
                 .ToListAsync();
@@ -67,16 +64,18 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             return await _context.EssaySubmissions
                 .Include(s => s.User)
-                .Where(s => s.AssessmentId == assessmentId)
+                .Include(s => s.Essay)
+                .Where(s => s.Essay.AssessmentId == assessmentId)
                 .OrderByDescending(s => s.SubmittedAt)
                 .ToListAsync();
         }
 
-        public async Task<EssaySubmission?> GetUserSubmissionForEssayAsync(int userId, int assessmentId)
+        public async Task<EssaySubmission?> GetUserSubmissionForEssayAsync(int userId, int essayId)
         {
             return await _context.EssaySubmissions
-                .Include(s => s.Assessment)
-                .FirstOrDefaultAsync(s => s.UserId == userId && s.AssessmentId == assessmentId);
+                .Include(s => s.Essay)
+                    .ThenInclude(e => e.Assessment)
+                .FirstOrDefaultAsync(s => s.UserId == userId && s.EssayId == essayId);
         }
 
         public async Task<EssaySubmission> UpdateSubmissionAsync(EssaySubmission submission)

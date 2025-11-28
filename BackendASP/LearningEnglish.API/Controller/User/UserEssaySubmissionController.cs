@@ -84,8 +84,8 @@ namespace LearningEnglish.API.Controller.User
         
         // Kiểm tra học sinh đã nộp bài cho Essay nào đó chưa
       
-        [HttpGet("submission-status/assessment/{assessmentId}")]
-        public async Task<IActionResult> GetSubmissionStatus(int assessmentId)
+        [HttpGet("submission-status/essay/{essayId}")]
+        public async Task<IActionResult> GetSubmissionStatus(int essayId)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out int userId))
@@ -93,7 +93,7 @@ namespace LearningEnglish.API.Controller.User
                 return BadRequest("Không thể lấy thông tin người dùng từ token");
             }
 
-            var result = await _essaySubmissionService.GetUserSubmissionForEssayAsync(userId, assessmentId);
+            var result = await _essaySubmissionService.GetUserSubmissionForEssayAsync(userId, essayId);
 
             if (result.Success)
             {

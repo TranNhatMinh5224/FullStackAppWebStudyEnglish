@@ -7,8 +7,8 @@ namespace LearningEnglish.Application.Validators.EssayValidators
     {
         public CreateEssaySubmissionDtoValidator()
         {
-            RuleFor(x => x.AssessmentId)
-                .GreaterThan(0).WithMessage("Assessment ID phải lớn hơn 0");
+            RuleFor(x => x.EssayId)
+                .GreaterThan(0).WithMessage("Essay ID phải lớn hơn 0");
 
             RuleFor(x => x.TextContent)
                 .NotEmpty().WithMessage("Nội dung bài làm không được để trống")

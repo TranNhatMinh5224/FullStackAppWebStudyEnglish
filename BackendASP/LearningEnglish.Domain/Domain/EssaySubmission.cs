@@ -6,7 +6,7 @@ namespace LearningEnglish.Domain.Entities;
 public class EssaySubmission
 {
     public int SubmissionId { get; set; }
-    public int AssessmentId { get; set; }
+    public int EssayId { get; set; }
     public int UserId { get; set; }
 
     // Nội dung bài làm
@@ -16,5 +16,5 @@ public class EssaySubmission
 
     // Navigation properties
     public User User { get; set; } = null!;
-    public Assessment Assessment { get; set; } = null!;
+    public Essay Essay { get; set; } = null!;
 }
