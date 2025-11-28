@@ -9,7 +9,7 @@ namespace LearningEnglish.Application.Interface
         /// Create new pronunciation assessment with Azure AI
         /// </summary>
         Task<ServiceResponse<PronunciationAssessmentDto>> CreateAssessmentAsync(
-            CreatePronunciationAssessmentDto dto, 
+            CreatePronunciationAssessmentDto dto,
             int userId);
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace LearningEnglish.Application.Interface
         /// Get assessments by FlashCard
         /// </summary>
         Task<ServiceResponse<List<ListPronunciationAssessmentDto>>> GetFlashCardAssessmentsAsync(
-            int flashCardId, 
+            int flashCardId,
             int userId);
 
         /// <summary>

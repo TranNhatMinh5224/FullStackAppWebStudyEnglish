@@ -1,3 +1,4 @@
+
 using AutoMapper;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
@@ -28,7 +29,7 @@ namespace LearningEnglish.Application.Service
         }
 
         public async Task<ServiceResponse<PronunciationAssessmentDto>> CreateAssessmentAsync(
-            CreatePronunciationAssessmentDto dto, 
+            CreatePronunciationAssessmentDto dto,
             int userId)
         {
             var response = new ServiceResponse<PronunciationAssessmentDto>();
@@ -37,8 +38,8 @@ namespace LearningEnglish.Application.Service
             {
                 // 1. Commit audio from temp to real
                 var commitResult = await _minioFileStorage.CommitFileAsync(
-                    dto.AudioTempKey, 
-                    BUCKET_NAME, 
+                    dto.AudioTempKey,
+                    BUCKET_NAME,
                     "real");
 
                 if (!commitResult.Success || string.IsNullOrEmpty(commitResult.Data))
@@ -81,7 +82,7 @@ namespace LearningEnglish.Application.Service
 
                     // 6. Call Azure Speech Service
                     var azureResult = await _azureSpeechService.AssessPronunciationAsync(
-                        audioUrl, 
+                        audioUrl,
                         dto.ReferenceText);
 
                     if (azureResult.Success)
@@ -95,12 +96,12 @@ namespace LearningEnglish.Application.Service
                         savedAssessment.DetailedResultJson = azureResult.DetailedResultJson;
                         savedAssessment.AzureRawResponse = azureResult.RawResponse;
                         savedAssessment.Feedback = GenerateFeedback(azureResult);
-                        
+
                         // 🆕 Serialize and save word-level data
                         savedAssessment.WordsDataJson = System.Text.Json.JsonSerializer.Serialize(azureResult.Words);
                         savedAssessment.ProblemPhonemesJson = System.Text.Json.JsonSerializer.Serialize(azureResult.ProblemPhonemes);
                         savedAssessment.StrongPhonemesJson = System.Text.Json.JsonSerializer.Serialize(azureResult.StrongPhonemes);
-                        
+
                         savedAssessment.Status = AssessmentStatus.Completed;
                         savedAssessment.UpdatedAt = DateTime.UtcNow;
                     }
@@ -117,7 +118,7 @@ namespace LearningEnglish.Application.Service
                     // 7. Map to DTO
                     var resultDto = _mapper.Map<PronunciationAssessmentDto>(savedAssessment);
                     resultDto.AudioUrl = audioUrl; // Use public URL
-                    
+
                     // 🆕 Include word-level details in response
                     resultDto.Words = azureResult.Words;
                     resultDto.ProblemPhonemes = azureResult.ProblemPhonemes;
@@ -125,8 +126,8 @@ namespace LearningEnglish.Application.Service
 
                     response.Success = true;
                     response.Data = resultDto;
-                    response.Message = azureResult.Success 
-                        ? "Pronunciation assessed successfully" 
+                    response.Message = azureResult.Success
+                        ? "Pronunciation assessed successfully"
                         : "Audio uploaded but assessment failed";
                 }
                 catch
@@ -232,7 +233,7 @@ namespace LearningEnglish.Application.Service
         }
 
         public async Task<ServiceResponse<List<ListPronunciationAssessmentDto>>> GetFlashCardAssessmentsAsync(
-            int flashCardId, 
+            int flashCardId,
             int userId)
         {
             var response = new ServiceResponse<List<ListPronunciationAssessmentDto>>();
@@ -240,7 +241,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var assessments = await _repository.GetByFlashCardIdAsync(flashCardId);
-                
+
                 // Filter by userId for security
                 var userAssessments = assessments.Where(a => a.UserId == userId).ToList();
                 var dtos = _mapper.Map<List<ListPronunciationAssessmentDto>>(userAssessments);
@@ -313,17 +314,17 @@ namespace LearningEnglish.Application.Service
                 {
                     TotalAssessments = assessments.Count,
                     CompletedAssessments = completedAssessments.Count,
-                    AverageAccuracy = completedAssessments.Any() 
-                        ? completedAssessments.Average(a => a.AccuracyScore) 
+                    AverageAccuracy = completedAssessments.Any()
+                        ? completedAssessments.Average(a => a.AccuracyScore)
                         : 0,
-                    AverageFluency = completedAssessments.Any() 
-                        ? completedAssessments.Average(a => a.FluencyScore) 
+                    AverageFluency = completedAssessments.Any()
+                        ? completedAssessments.Average(a => a.FluencyScore)
                         : 0,
-                    AverageCompleteness = completedAssessments.Any() 
-                        ? completedAssessments.Average(a => a.CompletenessScore) 
+                    AverageCompleteness = completedAssessments.Any()
+                        ? completedAssessments.Average(a => a.CompletenessScore)
                         : 0,
-                    AveragePronunciation = completedAssessments.Any() 
-                        ? completedAssessments.Average(a => a.PronunciationScore) 
+                    AveragePronunciation = completedAssessments.Any()
+                        ? completedAssessments.Average(a => a.PronunciationScore)
                         : 0,
                     RecentAssessments = completedAssessments
                         .OrderByDescending(a => a.CreatedAt)
@@ -437,7 +438,7 @@ namespace LearningEnglish.Application.Service
 
         // 🆕 Get progress analytics over time
         public async Task<ServiceResponse<ProgressAnalytics>> GetProgressAnalyticsAsync(
-            int userId, 
+            int userId,
             int months = 3)
         {
             var response = new ServiceResponse<ProgressAnalytics>();
