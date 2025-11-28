@@ -183,43 +183,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
 
-        // Controller Teacher - Tham gia khóa học của teacher khác
-
-        // [HttpPost("teacher/join-course")]
-        // [Authorize(Roles = "Teacher")]
-        // public async Task<IActionResult> JoinCourse([FromBody] JoinCourseTeacherDto joinDto)
-        // {
-        //     try
-        //     {
-        //         if (!ModelState.IsValid)
-        //         {
-        //             return BadRequest(ModelState);
-        //         }
-
-        //         // Lấy TeacherId từ JWT token
-        //         var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //         if (!int.TryParse(teacherIdClaim, out int teacherId))
-        //         {
-        //             return Unauthorized(new { message = "Invalid teacher credentials" });
-        //         }
-
-        //         // Convert JoinCourseTeacherDto to EnrollCourseDto
-        //         var enrollDto = new EnrollCourseDto { CourseId = joinDto.CourseId };
-        //         var result = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, teacherId);
-
-        //         if (!result.Success)
-        //         {
-        //             return BadRequest(result);
-        //         }
-
-        //         return Ok(result);
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _logger.LogError(ex, "Error in JoinCourse endpoint");
-        //         return StatusCode(500, new { message = "Internal server error" });
-        //     }
-        // }
 
 
         // Controller Admin - Cập nhật khóa học

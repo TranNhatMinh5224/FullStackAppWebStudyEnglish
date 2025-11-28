@@ -19,6 +19,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _lessonService = lessonService;
             _logger = logger;
         }
+        // Controller thêm Lesson mới Admin 
 
         [HttpPost("admin/add")]
         [Authorize(Roles = "Admin")]
@@ -26,9 +27,17 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         {
             try
             {
-                if (!ModelState.IsValid) return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
                 var response = await _lessonService.AdminAddLesson(dto);
-                if (!response.Success) return BadRequest(response);
+
+                if (!response.Success) 
+                {
+                    return BadRequest(response);
+                }
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -37,6 +46,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 return StatusCode(500, "Internal server error");
             }
         }
+        // Controller thêm Lesson mới Teacher
 
         [HttpPost("teacher/add")]
         [Authorize(Roles = "Teacher")]
@@ -44,9 +54,15 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         {
             try
             {
-                if (!ModelState.IsValid) return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
                 var response = await _lessonService.TeacherAddLesson(dto);
-                if (!response.Success) return BadRequest(response);
+                if (!response.Success)
+                {
+                    return BadRequest(response);
+                }
                 return Ok(response);
             }
             catch (Exception ex)
@@ -55,6 +71,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 return StatusCode(500, "Internal server error");
             }
         }
+        // Controller xóa Lesson
 
         [HttpDelete("delete/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
@@ -96,6 +113,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 return StatusCode(500, new { Message = "Internal server error" });
             }
         }
+        // Controller cập nhật Lesson
 
         [HttpPut("update/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
@@ -140,6 +158,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 return StatusCode(500, new { Message = "Internal server error" });
             }
         }
+        // Controller lấy Lesson theo ID
 
         [HttpGet("get/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
@@ -180,6 +199,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 return StatusCode(500, "Internal server error");
             }
         }
+        // Controller lấy danh sách Lesson theo Course ID
 
         [HttpGet("course/{courseId}")]
         public async Task<IActionResult> GetListLessonByCourseId(int courseId)
