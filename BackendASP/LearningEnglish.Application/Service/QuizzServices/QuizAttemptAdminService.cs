@@ -3,6 +3,7 @@ using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
+using LearningEnglish.Application.Common.Helpers;
 
 namespace LearningEnglish.Application.Service
 {
@@ -126,7 +127,7 @@ namespace LearningEnglish.Application.Service
                         UserName = $"{a.User?.FirstName} {a.User?.LastName}".Trim(),
                         AttemptNumber = a.AttemptNumber,
                         TotalScore = a.TotalScore,
-                        Percentage = a.Quiz?.TotalPossibleScore > 0 ? (a.TotalScore / a.Quiz.TotalPossibleScore) * 100 : 0,
+                        Percentage = CalculatePercentage(a, a.Quiz),
                         IsPassed = a.Quiz?.PassingScore.HasValue == true ? a.TotalScore >= a.Quiz.PassingScore.Value : false,
                         SubmittedAt = a.SubmittedAt,
                         TimeSpentSeconds = a.TimeSpentSeconds
@@ -168,6 +169,21 @@ namespace LearningEnglish.Application.Service
             }
 
             return response;
+        }
+
+        private double CalculatePercentage(QuizAttempt attempt, Quiz? quiz)
+        {
+            if (quiz == null || quiz.TotalQuestions <= 0) return 0;
+
+            int correctQuestions = 0;
+
+            if (!string.IsNullOrEmpty(attempt.ScoresJson))
+            {
+                var scores = AnswerNormalizer.DeserializeScoresJson(attempt.ScoresJson);
+                correctQuestions = scores.Count(s => s.Value > 0);
+            }
+
+            return ((double)correctQuestions / quiz.TotalQuestions) * 100;
         }
     }
 }
