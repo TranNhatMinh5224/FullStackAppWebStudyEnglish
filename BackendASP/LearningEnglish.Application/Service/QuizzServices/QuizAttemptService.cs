@@ -373,9 +373,17 @@ namespace LearningEnglish.Application.Service
                 {
                     result.TotalScore = attempt.TotalScore;
 
-                    // Tính percentage (điểm hiện tại / điểm tối đa có thể)
-                    var maxPossibleScore = quiz.TotalPossibleScore;
-                    result.Percentage = maxPossibleScore > 0 ? (attempt.TotalScore / maxPossibleScore) * 100 : 0;
+                    // Tính percentage dựa trên số câu đúng / tổng số câu hỏi
+                    int totalQuestions = quiz.TotalQuestions;
+                    int correctQuestions = 0;
+
+                    if (!string.IsNullOrEmpty(attempt.ScoresJson))
+                    {
+                        var scores = AnswerNormalizer.DeserializeScoresJson(attempt.ScoresJson);
+                        correctQuestions = scores.Count(s => s.Value > 0); // Đếm câu có điểm > 0 (đúng)
+                    }
+
+                    result.Percentage = totalQuestions > 0 ? (decimal)((double)correctQuestions / totalQuestions) * 100 : 0;
 
                     // Kiểm tra pass/fail
                     result.IsPassed = quiz.PassingScore.HasValue ? attempt.TotalScore >= quiz.PassingScore.Value : false;
