@@ -21,162 +21,60 @@ namespace LearningEnglish.API.Controller.User
             _streakService = streakService;
         }
 
-        /// <summary>
-        /// Get current streak information for authenticated user
-        /// </summary>
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                throw new UnauthorizedAccessException("User not authenticated");
+            }
+            return userId;
+        }
+
+        // GET: api/user/streak - Get current streak information (days count, last activity)
         [HttpGet]
         public async Task<IActionResult> GetCurrentStreak()
         {
-            try
-            {
-                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new ServiceResponse<object>
-                    {
-                        Success = false,
-                        Message = "User not authenticated"
-                    });
-                }
-
-                var result = await _streakService.GetCurrentStreakAsync(userId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ServiceResponse<object>
-                {
-                    Success = false,
-                    Message = $"Error retrieving streak: {ex.Message}"
-                });
-            }
+            var userId = GetCurrentUserId();
+            var result = await _streakService.GetCurrentStreakAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Get longest streak record for authenticated user
-        /// </summary>
+        // GET: api/user/streak/longest - Get longest streak record for user
         [HttpGet("longest")]
         public async Task<IActionResult> GetLongestStreak()
         {
-            try
-            {
-                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new ServiceResponse<object>
-                    {
-                        Success = false,
-                        Message = "User not authenticated"
-                    });
-                }
-
-                var result = await _streakService.GetLongestStreakAsync(userId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ServiceResponse<object>
-                {
-                    Success = false,
-                    Message = $"Error retrieving longest streak: {ex.Message}"
-                });
-            }
+            var userId = GetCurrentUserId();
+            var result = await _streakService.GetLongestStreakAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Get streak history for the last N days (default 30)
-        /// </summary>
+        // GET: api/user/streak/history - Get streak activity history for the last N days (default: 30, max: 365)
         [HttpGet("history")]
         public async Task<IActionResult> GetStreakHistory([FromQuery] int days = 30)
         {
-            try
+            if (days < 1 || days > 365)
             {
-                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new ServiceResponse<object>
-                    {
-                        Success = false,
-                        Message = "User not authenticated"
-                    });
-                }
-
-                if (days < 1 || days > 365)
-                {
-                    return BadRequest(new ServiceResponse<object>
-                    {
-                        Success = false,
-                        Message = "Days must be between 1 and 365"
-                    });
-                }
-
-                var result = await _streakService.GetStreakHistoryAsync(userId, days);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ServiceResponse<object>
+                return BadRequest(new ServiceResponse<object>
                 {
                     Success = false,
-                    Message = $"Error retrieving streak history: {ex.Message}"
+                    Message = "Days must be between 1 and 365"
                 });
             }
+
+            var userId = GetCurrentUserId();
+            var result = await _streakService.GetStreakHistoryAsync(userId, days);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Reset streak for authenticated user (Admin only or testing)
-        /// </summary>
+        // POST: api/user/streak/reset - Reset streak to zero (Admin only, for testing purposes)
         [HttpPost("reset")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ResetStreak()
         {
-            try
-            {
-                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new ServiceResponse<object>
-                    {
-                        Success = false,
-                        Message = "User not authenticated"
-                    });
-                }
-
-                var result = await _streakService.ResetStreakAsync(userId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ServiceResponse<object>
-                {
-                    Success = false,
-                    Message = $"Error resetting streak: {ex.Message}"
-                });
-            }
+            var userId = GetCurrentUserId();
+            var result = await _streakService.ResetStreakAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

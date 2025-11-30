@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
+
 namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
@@ -16,33 +17,20 @@ namespace LearningEnglish.API.Controller.User
             _quizService = quizService;
         }
 
-        // Lấy thông tin đầy đủ của Quiz theo ID (dành cho học sinh)
+        // GET: api/User/Quizz/{assessmentId} - Get all quizzes by assessment ID (for students)
         [HttpGet("Quizz/{assessmentId}")]
         public async Task<IActionResult> GetQuizInformation(int assessmentId)
         {
             var result = await _quizService.GetQuizzesByAssessmentIdAsync(assessmentId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-
-            return NotFound(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
+        // GET: api/User/quiz/{quizId} - Get quiz by ID (for students)
         [HttpGet("quiz/{quizId}")]
         public async Task<IActionResult> GetQuizById(int quizId)
         {
             var result = await _quizService.GetQuizByIdAsync(quizId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return NotFound(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
-
     }
 }

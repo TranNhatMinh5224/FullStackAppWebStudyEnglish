@@ -171,16 +171,18 @@ namespace LearningEnglish.Application.DTOs
         public string ClassCode { get; set; } = string.Empty;
     }
     // DTO cập nhật khóa học (Admin) - Request
+    // ✅ DTO cập nhật khóa học (Admin) - Hỗ trợ PARTIAL UPDATE
     public class AdminUpdateCourseRequestDto
     {
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
+        // ✅ Nullable để phân biệt: không gửi vs gửi giá trị rỗng
+        public string? Title { get; set; }
+        public string? Description { get; set; }
         public string? ImageTempKey { get; set; }
         public string? ImageType { get; set; }
         public decimal? Price { get; set; }
-        public int MaxStudent { get; set; } = 0;
-        public bool IsFeatured { get; set; } = false;
-        public CourseType Type { get; set; } = CourseType.System;
+        public int? MaxStudent { get; set; }
+        public bool? IsFeatured { get; set; }
+        public CourseType? Type { get; set; }
     }
 
     // DTO cập nhật khóa học (Teacher) - Request

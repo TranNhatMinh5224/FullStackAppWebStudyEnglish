@@ -31,43 +31,28 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
         }
 
-       
-        // Lấy thông tin module theo ID với chi tiết
-        
+        // GET: api/ATModule/{moduleId} - Get module by ID with details
         [HttpGet("{moduleId}")]
         public async Task<IActionResult> GetModule(int moduleId)
         {
             var userId = GetCurrentUserId();
             var result = await _moduleService.GetModuleByIdAsync(moduleId, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy tất cả module theo lesson ID
+        // GET: api/ATModule/lesson/{lessonId} - Get all modules by lesson ID
         [HttpGet("lesson/{lessonId}")]
         public async Task<IActionResult> GetModulesByLesson(int lessonId)
         {
             var userId = GetCurrentUserId();
             var result = await _moduleService.GetModulesByLessonIdAsync(lessonId, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Tạo module mới
+        // POST: api/ATModule - Create new module
         [HttpPost]
         public async Task<IActionResult> CreateModule([FromBody] CreateModuleDto createModuleDto)
         {
-            // Kiểm tra validation data đầu vào
             if (!ModelState.IsValid)
             {
                 return BadRequest(new 
@@ -81,20 +66,15 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
             var userId = GetCurrentUserId();
             var result = await _moduleService.CreateModuleAsync(createModuleDto, userId);
-
-            if (result.Success)
-            {
-                return CreatedAtAction(nameof(GetModule), new { moduleId = result.Data!.ModuleId }, result);
-            }
-
-            return BadRequest(result);
+            return result.Success 
+                ? CreatedAtAction(nameof(GetModule), new { moduleId = result.Data!.ModuleId }, result)
+                : StatusCode(result.StatusCode, result);
         }
 
-        // Cập nhật module (Admin có thể cập nhật bất kỳ, Teacher chỉ module của mình)
+        // PUT: api/ATModule/{moduleId} - Update module (Admin: any module, Teacher: own modules only)
         [HttpPut("{moduleId}")]
         public async Task<IActionResult> UpdateModule(int moduleId, [FromBody] UpdateModuleDto updateModuleDto)
         {
-            // Kiểm tra validation data đầu vào
             if (!ModelState.IsValid)
             {
                 return BadRequest(new 
@@ -109,49 +89,17 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
             var result = await _moduleService.UpdateModuleWithAuthorizationAsync(moduleId, updateModuleDto, userId, userRole);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            if (result.StatusCode == 404)
-            {
-                return NotFound(result);
-            }
-
-            if (result.StatusCode == 403)
-            {
-                return StatusCode(403, result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Xóa module (Admin có thể xóa bất kỳ, Teacher chỉ module của mình)
+        // DELETE: api/ATModule/{moduleId} - Delete module (Admin: any module, Teacher: own modules only)
         [HttpDelete("{moduleId}")]
         public async Task<IActionResult> DeleteModule(int moduleId)
         {
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
             var result = await _moduleService.DeleteModuleWithAuthorizationAsync(moduleId, userId, userRole);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            if (result.StatusCode == 404)
-            {
-                return NotFound(result);
-            }
-
-            if (result.StatusCode == 403)
-            {
-                return StatusCode(403, result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

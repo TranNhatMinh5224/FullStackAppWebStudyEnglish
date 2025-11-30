@@ -17,111 +17,52 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _quizSectionService = quizSectionService;
         }
 
-
+        // POST: api/admin/quiz-sections - Create a new quiz section
         [HttpPost]
         public async Task<IActionResult> CreateQuizSection([FromBody] CreateQuizSectionDto createDto)
         {
-            try
-            {
-                // FluentValidation tự động validate với ModelState
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                var result = await _quizSectionService.CreateQuizSectionAsync(createDto);
-
-                if (result.Success)
-                    return CreatedAtAction(nameof(GetQuizSectionById), new { id = result.Data?.QuizSectionId }, result);
-
-                return BadRequest(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var result = await _quizSectionService.CreateQuizSectionAsync(createDto);
+            return result.Success 
+                ? CreatedAtAction(nameof(GetQuizSectionById), new { id = result.Data?.QuizSectionId }, result)
+                : StatusCode(result.StatusCode, result);
         }
 
-
+        // GET: api/admin/quiz-sections/{id} - Get quiz section by ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetQuizSectionById(int id)
         {
-            try
-            {
-                var result = await _quizSectionService.GetQuizSectionByIdAsync(id);
-
-                if (result.Success)
-                    return Ok(result);
-
-                return NotFound(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var result = await _quizSectionService.GetQuizSectionByIdAsync(id);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy danh sách phần quiz theo Quiz ID
+        // GET: api/admin/quiz-sections/by-quiz/{quizId} - Get all quiz sections by quiz ID
         [HttpGet("by-quiz/{quizId}")]
         public async Task<IActionResult> GetQuizSectionsByQuizId(int quizId)
         {
-            try
-            {
-                var result = await _quizSectionService.GetQuizSectionsByQuizIdAsync(quizId);
-
-                if (result.Success)
-                    return Ok(result);
-
-                return BadRequest(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var result = await _quizSectionService.GetQuizSectionsByQuizIdAsync(quizId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
+        // PUT: api/admin/quiz-sections/{id} - Update quiz section
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateQuizSection(int id, [FromBody] UpdateQuizSectionDto updateDto)
         {
-            try
-            {
-                // FluentValidation tự động validate với ModelState
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                var result = await _quizSectionService.UpdateQuizSectionAsync(id, updateDto);
-
-                if (result.Success)
-                    return Ok(result);
-
-                return BadRequest(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var result = await _quizSectionService.UpdateQuizSectionAsync(id, updateDto);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Xóa phần quiz
+        // DELETE: api/admin/quiz-sections/{id} - Delete quiz section
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteQuizSection(int id)
         {
-            try
-            {
-                var result = await _quizSectionService.DeleteQuizSectionAsync(id);
-
-                if (result.Success)
-                    return Ok(result);
-
-                return BadRequest(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var result = await _quizSectionService.DeleteQuizSectionAsync(id);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

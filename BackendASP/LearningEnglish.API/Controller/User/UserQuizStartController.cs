@@ -18,75 +18,52 @@ namespace LearningEnglish.API.Controller.User
             _quizAttemptService = quizAttemptService;
         }
 
-        // Bắt đầu làm quiz
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+        }
+
+        // POST: api/User/QuizAttempt/start/{quizId} - Start quiz attempt
         [HttpPost("start/{quizId}")]
         public async Task<IActionResult> StartQuizAttempt(int quizId)
         {
-            // Lấy userId từ token
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return Unauthorized(new { message = "Invalid user ID" });
-            }
 
             var result = await _quizAttemptService.StartQuizAttemptAsync(quizId, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Submit bài thi
+        // POST: api/User/QuizAttempt/submit/{attemptId} - Submit quiz attempt
         [HttpPost("submit/{attemptId}")]
         public async Task<IActionResult> SubmitQuizAttempt(int attemptId)
         {
             var result = await _quizAttemptService.SubmitQuizAttemptAsync(attemptId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Resume attempt (cho trường hợp disconnect rồi quay lại)
+        // GET: api/User/QuizAttempt/resume/{attemptId} - Resume quiz attempt after disconnect
         [HttpGet("resume/{attemptId}")]
         public async Task<IActionResult> ResumeQuizAttempt(int attemptId)
         {
             var result = await _quizAttemptService.ResumeQuizAttemptAsync(attemptId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Update câu trả lời và tính điểm ngay lập tức (real-time scoring)
-        // Format của UserAnswer theo từng loại câu hỏi:
+        // POST: api/User/QuizAttempt/update-answer/{attemptId} - Update answer and calculate score in real-time
+        // UserAnswer format by question type:
         // - MultipleChoice/TrueFalse: int (optionId) → {"questionId": 1, "userAnswer": 1}
         // - MultipleAnswers: List<int> → {"questionId": 1, "userAnswer": [1, 2, 3]}
         // - FillBlank: string → {"questionId": 1, "userAnswer": "answer text"}
         // - Matching: Dictionary<int, int> → {"questionId": 1, "userAnswer": {"1": 2, "3": 4}}
         // - Ordering: List<int> → {"questionId": 1, "userAnswer": [3, 1, 2, 4]}
-        // Khi user làm câu nào, sẽ update answer và chấm điểm luôn.
-        // Nếu làm đúng rồi sửa lại sai thì điểm sẽ từ có điểm thành 0 điểm.
         [HttpPost("update-answer/{attemptId}")]
         public async Task<IActionResult> UpdateAnswerAndScore(int attemptId, [FromBody] UpdateAnswerRequestDto request)
         {
             var result = await _quizAttemptService.UpdateAnswerAndScoreAsync(attemptId, request);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

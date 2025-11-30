@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.Interface;
-using LearningEnglish.Application.DTOs;
-using LearningEnglish.Domain.Entities;
-
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
@@ -19,89 +16,53 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _quizAttemptAdminService = quizAttemptAdminService;
         }
 
-        // Lấy danh sách tất cả attempts của một quiz
+        // GET: api/AdminTeacher/QuizAttempt/quiz/{quizId} - Lấy tất cả các lần làm bài của một quiz
         [HttpGet("quiz/{quizId}")]
         public async Task<IActionResult> GetQuizAttempts(int quizId)
         {
             var result = await _quizAttemptAdminService.GetQuizAttemptsAsync(quizId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy chi tiết một attempt
+        // GET: api/AdminTeacher/QuizAttempt/{attemptId} - Lấy chi tiết một lần làm bài
         [HttpGet("{attemptId}")]
         public async Task<IActionResult> GetAttemptDetails(int attemptId)
         {
             var result = await _quizAttemptAdminService.GetAttemptDetailsAsync(attemptId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return NotFound(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Force submit một attempt (cho admin)
+        // POST: api/AdminTeacher/QuizAttempt/force-submit/{attemptId} - Bắt buộc nộp bài (chỉ Admin)
         [Authorize(Roles = "Admin")]
         [HttpPost("force-submit/{attemptId}")]
         public async Task<IActionResult> ForceSubmitAttempt(int attemptId)
         {
             var result = await _quizAttemptAdminService.ForceSubmitAttemptAsync(attemptId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy thống kê attempts của một quiz
+        // GET: api/AdminTeacher/QuizAttempt/stats/{quizId} - Lấy thống kê các lần làm bài của quiz
         [HttpGet("stats/{quizId}")]
         public async Task<IActionResult> GetQuizAttemptStats(int quizId)
         {
             var result = await _quizAttemptAdminService.GetQuizAttemptStatsAsync(quizId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy danh sách điểm của các user đã làm quiz
+        // GET: api/AdminTeacher/QuizAttempt/scores/{quizId} - Lấy điểm của các user đã hoàn thành quiz
         [HttpGet("scores/{quizId}")]
         public async Task<IActionResult> GetQuizScores(int quizId)
         {
             var result = await _quizAttemptAdminService.GetQuizScoresAsync(quizId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy lịch sử attempts của user cho một quiz
+        // GET: api/AdminTeacher/QuizAttempt/user/{userId}/quiz/{quizId} - Lấy lịch sử làm bài của user cho một quiz
         [HttpGet("user/{userId}/quiz/{quizId}")]
         public async Task<IActionResult> GetUserQuizAttempts(int userId, int quizId)
         {
             var result = await _quizAttemptAdminService.GetUserQuizAttemptsAsync(userId, quizId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

@@ -25,34 +25,22 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        // Lấy thông tin module với tiến độ của user
+        // GET: api/user/UserModule/{moduleId} - Get module with user progress
         [HttpGet("{moduleId}")]
         public async Task<IActionResult> GetModuleWithProgress(int moduleId)
         {
             var userId = GetCurrentUserId();
             var result = await _moduleService.GetModuleWithProgressAsync(moduleId, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy tất cả module trong lesson với tiến độ
+        // GET: api/user/UserModule/lesson/{lessonId} - Get all modules in lesson with user progress
         [HttpGet("lesson/{lessonId}")]
         public async Task<IActionResult> GetModulesWithProgress(int lessonId)
         {
             var userId = GetCurrentUserId();
             var result = await _moduleService.GetModulesWithProgressAsync(lessonId, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

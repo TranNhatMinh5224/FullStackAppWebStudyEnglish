@@ -14,7 +14,7 @@ namespace LearningEnglish.Application.Service
         private readonly IMapper _mapper;
         private readonly ILogger<UserCourseService> _logger;
 
-        // Đặt bucket + folder cho ảnh khóa học (giống TeacherCourseService)
+        
         private const string CourseImageBucket = "courses";
 
         public UserCourseService(
@@ -28,6 +28,7 @@ namespace LearningEnglish.Application.Service
             _mapper = mapper;
             _logger = logger;
         }
+        // Lấy danh sách khóa học hệ thống (System) cho User
      public async Task<ServiceResponse<IEnumerable<UserCourseListResponseDto>>> GetSystemCoursesAsync(int? userId = null)
         {
             var response = new ServiceResponse<IEnumerable<UserCourseListResponseDto>>();
@@ -53,6 +54,7 @@ namespace LearningEnglish.Application.Service
                 response.StatusCode = 200;
                 response.Data = courseDtos;
                 response.Message = "Lấy danh sách khóa học hệ thống thành công";
+                response.Success = true;
 
                 _logger.LogInformation("User retrieved {Count} system courses", courseDtos.Count());
             }

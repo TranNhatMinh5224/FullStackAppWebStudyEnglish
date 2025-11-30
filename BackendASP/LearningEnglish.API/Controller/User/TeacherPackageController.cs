@@ -21,61 +21,25 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-
-        // Lấy danh sách tất cả gói teacher (cho user xem để mua)
-
+        // GET: api/user/teacher-packages - Retrieve all available teacher packages for purchase
         [HttpGet("teacher-packages")]
         public async Task<IActionResult> GetTeacherPackages()
         {
-            try
-            {
-                var result = await _teacherPackageService.GetAllTeacherPackagesAsync();
-
-                if (!result.Success)
-                {
-                    _logger.LogWarning("Failed to get teacher packages: {Message}", result.Message);
-                    return BadRequest(result);
-                }
-
-                _logger.LogInformation("User retrieved {Count} teacher packages", result.Data?.Count ?? 0);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetTeacherPackages");
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+            var result = await _teacherPackageService.GetAllTeacherPackagesAsync();
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        
-        // Lấy chi tiết gói teacher theo ID
-        
+        // GET: api/user/teacher-packages/{id} - Get detailed information about a specific teacher package
         [HttpGet("teacher-packages/{id}")]
         public async Task<IActionResult> GetTeacherPackageById(int id)
         {
-            try
+            if (id <= 0)
             {
-                if (id <= 0)
-                {
-                    return BadRequest(new { message = "Invalid package ID" });
-                }
-
-                var result = await _teacherPackageService.GetTeacherPackageByIdAsync(id);
-
-                if (!result.Success)
-                {
-                    _logger.LogWarning("Teacher package {Id} not found: {Message}", id, result.Message);
-                    return NotFound(new { message = result.Message });
-                }
-
-                _logger.LogInformation("User retrieved teacher package {Id}", id);
-                return Ok(result);
+                return BadRequest(new { message = "Invalid package ID" });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetTeacherPackageById for Id: {Id}", id);
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+
+            var result = await _teacherPackageService.GetTeacherPackageByIdAsync(id);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

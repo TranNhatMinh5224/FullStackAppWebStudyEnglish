@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
 using System.Security.Claims;
-using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -14,144 +13,85 @@ namespace LearningEnglish.API.Controller.User
     {
         private readonly IUserEnrollmentService _userEnrollmentService;
         private readonly IEnrollmentQueryService _enrollmentQueryService;
-        private readonly ILogger<EnrollCourseController> _logger;
 
         public EnrollCourseController(
             IUserEnrollmentService userEnrollmentService,
-            IEnrollmentQueryService enrollmentQueryService,
-            ILogger<EnrollCourseController> logger)
+            IEnrollmentQueryService enrollmentQueryService)
         {
             _userEnrollmentService = userEnrollmentService;
             _enrollmentQueryService = enrollmentQueryService;
-            _logger = logger;
         }
 
-       
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+        }
+
+        // POST: api/user/enroll/course - Đăng ký khóa học
         [HttpPost("course")]
         public async Task<IActionResult> EnrollInCourse([FromBody] EnrollCourseDto enrollDto)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                // Lấy UserId từ JWT token
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new { message = "Invalid user credentials" });
-                }
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return Unauthorized(new { message = "Invalid user credentials" });
 
-                var result = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, userId);
+            var result = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, userId);
 
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in EnrollInCourse endpoint");
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+            return result.Success 
+                ? Ok(result) 
+                : StatusCode(result.StatusCode, result);
         }
 
-
-        // Controller - Hủy đăng ký khóa học
-
+        // DELETE: api/user/enroll/course/{courseId} - Hủy đăng ký khóa học
         [HttpDelete("course/{courseId}")]
         public async Task<IActionResult> UnenrollFromCourse(int courseId)
         {
-            try
-            {
-                // Lấy UserId từ JWT token
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new { message = "Invalid user credentials" });
-                }
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return Unauthorized(new { message = "Invalid user credentials" });
 
-                var result = await _userEnrollmentService.UnenrollFromCourseAsync(courseId, userId);
+            var result = await _userEnrollmentService.UnenrollFromCourseAsync(courseId, userId);
 
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in UnenrollFromCourse endpoint for CourseId: {CourseId}", courseId);
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+            return result.Success 
+                ? Ok(result) 
+                : StatusCode(result.StatusCode, result);
         }
 
-      
-        // Controller Lấy danh sách khóa học đã đăng ký
-     
+        // GET: api/user/enroll/my-courses - Lấy danh sách khóa học đã đăng ký
         [HttpGet("my-courses")]
         public async Task<IActionResult> GetMyEnrolledCourses()
         {
-            try
-            {
-                // Lấy UserId từ JWT token
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new { message = "Invalid user credentials" });
-                }
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return Unauthorized(new { message = "Invalid user credentials" });
 
-                var result = await _enrollmentQueryService.GetMyEnrolledCoursesAsync(userId);
+            var result = await _enrollmentQueryService.GetMyEnrolledCoursesAsync(userId);
 
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetMyEnrolledCourses endpoint");
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+            return result.Success 
+                ? Ok(result) 
+                : StatusCode(result.StatusCode, result);
         }
+
+        // POST: api/user/enroll/join-by-class-code - Tham gia khóa học qua mã lớp
         [HttpPost("join-by-class-code")]
         public async Task<IActionResult> JoincourseByClassCode([FromBody] EnrollCourseByClassCodeDto joinDto)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                // Lấy UserId từ JWT token
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new { message = "Invalid user credentials" });
-                }
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return Unauthorized(new { message = "Invalid user credentials" });
 
-                var result = await _userEnrollmentService.EnrollInCourseByClassCodeAsync(joinDto.ClassCode, userId);
+            var result = await _userEnrollmentService.EnrollInCourseByClassCodeAsync(joinDto.ClassCode, userId);
 
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in JoincourseByClassCode endpoint");
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+            return result.Success 
+                ? Ok(result) 
+                : StatusCode(result.StatusCode, result);
         }
     }
 }

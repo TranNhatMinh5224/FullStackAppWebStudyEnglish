@@ -26,20 +26,17 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _logger = logger;
         }
 
+        // POST: api/files/temp-file - Upload temporary file with size validation
         [HttpPost("temp-file")]
         [RequestSizeLimit(52_428_800)]  // Max 50MB
         public async Task<IActionResult> UploadTemplateFile(IFormFile file, [FromQuery] string bucketName, [FromQuery] string tempFolder = "temp")
         {
             if (file == null || file.Length == 0)
-            {
                 return BadRequest("No file uploaded.");
-            }
-            if (string.IsNullOrEmpty(bucketName))
-            {
-                return BadRequest("Bucket name is required.");
-            }
 
-            // Validate file size based on content type
+            if (string.IsNullOrEmpty(bucketName))
+                return BadRequest("Bucket name is required.");
+
             var validationResult = ValidateFileSize(file, bucketName);
             if (!validationResult.IsValid)
             {
@@ -51,12 +48,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
 
             var result = await _minioFileStorage.UpLoadFileTempAsync(file, bucketName, tempFolder);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
-
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         private (bool IsValid, string ErrorMessage, string MaxSizeReadable) ValidateFileSize(IFormFile file, string bucketName)
@@ -103,6 +95,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return (true, string.Empty, maxSizeReadable);
         }
 
+        // DELETE: api/files/temp-file - Delete temporary file
         [HttpDelete("temp-file")]
         public async Task<IActionResult> DeleteTemp(
             [FromQuery] string bucketName,
@@ -114,20 +107,11 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             if (string.IsNullOrWhiteSpace(tempKey))
                 return BadRequest("tempKey is required.");
 
-            var result = await _minioFileStorage.DeleteFileAsync(
-                tempKey,
-                bucketName
-            );
-            if (result.Success)
-                return Ok(result);
-            return BadRequest(result);
+            var result = await _minioFileStorage.DeleteFileAsync(tempKey, bucketName);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        
-
-        /// <summary>
-        /// Manual trigger cleanup temp files (Admin only)
-        /// </summary>
+        // POST: api/files/cleanup-temp - Manual trigger cleanup temp files (Admin only)
         [HttpPost("cleanup-temp")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CleanupTempFiles(

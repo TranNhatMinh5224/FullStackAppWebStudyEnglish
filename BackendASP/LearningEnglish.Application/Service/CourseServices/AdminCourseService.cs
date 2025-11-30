@@ -31,18 +31,28 @@ namespace LearningEnglish.Application.Service
             _minioFileStorage = minioFileStorage;
         }
 
+
+
+
+
+
+        // Service cho Admin Lấy ra toàn bộ khóa học 
+
         public async Task<ServiceResponse<IEnumerable<AdminCourseListResponseDto>>> GetAllCoursesAsync()
         {
             var response = new ServiceResponse<IEnumerable<AdminCourseListResponseDto>>();
+            // IEnumerable : là  interface đại diện cho một tập hợp các đối tượng có thể được lặp qua. 
+
+
 
             try
             {
-                var courses = await _courseRepository.GetAllCourses();
-                var courseDtos = new List<AdminCourseListResponseDto>();
+                var courses = await _courseRepository.GetAllCourses(); // Lấy tất cả khóa học từ repository
+                var courseDtos = new List<AdminCourseListResponseDto>(); // Tạo danh sách rỗng để lưu trữ các DTO khóa học
 
                 foreach (var course in courses)
                 {
-                    var courseDto = _mapper.Map<AdminCourseListResponseDto>(course);
+                    var courseDto = _mapper.Map<AdminCourseListResponseDto>(course); // Ánh xạ entity khóa học sang DTO
 
                     // Thêm thống kê
                     courseDto.LessonCount = await _courseRepository.CountLessons(course.CourseId);
@@ -63,6 +73,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 response.StatusCode = 200;
+                response.Success = true;
                 response.Data = courseDtos;
                 response.Message = "Lấy danh sách khóa học thành công";
 
@@ -76,12 +87,26 @@ namespace LearningEnglish.Application.Service
                 _logger.LogError(ex, "Error in GetAllCoursesAsync");
             }
 
+
             return response;
         }
+
+
+
+
+
+
+
+
+
+
+
+        // Service cho Admin Tạo mới khóa học
 
         public async Task<ServiceResponse<CourseResponseDto>> AdminCreateCourseAsync(AdminCreateCourseRequestDto requestDto)
         {
             var response = new ServiceResponse<CourseResponseDto>();
+
 
             try
             {
@@ -98,10 +123,10 @@ namespace LearningEnglish.Application.Service
                     EnrollmentCount = 0
                 };
 
-                string? committedImageKey = null;
-                
+                string? committedImageKey = null; // Biến lưu trữ key của ảnh đã commit  
+
                 // Convert temp file → real file nếu có ImageTempKey
-                if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))
+                if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))  // nếu có ảnh tạm
                 {
                     var commitResult = await _minioFileStorage.CommitFileAsync(
                         requestDto.ImageTempKey,
@@ -109,7 +134,7 @@ namespace LearningEnglish.Application.Service
                         CourseImageFolder
                     );
 
-                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data)) // nếu commit không thành công or trả về key rỗng
                     {
                         response.Success = false;
                         response.StatusCode = 400;
@@ -117,9 +142,10 @@ namespace LearningEnglish.Application.Service
                         return response;
                     }
 
-                    committedImageKey = commitResult.Data;
-                    course.ImageKey = committedImageKey;
-                    course.ImageType = requestDto.ImageType;
+
+                    committedImageKey = commitResult.Data; // Lưu key ảnh đã commit
+                    course.ImageKey = committedImageKey; // Gán key ảnh cho course
+                    course.ImageType = requestDto.ImageType; // Gán kiểu ảnh cho course
                 }
 
                 try
@@ -129,13 +155,13 @@ namespace LearningEnglish.Application.Service
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "Database error while creating course");
-                    
+
                     // Rollback MinIO file
                     if (committedImageKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(committedImageKey, CourseImageBucket);
                     }
-                    
+
                     response.Success = false;
                     response.StatusCode = 500;
                     response.Message = "Lỗi database khi tạo khóa học";
@@ -160,6 +186,7 @@ namespace LearningEnglish.Application.Service
                 response.StatusCode = 201;
                 response.Data = courseResponseDto;
                 response.Message = "Tạo khóa học thành công";
+                response.Success = true;
 
                 _logger.LogInformation("Admin created course: {CourseTitle} (ID: {CourseId})", requestDto.Title, course.CourseId);
             }
@@ -173,6 +200,12 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
+
+
+
+
+
+        // Service cho Admin Cập nhật khóa học
 
         public async Task<ServiceResponse<CourseResponseDto>> AdminUpdateCourseAsync(int courseId, AdminUpdateCourseRequestDto requestDto)
         {
@@ -189,17 +222,27 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Cập nhật course
-                course.Title = requestDto.Title;
-                course.Description = requestDto.Description;
-                course.Price = requestDto.Price;
-                course.MaxStudent = requestDto.MaxStudent;
-                course.IsFeatured = requestDto.IsFeatured;
-                course.Type = requestDto.Type;
+                if (!string.IsNullOrWhiteSpace(requestDto.Title))
+                    course.Title = requestDto.Title;
+                
+                if (!string.IsNullOrWhiteSpace(requestDto.Description))
+                    course.Description = requestDto.Description;
+                
+                if (requestDto.Price.HasValue)
+                    course.Price = requestDto.Price.Value;
+                
+                if (requestDto.MaxStudent.HasValue && requestDto.MaxStudent.Value > 0)
+                    course.MaxStudent = requestDto.MaxStudent.Value;
+                
+                if (requestDto.IsFeatured.HasValue)
+                    course.IsFeatured = requestDto.IsFeatured.Value;
+                
+                if (requestDto.Type.HasValue)
+                    course.Type = requestDto.Type.Value;
 
                 string? newImageKey = null;
                 string? oldImageKey = !string.IsNullOrWhiteSpace(course.ImageKey) ? course.ImageKey : null;
-                
+
                 // Xử lý file ảnh: commit new first
                 if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))
                 {
@@ -230,20 +273,20 @@ namespace LearningEnglish.Application.Service
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "Database error while updating course");
-                    
+
                     // Rollback new image
                     if (newImageKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(newImageKey, CourseImageBucket);
                     }
-                    
+
                     response.Success = false;
                     response.StatusCode = 500;
                     response.Message = "Lỗi database khi cập nhật khóa học";
                     return response;
                 }
-                
-                // Delete old image only after successful DB update
+
+                // Delete key ảnh cũ 
                 if (oldImageKey != null && newImageKey != null)
                 {
                     try
@@ -258,8 +301,7 @@ namespace LearningEnglish.Application.Service
 
                 var courseResponseDto = _mapper.Map<CourseResponseDto>(course);
                 courseResponseDto.LessonCount = await _courseRepository.CountLessons(courseId);
-                courseResponseDto.StudentCount = await _courseRepository.CountEnrolledUsers(courseId);
-                courseResponseDto.TeacherName = course.Teacher != null
+                 courseResponseDto.TeacherName = course.Teacher != null
                     ? $"{course.Teacher.FirstName} {course.Teacher.LastName}"
                     : "System Admin";
 
@@ -276,6 +318,7 @@ namespace LearningEnglish.Application.Service
 
                 response.StatusCode = 200;
                 response.Data = courseResponseDto;
+                response.Success = true;
                 response.Message = "Cập nhật khóa học thành công";
 
                 _logger.LogInformation("Admin updated course {CourseId}", courseId);
@@ -290,6 +333,9 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
+
+
+        // Service cho Admin Xóa khóa học
 
         public async Task<ServiceResponse<bool>> DeleteCourseAsync(int courseId)
         {

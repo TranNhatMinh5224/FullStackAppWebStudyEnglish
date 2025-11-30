@@ -32,139 +32,86 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
 
-        // Tạo Assessment mới (Admin và Teacher)
+        // POST: api/AdminAndTeacher/Assessment/AdminAssessment/create - Create new assessment (Admin and Teacher)
         [HttpPost("create")]
         public async Task<IActionResult> CreateAssessment([FromBody] CreateAssessmentDto createAssessmentDto)
         {
-            try
-            {
-                var userRole = GetCurrentUserRole();
-                _logger.LogInformation("{UserRole} {UserId} đang tạo Assessment mới: {Title}", userRole, GetCurrentUserId(), createAssessmentDto.Title);
+            var userRole = GetCurrentUserRole();
+            _logger.LogInformation("{UserRole} {UserId} đang tạo Assessment mới: {Title}", userRole, GetCurrentUserId(), createAssessmentDto.Title);
 
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
+            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
+            var result = await _assessmentService.CreateAssessment(createAssessmentDto, teacherId);
 
-                var result = await _assessmentService.CreateAssessment(createAssessmentDto, teacherId);
-
-                if (!result.Success)
-                {
-                    _logger.LogWarning("Tạo Assessment thất bại: {Message}", result.Message);
-                    return StatusCode(result.StatusCode, result);
-                }
-
+            if (!result.Success)
+                _logger.LogWarning("Tạo Assessment thất bại: {Message}", result.Message);
+            else
                 _logger.LogInformation("Tạo Assessment thành công với ID: {AssessmentId}", result.Data?.AssessmentId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi tạo Assessment");
-                return StatusCode(500, "Có lỗi xảy ra khi tạo Assessment");
-            }
+
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy danh sách Assessment theo ModuleId (Admin và Teacher)
+        // GET: api/AdminAndTeacher/Assessment/AdminAssessment/module/{moduleId} - Get assessments by module ID (Admin and Teacher)
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetAssessmentsByModuleId(int moduleId)
         {
-            try
-            {
-                var userRole = GetCurrentUserRole();
-                _logger.LogInformation("{UserRole} {UserId} đang lấy danh sách Assessment cho Module {ModuleId}", userRole, GetCurrentUserId(), moduleId);
+            var userRole = GetCurrentUserRole();
+            _logger.LogInformation("{UserRole} {UserId} đang lấy danh sách Assessment cho Module {ModuleId}", userRole, GetCurrentUserId(), moduleId);
 
-                var result = await _assessmentService.GetAssessmentsByModuleId(moduleId);
+            var result = await _assessmentService.GetAssessmentsByModuleId(moduleId);
 
-                if (!result.Success)
-                {
-                    _logger.LogWarning("Lấy danh sách Assessment thất bại: {Message}", result.Message);
-                    return StatusCode(result.StatusCode, result);
-                }
-
+            if (!result.Success)
+                _logger.LogWarning("Lấy danh sách Assessment thất bại: {Message}", result.Message);
+            else
                 _logger.LogInformation("Lấy danh sách Assessment thành công cho Module {ModuleId}, tổng số: {Count}", moduleId, result.Data?.Count ?? 0);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách Assessment cho Module {ModuleId}", moduleId);
-                return StatusCode(500, "Có lỗi xảy ra khi lấy danh sách Assessment");
-            }
+
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy thông tin Assessment theo ID (Admin và Teacher)
+        // GET: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - Get assessment by ID (Admin and Teacher)
         [HttpGet("{assessmentId}")]
         public async Task<IActionResult> GetAssessmentById(int assessmentId)
         {
-            try
-            {
-                var userRole = GetCurrentUserRole();
-                _logger.LogInformation("{UserRole} {UserId} đang lấy thông tin Assessment {AssessmentId}", userRole, GetCurrentUserId(), assessmentId);
+            var userRole = GetCurrentUserRole();
+            _logger.LogInformation("{UserRole} {UserId} đang lấy thông tin Assessment {AssessmentId}", userRole, GetCurrentUserId(), assessmentId);
 
-                var result = await _assessmentService.GetAssessmentById(assessmentId);
+            var result = await _assessmentService.GetAssessmentById(assessmentId);
 
-
-                _logger.LogInformation("Lấy thông tin Assessment thành công: {AssessmentId}", assessmentId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy thông tin Assessment {AssessmentId}", assessmentId);
-                return StatusCode(500, "Có lỗi xảy ra khi lấy thông tin Assessment");
-            }
+            _logger.LogInformation("Lấy thông tin Assessment thành công: {AssessmentId}", assessmentId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Cập nhật Assessment (Admin và Teacher)
+        // PUT: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - Update assessment (Admin and Teacher)
         [HttpPut("{assessmentId}")]
         public async Task<IActionResult> UpdateAssessment(int assessmentId, [FromBody] UpdateAssessmentDto updateAssessmentDto)
         {
-            try
-            {
-                var userRole = GetCurrentUserRole();
-                _logger.LogInformation("{UserRole} {UserId} đang cập nhật Assessment {AssessmentId}", userRole, GetCurrentUserId(), assessmentId);
+            var userRole = GetCurrentUserRole();
+            _logger.LogInformation("{UserRole} {UserId} đang cập nhật Assessment {AssessmentId}", userRole, GetCurrentUserId(), assessmentId);
 
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                var result = await _assessmentService.UpdateAssessment(assessmentId, updateAssessmentDto);
+            var result = await _assessmentService.UpdateAssessment(assessmentId, updateAssessmentDto);
 
-
-
-                _logger.LogInformation("Cập nhật Assessment thành công: {AssessmentId}", assessmentId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi cập nhật Assessment {AssessmentId}", assessmentId);
-                return StatusCode(500, "Có lỗi xảy ra khi cập nhật Assessment");
-            }
+            _logger.LogInformation("Cập nhật Assessment thành công: {AssessmentId}", assessmentId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Xóa Assessment (Admin và Teacher)
+        // DELETE: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - Delete assessment (Admin and Teacher)
         [HttpDelete("{assessmentId}")]
         public async Task<IActionResult> DeleteAssessment(int assessmentId)
         {
-            try
-            {
-                var userRole = GetCurrentUserRole();
-                var currentUserId = GetCurrentUserId();
-                _logger.LogInformation("{UserRole} {UserId} đang xóa Assessment {AssessmentId}", userRole, currentUserId, assessmentId);
+            var userRole = GetCurrentUserRole();
+            var currentUserId = GetCurrentUserId();
+            _logger.LogInformation("{UserRole} {UserId} đang xóa Assessment {AssessmentId}", userRole, currentUserId, assessmentId);
 
-                int? teacherId = userRole == "Teacher" ? currentUserId : null;
+            int? teacherId = userRole == "Teacher" ? currentUserId : null;
+            var result = await _assessmentService.DeleteAssessment(assessmentId, teacherId);
 
-                var result = await _assessmentService.DeleteAssessment(assessmentId, teacherId);
-
-                _logger.LogInformation("Xóa Assessment thành công: {AssessmentId}", assessmentId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi xóa Assessment {AssessmentId}", assessmentId);
-                return StatusCode(500, "Có lỗi xảy ra khi xóa Assessment");
-            }
+            _logger.LogInformation("Xóa Assessment thành công: {AssessmentId}", assessmentId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

@@ -2,7 +2,6 @@ using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -18,34 +17,20 @@ namespace LearningEnglish.API.Controller.User
             _essayService = essayService;
         }
 
-        
-        // Lấy thông tin Essay theo ID (dành cho học sinh)
-       
+        // GET: api/User/Essay/{essayId} - Get essay by ID (for students)
         [HttpGet("{essayId}")]
         public async Task<IActionResult> GetEssay(int essayId)
         {
             var result = await _essayService.GetEssayByIdAsync(essayId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return NotFound(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy danh sách Essay theo Assessment ID (dành cho học sinh)
+        // GET: api/User/Essay/assessment/{assessmentId} - Get essays by assessment ID (for students)
         [HttpGet("assessment/{assessmentId}")]
         public async Task<IActionResult> GetEssaysByAssessment(int assessmentId)
         {
             var result = await _essayService.GetEssaysByAssessmentIdAsync(assessmentId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

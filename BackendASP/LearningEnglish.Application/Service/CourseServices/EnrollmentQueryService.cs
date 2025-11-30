@@ -13,7 +13,7 @@ namespace LearningEnglish.Application.Service
         private readonly IMapper _mapper;
         private readonly ILogger<EnrollmentQueryService> _logger;
 
-        // Đặt bucket cho ảnh khóa học (giống các service khác)
+    
         private const string CourseImageBucket = "courses";
 
         public EnrollmentQueryService(

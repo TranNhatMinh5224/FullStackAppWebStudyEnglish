@@ -23,282 +23,163 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _logger = logger;
         }
 
-        // Get FlashCard by ID - Admin/Teacher
+        private int GetCurrentUserId()
+        {
+            return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        }
+
+        private string GetCurrentUserRole()
+        {
+            return User.FindFirst(ClaimTypes.Role)!.Value;
+        }
+
+        // GET: api/flash-card/atflashcard/{id} - Get flashcard details by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> GetFlashCard(int id)
         {
-            try
-            {
-                _logger.LogInformation("Admin/Teacher đang lấy FlashCard với ID: {FlashCardId}", id);
-
-                var result = await _flashCardService.GetFlashCardByIdAsync(id);
-
-                if (!result.Success)
-                {
-                    return NotFound(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi thêm FlashCard");
-                return StatusCode(500, "Internal server error");
-            }
+            var result = await _flashCardService.GetFlashCardByIdAsync(id);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
+        // GET: api/flash-card/atflashcard/{moduleId} - Get all flashcards in a module
         [HttpGet("/{moduleId}")]
         public async Task<ActionResult<ServiceResponse<List<ListFlashCardDto>>>> GetFlashCardsByModule(int moduleId)
         {
-            try
-            {
-                _logger.LogInformation("Admin/Teacher đang lấy danh sách FlashCard trong Module: {ModuleId}", moduleId);
-
-                var result = await _flashCardService.GetFlashCardsByModuleIdAsync(moduleId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách FlashCard trong Module: {ModuleId}", moduleId);
-                return StatusCode(500, "Internal server error");
-            }
+            var result = await _flashCardService.GetFlashCardsByModuleIdAsync(moduleId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
+        // GET: api/flash-card/atflashcard/search - Search flashcards by keyword with optional module filter
         [HttpGet("search")]
         public async Task<ActionResult<ServiceResponse<List<ListFlashCardDto>>>> SearchFlashCards(
             [FromQuery] string searchTerm,
             [FromQuery] int? moduleId = null)
         {
-            try
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                if (string.IsNullOrWhiteSpace(searchTerm))
+                return BadRequest(new ServiceResponse<List<ListFlashCardDto>>
                 {
-                    return BadRequest(new ServiceResponse<List<ListFlashCardDto>>
-                    {
-                        Success = false,
-                        Message = "Từ khóa tìm kiếm không được để trống"
-                    });
-                }
-
-                _logger.LogInformation("Admin/Teacher đang tìm kiếm FlashCard với từ khóa: {SearchTerm}", searchTerm);
-
-                var result = await _flashCardService.SearchFlashCardsAsync(searchTerm, moduleId);
-
-                return Ok(result);
+                    Success = false,
+                    Message = "Từ khóa tìm kiếm không được để trống"
+                });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi tìm kiếm FlashCard");
-                return StatusCode(500, "Internal server error");
-            }
+
+            var result = await _flashCardService.SearchFlashCardsAsync(searchTerm, moduleId);
+            return Ok(result);
         }
 
-        // Controller Tạo FlashCard
+        // POST: api/flash-card/atflashcard - Create a new flashcard
         [HttpPost]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> CreateFlashCard(
             [FromBody] CreateFlashCardDto createFlashCardDto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                return BadRequest(new ServiceResponse<FlashCardDto>
                 {
-                    var errors = ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)
-                        .ToList();
-
-                    return BadRequest(new ServiceResponse<FlashCardDto>
-                    {
-                        Success = false,
-                        Message = $"Dữ liệu không hợp lệ: {string.Join(", ", errors)}"
-                    });
-                }
-
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var userRole = User.FindFirst(ClaimTypes.Role)!.Value;
-
-                _logger.LogInformation("Admin/Teacher {UserId} đang tạo FlashCard mới: {Word}", userId, createFlashCardDto.Word);
-
-                var result = await _flashCardService.CreateFlashCardAsync(createFlashCardDto, userId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return CreatedAtAction(nameof(GetFlashCard),
-                    new { id = result.Data!.FlashCardId }, result);
+                    Success = false,
+                    Message = $"Dữ liệu không hợp lệ: {string.Join(", ", errors)}"
+                });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Loi khi tạo FlashCard mới");
-                return StatusCode(500, "Internal server error");
-            }
+
+            var userId = GetCurrentUserId();
+            var result = await _flashCardService.CreateFlashCardAsync(createFlashCardDto, userId);
+            return result.Success 
+                ? CreatedAtAction(nameof(GetFlashCard), new { id = result.Data!.FlashCardId }, result)
+                : StatusCode(result.StatusCode, result);
         }
 
-        // Controller Cập nhật FlashCard
+        // PUT: api/flash-card/atflashcard/{id} - Update flashcard (Admin: any, Teacher: own only)
         [HttpPut("{id}")]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> UpdateFlashCard(
             int id,
             [FromBody] UpdateFlashCardDto updateFlashCardDto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                return BadRequest(new ServiceResponse<FlashCardDto>
                 {
-                    var errors = ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)
-                        .ToList();
-
-                    return BadRequest(new ServiceResponse<FlashCardDto>
-                    {
-                        Success = false,
-                        Message = $"Dữ liệu không hợp lệ: {string.Join(", ", errors)}"
-                    });
-                }
-
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var userRole = User.FindFirst(ClaimTypes.Role)!.Value;
-
-                _logger.LogInformation("Admin/Teacher {UserId} đang cập nhật FlashCard: {FlashCardId}", userId, id);
-
-                var result = await _flashCardService.UpdateFlashCardAsync(
-                    id, updateFlashCardDto, userId, userRole);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
+                    Success = false,
+                    Message = $"Dữ liệu không hợp lệ: {string.Join(", ", errors)}"
+                });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "loi khi cập nhật FlashCard: {FlashCardId}", id);
-                return StatusCode(500, "Internal server error");
-            }
+
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
+            var result = await _flashCardService.UpdateFlashCardAsync(id, updateFlashCardDto, userId, userRole);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Controller Xóa FlashCard
+        // DELETE: api/flash-card/atflashcard/{id} - Delete flashcard (Admin: any, Teacher: own only)
         [HttpDelete("{id}")]
         public async Task<ActionResult<ServiceResponse<bool>>> DeleteFlashCard(int id)
         {
-            try
-            {
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var userRole = User.FindFirst(ClaimTypes.Role)!.Value;
-
-                _logger.LogInformation("Admin/Teacher {UserId} đang xóa FlashCard: {FlashCardId}", userId, id);
-
-                var result = await _flashCardService.DeleteFlashCardAsync(id, userId, userRole);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "loi khi xoa FlashCard: {FlashCardId}", id);
-                return StatusCode(500, "Internal server error");
-            }
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
+            var result = await _flashCardService.DeleteFlashCardAsync(id, userId, userRole);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Controller Tạo FlashCard Hàng loạt(bulk)
+        // POST: api/flash-card/atflashcard/bulk - Create multiple flashcards at once
         [HttpPost("bulk")]
         public async Task<ActionResult<ServiceResponse<List<FlashCardDto>>>> CreateBulkFlashCards(
             [FromBody] BulkImportFlashCardDto bulkImportDto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                return BadRequest(new ServiceResponse<List<FlashCardDto>>
                 {
-                    var errors = ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)
-                        .ToList();
-
-                    return BadRequest(new ServiceResponse<List<FlashCardDto>>
-                    {
-                        Success = false,
-                        Message = $"Dữ liệu không hợp lệ: {string.Join(", ", errors)}"
-                    });
-                }
-
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var userRole = User.FindFirst(ClaimTypes.Role)!.Value;
-
-                _logger.LogInformation("Admin/Teacher {UserId} đang tạo {Count} FlashCard hàng loạt",
-                    userId, bulkImportDto.FlashCards.Count);
-
-                var result = await _flashCardService.CreateBulkFlashCardsAsync(bulkImportDto, userId, userRole);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
+                    Success = false,
+                    Message = $"Dữ liệu không hợp lệ: {string.Join(", ", errors)}"
+                });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "loi khi tạo FlashCard hàng loạt");
-                return StatusCode(500, "Internal server error");
-            }
+
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
+            var result = await _flashCardService.CreateBulkFlashCardsAsync(bulkImportDto, userId, userRole);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
-
-
-
-        // Controller Kiểm tra Từ vựng
+        // GET: api/flash-card/atflashcard/validate-word - Check if word already exists in module (TODO: implement validation)
         [HttpGet("validate-word")]
         public async Task<ActionResult<ServiceResponse<bool>>> ValidateWord(
             [FromQuery] string word,
             [FromQuery] int moduleId,
             [FromQuery] int? excludeFlashCardId = null)
         {
-            try
+            if (string.IsNullOrWhiteSpace(word))
             {
-                if (string.IsNullOrWhiteSpace(word))
+                return BadRequest(new ServiceResponse<bool>
                 {
-                    return BadRequest(new ServiceResponse<bool>
-                    {
-                        Success = false,
-                        Message = "Từ vựng không được để trống"
-                    });
-                }
-
-                _logger.LogInformation("Kiểm tra từ vựng '{Word}' trong Module: {ModuleId}", word, moduleId);
-
-                // TODO: Add word validation method to repository/service
-                var result = new ServiceResponse<bool>
-                {
-                    Data = true, // Placeholder - implement actual validation
-                    Message = "Từ vựng hợp lệ"
-                };
-
-                await Task.CompletedTask; // Giữ async signature cho tương lai
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, " Error adding lesson for teacher");
-                return StatusCode(500, "Internal server error");
+                    Success = false,
+                    Message = "Từ vựng không được để trống"
+                });
             }
 
+            // TODO: Add word validation method to repository/service
+            var result = new ServiceResponse<bool>
+            {
+                Data = true,
+                Message = "Từ vựng hợp lệ"
+            };
+
+            await Task.CompletedTask;
+            return Ok(result);
         }
     }
 }

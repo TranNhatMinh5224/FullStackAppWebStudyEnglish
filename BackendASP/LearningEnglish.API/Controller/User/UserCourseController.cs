@@ -19,40 +19,23 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        
-        //Lấy danh sách khóa học hệ thống (không cần đăng nhập)
-        
+        // GET: api/user/courses/system-courses - Retrieve all available system courses (public access, optionally authenticated)
         [HttpGet("system-courses")]
         [AllowAnonymous]
         public async Task<IActionResult> GetSystemCourses()
         {
-            try
+            int? userId = null;
+            if (User.Identity?.IsAuthenticated == true)
             {
-                // Lấy UserId nếu user đã đăng nhập (optional)
-                int? userId = null;
-                if (User.Identity?.IsAuthenticated == true)
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdClaim, out int parsedUserId))
                 {
-                    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    if (int.TryParse(userIdClaim, out int parsedUserId))
-                    {
-                        userId = parsedUserId;
-                    }
+                    userId = parsedUserId;
                 }
-
-                var result = await _userCourseService.GetSystemCoursesAsync(userId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetSystemCourses endpoint");
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+
+            var result = await _userCourseService.GetSystemCoursesAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

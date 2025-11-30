@@ -23,170 +23,84 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        // GET: api/user/flashcard/{id}
+        private int GetCurrentUserId()
+        {
+            return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        }
+
+        // GET: api/user/flashcard/{id} - Retrieve a specific flashcard by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> GetFlashCard(int id)
         {
-            try
-            {
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                
-                _logger.LogInformation("User {UserId} đang xem FlashCard: {FlashCardId}", userId, id);
-
-                var result = await _flashCardService.GetFlashCardByIdAsync(id, userId);
-
-                if (!result.Success)
-                {
-                    return NotFound(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi User lấy FlashCard: {FlashCardId}", id);
-                return StatusCode(500, new ServiceResponse<FlashCardDto>
-                {
-                    Success = false,
-                    Message = "Có lỗi xảy ra khi lấy thông tin FlashCard"
-                });
-            }
+            var userId = GetCurrentUserId();
+            var result = await _flashCardService.GetFlashCardByIdAsync(id, userId);
+            return result.Success ? Ok(result) : NotFound(result);
         }
 
-        // GET: api/user/flashcard/module/{moduleId}
+        // GET: api/user/flashcard/module/{moduleId} - Get all flashcards within a specific module
         [HttpGet("module/{moduleId}")]
         public async Task<ActionResult<ServiceResponse<List<ListFlashCardDto>>>> GetFlashCardsByModule(int moduleId)
         {
-            try
-            {
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-
-                _logger.LogInformation("User {UserId} đang xem FlashCard trong Module: {ModuleId}", userId, moduleId);
-
-                var result = await _flashCardService.GetFlashCardsByModuleIdAsync(moduleId, userId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi User lấy danh sách FlashCard trong Module: {ModuleId}", moduleId);
-                return StatusCode(500, new ServiceResponse<List<ListFlashCardDto>>
-                {
-                    Success = false,
-                    Message = "Có lỗi xảy ra khi lấy danh sách FlashCard"
-                });
-            }
+            var userId = GetCurrentUserId();
+            var result = await _flashCardService.GetFlashCardsByModuleIdAsync(moduleId, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
 
-
-        // GET: api/user/flashcard/search
+        // GET: api/user/flashcard/search - Search flashcards by keyword with optional module filter
         [HttpGet("search")]
         public async Task<ActionResult<ServiceResponse<List<ListFlashCardDto>>>> SearchFlashCards(
             [FromQuery] string searchTerm,
             [FromQuery] int? moduleId = null)
         {
-            try
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                if (string.IsNullOrWhiteSpace(searchTerm))
-                {
-                    return BadRequest(new ServiceResponse<List<ListFlashCardDto>>
-                    {
-                        Success = false,
-                        Message = "Từ khóa tìm kiếm không được để trống"
-                    });
-                }
-
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-
-                _logger.LogInformation("User {UserId} đang tìm kiếm FlashCard với từ khóa: {SearchTerm}", userId, searchTerm);
-
-                var result = await _flashCardService.SearchFlashCardsAsync(searchTerm, moduleId, userId);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi User tìm kiếm FlashCard: {SearchTerm}", searchTerm);
-                return StatusCode(500, new ServiceResponse<List<ListFlashCardDto>>
+                return BadRequest(new ServiceResponse<List<ListFlashCardDto>>
                 {
                     Success = false,
-                    Message = "Có lỗi xảy ra khi tìm kiếm FlashCard"
+                    Message = "Từ khóa tìm kiếm không được để trống"
                 });
             }
+
+            var userId = GetCurrentUserId();
+            var result = await _flashCardService.SearchFlashCardsAsync(searchTerm, moduleId, userId);
+            return Ok(result);
         }
 
-
-
-        // GET: api/user/flashcard/progress/{moduleId}
+        // GET: api/user/flashcard/progress/{moduleId} - Get flashcard learning progress for a module (TODO: implementation pending)
         [HttpGet("progress/{moduleId}")]
         public async Task<ActionResult<ServiceResponse<List<FlashCardWithProgressDto>>>> GetFlashCardProgress(int moduleId)
         {
-            try
+            var userId = GetCurrentUserId();
+            _logger.LogInformation("User {UserId} đang lấy tiến trình FlashCard Module: {ModuleId}", userId, moduleId);
+
+            // TODO: Implement progress tracking
+            var result = new ServiceResponse<List<FlashCardWithProgressDto>>
             {
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                Data = new List<FlashCardWithProgressDto>(),
+                Message = "Lấy tiến trình học FlashCard thành công"
+            };
 
-                _logger.LogInformation("User {UserId} đang lấy tiến trình FlashCard Module: {ModuleId}", userId, moduleId);
-
-                // TODO: Implement progress tracking
-                var result = new ServiceResponse<List<FlashCardWithProgressDto>>
-                {
-                    Data = new List<FlashCardWithProgressDto>(),
-                    Message = "Lấy tiến trình học FlashCard thành công"
-                };
-
-                await Task.CompletedTask; // Giữ async signature cho tương lai
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi User lấy tiến trình FlashCard Module: {ModuleId}", moduleId);
-                return StatusCode(500, new ServiceResponse<List<FlashCardWithProgressDto>>
-                {
-                    Success = false,
-                    Message = "Có lỗi xảy ra khi lấy tiến trình FlashCard"
-                });
-            }
+            await Task.CompletedTask;
+            return Ok(result);
         }
 
-        // POST: api/user/flashcard/reset-progress/{flashCardId}
+        // POST: api/user/flashcard/reset-progress/{flashCardId} - Reset learning progress for a specific flashcard (TODO: implementation pending)
         [HttpPost("reset-progress/{flashCardId}")]
         public async Task<ActionResult<ServiceResponse<bool>>> ResetFlashCardProgress(int flashCardId)
         {
-            try
+            var userId = GetCurrentUserId();
+            _logger.LogInformation("User {UserId} đang reset progress FlashCard: {FlashCardId}", userId, flashCardId);
+
+            // TODO: Implement progress reset
+            var result = new ServiceResponse<bool>
             {
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                Data = true,
+                Message = "Reset tiến trình FlashCard thành công"
+            };
 
-                _logger.LogInformation("User {UserId} đang reset progress FlashCard: {FlashCardId}", userId, flashCardId);
-
-                // TODO: Implement progress reset
-                var result = new ServiceResponse<bool>
-                {
-                    Data = true,
-                    Message = "Reset tiến trình FlashCard thành công"
-                };
-
-                await Task.CompletedTask; // Giữ async signature cho tương lai
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi User reset progress FlashCard: {FlashCardId}", flashCardId);
-                return StatusCode(500, new ServiceResponse<bool>
-                {
-                    Success = false,
-                    Message = "Có lỗi xảy ra khi reset tiến trình FlashCard"
-                });
-            }
+            await Task.CompletedTask;
+            return Ok(result);
         }
-
-
     }
 }

@@ -18,65 +18,42 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _essaySubmissionService = essaySubmissionService;
         }
 
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+        }
 
-        //controller lấy thông tin Submission theo ID
+        private string GetCurrentUserRole()
+        {
+            return User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+        }
 
+        // GET: api/EssaySubmission/{submissionId} - Get submission by ID
         [HttpGet("{submissionId}")]
         public async Task<IActionResult> GetSubmission(int submissionId)
         {
             var result = await _essaySubmissionService.GetSubmissionByIdAsync(submissionId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return NotFound(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-       
-        //controller lấy danh sách Submission theo Assessment ID
-       
+        // GET: api/EssaySubmission/assessment/{assessmentId} - Get submissions by assessment ID (Admin: all, Teacher: own)
         [HttpGet("assessment/{assessmentId}")]
         public async Task<IActionResult> GetSubmissionsByAssessment(int assessmentId)
         {
-            // Lấy thông tin Teacher từ token (nếu không phải Admin)
-            int? teacherId = null;
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userRole == "Teacher")
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (int.TryParse(userIdClaim, out int parsedUserId))
-                {
-                    teacherId = parsedUserId;
-                }
-            }
+            var userRole = GetCurrentUserRole();
+            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
 
             var result = await _essaySubmissionService.GetSubmissionsByAssessmentIdAsync(assessmentId, teacherId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        
-        // Lấy danh sách Submission theo User ID 
-        
+        // GET: api/EssaySubmission/user/{userId} - Get submissions by user ID
         [HttpGet("user/{userId}")]
-       
         public async Task<IActionResult> GetSubmissionsByUser(int userId)
         {
             var result = await _essaySubmissionService.GetSubmissionsByUserIdAsync(userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

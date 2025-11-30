@@ -18,114 +18,83 @@ namespace LearningEnglish.API.Controller.User
             _studyReminderService = studyReminderService;
         }
 
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+        }
+
+        // GET: api/user/study-reminders - Get user's study reminders
         [HttpGet]
         public async Task<IActionResult> GetMyStudyReminders()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return Unauthorized(new { message = "Invalid user credentials" });
-            }
 
             var result = await _studyReminderService.GetUserStudyRemindersAsync(userId);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
+        // POST: api/user/study-reminders - Create study reminder
         [HttpPost]
         public async Task<IActionResult> CreateStudyReminder([FromBody] CreateStudyReminderDto request)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return Unauthorized(new { message = "Invalid user credentials" });
-            }
 
             request.UserId = userId;
-
             var result = await _studyReminderService.CreateStudyReminderAsync(request);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-
-            return Created("", result);
+            return result.Success ? Created("", result) : StatusCode(result.StatusCode, result);
         }
 
+        // PUT: api/user/study-reminders/{reminderId} - Update study reminder
         [HttpPut("{reminderId}")]
         public async Task<IActionResult> UpdateStudyReminder(int reminderId, [FromBody] CreateStudyReminderDto request)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return Unauthorized(new { message = "Invalid user credentials" });
-            }
 
             var result = await _studyReminderService.UpdateStudyReminderAsync(reminderId, request, userId);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
+        // DELETE: api/user/study-reminders/{reminderId} - Delete study reminder
         [HttpDelete("{reminderId}")]
         public async Task<IActionResult> DeleteStudyReminder(int reminderId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return Unauthorized(new { message = "Invalid user credentials" });
-            }
 
-            var result = await _studyReminderService.DeleteStudyReminderAsync(reminderId, int.Parse(userIdClaim));
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-
-            return Ok(result);
+            var result = await _studyReminderService.DeleteStudyReminderAsync(reminderId, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
+        // PUT: api/user/study-reminders/{reminderId}/toggle - Toggle study reminder on/off
         [HttpPut("{reminderId}/toggle")]
         public async Task<IActionResult> ToggleStudyReminder(int reminderId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return Unauthorized(new { message = "Invalid user credentials" });
-            }
 
             var result = await _studyReminderService.ToggleStudyReminderAsync(reminderId, userId);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
+        // POST: api/user/study-reminders/{reminderId}/send-now - Send reminder immediately
         [HttpPost("{reminderId}/send-now")]
         public async Task<IActionResult> SendReminderNow(int reminderId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return Unauthorized(new { message = "Invalid user credentials" });
-            }
 
             var result = await _studyReminderService.SendReminderNowAsync(reminderId, userId);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

@@ -94,22 +94,10 @@ namespace LearningEnglish.Application.Service
                             course.TeacherId.Value, enrollDto.CourseId);
                         return response;
                     }
-                    
-                    // Check 2: Kiểm tra giới hạn MaxStudents của package
-                    int totalStudents = await _courseRepository.GetTotalStudentsByTeacher(course.TeacherId.Value);
-                    if (totalStudents >= teacherPackage.MaxStudents)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 400;
-                        response.Message = $"Giáo viên đã đạt giới hạn số học sinh ({totalStudents}/{teacherPackage.MaxStudents}). Không thể nhận thêm học viên.";
-                        _logger.LogWarning("Teacher {TeacherId} reached MaxStudents limit ({Total}/{Max})", 
-                            course.TeacherId.Value, totalStudents, teacherPackage.MaxStudents);
-                        return response;
-                    }
                 }
 
-                // Đăng ký user vào course
-                await _courseRepository.EnrollUserInCourse(userId, enrollDto.CourseId);
+                // Đăng ký user vào course 
+                await _courseRepository.EnrollUserInCourse(enrollDto.CourseId, userId);
 
                 response.Success = true;
                 response.StatusCode = 200;
@@ -165,7 +153,9 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
-        // tham gia lớp học qua mã lớp học
+        // Tham gia lớp học qua mã lớp học (class code)
+        // Lưu ý: Đăng ký qua class code thường là cho course MIỄN PHÍ hoặc đã được teacher approve
+        // Nếu course có phí, cần xử lý payment riêng
         public async Task<ServiceResponse<bool>> EnrollInCourseByClassCodeAsync(string classCode, int userId)
         {
             var response = new ServiceResponse<bool>();
@@ -195,15 +185,40 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Đăng ký user vào course (kiểm tra CanJoin bên trong với dữ liệu fresh)
-                await _courseRepository.EnrollUserInCourse(userId, course.CourseId);
+                // Kiểm tra course có còn chỗ không (trước khi gọi EnrollUserInCourse)
+                if (!course.CanJoin())
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = $"Khóa học đã đầy ({course.EnrollmentCount}/{course.MaxStudent}). Không thể đăng ký thêm";
+                    return response;
+                }
+
+                
+                if (course.Type == CourseType.Teacher && course.TeacherId.HasValue)
+                {
+                    var teacherPackage = await _teacherPackageRepository.GetInformationTeacherpackage(course.TeacherId.Value);
+                    
+                    if (teacherPackage == null)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Khóa học này hiện không nhận học viên mới. Giáo viên cần gia hạn gói để tiếp tục nhận học viên.";
+                        _logger.LogWarning("Teacher {TeacherId} has no active package. Cannot enroll student {UserId} via class code in course {CourseId}", 
+                            course.TeacherId.Value, userId, course.CourseId);
+                        return response;
+                    }
+                }
+
+                // Đăng ký user vào course (courseId first, userId second theo interface)
+                await _courseRepository.EnrollUserInCourse(course.CourseId, userId);
 
                 response.Success = true;
                 response.StatusCode = 200;
                 response.Data = true;
                 response.Message = "Đăng ký khóa học thành công qua mã lớp học";
 
-                _logger.LogInformation("User {UserId} enrolled in course {CourseId} via class code", userId, course.CourseId);
+                _logger.LogInformation("User {UserId} enrolled in course {CourseId} via class code {ClassCode}", userId, course.CourseId, classCode);
             }
             catch (InvalidOperationException ex) when (ex.Message.Contains("maximum capacity reached"))
             {
@@ -211,6 +226,13 @@ namespace LearningEnglish.Application.Service
                 response.StatusCode = 400;
                 response.Message = "Bạn không thể tham gia vào lớp này vì khóa học đã đầy học viên";
                 _logger.LogWarning("User {UserId} cannot enroll in course {CourseId} - class is full", userId, courseId);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("already enrolled"))
+            {
+                response.Success = false;
+                response.StatusCode = 400;
+                response.Message = "Bạn đã đăng ký khóa học này rồi";
+                _logger.LogWarning("User {UserId} already enrolled in course {CourseId}", userId, courseId);
             }
             catch (Exception ex)
             {

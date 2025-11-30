@@ -18,138 +18,86 @@ namespace LearningEnglish.API.Controller.User
             _essaySubmissionService = essaySubmissionService;
         }
 
-        // controller nộp bài Essay(dành cho học sinh)
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+        }
+
+        // POST: api/User/EssaySubmission/submit - Submit essay (for students)
         [HttpPost("submit")]
         public async Task<IActionResult> SubmitEssay([FromBody] CreateEssaySubmissionDto submissionDto)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return BadRequest("Không thể lấy thông tin người dùng từ token");
-            }
 
             var result = await _essaySubmissionService.CreateSubmissionAsync(submissionDto, userId);
-
-            if (result.Success)
-            {
-                return CreatedAtAction(nameof(GetSubmission), new { submissionId = result.Data?.SubmissionId }, result);
-            }
-
-            return BadRequest(result);
+            return result.Success 
+                ? CreatedAtAction(nameof(GetSubmission), new { submissionId = result.Data?.SubmissionId }, result)
+                : StatusCode(result.StatusCode, result);
         }
 
-       
-        // Lấy thông tin submission
-
+        // GET: api/User/EssaySubmission/{submissionId} - Get submission by ID
         [HttpGet("{submissionId}")]
         public async Task<IActionResult> GetSubmission(int submissionId)
         {
             var result = await _essaySubmissionService.GetSubmissionByIdAsync(submissionId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return NotFound(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        
-        // Lấy danh sách submission 
-       
+        // GET: api/User/EssaySubmission/my-submissions - Get all submissions for current user
         [HttpGet("my-submissions")]
         public async Task<IActionResult> GetMySubmissions()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return BadRequest("Không thể lấy thông tin người dùng từ token");
-            }
 
             var result = await _essaySubmissionService.GetSubmissionsByUserIdAsync(userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        
-        // Kiểm tra học sinh đã nộp bài cho Essay nào đó chưa
-      
+        // GET: api/User/EssaySubmission/submission-status/essay/{essayId} - Check if student has submitted for an essay
         [HttpGet("submission-status/essay/{essayId}")]
         public async Task<IActionResult> GetSubmissionStatus(int essayId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return BadRequest("Không thể lấy thông tin người dùng từ token");
-            }
 
             var result = await _essaySubmissionService.GetUserSubmissionForEssayAsync(userId, essayId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-       
-        // Cập nhật submission của học sinh
-     
+        // PUT: api/User/EssaySubmission/update/{submissionId} - Update student's submission
         [HttpPut("update/{submissionId}")]
         public async Task<IActionResult> UpdateSubmission(int submissionId, [FromBody] UpdateEssaySubmissionDto updateDto)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return BadRequest("Không thể lấy thông tin người dùng từ token");
-            }
 
             var result = await _essaySubmissionService.UpdateSubmissionAsync(submissionId, updateDto, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-   
-        // Xóa submission của học sinh
-        
+        // DELETE: api/User/EssaySubmission/delete/{submissionId} - Delete student's submission
         [HttpDelete("delete/{submissionId}")]
         public async Task<IActionResult> DeleteSubmission(int submissionId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
                 return BadRequest("Không thể lấy thông tin người dùng từ token");
-            }
 
             var result = await _essaySubmissionService.DeleteSubmissionAsync(submissionId, userId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

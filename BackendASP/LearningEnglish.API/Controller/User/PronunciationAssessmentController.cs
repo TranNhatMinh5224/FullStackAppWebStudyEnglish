@@ -25,9 +25,7 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        /// <summary>
-        /// Create new pronunciation assessment with AI evaluation
-        /// </summary>
+        // POST: api/PronunciationAssessment - Create new pronunciation assessment with AI evaluation
         [HttpPost]
         public async Task<IActionResult> CreateAssessment([FromBody] CreatePronunciationAssessmentDto dto)
         {
@@ -40,16 +38,10 @@ namespace LearningEnglish.API.Controller.User
                 });
 
             var result = await _service.CreateAssessmentAsync(dto, userId);
-
-            if (!result.Success)
-                return BadRequest(result);
-
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Get assessment by ID
-        /// </summary>
+        // GET: api/PronunciationAssessment/{id} - Get assessment by ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetAssessmentById(int id)
         {
@@ -62,16 +54,10 @@ namespace LearningEnglish.API.Controller.User
                 });
 
             var result = await _service.GetAssessmentByIdAsync(id, userId);
-
-            if (!result.Success)
-                return NotFound(result);
-
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Get all assessments for current user
-        /// </summary>
+        // GET: api/PronunciationAssessment/my-assessments - Get all assessments for current user
         [HttpGet("my-assessments")]
         public async Task<IActionResult> GetMyAssessments()
         {
@@ -84,16 +70,10 @@ namespace LearningEnglish.API.Controller.User
                 });
 
             var result = await _service.GetUserAssessmentsAsync(userId);
-
-            if (!result.Success)
-                return BadRequest(result);
-
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Get assessments by FlashCard ID
-        /// </summary>
+        // GET: api/PronunciationAssessment/flashcard/{flashCardId} - Get assessments by FlashCard ID
         [HttpGet("flashcard/{flashCardId}")]
         public async Task<IActionResult> GetFlashCardAssessments(int flashCardId)
         {
@@ -106,16 +86,10 @@ namespace LearningEnglish.API.Controller.User
                 });
 
             var result = await _service.GetFlashCardAssessmentsAsync(flashCardId, userId);
-
-            if (!result.Success)
-                return BadRequest(result);
-
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Delete assessment
-        /// </summary>
+        // DELETE: api/PronunciationAssessment/{id} - Delete assessment
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAssessment(int id)
         {
@@ -128,16 +102,10 @@ namespace LearningEnglish.API.Controller.User
                 });
 
             var result = await _service.DeleteAssessmentAsync(id, userId);
-
-            if (!result.Success)
-                return BadRequest(result);
-
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Get user pronunciation statistics
-        /// </summary>
+        // GET: api/PronunciationAssessment/statistics - Get user pronunciation statistics
         [HttpGet("statistics")]
         public async Task<IActionResult> GetStatistics()
         {
@@ -150,16 +118,10 @@ namespace LearningEnglish.API.Controller.User
                 });
 
             var result = await _service.GetUserStatisticsAsync(userId);
-
-            if (!result.Success)
-                return BadRequest(result);
-
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// 🆕 Get progress analytics over time
-        /// </summary>
+        // GET: api/PronunciationAssessment/progress - Get progress analytics over time
         [HttpGet("progress")]
         public async Task<IActionResult> GetProgressAnalytics([FromQuery] int months = 3)
         {
@@ -172,13 +134,7 @@ namespace LearningEnglish.API.Controller.User
                 });
 
             var result = await _service.GetProgressAnalyticsAsync(userId, months);
-
-            if (!result.Success)
-                return BadRequest(result);
-
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
-
-        // Đã xóa endpoint /comparative và method GetComparativeAnalytics theo yêu cầu
     }
 }

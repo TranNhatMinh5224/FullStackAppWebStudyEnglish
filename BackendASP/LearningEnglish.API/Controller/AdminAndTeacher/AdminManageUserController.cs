@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.Interface;
-using LearningEnglish.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 
 namespace LearningEnglish.API.Controller.Admin
@@ -8,8 +7,6 @@ namespace LearningEnglish.API.Controller.Admin
     [ApiController]
     [Route("api/admin/auth")]
     [Authorize(Roles = "Admin")]
-
-    // ControllerBase là lớp cơ sở cho tất cả các controller trong ASP.NET Core
     public class AdminAuthController : ControllerBase
     {
         private readonly IUserManagementService _userManagementService;
@@ -18,65 +15,53 @@ namespace LearningEnglish.API.Controller.Admin
         {
             _userManagementService = userManagementService;
         }
-        // Controller lấy ra danh sách User trong hệ thống
 
+        // GET: api/admin/auth/users - Get all users in the system
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
         {
             var result = await _userManagementService.GetAllUsersAsync();
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return Ok(result.Data);
+            return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // Controller block tài khoản người dùng(teacher và student)
+        // PUT: api/admin/auth/block-account/{userId} - Block user account (Teacher or Student)
         [HttpPut("block-account/{userId}")]
         public async Task<IActionResult> BlockAccount(int userId)
         {
             var result = await _userManagementService.BlockAccountAsync(userId);
-
-            if (!result.Success)
-                return StatusCode(result.StatusCode, new { message = result.Message });
-
-            return Ok(result.Data);
-
+            return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // Controller mở khóa tài khoản người dùng
+        // PUT: api/admin/auth/unblock-account/{userId} - Unblock user account
         [HttpPut("unblock-account/{userId}")]
         public async Task<IActionResult> UnblockAccount(int userId)
         {
             var result = await _userManagementService.UnblockAccountAsync(userId);
-
-            if (!result.Success)
-                return StatusCode(result.StatusCode, new { message = result.Message });
-
-            return Ok(result.Data);
+            return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
-        // Controller lấy danh sách tài khoản bị khóa
+
+        // GET: api/admin/auth/list-blocked-accounts - Get all blocked accounts
         [HttpGet("list-blocked-accounts")]
         public async Task<IActionResult> GetListBlockedAccounts()
         {
             var result = await _userManagementService.GetListBlockedAccountsAsync();
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return Ok(result.Data);
+            return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // Controller lấy danh sách giáo viên trong hệ thống
+        // GET: api/admin/auth/teachers - Get all teachers in the system
         [HttpGet("teachers")]
-
         public async Task<IActionResult> GetListTeachers()
         {
             var result = await _userManagementService.GetListTeachersAsync();
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return Ok(result.Data);
+            return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
-        // Controller lấy danh sách học sinh theo all course
+
+        // GET: api/admin/auth/getall-students-by-all-courses - Get students across all courses
         [HttpGet("getall-students-by-all-courses")]
         public async Task<IActionResult> GetStudentsByAllCourses()
         {
             var result = await _userManagementService.GetStudentsByAllCoursesAsync();
-            if (!result.Success) return BadRequest(new { message = result.Message });
-            return Ok(result.Data);
+            return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
     }
 }

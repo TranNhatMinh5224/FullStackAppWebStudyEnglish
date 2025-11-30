@@ -31,183 +31,81 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(ClaimTypes.Role)?.Value ?? "";
         }
 
-
-        // Lấy thông tin lecture theo ID với chi tiết
-
+        // GET: api/atlecture/{lectureId} - Get lecture details by ID
         [HttpGet("{lectureId}")]
         public async Task<IActionResult> GetLecture(int lectureId)
         {
-            try
-            {
-                var userId = GetCurrentUserId();
-                var result = await _lectureService.GetLectureByIdAsync(lectureId, userId);
-
-                if (!result.Success)
-                    return NotFound(result);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy lecture với ID: {LectureId}", lectureId);
-                return StatusCode(500, "Có lỗi xảy ra khi lấy thông tin lecture");
-            }
+            var userId = GetCurrentUserId();
+            var result = await _lectureService.GetLectureByIdAsync(lectureId, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
-        // Lấy tất cả lecture theo module ID
-
+        // GET: api/atlecture/module/{moduleId} - Get all lectures within a module
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetLecturesByModule(int moduleId)
         {
-            try
-            {
-                var userId = GetCurrentUserId();
-                var result = await _lectureService.GetLecturesByModuleIdAsync(moduleId, userId);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách lecture theo ModuleId: {ModuleId}", moduleId);
-                return StatusCode(500, "Có lỗi xảy ra khi lấy danh sách lecture");
-            }
+            var userId = GetCurrentUserId();
+            var result = await _lectureService.GetLecturesByModuleIdAsync(moduleId, userId);
+            return Ok(result);
         }
 
-
-        // Lấy cấu trúc cây lecture theo module ID
-
+        // GET: api/atlecture/module/{moduleId}/tree - Get hierarchical lecture tree structure
         [HttpGet("module/{moduleId}/tree")]
         public async Task<IActionResult> GetLectureTree(int moduleId)
         {
-            try
-            {
-                var userId = GetCurrentUserId();
-                var result = await _lectureService.GetLectureTreeByModuleIdAsync(moduleId, userId);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy cấu trúc cây lecture theo ModuleId: {ModuleId}", moduleId);
-                return StatusCode(500, "Có lỗi xảy ra khi lấy cấu trúc cây lecture");
-            }
+            var userId = GetCurrentUserId();
+            var result = await _lectureService.GetLectureTreeByModuleIdAsync(moduleId, userId);
+            return Ok(result);
         }
 
-
-        // Tạo lecture mới
-
+        // POST: api/atlecture - Create new lecture (Admin/Teacher)
         [HttpPost]
         public async Task<IActionResult> CreateLecture([FromBody] CreateLectureDto createLectureDto)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                var userId = GetCurrentUserId();
-                var result = await _lectureService.CreateLectureAsync(createLectureDto, userId);
-
-                if (!result.Success)
-                    return BadRequest(result);
-
-                return CreatedAtAction(nameof(GetLecture), new { lectureId = result.Data?.LectureId }, result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi tạo lecture mới: {@CreateLectureDto}", createLectureDto);
-                return StatusCode(500, "Có lỗi xảy ra khi tạo lecture");
-            }
+            var userId = GetCurrentUserId();
+            var result = await _lectureService.CreateLectureAsync(createLectureDto, userId);
+            return result.Success 
+                ? CreatedAtAction(nameof(GetLecture), new { lectureId = result.Data?.LectureId }, result)
+                : StatusCode(result.StatusCode, result);
         }
 
-
-        // Cập nhật lecture (Admin có thể cập nhật bất kỳ, Teacher chỉ lecture của mình)
+        // PUT: api/atlecture/{lectureId} - Update lecture (Admin: any, Teacher: own only)
         [HttpPut("{lectureId}")]
         public async Task<IActionResult> UpdateLecture(int lectureId, [FromBody] UpdateLectureDto updateLectureDto)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                var userId = GetCurrentUserId();
-                var userRole = GetCurrentUserRole();
-
-                var result = await _lectureService.UpdateLectureWithAuthorizationAsync(lectureId, updateLectureDto, userId, userRole);
-
-                if (!result.Success)
-                {
-                    if (result.Message?.Contains("không có quyền") == true)
-                        return Forbid(result.Message);
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi cập nhật lecture với ID: {LectureId}, {@UpdateLectureDto}", lectureId, updateLectureDto);
-                return StatusCode(500, "Có lỗi xảy ra khi cập nhật lecture");
-            }
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
+            var result = await _lectureService.UpdateLectureWithAuthorizationAsync(lectureId, updateLectureDto, userId, userRole);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
-        // Xóa lecture (Admin có thể xóa bất kỳ, Teacher chỉ lecture của mình)
-
+        // DELETE: api/atlecture/{lectureId} - Delete lecture (Admin: any, Teacher: own only)
         [HttpDelete("{lectureId}")]
         public async Task<IActionResult> DeleteLecture(int lectureId)
         {
-            try
-            {
-                var userId = GetCurrentUserId();
-                var userRole = GetCurrentUserRole();
-
-                var result = await _lectureService.DeleteLectureWithAuthorizationAsync(lectureId, userId, userRole);
-
-                if (!result.Success)
-                {
-                    if (result.Message?.Contains("không có quyền") == true)
-                        return Forbid(result.Message);
-                    if (result.Message?.Contains("không tìm thấy") == true)
-                        return NotFound(result);
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi xóa lecture với ID: {LectureId}", lectureId);
-                return StatusCode(500, "Có lỗi xảy ra khi xóa lecture");
-            }
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
+            var result = await _lectureService.DeleteLectureWithAuthorizationAsync(lectureId, userId, userRole);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
-        // Sắp xếp lại thứ tự lecture
-
+        // POST: api/atlecture/reorder - Reorder lectures within a module
         [HttpPost("reorder")]
         public async Task<IActionResult> ReorderLectures([FromBody] List<ReorderLectureDto> reorderDtos)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                var userId = GetCurrentUserId();
-                var userRole = GetCurrentUserRole();
-
-                var result = await _lectureService.ReorderLecturesAsync(reorderDtos, userId, userRole);
-
-                if (!result.Success)
-                    return BadRequest(result);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi sắp xếp lại lecture: {@ReorderDtos}", reorderDtos);
-                return StatusCode(500, "Có lỗi xảy ra khi sắp xếp lại lecture");
-            }
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
+            var result = await _lectureService.ReorderLecturesAsync(reorderDtos, userId, userRole);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

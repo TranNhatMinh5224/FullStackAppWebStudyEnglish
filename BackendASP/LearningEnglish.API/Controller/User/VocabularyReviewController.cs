@@ -28,172 +28,74 @@ public class VocabularyReviewController : ControllerBase
         return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     }
 
-    // Lấy danh sách từ vựng cần ôn tập hôm nay
+    // GET: api/user/vocabularyreview/due - Get all flashcards due for review today using SM-2 algorithm
     [HttpGet("due")]
     public async Task<IActionResult> GetDueReviews()
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            _logger.LogInformation("User {UserId} đang lấy danh sách ôn tập", userId);
-
-            var result = await _vocabularyService.GetDueReviewsAsync(userId);
-            return result.Success ? Ok(result) : BadRequest(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi lấy danh sách ôn tập");
-            return StatusCode(500, new ServiceResponse<List<VocabularyReviewDto>>
-            {
-                Success = false,
-                Message = "Lỗi hệ thống"
-            });
-        }
+        var userId = GetCurrentUserId();
+        var result = await _vocabularyService.GetDueReviewsAsync(userId);
+        return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
     }
 
-    // Lấy từ vựng mới để học
+    // GET: api/user/vocabularyreview/new - Get new flashcards to learn (default limit: 10)
     [HttpGet("new")]
     public async Task<IActionResult> GetNewCards([FromQuery] int limit = 10)
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            _logger.LogInformation("User {UserId} đang lấy từ mới, limit: {Limit}", userId, limit);
-
-            var result = await _vocabularyService.GetNewCardsAsync(userId, limit);
-            return result.Success ? Ok(result) : BadRequest(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi lấy từ mới");
-            return StatusCode(500, new ServiceResponse<List<FlashCardDto>>
-            {
-                Success = false,
-                Message = "Lỗi hệ thống"
-            });
-        }
+        var userId = GetCurrentUserId();
+        var result = await _vocabularyService.GetNewCardsAsync(userId, limit);
+        return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
     }
 
-    // Bắt đầu ôn tập một từ vựng
+    // POST: api/user/vocabularyreview/start/{flashCardId} - Start a review session for a specific flashcard
     [HttpPost("start/{flashCardId}")]
     public async Task<IActionResult> StartReview(int flashCardId)
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            _logger.LogInformation("User {UserId} bắt đầu ôn tập từ {FlashCardId}", userId, flashCardId);
-
-            var result = await _vocabularyService.StartReviewAsync(userId, flashCardId);
-            return result.Success ? Ok(result) : BadRequest(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi bắt đầu ôn tập từ {FlashCardId}", flashCardId);
-            return StatusCode(500, new ServiceResponse<VocabularyReviewDto>
-            {
-                Success = false,
-                Message = "Lỗi hệ thống"
-            });
-        }
+        var userId = GetCurrentUserId();
+        var result = await _vocabularyService.StartReviewAsync(userId, flashCardId);
+        return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
     }
 
-    // Submit kết quả ôn tập (quality score 0-5)
+    // POST: api/user/vocabularyreview/submit/{reviewId} - Submit review result with quality score (0-5) for SM-2 algorithm
     [HttpPost("submit/{reviewId}")]
     public async Task<IActionResult> SubmitReview(int reviewId, [FromBody] SubmitReviewRequestDto request)
     {
-        try
+        if (request.Quality < 0 || request.Quality > 5)
         {
-            if (request.Quality < 0 || request.Quality > 5)
-            {
-                return BadRequest(new ServiceResponse<VocabularyReviewResultDto>
-                {
-                    Success = false,
-                    Message = "Quality phải từ 0-5"
-                });
-            }
-
-            _logger.LogInformation("Submitting review {ReviewId} with quality {Quality}", reviewId, request.Quality);
-
-            var result = await _vocabularyService.SubmitReviewAsync(reviewId, request.Quality);
-            return result.Success ? Ok(result) : BadRequest(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi submit review {ReviewId}", reviewId);
-            return StatusCode(500, new ServiceResponse<VocabularyReviewResultDto>
+            return BadRequest(new ServiceResponse<VocabularyReviewResultDto>
             {
                 Success = false,
-                Message = "Lỗi hệ thống"
+                Message = "Quality phải từ 0-5"
             });
         }
+
+        var result = await _vocabularyService.SubmitReviewAsync(reviewId, request.Quality);
+        return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
     }
 
-    // Lấy thống kê vocabulary review
+    // GET: api/user/vocabularyreview/stats - Get vocabulary learning statistics (cards learned, retention rate, etc.)
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            _logger.LogInformation("User {UserId} đang lấy thống kê vocabulary", userId);
-
-            var result = await _vocabularyService.GetVocabularyStatsAsync(userId);
-            return result.Success ? Ok(result) : BadRequest(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi lấy thống kê vocabulary");
-            return StatusCode(500, new ServiceResponse<VocabularyStatsDto>
-            {
-                Success = false,
-                Message = "Lỗi hệ thống"
-            });
-        }
+        var userId = GetCurrentUserId();
+        var result = await _vocabularyService.GetVocabularyStatsAsync(userId);
+        return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
     }
 
-    // Lấy lịch sử ôn tập gần đây
+    // GET: api/user/vocabularyreview/recent - Get recent review history (default: last 7 days)
     [HttpGet("recent")]
     public async Task<IActionResult> GetRecentReviews([FromQuery] int days = 7)
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            _logger.LogInformation("User {UserId} đang lấy lịch sử ôn tập {Days} ngày", userId, days);
-
-            var result = await _vocabularyService.GetRecentReviewsAsync(userId, days);
-            return result.Success ? Ok(result) : BadRequest(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi lấy lịch sử ôn tập");
-            return StatusCode(500, new ServiceResponse<List<VocabularyReviewDto>>
-            {
-                Success = false,
-                Message = "Lỗi hệ thống"
-            });
-        }
+        var userId = GetCurrentUserId();
+        var result = await _vocabularyService.GetRecentReviewsAsync(userId, days);
+        return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
     }
 
-    // Reset tiến độ của một từ vựng (khi quên hoàn toàn)
+    // POST: api/user/vocabularyreview/reset/{flashCardId} - Reset learning progress for a card (when completely forgotten)
     [HttpPost("reset/{flashCardId}")]
     public async Task<IActionResult> ResetCardProgress(int flashCardId)
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            _logger.LogInformation("User {UserId} reset tiến độ từ {FlashCardId}", userId, flashCardId);
-
-            var result = await _vocabularyService.ResetCardProgressAsync(userId, flashCardId);
-            return result.Success ? Ok(result) : BadRequest(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi reset tiến độ từ {FlashCardId}", flashCardId);
-            return StatusCode(500, new ServiceResponse<bool>
-            {
-                Success = false,
-                Message = "Lỗi hệ thống"
-            });
-        }
+        var userId = GetCurrentUserId();
+        var result = await _vocabularyService.ResetCardProgressAsync(userId, flashCardId);
+        return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
     }
 }

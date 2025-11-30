@@ -7,7 +7,6 @@ namespace LearningEnglish.API.Controller.Admin
 {
     [ApiController]
     [Route("api/admin/teacher-packages")]
-
     [Authorize(Roles = "Admin")]
     public class AdminTeacherPackageController : ControllerBase
     {
@@ -18,80 +17,58 @@ namespace LearningEnglish.API.Controller.Admin
             _teacherPackageService = teacherPackageService;
         }
 
-        // Controller lấy ra danh sách gói giáo viên trong hệ thống
-
+        // GET: api/admin/teacher-packages - Get all teacher packages in the system
         [HttpGet]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllTeacherPackages()
         {
             var result = await _teacherPackageService.GetAllTeacherPackagesAsync();
-            if (!result.Success)
-                return BadRequest(new { message = result.Message });
-            return Ok(result.Data);
+            return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
-        // Controller lấy ra gói giáo viên theo ID
 
+        // GET: api/admin/teacher-packages/{id} - Get teacher package by ID
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetTeacherPackageById(int id)
         {
             if (id <= 0)
                 return BadRequest(new { message = "Invalid ID provided." });
 
             var result = await _teacherPackageService.GetTeacherPackageByIdAsync(id);
-            if (!result.Success)
-                return BadRequest(new { message = result.Message });
-            return Ok(result.Data);
+            return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
-        // Controller tạo mới gói giáo viên
 
+        // POST: api/admin/teacher-packages - Create new teacher package
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateTeacherPackage([FromBody] CreateTeacherPackageDto createDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var result = await _teacherPackageService.CreateTeacherPackageAsync(createDto);
-            if (!result.Success)
-                return BadRequest(new { message = result.Message });
-            return Ok(result.Data);
+            return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
-        // Controller cập nhật gói giáo viên
 
+        // PUT: api/admin/teacher-packages/{id} - Update teacher package
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateTeacherPackage(int id, [FromBody] UpdateTeacherPackageDto teacherPackageDto)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                var result = await _teacherPackageService.UpdateTeacherPackageAsync(id, teacherPackageDto);
-
-                if (!result.Success)
-                    return BadRequest(new { Message = result.Message });
-
-                return Ok(new { Message = "Teacher package updated successfully.", Data = result.Data });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = "Internal server error", Detail = ex.Message });
-            }
+            var result = await _teacherPackageService.UpdateTeacherPackageAsync(id, teacherPackageDto);
+            return result.Success 
+                ? Ok(new { Message = "Teacher package updated successfully.", Data = result.Data })
+                : StatusCode(result.StatusCode, new { Message = result.Message });
         }
-        // Controller xóa gói giáo viên
+
+        // DELETE: api/admin/teacher-packages/{id} - Delete teacher package
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteTeacherPackage(int id)
         {
             if (id <= 0)
                 return BadRequest(new { message = "Invalid ID provided." });
 
             var result = await _teacherPackageService.DeleteTeacherPackageAsync(id);
-            if (!result.Success)
-                return BadRequest(new { message = result.Message });
-            return NoContent();
+            return result.Success ? NoContent() : StatusCode(result.StatusCode, new { message = result.Message });
         }
     }
 }

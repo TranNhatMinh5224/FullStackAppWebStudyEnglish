@@ -25,61 +25,31 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        // Lấy thông tin lecture theo ID (chỉ đọc)
+        // GET: api/userlecture/{lectureId} - Get lecture details by ID
         [HttpGet("{lectureId}")]
         public async Task<IActionResult> GetLecture(int lectureId)
         {
-            try
-            {
-                var userId = GetCurrentUserId();
-                var result = await _lectureService.GetLectureByIdAsync(lectureId, userId);
-
-                if (!result.Success)
-                    return NotFound(result);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi user lấy lecture với ID: {LectureId}", lectureId);
-                return StatusCode(500, "Có lỗi xảy ra khi lấy thông tin lecture");
-            }
+            var userId = GetCurrentUserId();
+            var result = await _lectureService.GetLectureByIdAsync(lectureId, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy danh sách lecture theo module ID (chỉ đọc)
+        // GET: api/userlecture/module/{moduleId} - Get all lectures within a module
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetLecturesByModule(int moduleId)
         {
-            try
-            {
-                var userId = GetCurrentUserId();
-                var result = await _lectureService.GetLecturesByModuleIdAsync(moduleId, userId);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi user lấy danh sách lecture theo ModuleId: {ModuleId}", moduleId);
-                return StatusCode(500, "Có lỗi xảy ra khi lấy danh sách lecture");
-            }
+            var userId = GetCurrentUserId();
+            var result = await _lectureService.GetLecturesByModuleIdAsync(moduleId, userId);
+            return Ok(result);
         }
 
-        // Lấy cấu trúc cây lecture theo module ID (chỉ đọc)
+        // GET: api/userlecture/module/{moduleId}/tree - Get hierarchical lecture tree structure for a module
         [HttpGet("module/{moduleId}/tree")]
         public async Task<IActionResult> GetLectureTree(int moduleId)
         {
-            try
-            {
-                var userId = GetCurrentUserId();
-                var result = await _lectureService.GetLectureTreeByModuleIdAsync(moduleId, userId);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi user lấy cấu trúc cây lecture theo ModuleId: {ModuleId}", moduleId);
-                return StatusCode(500, "Có lỗi xảy ra khi lấy cấu trúc cây lecture");
-            }
+            var userId = GetCurrentUserId();
+            var result = await _lectureService.GetLectureTreeByModuleIdAsync(moduleId, userId);
+            return Ok(result);
         }
     }
 }

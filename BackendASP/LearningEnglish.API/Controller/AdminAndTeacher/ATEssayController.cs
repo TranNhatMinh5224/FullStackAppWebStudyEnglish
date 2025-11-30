@@ -18,124 +18,72 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _essayService = essayService;
         }
 
-        
-        //Controller lấy thông tin Essay theo ID
-        
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+        }
+
+        private string GetCurrentUserRole()
+        {
+            return User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+        }
+
+        // GET: api/Essay/{essayId} - Get essay by ID
         [HttpGet("{essayId}")]
         public async Task<IActionResult> GetEssay(int essayId)
         {
             var result = await _essayService.GetEssayByIdAsync(essayId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return NotFound(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        //Controller lấy danh sách Essay theo Assessment ID
+        // GET: api/Essay/assessment/{assessmentId} - Get essays by assessment ID
         [HttpGet("assessment/{assessmentId}")]
         public async Task<IActionResult> GetEssaysByAssessment(int assessmentId)
         {
             var result = await _essayService.GetEssaysByAssessmentIdAsync(assessmentId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        //Controller tạo Essay mới
+        // POST: api/Essay/create - Create new essay (Admin: system-level, Teacher: own)
         [HttpPost("create")]
         public async Task<IActionResult> CreateEssay([FromBody] CreateEssayDto createDto)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
-            // Lấy thông tin Teacher từ token (nếu không phải Admin)
-            int? teacherId = null;
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userRole == "Teacher")
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (int.TryParse(userIdClaim, out int parsedUserId))
-                {
-                    teacherId = parsedUserId;
-                }
-            }
+            var userRole = GetCurrentUserRole();
+            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
 
             var result = await _essayService.CreateEssayAsync(createDto, teacherId);
-
-            if (result.Success)
-            {
-                return CreatedAtAction(nameof(GetEssay), new { essayId = result.Data?.EssayId }, result);
-            }
-
-            return BadRequest(result);
+            return result.Success 
+                ? CreatedAtAction(nameof(GetEssay), new { essayId = result.Data?.EssayId }, result)
+                : StatusCode(result.StatusCode, result);
         }
 
-        //Controller cập nhật Essay
+        // PUT: api/Essay/update/{essayId} - Update essay (Admin: any, Teacher: own only)
         [HttpPut("update/{essayId}")]
         public async Task<IActionResult> UpdateEssay(int essayId, [FromBody] UpdateEssayDto updateDto)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
-            // Lấy thông tin Teacher từ token (nếu không phải Admin)
-            int? teacherId = null;
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userRole == "Teacher")
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (int.TryParse(userIdClaim, out int parsedUserId))
-                {
-                    teacherId = parsedUserId;
-                }
-            }
+            var userRole = GetCurrentUserRole();
+            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
 
             var result = await _essayService.UpdateEssayAsync(essayId, updateDto, teacherId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
-        //controller Xóa Essay theo id
-
+        // DELETE: api/Essay/delete/{essayId} - Delete essay (Admin: any, Teacher: own only)
         [HttpDelete("delete/{essayId}")]
         public async Task<IActionResult> DeleteEssay(int essayId)
         {
-            // Lấy thông tin Teacher từ token (nếu không phải Admin)
-            int? teacherId = null;
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (userRole == "Teacher")
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (int.TryParse(userIdClaim, out int parsedUserId))
-                {
-                    teacherId = parsedUserId;
-                }
-            }
+            var userRole = GetCurrentUserRole();
+            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
 
             var result = await _essayService.DeleteEssayAsync(essayId, teacherId);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

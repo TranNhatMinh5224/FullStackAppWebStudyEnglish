@@ -17,71 +17,50 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _quizGroupService = quizGroupService;
         }
 
+        // POST: api/QuizGroup - Create quiz group
         [HttpPost]
         public async Task<IActionResult> CreateQuizGroup([FromBody] CreateQuizGroupDto createDto)
         {
-            // FluentValidation tự động validate với ModelState
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             var result = await _quizGroupService.CreateQuizGroupAsync(createDto);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
+        // GET: api/QuizGroup/{id} - Get quiz group by ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetQuizGroup(int id)
         {
             var result = await _quizGroupService.GetQuizGroupByIdAsync(id);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return NotFound(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
+        // GET: api/QuizGroup/by-quiz-section/{quizSectionId} - Get quiz groups by quiz section ID
         [HttpGet("by-quiz-section/{quizSectionId}")]
         public async Task<IActionResult> GetQuizGroupsByQuizSectionId(int quizSectionId)
         {
             var result = await _quizGroupService.GetQuizGroupsByQuizSectionIdAsync(quizSectionId);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
+        // PUT: api/QuizGroup/{id} - Update quiz group
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateQuizGroup(int id, [FromBody] UpdateQuizGroupDto updateDto)
         {
-            // FluentValidation tự động validate với ModelState
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             var result = await _quizGroupService.UpdateQuizGroupAsync(id, updateDto);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
+        // DELETE: api/QuizGroup/{id} - Delete quiz group
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteQuizGroup(int id)
         {
             var result = await _quizGroupService.DeleteQuizGroupAsync(id);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

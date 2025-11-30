@@ -31,124 +31,72 @@ namespace LearningEnglish.API.Controller.User
             _completeValidator = completeValidator;
         }
 
-        // Tạo thông tin thanh toán (Process Payment)
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                throw new UnauthorizedAccessException("Invalid user credentials");
+            }
+            return userId;
+        }
+
+        // POST: api/payment/process - Create payment request and generate payment URL
         [HttpPost("process")]
         public async Task<IActionResult> ProcessPayment([FromBody] requestPayment request)
         {
-            // Validate input
             var validationResult = await _requestValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
             {
                 return BadRequest(new { Errors = validationResult.Errors.Select(e => e.ErrorMessage) });
             }
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized(new { message = "Invalid user credentials" });
-            }
-
+            var userId = GetCurrentUserId();
             var result = await _paymentService.ProcessPaymentAsync(userId, request);
-            if (!result.Success)
-            {
-                return BadRequest(new { message = result.Message });
-            }
-
-            return Ok(result.Data);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Xác nhận thanh toán (Confirm Payment)
+        // POST: api/payment/confirm - Confirm and complete payment transaction
         [HttpPost("confirm")]
         public async Task<IActionResult> ConfirmPayment([FromBody] CompletePayment paymentDto)
         {
-            // Validate input
             var validationResult = await _completeValidator.ValidateAsync(paymentDto);
             if (!validationResult.IsValid)
             {
                 return BadRequest(new { Errors = validationResult.Errors.Select(e => e.ErrorMessage) });
             }
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized(new { message = "Invalid user credentials" });
-            }
-
+            var userId = GetCurrentUserId();
             var result = await _paymentService.ConfirmPaymentAsync(paymentDto, userId);
-            if (!result.Success)
-            {
-                return BadRequest(new { message = result.Message });
-            }
-
-            return Ok(new { message = "Payment confirmed successfully" });
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Get transaction history for authenticated user
-        /// </summary>
+        // GET: api/payment/history - Get paginated transaction history for authenticated user
         [HttpGet("history")]
         public async Task<IActionResult> GetTransactionHistory([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            try
+            if (pageNumber < 1)
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new { message = "Invalid user credentials" });
-                }
-
-                if (pageNumber < 1)
-                {
-                    return BadRequest(new { message = "Page number must be greater than 0" });
-                }
-
-                if (pageSize < 1 || pageSize > 100)
-                {
-                    return BadRequest(new { message = "Page size must be between 1 and 100" });
-                }
-
-                var result = await _paymentService.GetTransactionHistoryAsync(userId, pageNumber, pageSize);
-                if (!result.Success)
-                {
-                    return BadRequest(new { message = result.Message });
-                }
-
-                return Ok(result);
+                return BadRequest(new { message = "Page number must be greater than 0" });
             }
-            catch (Exception ex)
+
+            if (pageSize < 1 || pageSize > 100)
             {
-                _logger.LogError(ex, "Error retrieving transaction history");
-                return StatusCode(500, new { message = "An error occurred while retrieving transaction history" });
+                return BadRequest(new { message = "Page size must be between 1 and 100" });
             }
+
+            var userId = GetCurrentUserId();
+            var result = await _paymentService.GetTransactionHistoryAsync(userId, pageNumber, pageSize);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Get transaction detail by payment ID
-        /// </summary>
+        // GET: api/payment/transaction/{paymentId} - Get detailed information about a specific transaction
         [HttpGet("transaction/{paymentId}")]
         public async Task<IActionResult> GetTransactionDetail(int paymentId)
         {
-            try
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new { message = "Invalid user credentials" });
-                }
-
-                var result = await _paymentService.GetTransactionDetailAsync(paymentId, userId);
-                if (!result.Success)
-                {
-                    return NotFound(new { message = result.Message });
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving transaction detail for Payment {PaymentId}", paymentId);
-                return StatusCode(500, new { message = "An error occurred while retrieving transaction detail" });
-            }
+            var userId = GetCurrentUserId();
+            var result = await _paymentService.GetTransactionDetailAsync(paymentId, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

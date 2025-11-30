@@ -31,269 +31,121 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _userManagementService = userManagementService;
         }
 
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                throw new UnauthorizedAccessException("Invalid user credentials");
+            }
+            return userId;
+        }
 
-        // Admin - Lấy tất cả khóa học
-
+        // GET: api/admin/all - Admin retrieves all courses in the system
         [HttpGet("admin/all")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllCourses()
         {
-            try
-            {
-                var result = await _adminCourseService.GetAllCoursesAsync();
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetAllCourses endpoint");
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+            var result = await _adminCourseService.GetAllCoursesAsync();
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
-        // Controller Admin - Xóa khóa học
-
+        // DELETE: api/admin/{courseId} - Admin deletes a course by ID
         [HttpDelete("admin/{courseId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCourse(int courseId)
         {
-            try
-            {
-                var result = await _adminCourseService.DeleteCourseAsync(courseId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in DeleteCourse endpoint for CourseId: {CourseId}", courseId);
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+            var result = await _adminCourseService.DeleteCourseAsync(courseId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
-        // Controller Admin - Tạo khóa học mới
-
+        // POST: api/admin/create - Admin creates a new course with system-level permissions
         [HttpPost("admin/create")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminCreateCourse([FromBody] AdminCreateCourseRequestDto requestDto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var result = await _adminCourseService.AdminCreateCourseAsync(requestDto);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return CreatedAtAction(null, new { courseId = result.Data?.CourseId }, result);
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in AdminCreateCourse endpoint");
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+
+            var result = await _adminCourseService.AdminCreateCourseAsync(requestDto);
+            return result.Success 
+                ? CreatedAtAction(null, new { courseId = result.Data?.CourseId }, result)
+                : StatusCode(result.StatusCode, result);
         }
 
-
-
-
-        // Controller Teacher - Tạo khóa học mới
-
+        // POST: api/teacher/create - Teacher creates a new course owned by their account
         [HttpPost("teacher/create")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> CreateCourse([FromBody] TeacherCreateCourseRequestDto requestDto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                // Lấy TeacherId từ JWT token
-                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(teacherIdClaim, out int teacherId))
-                {
-                    return Unauthorized(new { message = "Invalid teacher credentials" });
-                }
-
-                var result = await _teacherCourseService.CreateCourseAsync(requestDto, teacherId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return CreatedAtAction(null, new { courseId = result.Data?.CourseId }, result);
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in CreateCourse endpoint");
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+
+            var teacherId = GetCurrentUserId();
+            var result = await _teacherCourseService.CreateCourseAsync(requestDto, teacherId);
+            return result.Success 
+                ? CreatedAtAction(null, new { courseId = result.Data?.CourseId }, result)
+                : StatusCode(result.StatusCode, result);
         }
 
-
-        // Controller Teacher - Lấy danh sách khóa học của mình
-
+        // GET: api/teacher/my-courses - Teacher retrieves all courses they own
         [HttpGet("teacher/my-courses")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> GetMyCourses()
         {
-            try
-            {
-                // Lấy TeacherId từ JWT token
-                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(teacherIdClaim, out int teacherId))
-                {
-                    return Unauthorized(new { message = "Invalid teacher credentials" });
-                }
-
-                var result = await _teacherCourseService.GetMyCoursesByTeacherAsync(teacherId);
-
-                if (!result.Success)
-                {
-                    return BadRequest(result);
-                }
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetMyCourses endpoint");
-                return StatusCode(500, new { message = "Internal server error" });
-            }
+            var teacherId = GetCurrentUserId();
+            var result = await _teacherCourseService.GetMyCoursesByTeacherAsync(teacherId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
-
-
-        // Controller Admin - Cập nhật khóa học
-
+        // PUT: api/admin/{courseId} - Admin updates any course with full permissions
         [HttpPut("admin/{courseId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminUpdateCourse(int courseId, [FromBody] AdminUpdateCourseRequestDto requestDto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
-                }
-
-                var result = await _adminCourseService.AdminUpdateCourseAsync(courseId, requestDto);
-
-                if (!result.Success)
-                {
-                    return StatusCode(result.StatusCode, new
-                    {
-                        success = false,
-                        message = result.Message,
-                        statusCode = result.StatusCode
-                    });
-                }
-
-                return Ok(new
-                {
-                    success = true,
-                    message = result.Message,
-                    data = result.Data,
-                    statusCode = result.StatusCode
-                });
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in AdminUpdateCourse endpoint for CourseId: {CourseId}", courseId);
-                return StatusCode(500, new { success = false, message = "Lỗi hệ thống", statusCode = 500 });
-            }
+
+            var result = await _adminCourseService.AdminUpdateCourseAsync(courseId, requestDto);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
-
-        // Controller Teacher - Cập nhật khóa học của mình
-
+        // PUT: api/teacher/{courseId} - Teacher updates their own course
         [HttpPut("teacher/{courseId}")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] TeacherUpdateCourseRequestDto requestDto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
-                }
-
-                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(teacherIdClaim, out int teacherId))
-                {
-                    return Unauthorized(new { success = false, message = "Thông tin giáo viên không hợp lệ" });
-                }
-
-                var result = await _teacherCourseService.UpdateCourseAsync(courseId, requestDto, teacherId);
-
-                if (!result.Success)
-                {
-                    return StatusCode(result.StatusCode, new
-                    {
-                        success = false,
-                        message = result.Message,
-                        statusCode = result.StatusCode
-                    });
-                }
-
-                return Ok(new
-                {
-                    success = true,
-                    message = result.Message,
-                    data = result.Data,
-                    statusCode = result.StatusCode
-                });
+                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = ModelState });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in UpdateCourse endpoint for CourseId: {CourseId}", courseId);
-                return StatusCode(500, new { success = false, message = "Lỗi hệ thống", statusCode = 500 });
-            }
+
+            var teacherId = GetCurrentUserId();
+            var result = await _teacherCourseService.UpdateCourseAsync(courseId, requestDto, teacherId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
-        // Controller lấy danh sách User trong khóa học (theo courseId) dành cho Admin và Teacher
+
+        // GET: api/getusersbycourse/{courseId} - Admin/Teacher retrieves all enrolled users for a course
         [HttpGet("getusersbycourse/{courseId}")]
         [Authorize(Roles = "Admin, Teacher")]
         public async Task<IActionResult> GetUsersByCourseId(int courseId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = GetCurrentUserId();
             var checkRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized(new { message = "Invalid user credentials" });
-            }
             if (string.IsNullOrEmpty(checkRole))
             {
                 return Unauthorized(new { message = "User role not found" });
             }
+
             var result = await _userManagementService.GetUsersByCourseIdAsync(courseId, userId, checkRole);
-            if (!result.Success)
-            {
-                return StatusCode(result.StatusCode, new { message = result.Message });
-            }
-            return Ok(result.Data);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

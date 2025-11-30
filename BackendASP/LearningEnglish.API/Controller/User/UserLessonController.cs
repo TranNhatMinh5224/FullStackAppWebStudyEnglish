@@ -22,90 +22,46 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                throw new UnauthorizedAccessException("Invalid user credentials");
+            }
+            return userId;
+        }
 
-        // Lấy danh sách bài học theo CourseId (chỉ user đã enroll mới xem được)
+        private string GetCurrentUserRole()
+        {
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (string.IsNullOrEmpty(userRole))
+            {
+                throw new UnauthorizedAccessException("User role not found");
+            }
+            return userRole;
+        }
+
+        // GET: api/user/lessons/course/{courseId} - Get all lessons for a course (only accessible to enrolled users)
         [HttpGet("course/{courseId}")]
         public async Task<IActionResult> GetLessonsByCourseId(int courseId)
         {
-            try
-            {
-                // Lấy UserId từ JWT token
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new { message = "Invalid user credentials" });
-                }
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
 
-               
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                if (string.IsNullOrEmpty(userRole))
-                {
-                    return Unauthorized(new { message = "User role not found" });
-                }
-
-          
-                var response = await _lessonService.GetListLessonByCourseId(courseId, userId, userRole);
-
-                if (!response.Success)
-                {
-                    if (response.StatusCode == 404)
-                    {
-                        return NotFound(new { message = response.Message });
-                    }
-                    if (response.StatusCode == 403)
-                    {
-                        return StatusCode(403, new { message = response.Message });
-                    }
-                    return BadRequest(new { message = response.Message });
-                }
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting lessons for course {CourseId}", courseId);
-                return StatusCode(500, "Internal server error");
-            }
+            var result = await _lessonService.GetListLessonByCourseId(courseId, userId, userRole);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
+        // GET: api/user/lessons/{lessonId} - Get detailed information about a specific lesson
         [HttpGet("{lessonId}")]
         public async Task<IActionResult> GetLessonById(int lessonId)
         {
-            try
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new { message = "Invalid user credentials" });
-                }
+            var userId = GetCurrentUserId();
+            var userRole = GetCurrentUserRole();
 
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                if (string.IsNullOrEmpty(userRole))
-                {
-                    return Unauthorized(new { message = "User role not found" });
-                }
-
-                var response = await _lessonService.GetLessonById(lessonId, userId, userRole);
-                if (!response.Success)
-                {
-                    if (response.StatusCode == 404)
-                    {
-                        return NotFound(new { message = response.Message });
-                    }
-                    if (response.StatusCode == 403)
-                    {
-                        return StatusCode(403, new { message = response.Message });
-                    }
-                    return BadRequest(new { message = response.Message });
-
-                }
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting lesson {LessonId}", lessonId);
-                return StatusCode(500, "Internal server error");
-            }
+            var result = await _lessonService.GetLessonById(lessonId, userId, userRole);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

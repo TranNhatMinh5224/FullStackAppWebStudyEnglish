@@ -12,113 +12,74 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
     public class QuestionController : ControllerBase
     {
         private readonly IQuestionService _questionService;
-
         private readonly IValidator<QuestionBulkCreateDto> _bulkCreateValidator;
 
         public QuestionController(
             IQuestionService questionService,
-
             IValidator<QuestionBulkCreateDto> bulkCreateValidator)
         {
             _questionService = questionService;
             _bulkCreateValidator = bulkCreateValidator;
         }
 
-
-        // Lấy câu hỏi theo ID
-
+        // GET: api/Question/{questionId} - Get question by ID
         [HttpGet("{questionId}")]
         public async Task<IActionResult> GetQuestionById(int questionId)
         {
             var result = await _questionService.GetQuestionByIdAsync(questionId);
-
-            if (result.Success)
-                return Ok(result);
-
-            return NotFound(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
-        //Lấy danh sách câu hỏi theo QuizGroupId
-
+        // GET: api/Question/quiz-group/{quizGroupId} - Get questions by quiz group ID
         [HttpGet("quiz-group/{quizGroupId}")]
         public async Task<IActionResult> GetQuestionsByQuizGroupId(int quizGroupId)
         {
             var result = await _questionService.GetQuestionsByQuizGroupIdAsync(quizGroupId);
-
-            if (result.Success)
-                return Ok(result);
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy danh sách câu hỏi theo QuizSectionId
-
+        // GET: api/Question/quiz-section/{quizSectionId} - Get questions by quiz section ID
         [HttpGet("quiz-section/{quizSectionId}")]
         public async Task<IActionResult> GetQuestionsByQuizSectionId(int quizSectionId)
         {
             var result = await _questionService.GetQuestionsByQuizSectionIdAsync(quizSectionId);
-
-            if (result.Success)
-                return Ok(result);
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-
-        /// Tạo câu hỏi mới (kèm đáp án)
-
+        // POST: api/Question/create - Create new question with answers
         [HttpPost("create")]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionCreateDto questionCreateDto)
         {
-
             var result = await _questionService.AddQuestionAsync(questionCreateDto);
-
-            if (result.Success)
-                return StatusCode(result.StatusCode > 0 ? result.StatusCode : 201, result);
-
-            return BadRequest(result);
+            return result.Success 
+                ? StatusCode(result.StatusCode > 0 ? result.StatusCode : 201, result)
+                : StatusCode(result.StatusCode, result);
         }
 
-
-        // Tạo hàng loạt câu hỏi (Bulk Create) - Gộp cả Question + Answer Options
-
+        // POST: api/Question/bulk-create - Bulk create questions with answers
         [HttpPost("bulk-create")]
         public async Task<IActionResult> CreateBulkQuestions([FromBody] QuestionBulkCreateDto questionBulkCreateDto)
         {
-
             var result = await _questionService.AddBulkQuestionsAsync(questionBulkCreateDto);
-
-            if (result.Success)
-                return StatusCode(result.StatusCode > 0 ? result.StatusCode : 201, result);
-
-            return BadRequest(result);
+            return result.Success 
+                ? StatusCode(result.StatusCode > 0 ? result.StatusCode : 201, result)
+                : StatusCode(result.StatusCode, result);
         }
 
-        // Cập nhật câu hỏi
+        // PUT: api/Question/update/{questionId} - Update question
         [HttpPut("update/{questionId}")]
         public async Task<IActionResult> UpdateQuestion(int questionId, [FromBody] QuestionUpdateDto questionUpdateDto)
         {
-
-
             var result = await _questionService.UpdateQuestionAsync(questionId, questionUpdateDto);
-
-            if (result.Success)
-                return Ok(result);
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Xóa câu hỏi
+        // DELETE: api/Question/delete/{questionId} - Delete question
         [HttpDelete("delete/{questionId}")]
         public async Task<IActionResult> DeleteQuestion(int questionId)
         {
             var result = await _questionService.DeleteQuestionAsync(questionId);
-
-            if (result.Success)
-                return Ok(result);
-
-            return BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }
