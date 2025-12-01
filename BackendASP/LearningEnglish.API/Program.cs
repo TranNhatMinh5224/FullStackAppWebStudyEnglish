@@ -188,6 +188,9 @@ builder.Services.AddScoped<ILessonProgressService, LessonProgressService>();
 builder.Services.AddScoped<IModuleProgressService, ModuleProgressService>();
 builder.Services.AddScoped<IProgressDashboardService, ProgressDashboardService>();
 
+// 🎤 Azure Speech Service for Pronunciation Assessment
+builder.Services.AddScoped<IAzureSpeechService, AzureSpeechService>();
+
 // HttpClient for Dictionary API
 builder.Services.AddHttpClient();
 

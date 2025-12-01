@@ -7,14 +7,12 @@ namespace LearningEnglish.Application.Validators.PronunciationAssessmentValidato
     {
         public CreatePronunciationAssessmentDtoValidator()
         {
-            // Validate ReferenceText - bắt buộc
-            RuleFor(x => x.ReferenceText)
-                .NotEmpty()
-                .WithMessage("Reference text is required")
-                .MaximumLength(500)
-                .WithMessage("Reference text must not exceed 500 characters");
+            // Validate FlashCardId - BẮT BUỘC (referenceText sẽ được lấy từ FlashCard.Word)
+            RuleFor(x => x.FlashCardId)
+                .GreaterThan(0)
+                .WithMessage("FlashCard ID is required and must be greater than 0");
 
-            // Validate AudioTempKey - bắt buộc
+            // Validate AudioTempKey - BẮT BUỘC
             RuleFor(x => x.AudioTempKey)
                 .NotEmpty()
                 .WithMessage("Audio temp key is required")
@@ -33,17 +31,11 @@ namespace LearningEnglish.Application.Validators.PronunciationAssessmentValidato
                 .WithMessage("Audio size must be greater than 0")
                 .When(x => x.AudioSize.HasValue);
 
-            // Validate FlashCardId - nếu có phải > 0
-            RuleFor(x => x.FlashCardId)
+            // Validate DurationInSeconds - nếu có phải > 0
+            RuleFor(x => x.DurationInSeconds)
                 .GreaterThan(0)
-                .WithMessage("FlashCard ID must be greater than 0")
-                .When(x => x.FlashCardId.HasValue);
-
-            // Validate AssignmentId - nếu có phải > 0
-            RuleFor(x => x.AssignmentId)
-                .GreaterThan(0)
-                .WithMessage("Assignment ID must be greater than 0")
-                .When(x => x.AssignmentId.HasValue);
+                .WithMessage("Duration must be greater than 0")
+                .When(x => x.DurationInSeconds.HasValue);
         }
     }
 }

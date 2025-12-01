@@ -11,6 +11,7 @@ namespace LearningEnglish.Application.Service
     public class PronunciationAssessmentService : IPronunciationAssessmentService
     {
         private readonly IPronunciationAssessmentRepository _repository;
+        private readonly IFlashCardRepository _flashCardRepository;
         private readonly IMinioFileStorage _minioFileStorage;
         private readonly IAzureSpeechService _azureSpeechService;
         private readonly IMapper _mapper;
@@ -18,11 +19,13 @@ namespace LearningEnglish.Application.Service
 
         public PronunciationAssessmentService(
             IPronunciationAssessmentRepository repository,
+            IFlashCardRepository flashCardRepository,
             IMinioFileStorage minioFileStorage,
             IAzureSpeechService azureSpeechService,
             IMapper mapper)
         {
             _repository = repository;
+            _flashCardRepository = flashCardRepository;
             _minioFileStorage = minioFileStorage;
             _azureSpeechService = azureSpeechService;
             _mapper = mapper;
@@ -36,7 +39,25 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // 1. Commit audio from temp to real
+                // 1. Get FlashCard to retrieve reference text
+                var flashCard = await _flashCardRepository.GetByIdAsync(dto.FlashCardId);
+                if (flashCard == null)
+                {
+                    response.Success = false;
+                    response.Message = "FlashCard not found";
+                    return response;
+                }
+
+                var referenceText = flashCard.Word; // Use the Word as reference text
+
+                if (string.IsNullOrWhiteSpace(referenceText))
+                {
+                    response.Success = false;
+                    response.Message = "FlashCard does not have a valid word to assess";
+                    return response;
+                }
+
+                // 2. Commit audio from temp to real
                 var commitResult = await _minioFileStorage.CommitFileAsync(
                     dto.AudioTempKey,
                     BUCKET_NAME,
@@ -53,16 +74,16 @@ namespace LearningEnglish.Application.Service
 
                 try
                 {
-                    // 2. Generate public URL
+                    // 3. Generate public URL
                     var audioUrl = BuildPublicUrl.BuildURL(BUCKET_NAME, audioKey);
 
-                    // 3. Create entity with Pending status
+                    // 4. Create entity with Pending status
                     var assessment = new PronunciationAssessment
                     {
                         UserId = userId,
                         FlashCardId = dto.FlashCardId,
-                        AssignmentId = dto.AssignmentId,
-                        ReferenceText = dto.ReferenceText,
+                        AssignmentId = null, // No longer used for flashcard-based assessments
+                        ReferenceText = referenceText, // From FlashCard.Word
                         AudioKey = audioKey,
                         AudioType = dto.AudioType,
                         AudioSize = dto.AudioSize,
@@ -72,18 +93,18 @@ namespace LearningEnglish.Application.Service
                         UpdatedAt = DateTime.UtcNow
                     };
 
-                    // 4. Save to DB
+                    // 5. Save to DB
                     var savedAssessment = await _repository.CreateAsync(assessment);
 
-                    // 5. Start Azure assessment (change status to Processing)
+                    // 6. Start Azure assessment (change status to Processing)
                     savedAssessment.Status = AssessmentStatus.Processing;
                     savedAssessment.UpdatedAt = DateTime.UtcNow;
                     await _repository.UpdateAsync(savedAssessment);
 
-                    // 6. Call Azure Speech Service
+                    // 7. Call Azure Speech Service
                     var azureResult = await _azureSpeechService.AssessPronunciationAsync(
                         audioUrl,
-                        dto.ReferenceText);
+                        referenceText); // Use referenceText from FlashCard
 
                     if (azureResult.Success)
                     {

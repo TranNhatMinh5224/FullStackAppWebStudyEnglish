@@ -40,12 +40,13 @@ namespace LearningEnglish.Application.DTOs
     // DTO for creating new pronunciation assessment
     public class CreatePronunciationAssessmentDto
     {
-        public int? FlashCardId { get; set; }
-        public int? AssignmentId { get; set; }
-        public string ReferenceText { get; set; } = string.Empty;
+        // FlashCard ID is REQUIRED - referenceText will be fetched from FlashCard.Word
+        public int FlashCardId { get; set; }
         
-        // MinIO temp key from upload
+        
         public string AudioTempKey { get; set; } = string.Empty;
+        
+        // Optional fields
         public string? AudioType { get; set; }
         public long? AudioSize { get; set; }
         public float? DurationInSeconds { get; set; }
@@ -109,7 +110,7 @@ namespace LearningEnglish.Application.DTOs
         public int Duration { get; set; }
     }
 
-    // 🆕 DTO for progress tracking
+    //  DTO for progress tracking
     public class ProgressAnalytics
     {
         public List<ProgressDataPoint> ChartData { get; set; } = new();
