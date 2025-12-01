@@ -47,11 +47,11 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<PronunciationAssessment>> GetByAssignmentIdAsync(int assignmentId)
+        public async Task<List<PronunciationAssessment>> GetByAssessmentIdAsync(int assessmentId)
         {
             return await _context.PronunciationAssessments
                 .Include(p => p.User)
-                .Where(p => p.AssignmentId == assignmentId)
+                .Where(p => p.AssessmentId == assessmentId)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }

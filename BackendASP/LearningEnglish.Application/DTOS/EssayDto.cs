@@ -9,6 +9,15 @@ namespace LearningEnglish.Application.DTOs
         public int AssessmentId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
+        
+        // Audio attachment
+        public string? AudioUrl { get; set; }
+        public string? AudioType { get; set; }
+        
+        // Image attachment
+        public string? ImageUrl { get; set; }
+        public string? ImageType { get; set; }
+        
         public string Type { get; set; } = "Essay";
         
         // Navigation properties
@@ -24,14 +33,30 @@ namespace LearningEnglish.Application.DTOs
         public int AssessmentId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
+        
+        // Audio attachment (temp key from MinIO)
+        public string? AudioTempKey { get; set; }
+        public string? AudioType { get; set; }
+        
+        // Image attachment (temp key from MinIO)
+        public string? ImageTempKey { get; set; }
+        public string? ImageType { get; set; }
     }
 
     
     // DTO cho cập nhật bài kiểm tra tự luận
         public class UpdateEssayDto
     {
-        public string Title { get; set; } = string.Empty;
+        public string? Title { get; set; }
         public string? Description { get; set; }
+        
+        // Audio attachment (temp key from MinIO)
+        public string? AudioTempKey { get; set; }
+        public string? AudioType { get; set; }
+        
+        // Image attachment (temp key from MinIO)
+        public string? ImageTempKey { get; set; }
+        public string? ImageType { get; set; }
     }
 
     // DTO cho EssaySubmission - bài nộp của học sinh

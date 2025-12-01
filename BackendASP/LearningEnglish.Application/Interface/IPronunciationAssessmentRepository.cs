@@ -9,7 +9,7 @@ namespace LearningEnglish.Application.Interface
         Task<PronunciationAssessment?> GetByIdAsync(int id);
         Task<List<PronunciationAssessment>> GetByUserIdAsync(int userId);
         Task<List<PronunciationAssessment>> GetByFlashCardIdAsync(int flashCardId);
-        Task<List<PronunciationAssessment>> GetByAssignmentIdAsync(int assignmentId);
+        Task<List<PronunciationAssessment>> GetByAssessmentIdAsync(int assessmentId);
         Task UpdateAsync(PronunciationAssessment assessment);
         Task DeleteAsync(int id);
         Task<int> CountByUserIdAsync(int userId);

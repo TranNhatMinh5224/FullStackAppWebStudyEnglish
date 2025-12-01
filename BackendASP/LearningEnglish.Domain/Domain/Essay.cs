@@ -9,6 +9,14 @@ namespace LearningEnglish.Domain.Entities
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
 
+        // Audio attachment for essay question
+        public string? AudioKey { get; set; }
+        public string? AudioType { get; set; }
+
+        // Image attachment for essay question
+        public string? ImageKey { get; set; }
+        public string? ImageType { get; set; }
+
         public AssessmentType Type { get; set; } = AssessmentType.Essay;
         
         // Navigation Properties

@@ -5,7 +5,7 @@ namespace LearningEnglish.Domain.Entities
         public int PronunciationAssessmentId { get; set; }
         public int UserId { get; set; }
         public int? FlashCardId { get; set; }
-        public int? AssignmentId { get; set; }
+        public int? AssessmentId { get; set; }
 
         // Input
         public string ReferenceText { get; set; } = string.Empty;
@@ -42,7 +42,7 @@ namespace LearningEnglish.Domain.Entities
 
         public User User { get; set; } = null!;
         public FlashCard? FlashCard { get; set; }
-        public    Assessment ? Assignment { get; set; }
+        public Assessment? Assessment { get; set; }
     }
 
     public enum AssessmentStatus

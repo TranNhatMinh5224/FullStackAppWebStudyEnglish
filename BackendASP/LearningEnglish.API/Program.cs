@@ -141,6 +141,7 @@ builder.Services.AddScoped<IQuizRepository, QuizRepository>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
 builder.Services.AddScoped<IPronunciationAssessmentRepository, PronunciationAssessmentRepository>();
+builder.Services.AddScoped<IPronunciationProgressRepository, PronunciationProgressRepository>();
 builder.Services.AddScoped<ICourseProgressRepository, CourseProgressRepository>();
 builder.Services.AddScoped<ILessonCompletionRepository, LessonCompletionRepository>();
 builder.Services.AddScoped<IModuleCompletionRepository, ModuleCompletionRepository>();

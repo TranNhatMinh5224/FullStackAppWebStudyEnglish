@@ -3,6 +3,7 @@ using System;
 using LearningEnglish.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LearningEnglish.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251201194341_AddPronunciationProgressAndModuleSummary")]
+    partial class AddPronunciationProgressAndModuleSummary
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -635,6 +638,90 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.ToTable("ModuleCompletions", (string)null);
                 });
 
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.ModulePronunciationSummary", b =>
+                {
+                    b.Property<int>("ModulePronunciationSummaryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ModulePronunciationSummaryId"));
+
+                    b.Property<double>("AverageModuleScore")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CompletedFlashCards")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FirstPracticedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("HighestScore")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("IsModuleCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastPracticedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("LowestScore")
+                        .HasColumnType("double precision");
+
+                    b.Property<decimal>("MasteryPercentage")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ModuleProblemPhonemesJson")
+                        .HasColumnType("text");
+
+                    b.Property<int>("NeedsReviewFlashCards")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PracticeProgressPercentage")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("PracticedFlashCards")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StrugglingWordsJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TopPerformingWordsJson")
+                        .HasColumnType("text");
+
+                    b.Property<int>("TotalAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalFlashCards")
+                        .HasColumnType("integer");
+
+                    b.Property<float>("TotalPracticeTimeMinutes")
+                        .HasColumnType("real");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ModulePronunciationSummaryId");
+
+                    b.HasIndex("ModuleId");
+
+                    b.HasIndex("UserId", "ModuleId")
+                        .IsUnique();
+
+                    b.ToTable("ModulePronunciationSummaries", (string)null);
+                });
+
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Notification", b =>
                 {
                     b.Property<int>("Id")
@@ -855,6 +942,18 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PronunciationProgressId"));
 
+                    b.Property<double>("AverageAccuracy")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("AverageCompleteness")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("AverageFluency")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("AverageScore")
+                        .HasColumnType("double precision");
+
                     b.Property<int?>("BestAssessmentId")
                         .HasColumnType("integer");
 
@@ -864,17 +963,50 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<DateTime?>("BestScoreDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CommonProblemPhonemesJson")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ConsecutiveGoodScores")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ConsecutivePoorScores")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("FlashCardId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ImprovementTipsJson")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("LastPracticedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("LatestAssessmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("LatestScore")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("NeedsReview")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("PracticeAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TestAttempts")
+                        .HasColumnType("integer");
+
                     b.Property<int>("TotalAttempts")
                         .HasColumnType("integer");
+
+                    b.Property<float>("TotalPracticeTimeSeconds")
+                        .HasColumnType("real");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -887,6 +1019,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.HasIndex("BestAssessmentId");
 
                     b.HasIndex("FlashCardId");
+
+                    b.HasIndex("LatestAssessmentId");
 
                     b.HasIndex("UserId", "FlashCardId")
                         .IsUnique();
@@ -1462,7 +1596,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             Email = "minhxoandev@gmail.com",
                             FirstName = "Admin",
                             LastName = "System",
-                            PasswordHash = "$2a$11$Z3lRLWi0T0iTZUo6.BKAYuxkevfzydYgXnxIFZAPQUvjsHRxFOLCm",
+                            PasswordHash = "$2a$11$cFRvh1jM1WyyBdB0r4eTieh6lnFGapVeHLOsw/XHpAhf0sya.cePi",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -1722,6 +1856,25 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.ModulePronunciationSummary", b =>
+                {
+                    b.HasOne("LearningEnglish.Domain.Entities.Module", "Module")
+                        .WithMany("PronunciationSummaries")
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearningEnglish.Domain.Entities.User", "User")
+                        .WithMany("ModulePronunciationSummaries")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Notification", b =>
                 {
                     b.HasOne("LearningEnglish.Domain.Entities.User", "User")
@@ -1783,7 +1936,7 @@ namespace LearningEnglish.Infrastructure.Migrations
             modelBuilder.Entity("LearningEnglish.Domain.Entities.PronunciationProgress", b =>
                 {
                     b.HasOne("LearningEnglish.Domain.Entities.PronunciationAssessment", "BestAssessment")
-                        .WithMany()
+                        .WithMany("BestProgressReferences")
                         .HasForeignKey("BestAssessmentId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -1792,6 +1945,11 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasForeignKey("FlashCardId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("LearningEnglish.Domain.Entities.PronunciationAssessment", "LatestAssessment")
+                        .WithMany("LatestProgressReferences")
+                        .HasForeignKey("LatestAssessmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("LearningEnglish.Domain.Entities.User", "User")
                         .WithMany("PronunciationProgresses")
@@ -1802,6 +1960,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("BestAssessment");
 
                     b.Navigation("FlashCard");
+
+                    b.Navigation("LatestAssessment");
 
                     b.Navigation("User");
                 });
@@ -2038,6 +2198,15 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("Lectures");
 
                     b.Navigation("ModuleCompletions");
+
+                    b.Navigation("PronunciationSummaries");
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.PronunciationAssessment", b =>
+                {
+                    b.Navigation("BestProgressReferences");
+
+                    b.Navigation("LatestProgressReferences");
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Question", b =>
@@ -2084,6 +2253,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("LessonCompletions");
 
                     b.Navigation("ModuleCompletions");
+
+                    b.Navigation("ModulePronunciationSummaries");
 
                     b.Navigation("Notifications");
 

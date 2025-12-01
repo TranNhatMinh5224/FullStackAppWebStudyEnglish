@@ -6,7 +6,7 @@ namespace LearningEnglish.Application.DTOs
         public int PronunciationAssessmentId { get; set; }
         public int UserId { get; set; }
         public int? FlashCardId { get; set; }
-        public int? AssignmentId { get; set; }
+        public int? AssessmentId { get; set; }
         
         public string ReferenceText { get; set; } = string.Empty;
         public string AudioUrl { get; set; } = string.Empty;

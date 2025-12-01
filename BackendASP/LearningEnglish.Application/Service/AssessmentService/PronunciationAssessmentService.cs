@@ -14,6 +14,7 @@ namespace LearningEnglish.Application.Service
         private readonly IFlashCardRepository _flashCardRepository;
         private readonly IMinioFileStorage _minioFileStorage;
         private readonly IAzureSpeechService _azureSpeechService;
+        private readonly IPronunciationProgressRepository _progressRepository;
         private readonly IMapper _mapper;
         private const string BUCKET_NAME = "pronunciations";
 
@@ -22,12 +23,14 @@ namespace LearningEnglish.Application.Service
             IFlashCardRepository flashCardRepository,
             IMinioFileStorage minioFileStorage,
             IAzureSpeechService azureSpeechService,
+            IPronunciationProgressRepository progressRepository,
             IMapper mapper)
         {
             _repository = repository;
             _flashCardRepository = flashCardRepository;
             _minioFileStorage = minioFileStorage;
             _azureSpeechService = azureSpeechService;
+            _progressRepository = progressRepository;
             _mapper = mapper;
         }
 
@@ -82,7 +85,7 @@ namespace LearningEnglish.Application.Service
                     {
                         UserId = userId,
                         FlashCardId = dto.FlashCardId,
-                        AssignmentId = null, // No longer used for flashcard-based assessments
+                        AssessmentId = null, // Can be linked to Assessment if needed
                         ReferenceText = referenceText, // From FlashCard.Word
                         AudioKey = audioKey,
                         AudioType = dto.AudioType,
@@ -136,7 +139,20 @@ namespace LearningEnglish.Application.Service
 
                     await _repository.UpdateAsync(savedAssessment);
 
-                    // 7. Map to DTO
+                    // 🆕 8. Update PronunciationProgress (only if assessment completed successfully)
+                    if (savedAssessment.Status == AssessmentStatus.Completed && savedAssessment.FlashCardId.HasValue)
+                    {
+                        try
+                        {
+                            await _progressRepository.UpsertAsync(userId, savedAssessment.FlashCardId.Value, savedAssessment);
+                        }
+                        catch
+                        {
+                            // Progress update failed, but main assessment succeeded - don't fail request
+                        }
+                    }
+
+                    // 9. Map to DTO
                     var resultDto = _mapper.Map<PronunciationAssessmentDto>(savedAssessment);
                     resultDto.AudioUrl = audioUrl; // Use public URL
 

@@ -3,6 +3,7 @@ using System;
 using LearningEnglish.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LearningEnglish.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251201162721_AddAudioAndImageToEssay")]
+    partial class AddAudioAndImageToEssay
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -771,7 +774,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<double>("AccuracyScore")
                         .HasColumnType("double precision");
 
-                    b.Property<int?>("AssessmentId")
+                    b.Property<int?>("AssignmentId")
                         .HasColumnType("integer");
 
                     b.Property<string>("AudioKey")
@@ -838,60 +841,13 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.HasKey("PronunciationAssessmentId");
 
-                    b.HasIndex("AssessmentId");
+                    b.HasIndex("AssignmentId");
 
                     b.HasIndex("FlashCardId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("PronunciationAssessments", (string)null);
-                });
-
-            modelBuilder.Entity("LearningEnglish.Domain.Entities.PronunciationProgress", b =>
-                {
-                    b.Property<int>("PronunciationProgressId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PronunciationProgressId"));
-
-                    b.Property<int?>("BestAssessmentId")
-                        .HasColumnType("integer");
-
-                    b.Property<double>("BestScore")
-                        .HasColumnType("double precision");
-
-                    b.Property<DateTime?>("BestScoreDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("FlashCardId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("LastPracticedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("TotalAttempts")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("PronunciationProgressId");
-
-                    b.HasIndex("BestAssessmentId");
-
-                    b.HasIndex("FlashCardId");
-
-                    b.HasIndex("UserId", "FlashCardId")
-                        .IsUnique();
-
-                    b.ToTable("PronunciationProgresses", (string)null);
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Question", b =>
@@ -1462,7 +1418,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             Email = "minhxoandev@gmail.com",
                             FirstName = "Admin",
                             LastName = "System",
-                            PasswordHash = "$2a$11$Z3lRLWi0T0iTZUo6.BKAYuxkevfzydYgXnxIFZAPQUvjsHRxFOLCm",
+                            PasswordHash = "$2a$11$RYxM4UOpWnQevdZBtHVu.ORLRdqV9PzR4N5gQH7j/ywCYK.eZhg0a",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -1757,9 +1713,9 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.PronunciationAssessment", b =>
                 {
-                    b.HasOne("LearningEnglish.Domain.Entities.Assessment", "Assessment")
+                    b.HasOne("LearningEnglish.Domain.Entities.Assessment", "Assignment")
                         .WithMany("PronunciationAssessments")
-                        .HasForeignKey("AssessmentId")
+                        .HasForeignKey("AssignmentId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("LearningEnglish.Domain.Entities.FlashCard", "FlashCard")
@@ -1773,33 +1729,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Assessment");
-
-                    b.Navigation("FlashCard");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("LearningEnglish.Domain.Entities.PronunciationProgress", b =>
-                {
-                    b.HasOne("LearningEnglish.Domain.Entities.PronunciationAssessment", "BestAssessment")
-                        .WithMany()
-                        .HasForeignKey("BestAssessmentId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("LearningEnglish.Domain.Entities.FlashCard", "FlashCard")
-                        .WithMany("PronunciationProgresses")
-                        .HasForeignKey("FlashCardId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LearningEnglish.Domain.Entities.User", "User")
-                        .WithMany("PronunciationProgresses")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BestAssessment");
+                    b.Navigation("Assignment");
 
                     b.Navigation("FlashCard");
 
@@ -2012,8 +1942,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                 {
                     b.Navigation("PronunciationAssessments");
 
-                    b.Navigation("PronunciationProgresses");
-
                     b.Navigation("Reviews");
                 });
 
@@ -2092,8 +2020,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("Payments");
 
                     b.Navigation("PronunciationAssessments");
-
-                    b.Navigation("PronunciationProgresses");
 
                     b.Navigation("QuizAttempts");
 
