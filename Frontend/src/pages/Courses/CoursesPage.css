@@ -1,0 +1,108 @@
+/* Courses Page Styles */
+.courses-page {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.page-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Course Card Styles */
+.course-card {
+  transition: all 0.3s ease;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.course-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+.course-image-wrapper {
+  height: 200px;
+  overflow: hidden;
+  background-color: #e9ecef;
+}
+
+.course-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.course-card:hover .course-image {
+  transform: scale(1.1);
+}
+
+.course-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  min-height: 2.4rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.course-description {
+  font-size: 0.875rem;
+  min-height: 3rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.course-stats {
+  border-top: 1px solid #e9ecef;
+  padding-top: 0.75rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .page-header h1 {
+    font-size: 2rem;
+  }
+  
+  .page-header p {
+    font-size: 1rem;
+  }
+  
+  .course-image-wrapper {
+    height: 180px;
+  }
+}
+
+@media (max-width: 576px) {
+  .course-image-wrapper {
+    height: 150px;
+  }
+}
+
+/* Badge Styles */
+.badge {
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+}
+
+/* Search & Filter Bar */
+.input-group-text {
+  background-color: #fff;
+  border-right: none;
+}
+
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}

@@ -15,6 +15,8 @@ import TipsPage from "./pages/Tips/TipsPage";
 import AdminDashboard from "./pages/Dashboard/Admin/AdminDashboard";
 import TeacherDashboard from "./pages/Dashboard/Teacher/TeacherDashboard";
 import Unauthorized from "./pages/Unauthorized/Unauthorized";
+// Course pages
+import { CoursesPage, CourseDetailPage, MyCoursesPage } from "./pages/Courses";
 
 // Loading component
 const LoadingSpinner = () => (
@@ -63,6 +65,13 @@ const AppContent = () => {
         {/* Home cho cả guest và user đã đăng nhập */}
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/tips" element={<TipsPage />} />
+        
+        {/* Course routes - Public access for browsing */}
+        <Route path="/courses" element={<CoursesPage />} />
+        <Route path="/courses/:courseId" element={<CourseDetailPage />} />
+        
+        {/* My Courses - Protected route */}
+        <Route path="/my-courses" element={<StudentRoute><MyCoursesPage /></StudentRoute>} />
         
         {/* Dashboard redirect based on role */}
         <Route path="/dashboard" element={<RoleDashboardRedirect />} />
