@@ -37,5 +37,24 @@ namespace LearningEnglish.API.Controller.User
             var result = await _userCourseService.GetSystemCoursesAsync(userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
+
+        // GET: api/user/courses/{courseId} - Retrieve course details by ID with enrollment status
+        [HttpGet("{courseId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetCourseById(int courseId)
+        {
+            int? userId = null;
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdClaim, out int parsedUserId))
+                {
+                    userId = parsedUserId;
+                }
+            }
+
+            var result = await _userCourseService.GetCourseByIdAsync(courseId, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
     }
 }

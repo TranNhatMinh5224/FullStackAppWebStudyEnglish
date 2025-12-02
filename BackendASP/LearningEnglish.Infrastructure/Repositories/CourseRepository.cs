@@ -111,13 +111,13 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<IEnumerable<Course>> GetEnrolledCoursesByUserId(int userId)
         {
             return await _context.UserCourses
-                .Where(uc => uc.UserId == userId)
-                .Include(uc => uc.Course)
-                    .ThenInclude(c => c!.Teacher)
-                .Include(uc => uc.Course)
-                    .ThenInclude(c => c!.Lessons)
-                .Select(uc => uc.Course!)
-                .ToListAsync();
+                .Where(uc => uc.UserId == userId) // Lọc theo userId
+                .Include(uc => uc.Course) // Include khóa học
+                    .ThenInclude(c => c!.Teacher) // Include thông tin giáo viên
+                .Include(uc => uc.Course) // Include khóa học
+                    .ThenInclude(c => c!.Lessons) //    Include bài học
+                .Select(uc => uc.Course!) // Lấy danh sách khóa học
+                .ToListAsync(); // Trả về danh sách khóa học
         }
 
 

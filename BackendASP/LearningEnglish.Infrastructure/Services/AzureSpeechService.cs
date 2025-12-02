@@ -1,385 +1,324 @@
+using LearningEnglish.Application.Configurations;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
-using Microsoft.Extensions.Configuration;
+using Microsoft.CognitiveServices.Speech.PronunciationAssessment;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace LearningEnglish.Infrastructure.Services
 {
     public class AzureSpeechService : IAzureSpeechService
     {
-        private readonly string _subscriptionKey;
-        private readonly string _region;
+        private readonly AzureSpeechOptions _options;
         private readonly HttpClient _httpClient;
+        private readonly IAudioConverterService _audioConverter;
         private readonly ILogger<AzureSpeechService> _logger;
 
         public AzureSpeechService(
-            IConfiguration configuration, 
+            IOptions<AzureSpeechOptions> options,
             HttpClient httpClient,
+            IAudioConverterService audioConverter,
             ILogger<AzureSpeechService> logger)
         {
-            _subscriptionKey = configuration["AzureSpeech:SubscriptionKey"] ?? 
-                throw new ArgumentNullException("AzureSpeech:SubscriptionKey is not configured");
-            _region = configuration["AzureSpeech:Region"] ?? 
-                throw new ArgumentNullException("AzureSpeech:Region is not configured");
+            _options = options.Value;
             _httpClient = httpClient;
+            _audioConverter = audioConverter;
             _logger = logger;
         }
 
         public async Task<AzureSpeechAssessmentResult> AssessPronunciationAsync(
-            string audioUrl, 
-            string referenceText, 
+            string audioUrl,
+            string referenceText,
             string locale = "en-US")
         {
             try
             {
-                // Download audio from MinIO URL
+                _logger.LogInformation("Starting pronunciation assessment for text: '{Text}'", referenceText);
+
+                // 1. Download audio from MinIO
+                _logger.LogInformation("Downloading audio from {Url}", audioUrl);
                 var audioBytes = await _httpClient.GetByteArrayAsync(audioUrl);
-                using var audioStream = new MemoryStream(audioBytes);
-                
-                return await AssessPronunciationFromStreamAsync(audioStream, referenceText, locale);
+                _logger.LogInformation("Downloaded {Size} bytes", audioBytes.Length);
+
+                // 2. Detect format
+                var format = _audioConverter.DetectAudioFormat(audioUrl);
+                _logger.LogInformation("Detected audio format: {Format}", format);
+
+                // 3. Convert to WAV 16kHz Mono
+                byte[] wavBytes;
+                if (format == "wav")
+                {
+                    // Validate and convert if needed
+                    wavBytes = await _audioConverter.ValidateWavFormatAsync(audioBytes);
+                }
+                else
+                {
+                    // Convert from other formats
+                    wavBytes = await _audioConverter.ConvertToWavAsync(audioBytes, format);
+                }
+
+                // 4. Create temp WAV file for Azure SDK
+                var tempWavFile = Path.Combine(Path.GetTempPath(), $"assessment_{Guid.NewGuid()}.wav");
+                await File.WriteAllBytesAsync(tempWavFile, wavBytes);
+                _logger.LogInformation("Created temp WAV file: {Path}", tempWavFile);
+
+                try
+                {
+                    // 5. Setup Azure Speech SDK
+                    var speechConfig = SpeechConfig.FromSubscription(_options.Key, _options.Region);
+                    speechConfig.SpeechRecognitionLanguage = locale;
+                    speechConfig.SetProperty(
+                        PropertyId.SpeechServiceResponse_RequestDetailedResultTrueFalse,
+                        "true"
+                    );
+
+                    // 6. Configure pronunciation assessment
+                    var pronunciationConfig = new PronunciationAssessmentConfig(
+                        referenceText,
+                        GradingSystem.HundredMark,
+                        Granularity.Phoneme,
+                        enableMiscue: true
+                    );
+
+                    // 7. Create audio and recognizer
+                    using var audioConfig = AudioConfig.FromWavFileInput(tempWavFile);
+                    using var recognizer = new SpeechRecognizer(speechConfig, audioConfig);
+
+                    pronunciationConfig.ApplyTo(recognizer);
+
+                    // 8. Recognize with timeout
+                    _logger.LogInformation("Calling Azure Speech Recognition API...");
+                    var cancellationTokenSource = new CancellationTokenSource(
+                        TimeSpan.FromSeconds(_options.TimeoutSeconds)
+                    );
+
+                    var result = await recognizer.RecognizeOnceAsync().ConfigureAwait(false);
+                    _logger.LogInformation("Recognition completed with reason: {Reason}", result.Reason);
+
+                    // 9. Parse and return results
+                    return ParseAzureResult(result, referenceText);
+                }
+                finally
+                {
+                    // Cleanup temp WAV file
+                    if (File.Exists(tempWavFile))
+                    {
+                        try
+                        {
+                            File.Delete(tempWavFile);
+                            _logger.LogInformation("Cleaned up temp WAV file");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to delete temp WAV file: {Path}", tempWavFile);
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Pronunciation assessment failed");
                 return new AzureSpeechAssessmentResult
                 {
                     Success = false,
-                    ErrorMessage = $"Failed to download audio: {ex.Message}"
+                    ErrorMessage = $"Assessment failed: {ex.Message}"
                 };
             }
         }
 
         public async Task<AzureSpeechAssessmentResult> AssessPronunciationFromStreamAsync(
-            Stream audioStream, 
-            string referenceText, 
+            Stream audioStream,
+            string referenceText,
             string locale = "en-US")
         {
-            try
+            // Not implemented yet - can add if needed
+            throw new NotImplementedException("Stream-based assessment not implemented yet");
+        }
+
+        public async Task<Stream?> GenerateSpeechAsync(
+            string text,
+            string locale = "en-US",
+            string voiceName = "en-US-JennyNeural")
+        {
+            // Not implemented yet - can add for TTS feature
+            throw new NotImplementedException("Text-to-speech not implemented yet");
+        }
+
+        private AzureSpeechAssessmentResult ParseAzureResult(
+            SpeechRecognitionResult result,
+            string referenceText)
+        {
+            if (result.Reason == ResultReason.RecognizedSpeech)
             {
-                var config = SpeechConfig.FromSubscription(_subscriptionKey, _region);
-                config.SpeechRecognitionLanguage = locale;
-
-                // Set up audio stream
-                byte[] audioBytes;
-                if (audioStream is MemoryStream ms)
+                try
                 {
-                    audioBytes = ms.ToArray();
-                }
-                else
-                {
-                    using var memStream = new MemoryStream();
-                    await audioStream.CopyToAsync(memStream);
-                    audioBytes = memStream.ToArray();
-                }
+                    // Get detailed JSON result
+                    var jsonResult = result.Properties.GetProperty(
+                        PropertyId.SpeechServiceResponse_JsonResult
+                    );
 
-                using var audioInputStream = AudioInputStream.CreatePushStream();
-                using var audioConfig = AudioConfig.FromStreamInput(audioInputStream);
-                using var recognizer = new SpeechRecognizer(config, audioConfig);
+                    _logger.LogDebug("Azure JSON Response: {Json}", jsonResult);
 
-                // Configure pronunciation assessment via JSON
-                var pronunciationAssessmentJson = $@"{{
-                    ""ReferenceText"": ""{referenceText}"",
-                    ""GradingSystem"": ""HundredMark"",
-                    ""Granularity"": ""Phoneme"",
-                    ""EnableMiscue"": true
-                }}";
-                
-                recognizer.Properties.SetProperty("SPEECH-PronunciationAssessment", pronunciationAssessmentJson);
+                    var jsonDoc = JsonDocument.Parse(jsonResult);
+                    var nBest = jsonDoc.RootElement.GetProperty("NBest")[0];
 
-                // Push audio data
-                audioInputStream.Write(audioBytes);
-                audioInputStream.Close();
+                    // Extract overall scores
+                    var pronunciationAssessment = nBest.GetProperty("PronunciationAssessment");
+                    var accuracyScore = pronunciationAssessment.GetProperty("AccuracyScore").GetDouble();
+                    var fluencyScore = pronunciationAssessment.GetProperty("FluencyScore").GetDouble();
+                    var completenessScore = pronunciationAssessment.GetProperty("CompletenessScore").GetDouble();
+                    var pronunciationScore = pronunciationAssessment.GetProperty("PronScore").GetDouble();
 
-                // Recognize speech
-                var result = await recognizer.RecognizeOnceAsync();
+                    _logger.LogInformation(
+                        "Scores - Accuracy: {Accuracy}, Fluency: {Fluency}, Completeness: {Completeness}, Pronunciation: {Pronunciation}",
+                        accuracyScore, fluencyScore, completenessScore, pronunciationScore
+                    );
 
-                if (result.Reason == ResultReason.RecognizedSpeech)
-                {
-                    // Parse JSON result
-                    var jsonResult = result.Properties.GetProperty(PropertyId.SpeechServiceResponse_JsonResult);
-                    
-                    // Try to extract scores from JSON
-                    try
+                    // Extract word-level details
+                    var words = new List<WordPronunciationDetail>();
+                    var problemPhonemes = new List<string>();
+                    var strongPhonemes = new List<string>();
+
+                    if (nBest.TryGetProperty("Words", out var wordsArray))
                     {
-                        var jsonDoc = System.Text.Json.JsonDocument.Parse(jsonResult);
-                        var root = jsonDoc.RootElement;
-                        
-                        double accuracyScore = 0;
-                        double fluencyScore = 0;
-                        double completenessScore = 0;
-                        double pronScore = 0;
-                        
-                        // 🆕 Word-level analysis
-                        var words = new List<WordPronunciationDetail>();
-                        var allPhonemeScores = new Dictionary<string, List<double>>();
-                        
-                        if (root.TryGetProperty("NBest", out var nBest) && nBest.GetArrayLength() > 0)
+                        foreach (var word in wordsArray.EnumerateArray())
                         {
-                            var firstResult = nBest[0];
-                            
-                            // Overall scores
-                            if (firstResult.TryGetProperty("PronunciationAssessment", out var pronAssessment))
+                            var wordDetail = new WordPronunciationDetail
                             {
-                                if (pronAssessment.TryGetProperty("AccuracyScore", out var acc))
-                                    accuracyScore = acc.GetDouble();
-                                if (pronAssessment.TryGetProperty("FluencyScore", out var flu))
-                                    fluencyScore = flu.GetDouble();
-                                if (pronAssessment.TryGetProperty("CompletenessScore", out var comp))
-                                    completenessScore = comp.GetDouble();
-                                if (pronAssessment.TryGetProperty("PronScore", out var pron))
-                                    pronScore = pron.GetDouble();
-                            }
-                            
-                            // 🆕 Parse words array
-                            if (firstResult.TryGetProperty("Words", out var wordsArray))
+                                Word = word.GetProperty("Word").GetString() ?? "",
+                                AccuracyScore = word.GetProperty("PronunciationAssessment")
+                                    .GetProperty("AccuracyScore").GetDouble(),
+                                ErrorType = word.GetProperty("PronunciationAssessment")
+                                    .GetProperty("ErrorType").GetString() ?? "None"
+                            };
+
+                            if (word.TryGetProperty("Offset", out var offset))
+                                wordDetail.Offset = offset.GetInt32();
+                            if (word.TryGetProperty("Duration", out var duration))
+                                wordDetail.Duration = duration.GetInt32();
+
+                            // Parse phonemes
+                            if (word.TryGetProperty("Phonemes", out var phonemesArray))
                             {
-                                foreach (var wordElement in wordsArray.EnumerateArray())
+                                foreach (var phoneme in phonemesArray.EnumerateArray())
                                 {
-                                    var wordDetail = new WordPronunciationDetail
+                                    var phonemeIPA = phoneme.GetProperty("Phoneme").GetString() ?? "";
+                                    var phonemeScore = phoneme.GetProperty("PronunciationAssessment")
+                                        .GetProperty("AccuracyScore").GetDouble();
+
+                                    var phonemeDetail = new PhonemeDetail
                                     {
-                                        Word = wordElement.TryGetProperty("Word", out var wordProp) 
-                                            ? wordProp.GetString() ?? "" : "",
-                                        Offset = wordElement.TryGetProperty("Offset", out var offset) 
-                                            ? offset.GetInt32() : 0,
-                                        Duration = wordElement.TryGetProperty("Duration", out var duration) 
-                                            ? duration.GetInt32() : 0
+                                        Phoneme = phonemeIPA,
+                                        PhonemeDisplay = ConvertIPAToDisplay(phonemeIPA),
+                                        AccuracyScore = phonemeScore
                                     };
-                                    
-                                    // Parse word-level pronunciation assessment
-                                    if (wordElement.TryGetProperty("PronunciationAssessment", out var wordPronAssessment))
-                                    {
-                                        wordDetail.AccuracyScore = wordPronAssessment.TryGetProperty("AccuracyScore", out var wordAcc)
-                                            ? wordAcc.GetDouble() : 0;
-                                        wordDetail.ErrorType = wordPronAssessment.TryGetProperty("ErrorType", out var errorType)
-                                            ? errorType.GetString() ?? "None" : "None";
-                                    }
-                                    
-                                    // 🆕 Parse phonemes for each word
-                                    if (wordElement.TryGetProperty("Phonemes", out var phonemesArray))
-                                    {
-                                        foreach (var phonemeElement in phonemesArray.EnumerateArray())
-                                        {
-                                            var phoneme = phonemeElement.TryGetProperty("Phoneme", out var phonemeProp)
-                                                ? phonemeProp.GetString() ?? "" : "";
-                                            var phonemeScore = 0.0;
-                                            
-                                            if (phonemeElement.TryGetProperty("PronunciationAssessment", out var phonemePronAssessment))
-                                            {
-                                                phonemeScore = phonemePronAssessment.TryGetProperty("AccuracyScore", out var pScore)
-                                                    ? pScore.GetDouble() : 0;
-                                            }
-                                            
-                                            var phonemeDetail = new PhonemeDetail
-                                            {
-                                                Phoneme = phoneme,
-                                                PhonemeDisplay = ConvertToDisplayPhoneme(phoneme),
-                                                AccuracyScore = phonemeScore,
-                                                Offset = phonemeElement.TryGetProperty("Offset", out var pOffset) 
-                                                    ? pOffset.GetInt32() : 0,
-                                                Duration = phonemeElement.TryGetProperty("Duration", out var pDuration) 
-                                                    ? pDuration.GetInt32() : 0
-                                            };
-                                            
-                                            wordDetail.Phonemes.Add(phonemeDetail);
-                                            
-                                            // Track phoneme scores for analysis
-                                            if (!string.IsNullOrEmpty(phoneme))
-                                            {
-                                                if (!allPhonemeScores.ContainsKey(phoneme))
-                                                    allPhonemeScores[phoneme] = new List<double>();
-                                                allPhonemeScores[phoneme].Add(phonemeScore);
-                                            }
-                                        }
-                                    }
-                                    
-                                    words.Add(wordDetail);
+
+                                    if (phoneme.TryGetProperty("Offset", out var pOffset))
+                                        phonemeDetail.Offset = pOffset.GetInt32();
+                                    if (phoneme.TryGetProperty("Duration", out var pDuration))
+                                        phonemeDetail.Duration = pDuration.GetInt32();
+
+                                    // Classify phonemes
+                                    if (phonemeScore < 60)
+                                        problemPhonemes.Add(phonemeDetail.PhonemeDisplay);
+                                    else if (phonemeScore >= 85)
+                                        strongPhonemes.Add(phonemeDetail.PhonemeDisplay);
+
+                                    wordDetail.Phonemes.Add(phonemeDetail);
                                 }
                             }
-                        }
-                        
-                        // 🆕 Analyze problem and strong phonemes
-                        var problemPhonemes = allPhonemeScores
-                            .Where(p => p.Value.Any() && p.Value.Average() < 70)
-                            .OrderBy(p => p.Value.Average())
-                            .Select(p => ConvertToDisplayPhoneme(p.Key))
-                            .Take(5)
-                            .ToList();
 
-                        var strongPhonemes = allPhonemeScores
-                            .Where(p => p.Value.Any() && p.Value.Average() >= 85)
-                            .OrderByDescending(p => p.Value.Average())
-                            .Select(p => ConvertToDisplayPhoneme(p.Key))
-                            .Take(5)
-                            .ToList();
-                        
-                        return new AzureSpeechAssessmentResult
-                        {
-                            Success = true,
-                            AccuracyScore = accuracyScore,
-                            FluencyScore = fluencyScore,
-                            CompletenessScore = completenessScore,
-                            PronunciationScore = pronScore,
-                            RecognizedText = result.Text,
-                            DetailedResultJson = jsonResult,
-                            RawResponse = jsonResult,
-                            Words = words,
-                            ProblemPhonemes = problemPhonemes,
-                            StrongPhonemes = strongPhonemes
-                        };
+                            words.Add(wordDetail);
+                        }
                     }
-                    catch (Exception parseEx)
-                    {
-                        _logger.LogError(parseEx, "Error parsing Azure speech result");
-                        // If parsing fails, return what we have
-                        return new AzureSpeechAssessmentResult
-                        {
-                            Success = true,
-                            AccuracyScore = 0,
-                            FluencyScore = 0,
-                            CompletenessScore = 0,
-                            PronunciationScore = 0,
-                            RecognizedText = result.Text,
-                            DetailedResultJson = jsonResult,
-                            RawResponse = jsonResult,
-                            ErrorMessage = $"Speech recognized but score parsing failed: {parseEx.Message}"
-                        };
-                    }
-                }
-                else if (result.Reason == ResultReason.NoMatch)
-                {
+
                     return new AzureSpeechAssessmentResult
                     {
-                        Success = false,
-                        ErrorMessage = "No speech could be recognized from the audio."
+                        Success = true,
+                        AccuracyScore = accuracyScore,
+                        FluencyScore = fluencyScore,
+                        CompletenessScore = completenessScore,
+                        PronunciationScore = pronunciationScore,
+                        RecognizedText = result.Text,
+                        Words = words,
+                        ProblemPhonemes = problemPhonemes.Distinct().ToList(),
+                        StrongPhonemes = strongPhonemes.Distinct().ToList(),
+                        DetailedResultJson = jsonResult,
+                        RawResponse = jsonResult
                     };
                 }
-                else if (result.Reason == ResultReason.Canceled)
+                catch (Exception ex)
                 {
-                    var cancellation = CancellationDetails.FromResult(result);
+                    _logger.LogError(ex, "Failed to parse Azure response");
                     return new AzureSpeechAssessmentResult
                     {
                         Success = false,
-                        ErrorMessage = $"Speech recognition canceled: {cancellation.Reason}. Details: {cancellation.ErrorDetails}"
-                    };
-                }
-                else
-                {
-                    return new AzureSpeechAssessmentResult
-                    {
-                        Success = false,
-                        ErrorMessage = $"Unexpected result reason: {result.Reason}"
+                        ErrorMessage = $"Failed to parse Azure response: {ex.Message}"
                     };
                 }
             }
-            catch (Exception ex)
+            else if (result.Reason == ResultReason.NoMatch)
             {
+                _logger.LogWarning("No speech recognized");
                 return new AzureSpeechAssessmentResult
                 {
                     Success = false,
-                    ErrorMessage = $"Azure Speech Service error: {ex.Message}"
+                    ErrorMessage = "Could not recognize speech. Please speak more clearly or check audio quality."
+                };
+            }
+            else if (result.Reason == ResultReason.Canceled)
+            {
+                var cancellation = CancellationDetails.FromResult(result);
+                _logger.LogError("Recognition canceled: {Reason}, ErrorCode: {Code}, Details: {Details}",
+                    cancellation.Reason, cancellation.ErrorCode, cancellation.ErrorDetails);
+
+                return new AzureSpeechAssessmentResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Recognition canceled: {cancellation.ErrorDetails}"
+                };
+            }
+            else
+            {
+                _logger.LogWarning("Unexpected recognition result: {Reason}", result.Reason);
+                return new AzureSpeechAssessmentResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Unexpected result: {result.Reason}"
                 };
             }
         }
 
-        public async Task<Stream?> GenerateSpeechAsync(
-            string text, 
-            string locale = "en-US", 
-            string voiceName = "en-US-JennyNeural")
+        private string ConvertIPAToDisplay(string ipa)
         {
-            try
-            {
-                var config = SpeechConfig.FromSubscription(_subscriptionKey, _region);
-                config.SpeechSynthesisVoiceName = voiceName;
-                config.SetSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3);
-
-                using var synthesizer = new SpeechSynthesizer(config, null);
-                var result = await synthesizer.SpeakTextAsync(text);
-
-                if (result.Reason == ResultReason.SynthesizingAudioCompleted)
-                {
-                    _logger.LogInformation("Speech synthesized for text: {Text}", text);
-                    var audioData = result.AudioData;
-                    return new MemoryStream(audioData);
-                }
-                else if (result.Reason == ResultReason.Canceled)
-                {
-                    var cancellation = SpeechSynthesisCancellationDetails.FromResult(result);
-                    _logger.LogError("Speech synthesis canceled: {Reason}. Details: {ErrorDetails}", 
-                        cancellation.Reason, cancellation.ErrorDetails);
-                    return null;
-                }
-                else
-                {
-                    _logger.LogWarning("Speech synthesis failed with reason: {Reason}", result.Reason);
-                    return null;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating speech for text: {Text}", text);
-                return null;
-            }
-        }
-
-        // 🆕 Helper method: Convert IPA phoneme symbols to user-friendly display format
-        private string ConvertToDisplayPhoneme(string ipaPhoneme)
-        {
-            if (string.IsNullOrEmpty(ipaPhoneme))
-                return ipaPhoneme;
-
-            // Map IPA symbols to readable format
+            // Map IPA symbols to user-friendly display
             var mapping = new Dictionary<string, string>
             {
-                // Consonants
-                { "θ", "th" },      // think
-                { "ð", "th" },      // this (voiced)
-                { "ʃ", "sh" },      // ship
-                { "ʒ", "zh" },      // measure
-                { "tʃ", "ch" },     // church
-                { "dʒ", "j" },      // judge
-                { "ŋ", "ng" },      // sing
-                { "j", "y" },       // yes
-                
-                // R-colored vowels
-                { "ɜr", "er" },     // bird
-                { "ɝ", "er" },      // bird (alternative)
-                { "ɑr", "ar" },     // car
-                { "ɔr", "or" },     // door
-                { "ɪr", "ir" },     // ear
-                { "ɛr", "air" },    // care
-                { "ʊr", "oor" },    // tour
-                
-                // Diphthongs
-                { "eɪ", "ay" },     // day
-                { "aɪ", "i" },      // my
-                { "ɔɪ", "oy" },     // boy
-                { "aʊ", "ow" },     // how
-                { "oʊ", "o" },      // go
-                { "ɪə", "ear" },    // here
-                { "ɛə", "air" },    // care
-                { "ʊə", "oor" },    // tour
-                
-                // Vowels
-                { "ə", "uh" },      // about (schwa)
-                { "ʌ", "u" },       // cup
-                { "æ", "a" },       // cat
-                { "ɑ", "ah" },      // father
-                { "ɔ", "aw" },      // law
-                { "ɛ", "e" },       // bed
-                { "ɪ", "i" },       // sit
-                { "i", "ee" },      // see
-                { "ʊ", "u" },       // book
-                { "u", "oo" },      // food
-                
-                // Common consonant clusters
-                { "str", "str" },
-                { "spr", "spr" },
-                { "skr", "scr" }
+                { "θ", "th" },
+                { "ð", "th" },
+                { "ʃ", "sh" },
+                { "ʒ", "zh" },
+                { "ʧ", "ch" },
+                { "ʤ", "j" },
+                { "ŋ", "ng" },
+                { "ɜr", "er" },
+                { "ɜ", "er" },
+                { "ə", "uh" },
+                { "ɪ", "i" },
+                { "i", "ee" },
+                { "ɑ", "ah" },
+                { "æ", "a" },
+                { "ʊ", "oo" },
+                { "u", "oo" },
+                { "oʊ", "oh" },
+                { "aʊ", "ow" },
+                { "aɪ", "ay" }
             };
 
-            return mapping.TryGetValue(ipaPhoneme, out var display) ? display : ipaPhoneme;
+            return mapping.TryGetValue(ipa, out var display) ? display : ipa;
         }
     }
 }

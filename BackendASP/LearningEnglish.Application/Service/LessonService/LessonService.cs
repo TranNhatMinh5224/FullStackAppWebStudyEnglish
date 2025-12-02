@@ -16,6 +16,7 @@ namespace LearningEnglish.Application.Service
         private readonly ILogger<LessonService> _logger;
         private readonly ITeacherPackageRepository _teacherPackageRepository;
         private readonly IMinioFileStorage _minioFileStorage;
+        private readonly ILessonCompletionRepository _lessonCompletionRepository;
 
         // Đặt bucket + folder cho ảnh lesson
         private const string LessonImageBucket = "lessons";
@@ -27,7 +28,8 @@ namespace LearningEnglish.Application.Service
             ILogger<LessonService> logger,
             ICourseRepository courseRepository,
             ITeacherPackageRepository teacherPackageRepository,
-            IMinioFileStorage minioFileStorage)
+            IMinioFileStorage minioFileStorage,
+            ILessonCompletionRepository lessonCompletionRepository)
         {
             _lessonRepository = lessonRepository;
             _mapper = mapper;
@@ -35,6 +37,7 @@ namespace LearningEnglish.Application.Service
             _courseRepository = courseRepository;
             _teacherPackageRepository = teacherPackageRepository;
             _minioFileStorage = minioFileStorage;
+            _lessonCompletionRepository = lessonCompletionRepository;
         }
 
         // admin Thêm Lesson vào Course 
@@ -282,9 +285,9 @@ namespace LearningEnglish.Application.Service
 
 
         }
-        public async Task<ServiceResponse<List<ListLessonDto>>> GetListLessonByCourseId(int CourseId, int userId, string userRole)
+        public async Task<ServiceResponse<List<LessonWithProgressDto>>> GetListLessonByCourseId(int CourseId, int userId, string userRole)
         {
-            var response = new ServiceResponse<List<ListLessonDto>>();
+            var response = new ServiceResponse<List<LessonWithProgressDto>>();
             try
             {
                 var course = await _courseRepository.GetCourseById(CourseId);
@@ -295,13 +298,9 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Không tìm thấy khóa học";
                     return response;
                 }
-                if (userRole == "Admin")
-                {
-                    response.StatusCode = 200;
-                    response.Data = (await _lessonRepository.GetListLessonByCourseId(CourseId))
-                        .Select(l => _mapper.Map<ListLessonDto>(l)).ToList();
-                }
-                else if (userRole == "Teacher")
+                
+                // Authorization checks
+                if (userRole == "Teacher")
                 {
                     if (course.Type != CourseType.Teacher || course.TeacherId != userId)
                     {
@@ -322,7 +321,7 @@ namespace LearningEnglish.Application.Service
                         return response;
                     }
                 }
-                else
+                else if (userRole != "Admin")
                 {
                     response.Success = false;
                     response.StatusCode = 403;
@@ -331,12 +330,22 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var lessons = await _lessonRepository.GetListLessonByCourseId(CourseId);
-                var lessonDtos = new List<ListLessonDto>();
+                var lessonDtos = new List<LessonWithProgressDto>();
                 
-                // Map và generate URL từ key cho tất cả lessons
+                // Map lessons with progress (for Students) or without progress (for Admin/Teacher)
                 foreach (var lesson in lessons)
                 {
-                    var lessonDto = _mapper.Map<ListLessonDto>(lesson);
+                    var lessonDto = new LessonWithProgressDto
+                    {
+                        LessonId = lesson.LessonId,
+                        Title = lesson.Title,
+                        Description = lesson.Description,
+                        OrderIndex = lesson.OrderIndex,
+                        CourseId = lesson.CourseId,
+                        ImageType = lesson.ImageType
+                    };
+                    
+                    // Generate image URL
                     if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                     {
                         lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
@@ -344,6 +353,23 @@ namespace LearningEnglish.Application.Service
                             lesson.ImageKey
                         );
                     }
+                    
+                    // ✅ Add progress info for Students
+                    if (userRole == "Student")
+                    {
+                        var lessonCompletion = await _lessonCompletionRepository.GetByUserAndLessonAsync(userId, lesson.LessonId);
+                        if (lessonCompletion != null)
+                        {
+                            lessonDto.CompletionPercentage = lessonCompletion.CompletionPercentage;
+                            lessonDto.IsCompleted = lessonCompletion.IsCompleted;
+                            lessonDto.CompletedModules = lessonCompletion.CompletedModules;
+                            lessonDto.TotalModules = lessonCompletion.TotalModules;
+                            lessonDto.VideoProgressPercentage = lessonCompletion.VideoProgressPercentage;
+                            lessonDto.StartedAt = lessonCompletion.StartedAt;
+                            lessonDto.CompletedAt = lessonCompletion.CompletedAt;
+                        }
+                    }
+                    
                     lessonDtos.Add(lessonDto);
                 }
                 
@@ -756,6 +782,99 @@ namespace LearningEnglish.Application.Service
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Đã xảy ra lỗi hệ thống";
+                return response;
+            }
+        }
+
+        // ✅ NEW: Get lessons with progress for students
+        public async Task<ServiceResponse<List<LessonWithProgressDto>>> GetLessonsWithProgressByCourseIdAsync(int courseId, int userId)
+        {
+            var response = new ServiceResponse<List<LessonWithProgressDto>>();
+            try
+            {
+                // Check if course exists
+                var course = await _courseRepository.GetCourseById(courseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                // Check if user is enrolled
+                bool isEnrolled = await _courseRepository.IsUserEnrolled(courseId, userId);
+                if (!isEnrolled)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn chưa đăng ký khóa học này";
+                    return response;
+                }
+
+                // Get all lessons for the course
+                var lessons = await _lessonRepository.GetListLessonByCourseId(courseId);
+                var lessonWithProgressDtos = new List<LessonWithProgressDto>();
+
+                foreach (var lesson in lessons)
+                {
+                    var lessonDto = new LessonWithProgressDto
+                    {
+                        LessonId = lesson.LessonId,
+                        Title = lesson.Title,
+                        Description = lesson.Description,
+                        OrderIndex = lesson.OrderIndex,
+                        CourseId = lesson.CourseId,
+                        ImageType = lesson.ImageType
+                    };
+
+                    // Generate image URL
+                    if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
+                    {
+                        lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
+                            LessonImageBucket,
+                            lesson.ImageKey
+                        );
+                    }
+
+                    // ✅ Get progress information for this lesson
+                    var lessonCompletion = await _lessonCompletionRepository.GetByUserAndLessonAsync(userId, lesson.LessonId);
+                    
+                    if (lessonCompletion != null)
+                    {
+                        lessonDto.CompletionPercentage = lessonCompletion.CompletionPercentage;
+                        lessonDto.IsCompleted = lessonCompletion.IsCompleted;
+                        lessonDto.CompletedModules = lessonCompletion.CompletedModules;
+                        lessonDto.TotalModules = lessonCompletion.TotalModules;
+                        lessonDto.VideoProgressPercentage = lessonCompletion.VideoProgressPercentage;
+                        lessonDto.StartedAt = lessonCompletion.StartedAt;
+                        lessonDto.CompletedAt = lessonCompletion.CompletedAt;
+                    }
+                    else
+                    {
+                        // No progress yet, set default values
+                        lessonDto.CompletionPercentage = 0;
+                        lessonDto.IsCompleted = false;
+                        lessonDto.CompletedModules = 0;
+                        lessonDto.TotalModules = 0; // TODO: Could query module count if needed
+                        lessonDto.VideoProgressPercentage = 0;
+                        lessonDto.StartedAt = null;
+                        lessonDto.CompletedAt = null;
+                    }
+
+                    lessonWithProgressDtos.Add(lessonDto);
+                }
+
+                response.Data = lessonWithProgressDtos;
+                response.Message = "Lấy danh sách lesson với tiến độ thành công";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy lessons với tiến độ cho course {CourseId}, user {UserId}", courseId, userId);
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi khi lấy danh sách lesson với tiến độ";
                 return response;
             }
         }

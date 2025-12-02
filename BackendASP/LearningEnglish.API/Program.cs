@@ -12,14 +12,15 @@ using LearningEnglish.Application.Mappings;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Application.Service;
-using LearningEnglish.Application.Service.ProgressServices;
 using LearningEnglish.Application.Service.PaymentProcessors;
 using LearningEnglish.Application.Service.ScoringStrategies;
 using LearningEnglish.Application.Service.BackgroundJobs;
+using LearningEnglish.Application.Service.BackgroundServices;
 using LearningEnglish.Application.Validators;
 using LearningEnglish.Infrastructure.Repositories;
 using LearningEnglish.Infrastructure.Services;
 using LearningEnglish.Application.Cofigurations;
+using LearningEnglish.Application.Configurations;
 using Microsoft.Extensions.Options;
 using Minio;
 using LearningEnglish.Infrastructure.MinioFileStorage;
@@ -140,7 +141,6 @@ builder.Services.AddScoped<IQuizGroupRepository, QuizGroupRepository>();
 builder.Services.AddScoped<IQuizRepository, QuizRepository>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
-builder.Services.AddScoped<IPronunciationAssessmentRepository, PronunciationAssessmentRepository>();
 builder.Services.AddScoped<IPronunciationProgressRepository, PronunciationProgressRepository>();
 builder.Services.AddScoped<ICourseProgressRepository, CourseProgressRepository>();
 builder.Services.AddScoped<ILessonCompletionRepository, LessonCompletionRepository>();
@@ -152,9 +152,10 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAdminCourseService, AdminCourseService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<IModuleService, ModuleService>();
+builder.Services.AddScoped<IModuleProgressService, ModuleProgressService>(); // ✅ Progress tracking
 builder.Services.AddScoped<ILectureService, LectureService>();
 builder.Services.AddScoped<IFlashCardService, FlashCardService>();
-builder.Services.AddScoped<IVocabularyReviewService, VocabularyReviewService>();
+builder.Services.AddScoped<IFlashCardReviewService, FlashCardReviewService>();
 builder.Services.AddScoped<IStreakRepository, StreakRepository>();
 builder.Services.AddScoped<IStreakService, StreakService>();
 builder.Services.AddScoped<IAssessmentService, AssessmentService>();
@@ -184,13 +185,12 @@ builder.Services.AddScoped<IQuizAttemptService, QuizAttemptService>();
 builder.Services.AddScoped<IQuizAttemptAdminService, QuizAttemptAdminService>();
 builder.Services.AddScoped<IPronunciationAssessmentService, PronunciationAssessmentService>();
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
-builder.Services.AddScoped<ICourseProgressService, CourseProgressService>();
-builder.Services.AddScoped<ILessonProgressService, LessonProgressService>();
-builder.Services.AddScoped<IModuleProgressService, ModuleProgressService>();
-builder.Services.AddScoped<IProgressDashboardService, ProgressDashboardService>();
 
 // 🎤 Azure Speech Service for Pronunciation Assessment
-builder.Services.AddScoped<IAzureSpeechService, AzureSpeechService>();
+builder.Services.Configure<AzureSpeechOptions>(builder.Configuration.GetSection("Azure:Speech"));
+builder.Services.AddScoped<IAudioConverterService, AudioConverterService>();
+builder.Services.AddHttpClient<IAzureSpeechService, AzureSpeechService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
 // HttpClient for Dictionary API
 builder.Services.AddHttpClient();
@@ -221,9 +221,6 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
 // File Storage Service
 builder.Services.AddScoped<IMinioFileStorage, MinioFileStorageService>();
 
-// Azure Speech Service
-builder.Services.AddHttpClient<IAzureSpeechService, AzureSpeechService>();
-
 // Background Jobs
 builder.Services.AddScoped<TempFileCleanupJob>();
 
@@ -253,6 +250,7 @@ builder.Services.AddScoped<IScoringStrategy, OrderingScoringStrategy>();
 builder.Services.AddHostedService<QuizAutoSubmitService>();
 builder.Services.AddHostedService<TempFileCleanupHostedService>();
 builder.Services.AddHostedService<StudyReminderJob>();
+builder.Services.AddHostedService<VocabularyReminderBackgroundService>();
 
 // Notification services
 builder.Services.AddScoped<INotificationService, NotificationService>();

@@ -16,6 +16,8 @@ namespace LearningEnglish.Application.Service
         private readonly IMinioFileStorage _minioFileStorage;
         private readonly IMapper _mapper;
         private readonly ILogger<EssaySubmissionService> _logger;
+        private readonly IModuleProgressService _moduleProgressService;
+        private readonly IAssessmentRepository _assessmentRepository;
 
         // MinIO configuration for essay attachments
         private const string AttachmentBucket = "essay-attachments";
@@ -26,13 +28,17 @@ namespace LearningEnglish.Application.Service
             IEssayRepository essayRepository,
             IMinioFileStorage minioFileStorage,
             IMapper mapper, 
-            ILogger<EssaySubmissionService> logger)
+            ILogger<EssaySubmissionService> logger,
+            IModuleProgressService moduleProgressService,
+            IAssessmentRepository assessmentRepository)
         {
             _essaySubmissionRepository = essaySubmissionRepository;
             _essayRepository = essayRepository;
             _minioFileStorage = minioFileStorage;
             _mapper = mapper;
             _logger = logger;
+            _moduleProgressService = moduleProgressService;
+            _assessmentRepository = assessmentRepository;
         }
         // Implement cho phương thức Nộp bài kiểm tra tự luận (Essay Submission)
         public async Task<ServiceResponse<EssaySubmissionDto>> CreateSubmissionAsync(CreateEssaySubmissionDto dto, int userId)
@@ -97,6 +103,14 @@ namespace LearningEnglish.Application.Service
                 try
                 {
                     var createdSubmission = await _essaySubmissionRepository.CreateSubmissionAsync(submission);
+                    
+                    // ✅ Mark module as completed after essay submission
+                    var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+                    if (assessment?.ModuleId != null)
+                    {
+                        await _moduleProgressService.CompleteModuleAsync(userId, assessment.ModuleId);
+                    }
+                    
                     var submissionDto = _mapper.Map<EssaySubmissionDto>(createdSubmission);
 
                     // Build attachment URL if attachment exists

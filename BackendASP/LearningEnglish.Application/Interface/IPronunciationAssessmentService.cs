@@ -3,45 +3,24 @@ using LearningEnglish.Application.DTOs;
 
 namespace LearningEnglish.Application.Interface
 {
+    /// <summary>
+    /// Realtime-only pronunciation assessment service
+    /// NO individual assessments stored - only aggregated progress
+    /// </summary>
     public interface IPronunciationAssessmentService
     {
         /// <summary>
-        /// Create new pronunciation assessment with Azure AI
+        /// Create realtime pronunciation assessment (not stored, only progress updated)
         /// </summary>
         Task<ServiceResponse<PronunciationAssessmentDto>> CreateAssessmentAsync(
             CreatePronunciationAssessmentDto dto,
             int userId);
 
         /// <summary>
-        /// Get assessment by ID
+        /// Get flashcards with pronunciation progress for a module
         /// </summary>
-        Task<ServiceResponse<PronunciationAssessmentDto>> GetAssessmentByIdAsync(int id, int userId);
-
-        /// <summary>
-        /// Get all assessments by user
-        /// </summary>
-        Task<ServiceResponse<List<ListPronunciationAssessmentDto>>> GetUserAssessmentsAsync(int userId);
-
-        /// <summary>
-        /// Get assessments by FlashCard
-        /// </summary>
-        Task<ServiceResponse<List<ListPronunciationAssessmentDto>>> GetFlashCardAssessmentsAsync(
-            int flashCardId,
+        Task<ServiceResponse<List<FlashCardWithPronunciationDto>>> GetFlashCardsWithPronunciationProgressAsync(
+            int moduleId,
             int userId);
-
-        /// <summary>
-        /// Delete assessment
-        /// </summary>
-        Task<ServiceResponse<bool>> DeleteAssessmentAsync(int id, int userId);
-
-        /// <summary>
-        /// Get user statistics
-        /// </summary>
-        Task<ServiceResponse<object>> GetUserStatisticsAsync(int userId);
-
-        /// <summary>
-        /// 🆕 Get progress analytics over time
-        /// </summary>
-        Task<ServiceResponse<ProgressAnalytics>> GetProgressAnalyticsAsync(int userId, int months = 3);
     }
 }

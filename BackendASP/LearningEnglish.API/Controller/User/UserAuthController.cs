@@ -72,7 +72,7 @@ namespace LearningEnglish.API.Controllers.User
 
         // PUT: api/user/auth/profile - Update authenticated user's profile information
         [Authorize]
-        [HttpPut("profile")]
+        [HttpPut("update/profile")]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserDto dto)
         {
             var userId = GetCurrentUserId();

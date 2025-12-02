@@ -4,16 +4,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace LearningEnglish.API.Controller.AdminAndTeacher
+namespace LearningEnglish.API.Controller.Shared
 {
-    [Route("api/Essay")]
+    [Route("api/essays")]
     [ApiController]
-    [Authorize(Roles = "Admin, Teacher")]
-    public class ATEssayController : ControllerBase
+    [Authorize]
+    public class EssayController : ControllerBase
     {
         private readonly IEssayService _essayService;
 
-        public ATEssayController(IEssayService essayService)
+        public EssayController(IEssayService essayService)
         {
             _essayService = essayService;
         }
@@ -29,7 +29,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
         }
 
-        // GET: api/Essay/{essayId} - Get essay by ID
+        // GET: api/essays/{essayId} - Get essay by ID (all roles)
         [HttpGet("{essayId}")]
         public async Task<IActionResult> GetEssay(int essayId)
         {
@@ -37,7 +37,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/Essay/assessment/{assessmentId} - Get essays by assessment ID
+        // GET: api/essays/assessment/{assessmentId} - Get essays by assessment ID (all roles)
         [HttpGet("assessment/{assessmentId}")]
         public async Task<IActionResult> GetEssaysByAssessment(int assessmentId)
         {
@@ -45,8 +45,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/Essay/create - Create new essay (Admin: system-level, Teacher: own)
-        [HttpPost("create")]
+        // POST: api/essays - Create new essay (Admin/Teacher only)
+        [HttpPost]
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> CreateEssay([FromBody] CreateEssayDto createDto)
         {
             if (!ModelState.IsValid)
@@ -61,8 +62,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/Essay/update/{essayId} - Update essay (Admin: any, Teacher: own only)
-        [HttpPut("update/{essayId}")]
+        // PUT: api/essays/{essayId} - Update essay (Admin: any, Teacher: own only)
+        [HttpPut("{essayId}")]
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> UpdateEssay(int essayId, [FromBody] UpdateEssayDto updateDto)
         {
             if (!ModelState.IsValid)
@@ -75,8 +77,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/Essay/delete/{essayId} - Delete essay (Admin: any, Teacher: own only)
-        [HttpDelete("delete/{essayId}")]
+        // DELETE: api/essays/{essayId} - Delete essay (Admin: any, Teacher: own only)
+        [HttpDelete("{essayId}")]
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> DeleteEssay(int essayId)
         {
             var userRole = GetCurrentUserRole();

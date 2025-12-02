@@ -31,7 +31,6 @@ namespace LearningEnglish.Infrastructure.Data
         public DbSet<LessonCompletion> LessonCompletions => Set<LessonCompletion>();
         public DbSet<CourseProgress> CourseProgresses => Set<CourseProgress>();
         public DbSet<FlashCardReview> FlashCardReviews => Set<FlashCardReview>();
-        public DbSet<PronunciationAssessment> PronunciationAssessments => Set<PronunciationAssessment>();
         public DbSet<PronunciationProgress> PronunciationProgresses => Set<PronunciationProgress>();
         public DbSet<Streak> Streaks => Set<Streak>();
         public DbSet<StudyReminder> StudyReminders => Set<StudyReminder>();
@@ -367,26 +366,6 @@ namespace LearningEnglish.Infrastructure.Data
                  .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // PronunciationAssessment
-            modelBuilder.Entity<PronunciationAssessment>(e =>
-            {
-                e.ToTable("PronunciationAssessments");
-                e.HasOne(pa => pa.User)
-                 .WithMany(u => u.PronunciationAssessments)
-                 .HasForeignKey(pa => pa.UserId)
-                 .OnDelete(DeleteBehavior.Cascade);
-                e.HasOne(pa => pa.FlashCard)
-                 .WithMany(fc => fc.PronunciationAssessments)
-                 .HasForeignKey(pa => pa.FlashCardId)
-                 .IsRequired(false)
-                 .OnDelete(DeleteBehavior.Cascade);
-                e.HasOne(pa => pa.Assessment)
-                 .WithMany(a => a.PronunciationAssessments)
-                 .HasForeignKey(pa => pa.AssessmentId)
-                 .IsRequired(false)
-                 .OnDelete(DeleteBehavior.SetNull);
-            });
-
             // PronunciationProgress
             modelBuilder.Entity<PronunciationProgress>(e =>
             {
@@ -405,13 +384,6 @@ namespace LearningEnglish.Infrastructure.Data
                  .WithMany(fc => fc.PronunciationProgresses)
                  .HasForeignKey(pp => pp.FlashCardId)
                  .OnDelete(DeleteBehavior.Cascade);
-
-                // Reference to best assessment (optional, don't cascade)
-                e.HasOne(pp => pp.BestAssessment)
-                 .WithMany()  // No navigation property on PronunciationAssessment
-                 .HasForeignKey(pp => pp.BestAssessmentId)
-                 .IsRequired(false)
-                 .OnDelete(DeleteBehavior.SetNull);
             });
 
             // Streak

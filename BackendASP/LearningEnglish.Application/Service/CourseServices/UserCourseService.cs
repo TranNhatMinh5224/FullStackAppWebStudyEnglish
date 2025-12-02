@@ -11,6 +11,7 @@ namespace LearningEnglish.Application.Service
     {
         private readonly ICourseRepository _courseRepository;
         private readonly ICourseRepository _userCourseRepository;
+        private readonly ICourseProgressRepository _courseProgressRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<UserCourseService> _logger;
 
@@ -20,24 +21,26 @@ namespace LearningEnglish.Application.Service
         public UserCourseService(
             ICourseRepository courseRepository,
             ICourseRepository userCourseRepository,
+            ICourseProgressRepository courseProgressRepository,
             IMapper mapper,
             ILogger<UserCourseService> logger)
         {
             _courseRepository = courseRepository;
             _userCourseRepository = userCourseRepository;
+            _courseProgressRepository = courseProgressRepository;
             _mapper = mapper;
             _logger = logger;
         }
-        // Lấy danh sách khóa học hệ thống (System) cho User
-     public async Task<ServiceResponse<IEnumerable<UserCourseListResponseDto>>> GetSystemCoursesAsync(int? userId = null)
+        // GET /api/user/courses/system-courses
+        public async Task<ServiceResponse<IEnumerable<SystemCoursesListResponseDto>>> GetSystemCoursesAsync(int? userId = null)
         {
-            var response = new ServiceResponse<IEnumerable<UserCourseListResponseDto>>();
+            var response = new ServiceResponse<IEnumerable<SystemCoursesListResponseDto>>();
 
             try
             {
                 var courses = await _courseRepository.GetSystemCourses();
 
-                var courseDtos = _mapper.Map<IEnumerable<UserCourseListResponseDto>>(courses).ToList();
+                var courseDtos = _mapper.Map<IEnumerable<SystemCoursesListResponseDto>>(courses).ToList();
 
                 // Generate URL từ key cho tất cả courses
                 foreach (var courseDto in courseDtos)
@@ -48,6 +51,16 @@ namespace LearningEnglish.Application.Service
                             CourseImageBucket,
                             courseDto.ImageUrl
                         );
+                    }
+                    
+                    // Check enrollment status nếu user đã login
+                    if (userId.HasValue)
+                    {
+                        courseDto.IsEnrolled = await _courseRepository.IsUserEnrolled(courseDto.CourseId, userId.Value);
+                    }
+                    else
+                    {
+                        courseDto.IsEnrolled = false;
                     }
                 }
 
@@ -64,6 +77,73 @@ namespace LearningEnglish.Application.Service
                 response.StatusCode = 500;
                 response.Message = $"Lỗi khi lấy danh sách khóa học hệ thống: {ex.Message}";
                 _logger.LogError(ex, "Error in GetSystemCoursesAsync");
+            }
+
+            return response;
+        }
+
+        // GET /api/user/courses/{courseId}
+        public async Task<ServiceResponse<CourseDetailWithEnrollmentDto>> GetCourseByIdAsync(int courseId, int? userId = null)
+        {
+            var response = new ServiceResponse<CourseDetailWithEnrollmentDto>();
+
+            try
+            {
+                var course = await _courseRepository.GetByIdAsync(courseId);
+
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var courseDto = _mapper.Map<CourseDetailWithEnrollmentDto>(course);
+
+                // Generate URL từ key
+                if (!string.IsNullOrWhiteSpace(courseDto.ImageUrl))
+                {
+                    courseDto.ImageUrl = BuildPublicUrl.BuildURL(CourseImageBucket, courseDto.ImageUrl);
+                }
+
+                // Check enrollment status nếu user đã login
+                if (userId.HasValue)
+                {
+                    courseDto.IsEnrolled = await _courseRepository.IsUserEnrolled(courseId, userId.Value);
+                    
+                    // ✅ Add progress info if enrolled
+                    if (courseDto.IsEnrolled)
+                    {
+                        var courseProgress = await _courseProgressRepository.GetByUserAndCourseAsync(userId.Value, courseId);
+                        if (courseProgress != null)
+                        {
+                            courseDto.ProgressPercentage = courseProgress.ProgressPercentage;
+                            courseDto.CompletedLessons = courseProgress.CompletedLessons;
+                            courseDto.IsCompleted = courseProgress.IsCompleted;
+                            courseDto.EnrolledAt = courseProgress.EnrolledAt;
+                            courseDto.CompletedAt = courseProgress.CompletedAt;
+                        }
+                    }
+                }
+                else
+                {
+                    courseDto.IsEnrolled = false;
+                }
+
+                response.StatusCode = 200;
+                response.Data = courseDto;
+                response.Message = "Lấy thông tin khóa học thành công";
+                response.Success = true;
+
+                _logger.LogInformation("Retrieved course {CourseId} details, userId: {UserId}", courseId, userId);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = $"Lỗi khi lấy thông tin khóa học: {ex.Message}";
+                _logger.LogError(ex, "Error in GetCourseByIdAsync for course {CourseId}", courseId);
             }
 
             return response;

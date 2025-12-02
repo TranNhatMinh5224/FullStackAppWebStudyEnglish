@@ -32,7 +32,6 @@ public class FlashCard
     // Navigation Properties
     public Module? Module { get; set; }
     public List<FlashCardReview> Reviews { get; set; } = new();
-    public List<PronunciationAssessment> PronunciationAssessments { get; set; } = new();
     public List<PronunciationProgress> PronunciationProgresses { get; set; } = new();
 }
 

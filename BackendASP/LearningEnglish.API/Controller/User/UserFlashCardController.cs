@@ -47,26 +47,6 @@ namespace LearningEnglish.API.Controller.User
         }
 
 
-        // GET: api/user/flashcard/search - Search flashcards by keyword with optional module filter
-        [HttpGet("search")]
-        public async Task<ActionResult<ServiceResponse<List<ListFlashCardDto>>>> SearchFlashCards(
-            [FromQuery] string searchTerm,
-            [FromQuery] int? moduleId = null)
-        {
-            if (string.IsNullOrWhiteSpace(searchTerm))
-            {
-                return BadRequest(new ServiceResponse<List<ListFlashCardDto>>
-                {
-                    Success = false,
-                    Message = "Từ khóa tìm kiếm không được để trống"
-                });
-            }
-
-            var userId = GetCurrentUserId();
-            var result = await _flashCardService.SearchFlashCardsAsync(searchTerm, moduleId, userId);
-            return Ok(result);
-        }
-
         // GET: api/user/flashcard/progress/{moduleId} - Get flashcard learning progress for a module (TODO: implementation pending)
         [HttpGet("progress/{moduleId}")]
         public async Task<ActionResult<ServiceResponse<List<FlashCardWithProgressDto>>>> GetFlashCardProgress(int moduleId)

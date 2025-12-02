@@ -42,7 +42,6 @@ namespace LearningEnglish.Infrastructure.Repositories
                         .ThenInclude(m => m!.Lesson)
                             .ThenInclude(l => l!.Course)
                     .Include(fc => fc.Reviews)
-                    .Include(fc => fc.PronunciationAssessments)
                     .FirstOrDefaultAsync(fc => fc.FlashCardId == flashCardId);
             }
             catch (Exception ex)

@@ -1,11 +1,24 @@
-using LearningEnglish.Application.Common;
-using System.Threading.Tasks;
+namespace LearningEnglish.Application.Interface;
 
-namespace LearningEnglish.Application.Interface
+/// <summary>
+/// Service xử lý logic tiến độ module, lesson, course
+/// </summary>
+public interface IModuleProgressService
 {
-    public interface IModuleProgressService
-    {
-        Task<ServiceResponse<bool>> StartModuleAsync(int userId, int moduleId);
-        Task<ServiceResponse<bool>> CompleteModuleAsync(int userId, int moduleId);
-    }
+    /// <summary>
+    /// Đánh dấu module hoàn thành (gọi khi user làm xong Quiz/Essay)
+    /// - Tự động cập nhật LessonCompletion
+    /// - Tự động cập nhật CourseProgress
+    /// </summary>
+    Task CompleteModuleAsync(int userId, int moduleId);
+    
+    /// <summary>
+    /// Đánh dấu module bắt đầu (gọi khi user vào module lần đầu)
+    /// </summary>
+    Task StartModuleAsync(int userId, int moduleId);
+    
+    /// <summary>
+    /// Cập nhật tiến độ video trong lesson
+    /// </summary>
+    Task UpdateVideoProgressAsync(int userId, int lessonId, int positionSeconds, float videoPercentage);
 }

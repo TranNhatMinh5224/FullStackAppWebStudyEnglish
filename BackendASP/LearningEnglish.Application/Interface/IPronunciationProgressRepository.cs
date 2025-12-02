@@ -14,8 +14,17 @@ namespace LearningEnglish.Application.Interface
         Task<PronunciationProgress> UpdateAsync(PronunciationProgress progress);
         Task<bool> DeleteAsync(int id);
 
-        // Upsert (Create or Update)
-        Task<PronunciationProgress> UpsertAsync(int userId, int flashCardId, PronunciationAssessment assessment);
+        // Upsert (Create or Update) - No longer depends on PronunciationAssessment entity
+        Task<PronunciationProgress> UpsertAsync(
+            int userId, 
+            int flashCardId,
+            double accuracyScore,
+            double fluencyScore,
+            double completenessScore,
+            double pronunciationScore,
+            List<string> problemPhonemes,
+            List<string> strongPhonemes,
+            DateTime attemptTime);
 
         // Statistics
         Task<int> GetTotalProgressCountAsync(int userId);

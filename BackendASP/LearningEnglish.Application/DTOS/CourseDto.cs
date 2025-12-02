@@ -77,43 +77,46 @@ namespace LearningEnglish.Application.DTOs
         public DateTime CreatedAt { get; set; }
     }
 
-    // DTO danh sách khóa học cho User
-    public class UserCourseListResponseDto
+    // ✅ DTO cho endpoint: GET /api/user/courses/system-courses
+    // Response: Danh sách các khóa học system với trạng thái enrollment
+    public class SystemCoursesListResponseDto
     {
         public int CourseId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
-        public string? ImageType { get; set; }
-        public CourseType Type { get; set; }
         public decimal? Price { get; set; }
-        public bool IsEnrolled { get; set; }
+        public bool IsEnrolled { get; set; } // true nếu user đã enroll
         public int EnrollmentCount { get; set; }
-        public int MaxStudent { get; set; }
         public bool IsFeatured { get; set; }
-        public bool CanJoin { get; set; }
-        public string TeacherName { get; set; } = string.Empty;
-    }
-
-    // DTO chi tiết khóa học
-    public class CourseDetailResponseDto
-    {
-        public int CourseId { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string? ImageUrl { get; set; }
-        public string? ImageType { get; set; }
-        public CourseType Type { get; set; }
-        public decimal? Price { get; set; }
-        public int? TeacherId { get; set; }
-        public string TeacherName { get; set; } = string.Empty;
-        public int LessonCount { get; set; }
-        public bool IsEnrolled { get; set; }
-        public List<LessonSummaryDto>? Lessons { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 
-    // DTO tóm tắt Lesson (dùng trong CourseDetailResponseDto)
+    // ✅ DTO cho endpoint: GET /api/user/courses/{courseId}
+    // Response: Chi tiết khóa học với trạng thái enrollment, progress và danh sách lessons
+    public class CourseDetailWithEnrollmentDto
+    {
+        public int CourseId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
+        public decimal? Price { get; set; }
+        public bool IsEnrolled { get; set; } // true nếu user đã enroll
+        public int EnrollmentCount { get; set; }
+        public bool IsFeatured { get; set; }
+        public int TotalLessons { get; set; }
+        public List<LessonSummaryDto> Lessons { get; set; } = new();
+        public DateTime CreatedAt { get; set; }
+        
+        // ✅ Progress information (for enrolled users)
+        public decimal ProgressPercentage { get; set; } = 0; // 0-100%
+        public int CompletedLessons { get; set; } = 0;
+        public bool IsCompleted { get; set; } = false;
+        public DateTime? EnrolledAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
+    }
+
+    // DTO tóm tắt Lesson (dùng trong CourseDetailWithEnrollmentDto)
     public class LessonSummaryDto
     {
         public int LessonId { get; set; }
@@ -163,6 +166,30 @@ namespace LearningEnglish.Application.DTOs
         public int LessonCount { get; set; }
         public int StudentCount { get; set; }
         public DateTime CreatedAt { get; set; }
+    }
+
+    // DTO khóa học đã đăng ký với tiến độ (My Enrolled Courses)
+    public class EnrolledCourseWithProgressDto
+    {
+        public int CourseId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
+        public string? ImageType { get; set; }
+        public CourseType Type { get; set; }
+        public decimal? Price { get; set; }
+        public int? TeacherId { get; set; }
+        public string TeacherName { get; set; } = string.Empty;
+        public int LessonCount { get; set; }
+        public int StudentCount { get; set; }
+        
+        // ✅ Progress information
+        public decimal ProgressPercentage { get; set; } = 0; // 0-100%
+        public int CompletedLessons { get; set; } = 0;
+        public int TotalLessons { get; set; } = 0;
+        public bool IsCompleted { get; set; } = false;
+        public DateTime EnrolledAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
     }
 
     // DTO tham gia khóa học qua mã lớp học

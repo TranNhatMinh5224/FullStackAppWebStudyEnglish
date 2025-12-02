@@ -49,25 +49,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/flash-card/atflashcard/search - Search flashcards by keyword with optional module filter
-        [HttpGet("search")]
-        public async Task<ActionResult<ServiceResponse<List<ListFlashCardDto>>>> SearchFlashCards(
-            [FromQuery] string searchTerm,
-            [FromQuery] int? moduleId = null)
-        {
-            if (string.IsNullOrWhiteSpace(searchTerm))
-            {
-                return BadRequest(new ServiceResponse<List<ListFlashCardDto>>
-                {
-                    Success = false,
-                    Message = "Từ khóa tìm kiếm không được để trống"
-                });
-            }
-
-            var result = await _flashCardService.SearchFlashCardsAsync(searchTerm, moduleId);
-            return Ok(result);
-        }
-
         // POST: api/flash-card/atflashcard - Create a new flashcard
         [HttpPost]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> CreateFlashCard(

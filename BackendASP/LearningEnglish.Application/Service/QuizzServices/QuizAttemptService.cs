@@ -19,6 +19,7 @@ namespace LearningEnglish.Application.Service
         private readonly IUserRepository _userRepository;
         private readonly IEnumerable<IScoringStrategy> _scoringStrategies;
         private readonly IQuestionRepository _questionRepository;
+        private readonly IModuleProgressService _moduleProgressService;
         
         // MinIO bucket constant
         private const string QuestionBucket = "questions";
@@ -32,7 +33,8 @@ namespace LearningEnglish.Application.Service
             IAssessmentRepository assessmentRepository,
             IUserRepository userRepository,
             IEnumerable<IScoringStrategy> scoringStrategies,
-            IQuestionRepository questionRepository)
+            IQuestionRepository questionRepository,
+            IModuleProgressService moduleProgressService)
         {
             _quizRepository = quizRepository;
             _quizAttemptRepository = quizAttemptRepository;
@@ -41,6 +43,7 @@ namespace LearningEnglish.Application.Service
             _userRepository = userRepository;
             _scoringStrategies = scoringStrategies;
             _questionRepository = questionRepository;
+            _moduleProgressService = moduleProgressService;
 
             // Debug: kiểm tra strategies được inject
 
@@ -350,7 +353,7 @@ namespace LearningEnglish.Application.Service
 
                 await _quizAttemptRepository.UpdateQuizAttemptAsync(attempt);
 
-                // Kiểm tra xem giáo viên cho hs xem nhung thonm tin j sau khi submit  va cho hoc sinh do xem nhung thong tin do 
+                // Kiểm tra xem giáo viên cho hs xem nhung thonm tin j sau khi submit  va cho hoc sinh do xem nhung thong tin do
                 var quiz = await _quizRepository.GetQuizByIdAsync(attempt.QuizId);
                 if (quiz == null)
                 {
@@ -358,6 +361,13 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Quiz not found";
                     response.StatusCode = 404;
                     return response;
+                }
+
+                // ✅ Mark module as completed after quiz submission
+                var assessment = await _assessmentRepository.GetAssessmentById(quiz.AssessmentId);
+                if (assessment?.ModuleId != null)
+                {
+                    await _moduleProgressService.CompleteModuleAsync(attempt.UserId, assessment.ModuleId);
                 }
 
                 // Tạo result object

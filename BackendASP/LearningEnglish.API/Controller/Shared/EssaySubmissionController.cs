@@ -4,16 +4,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace LearningEnglish.API.Controller.AdminAndTeacher
+namespace LearningEnglish.API.Controller.Shared
 {
-    [Route("api/EssaySubmission")]
+    [Route("api/essay-submissions")]
     [ApiController]
-    [Authorize(Roles = "Admin, Teacher")]
-    public class ATEssaySubmissionController : ControllerBase
+    [Authorize]
+    public class EssaySubmissionController : ControllerBase
     {
         private readonly IEssaySubmissionService _essaySubmissionService;
 
-        public ATEssaySubmissionController(IEssaySubmissionService essaySubmissionService)
+        public EssaySubmissionController(IEssaySubmissionService essaySubmissionService)
         {
             _essaySubmissionService = essaySubmissionService;
         }
@@ -29,7 +29,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
         }
 
-        // GET: api/EssaySubmission/{submissionId} - Get submission by ID
+        // GET: api/essay-submissions/{submissionId} - Get submission by ID (all roles with authorization)
         [HttpGet("{submissionId}")]
         public async Task<IActionResult> GetSubmission(int submissionId)
         {
@@ -37,8 +37,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/EssaySubmission/assessment/{assessmentId} - Get submissions by assessment ID (Admin: all, Teacher: own)
+        // GET: api/essay-submissions/assessment/{assessmentId} - Get submissions by assessment (Admin/Teacher only)
         [HttpGet("assessment/{assessmentId}")]
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> GetSubmissionsByAssessment(int assessmentId)
         {
             var userRole = GetCurrentUserRole();
@@ -48,8 +49,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/EssaySubmission/user/{userId} - Get submissions by user ID
+        // GET: api/essay-submissions/user/{userId} - Get submissions by user (Admin/Teacher only)
         [HttpGet("user/{userId}")]
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> GetSubmissionsByUser(int userId)
         {
             var result = await _essaySubmissionService.GetSubmissionsByUserIdAsync(userId);

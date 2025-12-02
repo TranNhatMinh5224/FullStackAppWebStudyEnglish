@@ -19,7 +19,6 @@ namespace LearningEnglish.Infrastructure.Repositories
             return await _context.PronunciationProgresses
                 .Include(p => p.User)
                 .Include(p => p.FlashCard)
-                .Include(p => p.BestAssessment)
                 .FirstOrDefaultAsync(p => p.PronunciationProgressId == id);
         }
 
@@ -81,7 +80,16 @@ namespace LearningEnglish.Infrastructure.Repositories
             return true;
         }
 
-        public async Task<PronunciationProgress> UpsertAsync(int userId, int flashCardId, PronunciationAssessment assessment)
+        public async Task<PronunciationProgress> UpsertAsync(
+            int userId, 
+            int flashCardId,
+            double accuracyScore,
+            double fluencyScore,
+            double completenessScore,
+            double pronunciationScore,
+            List<string> problemPhonemes,
+            List<string> strongPhonemes,
+            DateTime attemptTime)
         {
             var existing = await GetByUserAndFlashCardAsync(userId, flashCardId);
 
@@ -97,8 +105,16 @@ namespace LearningEnglish.Infrastructure.Repositories
                 _context.PronunciationProgresses.Add(existing);
             }
 
-            // Update progress with new assessment
-            existing.UpdateAfterNewAssessment(assessment);
+            // Update progress with new realtime assessment data
+            existing.UpdateAfterAssessment(
+                accuracyScore,
+                fluencyScore,
+                completenessScore,
+                pronunciationScore,
+                problemPhonemes,
+                strongPhonemes,
+                attemptTime
+            );
             
             await _context.SaveChangesAsync();
             return existing;

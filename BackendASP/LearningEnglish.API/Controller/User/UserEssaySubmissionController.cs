@@ -37,16 +37,8 @@ namespace LearningEnglish.API.Controller.User
 
             var result = await _essaySubmissionService.CreateSubmissionAsync(submissionDto, userId);
             return result.Success 
-                ? CreatedAtAction(nameof(GetSubmission), new { submissionId = result.Data?.SubmissionId }, result)
+                ? CreatedAtAction("GetSubmission", "EssaySubmission", new { submissionId = result.Data?.SubmissionId }, result)
                 : StatusCode(result.StatusCode, result);
-        }
-
-        // GET: api/User/EssaySubmission/{submissionId} - Get submission by ID
-        [HttpGet("{submissionId}")]
-        public async Task<IActionResult> GetSubmission(int submissionId)
-        {
-            var result = await _essaySubmissionService.GetSubmissionByIdAsync(submissionId);
-            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // GET: api/User/EssaySubmission/my-submissions - Get all submissions for current user

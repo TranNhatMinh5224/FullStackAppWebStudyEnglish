@@ -42,7 +42,7 @@ namespace LearningEnglish.API.Controller.User
             return userRole;
         }
 
-        // GET: api/user/lessons/course/{courseId} - Get all lessons for a course (only accessible to enrolled users)
+        // GET: api/user/lessons/course/{courseId} - Get all lessons for a course with progress (for enrolled users)
         [HttpGet("course/{courseId}")]
         public async Task<IActionResult> GetLessonsByCourseId(int courseId)
         {

@@ -14,13 +14,6 @@ namespace LearningEnglish.Application.DTOs
         public string StreakStatus { get; set; } = string.Empty; // "Active", "Broken", "New"
     }
 
-    public class StreakHistoryDto
-    {
-        public DateTime Date { get; set; }
-        public bool WasActive { get; set; }
-        public int StreakOnThatDay { get; set; }
-    }
-
     public class StreakUpdateResultDto
     {
         public bool Success { get; set; }

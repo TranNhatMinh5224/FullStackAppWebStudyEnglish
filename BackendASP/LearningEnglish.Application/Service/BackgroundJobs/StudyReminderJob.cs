@@ -50,7 +50,7 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
             using var scope = _serviceProvider.CreateScope();
             var studyReminderRepository = scope.ServiceProvider.GetRequiredService<IStudyReminderRepository>();
             var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
-            var vocabularyReviewService = scope.ServiceProvider.GetRequiredService<IVocabularyReviewService>();
+            var flashCardReviewService = scope.ServiceProvider.GetRequiredService<IFlashCardReviewService>();
             var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
             // var pushNotificationService = scope.ServiceProvider.GetRequiredService<IPushNotificationService>();
 
@@ -74,7 +74,7 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
                     // Special handling for FlashcardReview reminders
                     if (reminder.Type == ReminderType.FlashcardReview)
                     {
-                        await HandleFlashcardReviewReminder(reminder, vocabularyReviewService, notificationService);
+                        await HandleFlashcardReviewReminder(reminder, flashCardReviewService, notificationService);
                     }
 
                     // Send email if enabled
@@ -107,17 +107,17 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
 
         private async Task HandleFlashcardReviewReminder(
             StudyReminder reminder,
-            IVocabularyReviewService vocabularyReviewService,
+            IFlashCardReviewService flashCardReviewService,
             INotificationService notificationService)
         {
             try
             {
                 // Check if user has due reviews
-                var dueReviewsResult = await vocabularyReviewService.GetDueReviewsAsync(reminder.UserId);
+                var dueCountResult = await flashCardReviewService.GetDueCountAsync(reminder.UserId);
 
-                if (dueReviewsResult.Success && dueReviewsResult.Data?.Any() == true)
+                if (dueCountResult.Success && dueCountResult.Data > 0)
                 {
-                    var dueCount = dueReviewsResult.Data.Count;
+                    var dueCount = dueCountResult.Data;
 
                     // Create in-app notification
                     var notificationRequest = new CreateNotificationDto
@@ -126,7 +126,7 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
                         Title = $"📚 {dueCount} từ vựng cần ôn tập",
                         Message = $"Bạn có {dueCount} từ vựng cần ôn tập hôm nay. Hãy dành chút thời gian để củng cố kiến thức!",
                         Type = NotificationType.General,
-                        RelatedEntityType = "VocabularyReview",
+                        RelatedEntityType = "FlashCardReview",
                         SendEmail = reminder.IsEmailEnabled
                     };
 

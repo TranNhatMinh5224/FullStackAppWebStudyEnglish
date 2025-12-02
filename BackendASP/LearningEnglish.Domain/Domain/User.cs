@@ -47,7 +47,6 @@ public class User
     public List<FlashCardReview> FlashCardReviews { get; set; } = new();
     public List<QuizAttempt> QuizAttempts { get; set; } = new();
     public List<EssaySubmission> EssaySubmissions { get; set; } = new();
-    public List<PronunciationAssessment> PronunciationAssessments { get; set; } = new();
     public List<PronunciationProgress> PronunciationProgresses { get; set; } = new();
     public List<Notification> Notifications { get; set; } = new();
 

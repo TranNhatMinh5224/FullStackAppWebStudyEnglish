@@ -1,9 +1,8 @@
 namespace LearningEnglish.Application.DTOs
 {
-    // DTO for PronunciationAssessment response
+    // DTO for PronunciationAssessment realtime response (not stored in DB)
     public class PronunciationAssessmentDto
     {
-        public int PronunciationAssessmentId { get; set; }
         public int UserId { get; set; }
         public int? FlashCardId { get; set; }
         public int? AssessmentId { get; set; }
@@ -51,20 +50,6 @@ namespace LearningEnglish.Application.DTOs
         public long? AudioSize { get; set; }
         public float? DurationInSeconds { get; set; }
     }
-
-    // DTO for listing pronunciation assessments (lighter version)
-    public class ListPronunciationAssessmentDto
-    {
-        public int PronunciationAssessmentId { get; set; }
-        public int UserId { get; set; }
-        public int? FlashCardId { get; set; }
-        public string ReferenceText { get; set; } = string.Empty;
-        public double PronunciationScore { get; set; }
-        public string? RecognizedText { get; set; }
-        public string Status { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
-        public string? FlashCardWord { get; set; }
-    }
     
     // DTO for Azure Speech assessment result
     public class AzureSpeechAssessmentResult
@@ -108,47 +93,6 @@ namespace LearningEnglish.Application.DTOs
         public double AccuracyScore { get; set; }
         public int Offset { get; set; }
         public int Duration { get; set; }
-    }
-
-    //  DTO for progress tracking
-    public class ProgressAnalytics
-    {
-        public List<ProgressDataPoint> ChartData { get; set; } = new();
-        public List<Milestone> Milestones { get; set; } = new();
-        public PhonemeProgressAnalysis PhonemeProgress { get; set; } = new();
-        public double OverallImprovementPercent { get; set; }
-        public string ProgressSummary { get; set; } = string.Empty;
-    }
-
-    public class ProgressDataPoint
-    {
-        public DateTime Date { get; set; }
-        public double AverageScore { get; set; }
-        public int AssessmentsCount { get; set; }
-    }
-
-    public class Milestone
-    {
-        public DateTime Date { get; set; }
-        public string Achievement { get; set; } = string.Empty;
-        public double Score { get; set; }
-        public string Icon { get; set; } = "🎯";
-    }
-
-    public class PhonemeProgressAnalysis
-    {
-        public List<PhonemeImprovement> MostImproved { get; set; } = new();
-        public List<PhonemeImprovement> NeedsWork { get; set; } = new();
-    }
-
-    public class PhonemeImprovement
-    {
-        public string Phoneme { get; set; } = string.Empty;
-        public string PhonemeDisplay { get; set; } = string.Empty;
-        public double FromScore { get; set; }
-        public double ToScore { get; set; }
-        public double ImprovementPercent { get; set; }
-        public int OccurrenceCount { get; set; }
     }
 }
 

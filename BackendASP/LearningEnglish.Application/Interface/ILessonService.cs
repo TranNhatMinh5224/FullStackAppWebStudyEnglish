@@ -6,7 +6,7 @@ namespace LearningEnglish.Application.Interface
     public interface ILessonService
     {
         // CRUD với ServiceResponse và DTOs
-        Task<ServiceResponse<List<ListLessonDto>>> GetListLessonByCourseId(int CourseId, int userId, string userRole);
+        Task<ServiceResponse<List<LessonWithProgressDto>>> GetListLessonByCourseId(int CourseId, int userId, string userRole);
         Task<ServiceResponse<LessonDto>> GetLessonById(int lessonId, int userId, string userRole);
         Task<ServiceResponse<LessonDto>> AdminAddLesson(AdminCreateLessonDto dto);
         Task<ServiceResponse<LessonDto>> TeacherAddLesson(TeacherCreateLessonDto dto);

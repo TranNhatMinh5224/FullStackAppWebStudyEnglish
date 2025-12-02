@@ -23,7 +23,6 @@ namespace LearningEnglish.Domain.Entities
         public Module? Module { get; set; }
         public List<Essay> Essays { get; set; } = new List<Essay>();
         public List<Quiz> Quizzes { get; set; } = new List<Quiz>();
-        public List<PronunciationAssessment> PronunciationAssessments { get; set; } = new();
     }
 
 
