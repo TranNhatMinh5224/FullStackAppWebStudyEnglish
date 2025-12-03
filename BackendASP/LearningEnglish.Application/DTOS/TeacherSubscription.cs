@@ -18,6 +18,11 @@ namespace LearningEnglish.Application.DTOs
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
     }
+    public class UserTeacherSubscriptionDto
+    {
+        public bool IsTeacher { get; set; }
+        public string? PackageLevel { get; set; }
+    }
     public class ListTeacherSubcription
     {
         public int TeacherSubscriptionId { get; set; }

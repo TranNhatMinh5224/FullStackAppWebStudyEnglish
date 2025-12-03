@@ -14,24 +14,15 @@ namespace LearningEnglish.Application.Interface
 
         /// <summary>
         /// Get all flashcards due for review today (NextReviewDate <= Today)
+        /// Returns ALL due cards from ALL modules ("rổ review chung")
         /// Includes both new cards and cards being reviewed
         /// </summary>
         Task<ServiceResponse<DueFlashCardsResponseDto>> GetDueFlashCardsAsync(int userId);
 
         /// <summary>
-        /// Get flashcards due for review by module
-        /// </summary>
-        Task<ServiceResponse<DueFlashCardsResponseDto>> GetDueFlashCardsByModuleAsync(int userId, int moduleId);
-
-        /// <summary>
         /// Get comprehensive review statistics for dashboard
         /// </summary>
         Task<ServiceResponse<ReviewStatisticsDto>> GetReviewStatisticsAsync(int userId);
-
-        /// <summary>
-        /// Get count of flashcards due today
-        /// </summary>
-        Task<ServiceResponse<int>> GetDueCountAsync(int userId);
 
         /// <summary>
         /// Start learning a module - Add all flashcards in module to review system
@@ -43,5 +34,11 @@ namespace LearningEnglish.Application.Interface
         /// Get all mastered flashcards (cards that won't be reviewed anymore)
         /// </summary>
         Task<ServiceResponse<DueFlashCardsResponseDto>> GetMasteredFlashCardsAsync(int userId);
+
+        /// <summary>
+        /// Get count of flashcards due for review today
+        /// Used by background services and notifications
+        /// </summary>
+        Task<int> GetDueCountAsync(int userId);
     }
 }

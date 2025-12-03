@@ -45,42 +45,5 @@ namespace LearningEnglish.API.Controller.User
             var result = await _flashCardService.GetFlashCardsByModuleIdAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
-
-
-        // GET: api/user/flashcard/progress/{moduleId} - Get flashcard learning progress for a module (TODO: implementation pending)
-        [HttpGet("progress/{moduleId}")]
-        public async Task<ActionResult<ServiceResponse<List<FlashCardWithProgressDto>>>> GetFlashCardProgress(int moduleId)
-        {
-            var userId = GetCurrentUserId();
-            _logger.LogInformation("User {UserId} đang lấy tiến trình FlashCard Module: {ModuleId}", userId, moduleId);
-
-            // TODO: Implement progress tracking
-            var result = new ServiceResponse<List<FlashCardWithProgressDto>>
-            {
-                Data = new List<FlashCardWithProgressDto>(),
-                Message = "Lấy tiến trình học FlashCard thành công"
-            };
-
-            await Task.CompletedTask;
-            return Ok(result);
-        }
-
-        // POST: api/user/flashcard/reset-progress/{flashCardId} - Reset learning progress for a specific flashcard (TODO: implementation pending)
-        [HttpPost("reset-progress/{flashCardId}")]
-        public async Task<ActionResult<ServiceResponse<bool>>> ResetFlashCardProgress(int flashCardId)
-        {
-            var userId = GetCurrentUserId();
-            _logger.LogInformation("User {UserId} đang reset progress FlashCard: {FlashCardId}", userId, flashCardId);
-
-            // TODO: Implement progress reset
-            var result = new ServiceResponse<bool>
-            {
-                Data = true,
-                Message = "Reset tiến trình FlashCard thành công"
-            };
-
-            await Task.CompletedTask;
-            return Ok(result);
-        }
     }
 }

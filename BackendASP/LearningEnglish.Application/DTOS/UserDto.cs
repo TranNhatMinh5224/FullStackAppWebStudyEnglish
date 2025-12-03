@@ -29,6 +29,12 @@ namespace LearningEnglish.Application.DTOs
         public string Status { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }
         public string? AvatarType { get; set; }
+        
+        // Streak info
+        public StreakDto? Streak { get; set; }
+        
+        // Teacher subscription info (if user has purchased)
+        public UserTeacherSubscriptionDto? TeacherSubscription { get; set; }
     }
     // Dto dành cho phản hồi đăng nhập thành công  
     public class AuthResponseDto

@@ -92,16 +92,6 @@ namespace LearningEnglish.Application.DTOs
         public string? AudioType { get; set; }
     }
 
-    // DTO for flashcard with user progress info
-    public class FlashCardWithProgressDto : FlashCardDto
-    {
-        public bool IsLearned { get; set; }
-        public bool NeedsReview { get; set; }
-        public int ConsecutiveCorrect { get; set; }
-        public float EasinessFactor { get; set; }
-        public int IntervalDays { get; set; }
-    }
-
     // DTO for bulk flashcard import
     public class BulkImportFlashCardDto
     {

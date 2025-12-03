@@ -113,12 +113,10 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
             try
             {
                 // Check if user has due reviews
-                var dueCountResult = await flashCardReviewService.GetDueCountAsync(reminder.UserId);
+                var dueCount = await flashCardReviewService.GetDueCountAsync(reminder.UserId);
 
-                if (dueCountResult.Success && dueCountResult.Data > 0)
+                if (dueCount > 0)
                 {
-                    var dueCount = dueCountResult.Data;
-
                     // Create in-app notification
                     var notificationRequest = new CreateNotificationDto
                     {

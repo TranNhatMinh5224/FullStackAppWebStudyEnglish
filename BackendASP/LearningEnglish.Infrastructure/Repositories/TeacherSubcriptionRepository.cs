@@ -29,6 +29,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             var now = DateTime.UtcNow;
             return await _context.TeacherSubscriptions
+                .Include(ts => ts.TeacherPackage)
                 .Where(ts => ts.UserId == userId 
                           && ts.Status == Domain.Enums.SubscriptionStatus.Active
                           && ts.EndDate > now)

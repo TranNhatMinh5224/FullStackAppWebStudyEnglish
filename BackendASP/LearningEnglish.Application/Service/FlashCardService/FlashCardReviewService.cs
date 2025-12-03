@@ -15,6 +15,7 @@ namespace LearningEnglish.Application.Service
         private readonly IModuleProgressService _moduleProgressService;
         private readonly IMapper _mapper;
         private readonly ILogger<FlashCardReviewService> _logger;
+        private readonly IStreakService _streakService;
 
         // MinIO bucket constants
         private const string AUDIO_BUCKET_NAME = "flashcard-audio";
@@ -25,13 +26,15 @@ namespace LearningEnglish.Application.Service
             IFlashCardRepository flashCardRepository,
             IModuleProgressService moduleProgressService,
             IMapper mapper,
-            ILogger<FlashCardReviewService> logger)
+            ILogger<FlashCardReviewService> logger,
+            IStreakService streakService)
         {
             _reviewRepository = reviewRepository;
             _flashCardRepository = flashCardRepository;
             _moduleProgressService = moduleProgressService;
             _mapper = mapper;
             _logger = logger;
+            _streakService = streakService;
         }
 
         public async Task<ServiceResponse<ReviewFlashCardResponseDto>> ReviewFlashCardAsync(int userId, ReviewFlashCardDto reviewDto)
@@ -116,6 +119,10 @@ namespace LearningEnglish.Application.Service
                 _logger.LogInformation("User {UserId} reviewed flashcard {FlashCardId} with quality {Quality}. Next review: {NextReview}",
                     userId, reviewDto.FlashCardId, reviewDto.Quality, review.NextReviewDate);
 
+                // ✅ Update streak after flashcard review
+                bool isSuccessful = reviewDto.Quality >= 3; // Quality >= 3 is considered successful
+                await _streakService.UpdateStreakAsync(userId, isSuccessful);
+
                 // ✅ Check if module is completed after this review
                 if (flashCard.ModuleId.HasValue)
                 {
@@ -140,7 +147,10 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var currentDate = DateTime.UtcNow.Date;
+                _logger.LogInformation("GetDueFlashCardsAsync - UserId: {UserId}, CurrentDate: {CurrentDate}", userId, currentDate);
+                
                 var dueReviews = await _reviewRepository.GetDueReviewsAsync(userId, currentDate);
+                _logger.LogInformation("Found {Count} due reviews for user {UserId}", dueReviews.Count(), userId);
 
                 var dueFlashCards = new List<DueFlashCardDto>();
 
@@ -201,84 +211,6 @@ namespace LearningEnglish.Application.Service
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting due flashcards for user {UserId}", userId);
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = $"Lỗi khi lấy danh sách từ cần ôn: {ex.Message}";
-            }
-
-            return response;
-        }
-
-        public async Task<ServiceResponse<DueFlashCardsResponseDto>> GetDueFlashCardsByModuleAsync(int userId, int moduleId)
-        {
-            var response = new ServiceResponse<DueFlashCardsResponseDto>();
-
-            try
-            {
-                var currentDate = DateTime.UtcNow.Date;
-                var allDueReviews = await _reviewRepository.GetDueReviewsAsync(userId, currentDate);
-                
-                // Filter by module
-                var dueReviews = allDueReviews.Where(r => r.FlashCard.ModuleId == moduleId).ToList();
-
-                var dueFlashCards = new List<DueFlashCardDto>();
-
-                foreach (var review in dueReviews)
-                {
-                    var flashCard = review.FlashCard;
-                    
-                    string? imageUrl = null;
-                    string? audioUrl = null;
-
-                    if (!string.IsNullOrEmpty(flashCard.ImageKey))
-                    {
-                        imageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, flashCard.ImageKey);
-                    }
-
-                    if (!string.IsNullOrEmpty(flashCard.AudioKey))
-                    {
-                        audioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, flashCard.AudioKey);
-                    }
-
-                    var daysOverdue = (currentDate - review.NextReviewDate.Date).Days;
-
-                    dueFlashCards.Add(new DueFlashCardDto
-                    {
-                        FlashCardId = flashCard.FlashCardId,
-                        ModuleId = flashCard.ModuleId,
-                        Word = flashCard.Word,
-                        Meaning = flashCard.Meaning,
-                        Pronunciation = flashCard.Pronunciation,
-                        ImageUrl = imageUrl,
-                        AudioUrl = audioUrl,
-                        PartOfSpeech = flashCard.PartOfSpeech,
-                        Example = flashCard.Example,
-                        ExampleTranslation = flashCard.ExampleTranslation,
-                        NextReviewDate = review.NextReviewDate,
-                        IntervalDays = review.IntervalDays,
-                        RepetitionCount = review.RepetitionCount,
-                        IsOverdue = daysOverdue > 0,
-                        DaysOverdue = daysOverdue > 0 ? daysOverdue : 0
-                    });
-                }
-
-                var responseData = new DueFlashCardsResponseDto
-                {
-                    TotalDue = dueFlashCards.Count,
-                    NewCards = dueFlashCards.Count(c => c.RepetitionCount == 0),
-                    ReviewCards = dueFlashCards.Count(c => c.RepetitionCount > 0),
-                    OverdueCards = dueFlashCards.Count(c => c.IsOverdue),
-                    FlashCards = dueFlashCards.OrderBy(c => c.NextReviewDate).ToList()
-                };
-
-                response.Data = responseData;
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = $"Có {responseData.TotalDue} từ cần ôn trong module này";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting due flashcards by module for user {UserId}, module {ModuleId}", userId, moduleId);
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = $"Lỗi khi lấy danh sách từ cần ôn: {ex.Message}";
@@ -355,30 +287,6 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        public async Task<ServiceResponse<int>> GetDueCountAsync(int userId)
-        {
-            var response = new ServiceResponse<int>();
-
-            try
-            {
-                var count = await _reviewRepository.GetDueCountAsync(userId, DateTime.UtcNow.Date);
-
-                response.Data = count;
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = $"Có {count} từ cần ôn tập";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting due count for user {UserId}", userId);
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = $"Lỗi khi đếm từ cần ôn: {ex.Message}";
-            }
-
-            return response;
-        }
-
         public async Task<ServiceResponse<int>> StartLearningModuleAsync(int userId, int moduleId)
         {
             var response = new ServiceResponse<int>();
@@ -396,7 +304,8 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                int addedCount = 0;
+                int newCardsAdded = 0;
+                int existingCardsCount = 0;
 
                 foreach (var flashCard in flashCards)
                 {
@@ -405,31 +314,54 @@ namespace LearningEnglish.Application.Service
 
                     if (existingReview == null)
                     {
-                        // Create initial review record
+                        // Create initial review record for new card
                         var newReview = new FlashCardReview
                         {
                             UserId = userId,
                             FlashCardId = flashCard.FlashCardId,
                             Quality = 0,
                             EasinessFactor = 2.5f,
-                            IntervalDays = 1,
+                            IntervalDays = 0,
                             RepetitionCount = 0,
                             NextReviewDate = DateTime.UtcNow.Date, // Due today for first review
                             ReviewedAt = DateTime.UtcNow
                         };
 
                         await _reviewRepository.CreateAsync(newReview);
-                        addedCount++;
+                        newCardsAdded++;
+                        
+                        _logger.LogInformation("Added new flashcard {FlashCardId} to review system for user {UserId}, NextReviewDate: {NextReviewDate}", 
+                            flashCard.FlashCardId, userId, newReview.NextReviewDate);
+                    }
+                    else
+                    {
+                        existingCardsCount++;
+                        _logger.LogDebug("FlashCard {FlashCardId} already exists in review system for user {UserId}", 
+                            flashCard.FlashCardId, userId);
                     }
                 }
 
-                response.Data = addedCount;
+                int totalCards = flashCards.Count;
+                response.Data = totalCards;
                 response.Success = true;
                 response.StatusCode = 200;
-                response.Message = $"Đã thêm {addedCount} từ vào hệ thống ôn tập";
 
-                _logger.LogInformation("User {UserId} started learning module {ModuleId} - Added {Count} flashcards", 
-                    userId, moduleId, addedCount);
+                // Build detailed message
+                if (newCardsAdded == 0)
+                {
+                    response.Message = $"Module có {totalCards} từ. Tất cả đã có trong hệ thống ôn tập. Bạn có thể bắt đầu ôn ngay!";
+                }
+                else if (existingCardsCount == 0)
+                {
+                    response.Message = $"Đã thêm {newCardsAdded} từ mới vào hệ thống ôn tập. Sẵn sàng để học!";
+                }
+                else
+                {
+                    response.Message = $"Module có {totalCards} từ: {newCardsAdded} từ mới được thêm, {existingCardsCount} từ đã có sẵn.";
+                }
+
+                _logger.LogInformation("User {UserId} started learning module {ModuleId} - Total: {Total}, New: {New}, Existing: {Existing}", 
+                    userId, moduleId, totalCards, newCardsAdded, existingCardsCount);
             }
             catch (Exception ex)
             {
@@ -752,6 +684,16 @@ namespace LearningEnglish.Application.Service
                 _logger.LogError(ex, "Error checking module completion for user {UserId}, module {ModuleId}", userId, moduleId);
                 // Don't throw - this is a background check, shouldn't fail the main operation
             }
+        }
+
+        /// <summary>
+        /// Get count of flashcards due for review today
+        /// Used by background services and notifications
+        /// </summary>
+        public async Task<int> GetDueCountAsync(int userId)
+        {
+            var currentDate = DateTime.UtcNow.Date;
+            return await _reviewRepository.GetDueCountAsync(userId, currentDate);
         }
 
         #endregion

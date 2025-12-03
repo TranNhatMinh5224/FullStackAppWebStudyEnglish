@@ -20,6 +20,7 @@ namespace LearningEnglish.Application.Service
         private readonly IEnumerable<IScoringStrategy> _scoringStrategies;
         private readonly IQuestionRepository _questionRepository;
         private readonly IModuleProgressService _moduleProgressService;
+        private readonly IStreakService _streakService;
         
         // MinIO bucket constant
         private const string QuestionBucket = "questions";
@@ -34,7 +35,8 @@ namespace LearningEnglish.Application.Service
             IUserRepository userRepository,
             IEnumerable<IScoringStrategy> scoringStrategies,
             IQuestionRepository questionRepository,
-            IModuleProgressService moduleProgressService)
+            IModuleProgressService moduleProgressService,
+            IStreakService streakService)
         {
             _quizRepository = quizRepository;
             _quizAttemptRepository = quizAttemptRepository;
@@ -44,6 +46,7 @@ namespace LearningEnglish.Application.Service
             _scoringStrategies = scoringStrategies;
             _questionRepository = questionRepository;
             _moduleProgressService = moduleProgressService;
+            _streakService = streakService;
 
             // Debug: kiểm tra strategies được inject
 
@@ -80,6 +83,22 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Quiz chưa mở để làm";
                     response.StatusCode = 403;
                     return response;
+                }
+
+                // Kiểm tra Assessment deadline nếu quiz thuộc về assessment
+                if (quiz.AssessmentId > 0)
+                {
+                    var assessment = await _assessmentRepository.GetAssessmentById(quiz.AssessmentId);
+                    if (assessment != null && assessment.DueAt.HasValue)
+                    {
+                        if (DateTime.UtcNow > assessment.DueAt.Value)
+                        {
+                            response.Success = false;
+                            response.Message = "Assessment đã quá hạn nộp bài";
+                            response.StatusCode = 403;
+                            return response;
+                        }
+                    }
                 }
 
                 // 2. Kiểm tra user tồn tại
@@ -369,6 +388,10 @@ namespace LearningEnglish.Application.Service
                 {
                     await _moduleProgressService.CompleteModuleAsync(attempt.UserId, assessment.ModuleId);
                 }
+
+                // ✅ Update streak after quiz submission
+                bool isPassed = quiz.PassingScore.HasValue ? attempt.TotalScore >= quiz.PassingScore.Value : true;
+                await _streakService.UpdateStreakAsync(attempt.UserId, isPassed);
 
                 // Tạo result object
                 var result = new QuizAttemptResultDto

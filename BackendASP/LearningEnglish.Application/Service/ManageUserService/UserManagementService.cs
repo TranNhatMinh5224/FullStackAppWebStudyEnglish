@@ -13,6 +13,8 @@ namespace LearningEnglish.Application.Service
         private readonly IMapper _mapper;
         private readonly ICourseRepository _courseRepository;
         private readonly IMinioFileStorage _minioFileStorage;
+        private readonly IStreakService _streakService;
+        private readonly ITeacherSubscriptionRepository _teacherSubscriptionRepository;
 
         // Bucket + folder cho avatar người dùng
         private const string AvatarBucket = "avatars";
@@ -22,12 +24,16 @@ namespace LearningEnglish.Application.Service
             IUserRepository userRepository, 
             IMapper mapper, 
             ICourseRepository courseRepository,
-            IMinioFileStorage minioFileStorage)
+            IMinioFileStorage minioFileStorage,
+            IStreakService streakService,
+            ITeacherSubscriptionRepository teacherSubscriptionRepository)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _courseRepository = courseRepository;
             _minioFileStorage = minioFileStorage;
+            _streakService = streakService;
+            _teacherSubscriptionRepository = teacherSubscriptionRepository;
         }
 
         public async Task<ServiceResponse<UserDto>> GetUserProfileAsync(int userId)
@@ -52,6 +58,19 @@ namespace LearningEnglish.Application.Service
                 {
                     response.Data.AvatarUrl = BuildPublicUrl.BuildURL(AvatarBucket, user.AvatarKey);
                 }
+
+                // Get streak info
+                var streakResult = await _streakService.GetCurrentStreakAsync(userId);
+                if (streakResult.Success && streakResult.Data != null)
+                {
+                    response.Data.Streak = streakResult.Data;
+                }
+
+                // Get active teacher subscription if exists
+                var subscription = await _teacherSubscriptionRepository.GetActiveSubscriptionAsync(userId);
+                response.Data.TeacherSubscription = subscription != null 
+                    ? _mapper.Map<UserTeacherSubscriptionDto>(subscription)
+                    : new UserTeacherSubscriptionDto { IsTeacher = false, PackageLevel = null };
             }
             catch (Exception)
             {
@@ -156,14 +175,27 @@ namespace LearningEnglish.Application.Service
                 }
 
                 response.StatusCode = 200;
-                response.Message = "Cập nhật avatar thành công";
+                response.StatusCode = 200;
                 response.Data = _mapper.Map<UserDto>(user);
 
-                // Build URL cho avatar
+                // Build URL cho avatar nếu tồn tại
                 if (!string.IsNullOrWhiteSpace(user.AvatarKey))
                 {
                     response.Data.AvatarUrl = BuildPublicUrl.BuildURL(AvatarBucket, user.AvatarKey);
                 }
+
+                // Get streak info
+                var streakResult = await _streakService.GetCurrentStreakAsync(userId);
+                if (streakResult.Success && streakResult.Data != null)
+                {
+                    response.Data.Streak = streakResult.Data;
+                }
+
+                // Get active teacher subscription if exists
+                var subscription = await _teacherSubscriptionRepository.GetActiveSubscriptionAsync(userId);
+                response.Data.TeacherSubscription = subscription != null 
+                    ? _mapper.Map<UserTeacherSubscriptionDto>(subscription)
+                    : new UserTeacherSubscriptionDto { IsTeacher = false, PackageLevel = null };
             }
             catch (Exception)
             {

@@ -197,34 +197,12 @@ public class StreakService : IStreakService
         var today = DateTime.UtcNow.Date;
         var lastActivity = streak.LastActivityDate?.Date;
 
-        string status;
-        if (lastActivity == null)
-        {
-            status = "New";
-        }
-        else if (lastActivity == today)
-        {
-            status = "Active";
-        }
-        else if (lastActivity == today.AddDays(-1))
-        {
-            status = "Active";
-        }
-        else
-        {
-            status = "Broken";
-        }
-
         return new StreakDto
         {
             UserId = streak.UserId,
             CurrentStreak = streak.CurrentStreak,
-            LongestStreak = streak.LongestStreak,
-            TotalActiveDays = streak.TotalActiveDays,
             LastActivityDate = streak.LastActivityDate,
-            CurrentStreakStartDate = streak.CurrentStreakStartDate,
-            IsActiveToday = lastActivity == today,
-            StreakStatus = status
+            IsActiveToday = lastActivity == today
         };
     }
 }

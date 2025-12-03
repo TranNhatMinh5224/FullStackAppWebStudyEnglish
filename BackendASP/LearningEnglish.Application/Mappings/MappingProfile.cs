@@ -1,6 +1,7 @@
 using AutoMapper;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.DTOs;
+using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Application.Mappings
 {
@@ -222,6 +223,14 @@ namespace LearningEnglish.Application.Mappings
             .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate))
             .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate));
 
+            // Mapping for UserDto TeacherSubscription property
+            CreateMap<TeacherSubscription, UserTeacherSubscriptionDto>()
+            .ForMember(dest => dest.IsTeacher, opt => opt.MapFrom(src => src.Status == SubscriptionStatus.Active))
+            .ForMember(dest => dest.PackageLevel, opt => opt.MapFrom(src => 
+                src.Status == SubscriptionStatus.Active && src.TeacherPackage != null 
+                ? src.TeacherPackage.Level.ToString() 
+                : null));
+
             // FlashCard mappings
             CreateMap<FlashCard, FlashCardDto>()
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey)) // Map key to url field
@@ -251,13 +260,6 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.ImageKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForMember(dest => dest.AudioKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-
-            CreateMap<FlashCard, FlashCardWithProgressDto>()
-                .ForMember(dest => dest.ModuleName, opt => opt.MapFrom(src => src.Module != null ? src.Module.Name : string.Empty))
-                .ForMember(dest => dest.CurrentLevel, opt => opt.Ignore()) // Sẽ tính trong service
-                .ForMember(dest => dest.NextReviewAt, opt => opt.Ignore()) // Sẽ tính trong service
-                .ForMember(dest => dest.ReviewCount, opt => opt.Ignore()) // Sẽ tính trong service
-                .ForMember(dest => dest.SuccessRate, opt => opt.Ignore()); // Sẽ tính trong service
 
             // Assessment mappings
             CreateMap<Assessment, AssessmentDto>()

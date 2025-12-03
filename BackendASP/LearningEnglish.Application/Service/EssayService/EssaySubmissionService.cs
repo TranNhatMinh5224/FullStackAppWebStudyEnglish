@@ -18,6 +18,7 @@ namespace LearningEnglish.Application.Service
         private readonly ILogger<EssaySubmissionService> _logger;
         private readonly IModuleProgressService _moduleProgressService;
         private readonly IAssessmentRepository _assessmentRepository;
+        private readonly IStreakService _streakService;
 
         // MinIO configuration for essay attachments
         private const string AttachmentBucket = "essay-attachments";
@@ -30,7 +31,8 @@ namespace LearningEnglish.Application.Service
             IMapper mapper, 
             ILogger<EssaySubmissionService> logger,
             IModuleProgressService moduleProgressService,
-            IAssessmentRepository assessmentRepository)
+            IAssessmentRepository assessmentRepository,
+            IStreakService streakService)
         {
             _essaySubmissionRepository = essaySubmissionRepository;
             _essayRepository = essayRepository;
@@ -39,6 +41,7 @@ namespace LearningEnglish.Application.Service
             _logger = logger;
             _moduleProgressService = moduleProgressService;
             _assessmentRepository = assessmentRepository;
+            _streakService = streakService;
         }
         // Implement cho phương thức Nộp bài kiểm tra tự luận (Essay Submission)
         public async Task<ServiceResponse<EssaySubmissionDto>> CreateSubmissionAsync(CreateEssaySubmissionDto dto, int userId)
@@ -55,6 +58,19 @@ namespace LearningEnglish.Application.Service
                     response.StatusCode = 404;
                     response.Message = "Essay không tồn tại";
                     return response;
+                }
+
+                // Kiểm tra Assessment deadline
+                var essayAssessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+                if (essayAssessment != null && essayAssessment.DueAt.HasValue)
+                {
+                    if (DateTime.UtcNow > essayAssessment.DueAt.Value)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Assessment đã quá hạn nộp bài";
+                        return response;
+                    }
                 }
 
                 // Kiểm tra học sinh đã nộp bài chưa
@@ -110,6 +126,9 @@ namespace LearningEnglish.Application.Service
                     {
                         await _moduleProgressService.CompleteModuleAsync(userId, assessment.ModuleId);
                     }
+
+                    // ✅ Update streak after essay submission
+                    await _streakService.UpdateStreakAsync(userId, true); // Essay submission is always successful
                     
                     var submissionDto = _mapper.Map<EssaySubmissionDto>(createdSubmission);
 
