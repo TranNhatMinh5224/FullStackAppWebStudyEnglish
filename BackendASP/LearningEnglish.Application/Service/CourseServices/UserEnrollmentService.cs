@@ -83,14 +83,14 @@ namespace LearningEnglish.Application.Service
                 if (course.Type == CourseType.Teacher && course.TeacherId.HasValue)
                 {
                     var teacherPackage = await _teacherPackageRepository.GetInformationTeacherpackage(course.TeacherId.Value);
-                    
+
                     // Check 1: Teacher phải có active package mới nhận students mới
                     if (teacherPackage == null)
                     {
                         response.Success = false;
                         response.StatusCode = 403;
                         response.Message = "Khóa học này hiện không nhận học viên mới. Giáo viên cần gia hạn gói để tiếp tục nhận học viên.";
-                        _logger.LogWarning("Teacher {TeacherId} has no active package. Cannot enroll new students in course {CourseId}", 
+                        _logger.LogWarning("Teacher {TeacherId} has no active package. Cannot enroll new students in course {CourseId}",
                             course.TeacherId.Value, enrollDto.CourseId);
                         return response;
                     }
@@ -154,7 +154,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
         // Tham gia lớp học qua mã lớp học (class code)
-        // Lưu ý: Đăng ký qua class code thường là cho course MIỄN PHÍ hoặc đã được teacher approve
+        // Lưu ý: Đăng ký qua class code thường là cho course MIỄN PHÍ 
         // Nếu course có phí, cần xử lý payment riêng
         public async Task<ServiceResponse<bool>> EnrollInCourseByClassCodeAsync(string classCode, int userId)
         {
@@ -194,17 +194,17 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                
+
                 if (course.Type == CourseType.Teacher && course.TeacherId.HasValue)
                 {
                     var teacherPackage = await _teacherPackageRepository.GetInformationTeacherpackage(course.TeacherId.Value);
-                    
+
                     if (teacherPackage == null)
                     {
                         response.Success = false;
                         response.StatusCode = 403;
                         response.Message = "Khóa học này hiện không nhận học viên mới. Giáo viên cần gia hạn gói để tiếp tục nhận học viên.";
-                        _logger.LogWarning("Teacher {TeacherId} has no active package. Cannot enroll student {UserId} via class code in course {CourseId}", 
+                        _logger.LogWarning("Teacher {TeacherId} has no active package. Cannot enroll student {UserId} via class code in course {CourseId}",
                             course.TeacherId.Value, userId, course.CourseId);
                         return response;
                     }
