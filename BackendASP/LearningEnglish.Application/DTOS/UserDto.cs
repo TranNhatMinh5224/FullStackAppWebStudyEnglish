@@ -29,10 +29,10 @@ namespace LearningEnglish.Application.DTOs
         public string Status { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }
         public string? AvatarType { get; set; }
-        
+
         // Streak info
         public StreakDto? Streak { get; set; }
-        
+
         // Teacher subscription info (if user has purchased)
         public UserTeacherSubscriptionDto? TeacherSubscription { get; set; }
     }
@@ -52,7 +52,7 @@ namespace LearningEnglish.Application.DTOs
         public string LastName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
     }
-    
+
     // Dto riêng cho update avatar
     public class UpdateAvatarDto
     {
@@ -118,5 +118,9 @@ namespace LearningEnglish.Application.DTOs
         public int TotalUsers { get; set; }
 
         public List<UserDto> Users { get; set; } = new();
+    }
+    public class GoogleLoginDto
+    {
+        public string IdToken { get; set; } = string.Empty;
     }
 }

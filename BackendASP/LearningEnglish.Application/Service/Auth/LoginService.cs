@@ -1,10 +1,10 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Interface;
-using LearningEnglish.Domain.Entities;
+
 using AutoMapper;
 using LearningEnglish.Domain.Enums;
-using Microsoft.Extensions.Configuration;
+
 
 namespace LearningEnglish.Application.Service
 {
@@ -46,7 +46,7 @@ namespace LearningEnglish.Application.Service
                         User = _mapper.Map<UserDto>(user),
                     };
                     return response;
-                    
+
                 }
 
                 var accessToken = _tokenService.GenerateAccessToken(user);
@@ -67,5 +67,26 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        public async Task<ServiceResponse<AuthResponseDto>> LoginByGoogleAsync(GoogleLoginDto dto) 
+        {
+            var response = new ServiceResponse<AuthResponseDto>() ; 
+            try
+            {
+                
+            }
+            catch (Exception)
+            {   
+                
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = $"Đã xảy ra lỗi hệ thống";
+            }
+            
+           
+            return response;
+
+
+        }
     }
+
 }
