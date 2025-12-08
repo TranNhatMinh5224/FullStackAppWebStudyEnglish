@@ -192,6 +192,9 @@ builder.Services.AddScoped<IAudioConverterService, AudioConverterService>();
 builder.Services.AddHttpClient<IAzureSpeechService, AzureSpeechService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
+// 📧 SMTP Configuration for Email Service
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
+
 // HttpClient for Dictionary API
 builder.Services.AddHttpClient();
 
@@ -203,6 +206,10 @@ builder.Services.Configure<UnsplashOptions>(builder.Configuration.GetSection("Un
 
 // MinIO Configuration
 builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("MinIO"));
+
+// Google Auth Configuration
+builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection("GoogleAuth"));
+
 
 // MinIO Client (Singleton - dùng chung cho toàn bộ app)
 builder.Services.AddSingleton<IMinioClient>(sp =>
@@ -234,7 +241,7 @@ builder.Services.AddScoped<IPaymentStrategy, TeacherPackagePaymentProcessor>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateLectureDtoValidator>();
-// Explicit validators for notifications and reminders (also discovered via assembly scan)
+
 builder.Services.AddTransient<FluentValidation.IValidator<LearningEnglish.Application.DTOs.CreateNotificationDto>, LearningEnglish.Application.Validators.NotificationValidators.CreateNotificationDtoValidator>();
 builder.Services.AddTransient<FluentValidation.IValidator<LearningEnglish.Application.DTOs.CreateStudyReminderDto>, LearningEnglish.Application.Validators.StudyReminderValidators.CreateStudyReminderDtoValidator>();
 

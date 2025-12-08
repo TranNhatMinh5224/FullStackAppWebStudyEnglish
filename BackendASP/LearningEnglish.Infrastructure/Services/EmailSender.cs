@@ -1,53 +1,43 @@
 using System.Net;
 using System.Net.Mail;
 using LearningEnglish.Application.Interface;
-using Microsoft.Extensions.Configuration;
+using LearningEnglish.Application.Cofigurations;
+using Microsoft.Extensions.Options;
 
 namespace LearningEnglish.Infrastructure.Services
 {
     public class EmailSender : IEmailSender
     {
-        private readonly IConfiguration _configuration;
+        private readonly SmtpOptions _smtpOptions;
 
-        public EmailSender(IConfiguration configuration)
+        public EmailSender(IOptions<SmtpOptions> smtpOptions)
         {
-            _configuration = configuration;
+            _smtpOptions = smtpOptions.Value;
         }
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
             try
             {
-                // Load SMTP settings from appsettings.json
-                var host = _configuration["Smtp:Host"];
-                var portString = _configuration["Smtp:Port"];
-                var username = _configuration["Smtp:User"];
-                var password = _configuration["Smtp:Password"];
-                var enableSslString = _configuration["Smtp:EnableSsl"];
-                var fromName = _configuration["Smtp:FromName"] ?? "E-Learning English Platform";
-
                 // Validate required SMTP settings
-                if (string.IsNullOrEmpty(host))
+                if (string.IsNullOrEmpty(_smtpOptions.Host))
                     throw new InvalidOperationException("Smtp:Host configuration is missing");
-                if (string.IsNullOrEmpty(portString) || !int.TryParse(portString, out var port))
+                if (_smtpOptions.Port <= 0)
                     throw new InvalidOperationException("Smtp:Port configuration is missing or invalid");
-                if (string.IsNullOrEmpty(username))
+                if (string.IsNullOrEmpty(_smtpOptions.User))
                     throw new InvalidOperationException("Smtp:User configuration is missing");
-                if (string.IsNullOrEmpty(password))
+                if (string.IsNullOrEmpty(_smtpOptions.Password))
                     throw new InvalidOperationException("Smtp:Password configuration is missing");
 
-                // Parse EnableSsl (default true for Gmail)
-                var enableSsl = string.IsNullOrEmpty(enableSslString) || bool.Parse(enableSslString);
-
-                using var client = new SmtpClient(host, port)
+                using var client = new SmtpClient(_smtpOptions.Host, _smtpOptions.Port)
                 {
-                    Credentials = new NetworkCredential(username, password),
-                    EnableSsl = enableSsl
+                    Credentials = new NetworkCredential(_smtpOptions.User, _smtpOptions.Password),
+                    EnableSsl = _smtpOptions.EnableSsl
                 };
 
                 var mailMessage = new MailMessage
                 {
-                    From = new MailAddress(username, fromName),
+                    From = new MailAddress(_smtpOptions.User, _smtpOptions.FromName),
                     Subject = subject,
                     Body = body,
                     IsBodyHtml = true

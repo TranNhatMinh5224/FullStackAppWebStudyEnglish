@@ -112,7 +112,7 @@ namespace LearningEnglish.Application.Service
                 {
                     courseDto.IsEnrolled = await _courseRepository.IsUserEnrolled(courseId, userId.Value);
                     
-                    // ✅ Add progress info if enrolled
+                    //  Add progress info if enrolled
                     if (courseDto.IsEnrolled)
                     {
                         var courseProgress = await _courseProgressRepository.GetByUserAndCourseAsync(userId.Value, courseId);
