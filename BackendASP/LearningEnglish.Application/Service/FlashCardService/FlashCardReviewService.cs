@@ -13,6 +13,7 @@ namespace LearningEnglish.Application.Service
         private readonly IFlashCardReviewRepository _reviewRepository;
         private readonly IFlashCardRepository _flashCardRepository;
         private readonly IModuleProgressService _moduleProgressService;
+        private readonly IModuleCompletionRepository _moduleCompletionRepo;
         private readonly IMapper _mapper;
         private readonly ILogger<FlashCardReviewService> _logger;
         private readonly IStreakService _streakService;
@@ -25,6 +26,7 @@ namespace LearningEnglish.Application.Service
             IFlashCardReviewRepository reviewRepository,
             IFlashCardRepository flashCardRepository,
             IModuleProgressService moduleProgressService,
+            IModuleCompletionRepository moduleCompletionRepo,
             IMapper mapper,
             ILogger<FlashCardReviewService> logger,
             IStreakService streakService)
@@ -32,6 +34,7 @@ namespace LearningEnglish.Application.Service
             _reviewRepository = reviewRepository;
             _flashCardRepository = flashCardRepository;
             _moduleProgressService = moduleProgressService;
+            _moduleCompletionRepo = moduleCompletionRepo;
             _mapper = mapper;
             _logger = logger;
             _streakService = streakService;
@@ -662,21 +665,41 @@ namespace LearningEnglish.Application.Service
                 var allReviews = await _reviewRepository.GetReviewsByUserAsync(userId);
                 var moduleReviews = allReviews.Where(r => moduleFlashCardIds.Contains(r.FlashCardId)).ToList();
 
-                // Check if all flashcards have been reviewed and mastered
-                // Mastered criteria: RepetitionCount >= 5 AND last quality >= 4
-                bool allMastered = flashCards.All(fc =>
+                // ✅ SCENARIO 1: Check if all flashcards have been reviewed at least once
+                // Completion criteria: Just need to review each card once (any quality)
+                bool allReviewed = flashCards.All(fc =>
+                {
+                    var review = moduleReviews.FirstOrDefault(r => r.FlashCardId == fc.FlashCardId);
+                    return review != null; // Just need to have reviewed once (any quality)
+                });
+
+                if (allReviewed)
+                {
+                    // Check if module already marked as completed
+                    var existingCompletion = await _moduleCompletionRepo.GetByUserAndModuleAsync(userId, moduleId);
+                    
+                    if (existingCompletion == null || !existingCompletion.IsCompleted)
+                    {
+                        // Mark module as completed for the first time
+                        await _moduleProgressService.CompleteModuleAsync(userId, moduleId);
+                        _logger.LogInformation(
+                            "🎉 User {UserId} completed FlashCard module {ModuleId} - All {Count} cards reviewed at least once",
+                            userId, moduleId, flashCards.Count);
+                    }
+                }
+
+                // 📊 Track mastery progress separately (for analytics)
+                var masteredCount = flashCards.Count(fc =>
                 {
                     var review = moduleReviews.FirstOrDefault(r => r.FlashCardId == fc.FlashCardId);
                     return review != null && review.RepetitionCount >= 5 && review.Quality >= 4;
                 });
 
-                if (allMastered)
+                if (masteredCount > 0)
                 {
-                    // Mark module as completed
-                    await _moduleProgressService.CompleteModuleAsync(userId, moduleId);
                     _logger.LogInformation(
-                        "User {UserId} completed FlashCard module {ModuleId} - All {Count} cards mastered",
-                        userId, moduleId, flashCards.Count);
+                        "Module {ModuleId} Mastery Progress: {Mastered}/{Total} cards mastered ({Percentage}%)",
+                        moduleId, masteredCount, flashCards.Count, (masteredCount * 100 / flashCards.Count));
                 }
             }
             catch (Exception ex)
