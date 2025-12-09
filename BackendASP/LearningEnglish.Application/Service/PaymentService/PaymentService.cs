@@ -6,6 +6,7 @@ using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Pagination;
 
 namespace LearningEnglish.Application.Service
 {
@@ -236,9 +237,9 @@ namespace LearningEnglish.Application.Service
         }
         // Service laays ra thong tin lich su giao dich
 
-        public async Task<ServiceResponse<paginationResponseDto<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
+        public async Task<ServiceResponse<PagedResult<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
         {
-            var response = new ServiceResponse<paginationResponseDto<TransactionHistoryDto>>();
+            var response = new ServiceResponse<PagedResult<TransactionHistoryDto>>();
             try
             {
                 _logger.LogInformation("Getting transaction history for User {UserId}, Page {PageNumber}, Size {PageSize}",
@@ -267,13 +268,12 @@ namespace LearningEnglish.Application.Service
                     });
                 }
 
-                response.Data = new paginationResponseDto<TransactionHistoryDto>
+                response.Data = new PagedResult<TransactionHistoryDto>
                 {
                     Items = transactionDtos,
-                    TotalItems = totalCount,
+                    TotalCount = totalCount,
                     PageNumber = pageNumber,
-                    PageSize = pageSize,
-                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                    PageSize = pageSize
                 };
 
                 _logger.LogInformation("Retrieved {Count} transactions for User {UserId}", transactionDtos.Count, userId);

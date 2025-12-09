@@ -50,7 +50,17 @@ namespace LearningEnglish.Application.Service.Auth
             var response = new ServiceResponse<AuthResponseDto>();
             try
             {
-                // Bước 1: Verify Facebook Access Token
+                // Validate CSRF state parameter
+                if (string.IsNullOrEmpty(facebookLoginDto.State))
+                {
+                    _logger.LogWarning("Facebook login attempt without CSRF state parameter");
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "State parameter là bắt buộc để bảo mật CSRF";
+                    return response;
+                }
+
+                // Verify Facebook Access Token
                 var appId = _facebookAuthOptions.AppId;
                 var appSecret = _facebookAuthOptions.AppSecret;
 
@@ -76,7 +86,7 @@ namespace LearningEnglish.Application.Service.Auth
                     return response;
                 }
 
-                // Bước 2: Lấy thông tin user từ Facebook
+                // Lấy thông tin user từ Facebook
                 var userInfoUrl = $"https://graph.facebook.com/me?fields=id,email,first_name,last_name,picture&access_token={facebookLoginDto.AccessToken}";
                 var userInfoResponse = await _httpClient.GetAsync(userInfoUrl);
 
@@ -99,7 +109,7 @@ namespace LearningEnglish.Application.Service.Auth
                     return response;
                 }
 
-                // Bước 3: Kiểm tra xem đã từng đăng nhập bằng Facebook chưa
+                // Kiểm tra Facebook login history
                 var existingExternalLogin = await _externalLoginRepository
                     .GetByProviderAndUserIdAsync("Facebook", facebookUser.Id);
 
@@ -160,6 +170,16 @@ namespace LearningEnglish.Application.Service.Auth
                         await _userRepository.AddUserAsync(user);
                         await _userRepository.SaveChangesAsync();
                     }
+                    else
+                    {
+                        // Email đã tồn tại với phương thức khác - chặn cross-login
+                        _logger.LogWarning("Attempt to login with Facebook for existing email with different method. Email: {Email}", facebookUser.Email);
+                        
+                        response.Success = false;
+                        response.StatusCode = 409;
+                        response.Message = "Email này đã được đăng ký bằng phương thức khác. Vui lòng sử dụng phương thức đăng nhập ban đầu.";
+                        return response;
+                    }
 
                     // Tạo External Login mới
                     var newExternalLogin = new ExternalLogin
@@ -178,7 +198,7 @@ namespace LearningEnglish.Application.Service.Auth
                     await _externalLoginRepository.SaveChangesAsync();
                 }
 
-                // Bước 4: Kiểm tra trạng thái tài khoản
+                // Kiểm tra trạng thái tài khoản
                 if (user.Status == Domain.Enums.AccountStatus.Inactive)
                 {
                     response.Success = false;
@@ -187,7 +207,7 @@ namespace LearningEnglish.Application.Service.Auth
                     return response;
                 }
 
-                // Bước 5: Tạo JWT token
+                // Tạo JWT token
                 var accessToken = _tokenService.GenerateAccessToken(user);
                 var refreshToken = _tokenService.GenerateRefreshToken(user);
 

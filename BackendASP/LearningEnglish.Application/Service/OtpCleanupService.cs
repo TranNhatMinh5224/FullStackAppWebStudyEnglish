@@ -62,9 +62,12 @@ namespace LearningEnglish.Application.Service
             var emailVerificationTokenRepo = scope.ServiceProvider
                 .GetRequiredService<IEmailVerificationTokenRepository>();
 
+            var userRepository = scope.ServiceProvider
+                .GetRequiredService<IUserRepository>();
+
             try
             {
-                _logger.LogInformation("Bắt đầu cleanup OTP hết hạn lúc {Time}", DateTime.UtcNow);
+                _logger.LogInformation("Bắt đầu cleanup OTP hết hạn và user chưa verify lúc {Time}", DateTime.UtcNow);
 
                 // Xóa PasswordResetTokens hết hạn
                 await passwordResetTokenRepo.DeleteExpiredTokensAsync();
@@ -74,11 +77,31 @@ namespace LearningEnglish.Application.Service
                 await emailVerificationTokenRepo.DeleteExpiredTokensAsync();
                 _logger.LogInformation("Đã xóa EmailVerificationTokens hết hạn");
 
-                _logger.LogInformation("Hoàn thành cleanup OTP hết hạn lúc {Time}", DateTime.UtcNow);
+                // XÓA USER CHƯA VERIFY EMAIL SAU 24 TIẾNG
+                var allUsers = await userRepository.GetAllUsersAsync();
+                var unverifiedUsers = allUsers.Where(u => 
+                    !u.EmailVerified && 
+                    u.CreatedAt < DateTime.UtcNow.AddHours(-24)
+                ).ToList();
+
+                foreach (var user in unverifiedUsers)
+                {
+                    await userRepository.DeleteUserAsync(user.UserId);
+                    _logger.LogInformation("Đã xóa user chưa verify: {Email} (Created: {CreatedAt})", 
+                        user.Email, user.CreatedAt);
+                }
+
+                if (unverifiedUsers.Any())
+                {
+                    await userRepository.SaveChangesAsync();
+                    _logger.LogInformation("Đã xóa {Count} user chưa verify email sau 24 giờ", unverifiedUsers.Count);
+                }
+
+                _logger.LogInformation("Hoàn thành cleanup lúc {Time}", DateTime.UtcNow);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi cleanup OTP repositories");
+                _logger.LogError(ex, "Lỗi khi cleanup OTP và unverified users");
                 throw;
             }
         }

@@ -4,24 +4,31 @@ namespace LearningEnglish.Application.Interface
 {
     public interface IRefreshTokenRepository
     {
-        //  lấy RefreshToken dựa trên token
+        // Lấy RefreshToken dựa trên token
         Task<RefreshToken?> GetByTokenAsync(string token);
 
-        // lấy tất cả RefreshToken của một user dựa trên userId
+        // Lấy tất cả RefreshToken của một user
         Task<List<RefreshToken>> GetTokensByUserIdAsync(int userId);
 
-        // thêm mới một RefreshToken
+        // Thêm mới RefreshToken
         Task AddAsync(RefreshToken refreshToken);
 
-        // cập nhật một RefreshToken
+        // Cập nhật RefreshToken
         Task UpdateAsync(RefreshToken refreshToken);
 
-        // xóa một RefreshToken dựa trên token
+        // Xóa RefreshToken dựa trên token
         Task DeleteAsync(string token);
 
-        // lưu thay đổi vào database
+        // Lưu thay đổi vào database
         Task SaveChangesAsync();
-        // xóa tất cả RefreshToken đã hết hạn
+        
+        // Xóa tất cả RefreshToken đã hết hạn
         Task DeleteExpiredTokensAsync();
+        
+        // Thu hồi tất cả tokens của user (security)
+        Task RevokeAllTokensForUserAsync(int userId);
+        
+        // Thu hồi token cụ thể (logout)
+        Task RevokeTokenAsync(string token);
     }
 }

@@ -31,9 +31,9 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<UserDto>();
             try
             {
-                // Check email đã tồn tại
+                // Check email đã tồn tại VÀ đã verify
                 var existingUser = await _userRepository.GetUserByEmailAsync(dto.Email);
-                if (existingUser != null)
+                if (existingUser != null && existingUser.EmailVerified)
                 {
                     response.Success = false;
                     response.StatusCode = 400;
@@ -41,9 +41,22 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Check số điện thoại đã tồn tại
+                // Nếu email tồn tại NHƯNG chưa verify → Cho phép đăng ký lại (xóa user cũ)
+                if (existingUser != null && !existingUser.EmailVerified)
+                {
+                    // Xóa user cũ chưa verify và OTP cũ
+                    await _userRepository.DeleteUserAsync(existingUser.UserId);
+                    var oldTokens = await _emailVerificationTokenRepository.GetAllByEmailAsync(dto.Email);
+                    foreach (var oldToken in oldTokens)
+                    {
+                        await _emailVerificationTokenRepository.DeleteAsync(oldToken);
+                    }
+                    await _emailVerificationTokenRepository.SaveChangesAsync();
+                }
+
+                // Check số điện thoại đã tồn tại VÀ đã verify
                 var existingPhone = await _userRepository.GetUserByPhoneNumberAsync(dto.PhoneNumber);
-                if (existingPhone != null)
+                if (existingPhone != null && existingPhone.EmailVerified)
                 {
                     response.Success = false;
                     response.StatusCode = 400;
@@ -51,18 +64,15 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // Tạo user MỚI với EmailVerified = FALSE (trạng thái chờ xác thực)
                 var user = _mapper.Map<User>(dto);
                 user.SetPassword(dto.Password);
                 user.NormalizedEmail = dto.Email.ToUpper();
+                user.EmailVerified = false;  // ← CHƯA XÁC THỰC
 
-                // XÓA tất cả OTP cũ của email này trước khi tạo mới
-                // Đảm bảo chỉ có 1 OTP mới nhất được sử dụng
-                var oldTokens = await _emailVerificationTokenRepository.GetAllByEmailAsync(dto.Email);
-                foreach (var oldToken in oldTokens)
-                {
-                    await _emailVerificationTokenRepository.DeleteAsync(oldToken);
-                }
-                await _emailVerificationTokenRepository.SaveChangesAsync();
+                // Lưu user vào DB (trạng thái pending)
+                await _userRepository.AddUserAsync(user);
+                await _userRepository.SaveChangesAsync();
 
                 // Generate 6-digit OTP code
                 var random = new Random();
@@ -71,23 +81,24 @@ namespace LearningEnglish.Application.Service
                 {
                     User = user,
                     OtpCode = otpCode,
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(15) // token hết hạn sau 15 phút
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(15), // token hết hạn sau 15 phút
+                    Email = dto.Email  // Lưu email để query
                 };
                 await _emailVerificationTokenRepository.AddAsync(emailToken);
                 await _emailVerificationTokenRepository.SaveChangesAsync();
 
                 // Send OTP email via EmailSender
-                await _emailSender.SendEmailAsync(dto.Email, "Xác thực tài khoản", $"Mã OTP của bạn là: {otpCode}");
+                await _emailSender.SendEmailAsync(dto.Email, "Xác thực tài khoản", $"Mã OTP của bạn là: {otpCode}. Mã này có hiệu lực trong 15 phút.");
 
                 response.StatusCode = 200;
                 response.Data = _mapper.Map<UserDto>(user);
-                response.Message = "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.";
+                response.Message = "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản trong vòng 15 phút.";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 response.Success = false;
                 response.StatusCode = 500;
-                response.Message = "Đã xảy ra lỗi hệ thống";
+                response.Message = $"Đã xảy ra lỗi hệ thống: {ex.Message}";
             }
             return response;
         }

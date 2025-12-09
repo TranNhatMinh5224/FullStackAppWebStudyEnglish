@@ -49,7 +49,17 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<AuthResponseDto>();
             try
             {
-                // Bước 1: Verify token với Google
+                // Validate CSRF state parameter
+                if (string.IsNullOrEmpty(googleLoginDto.State))
+                {
+                    _logger.LogWarning("Google login attempt without CSRF state parameter");
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "State parameter là bắt buộc để bảo mật CSRF";
+                    return response;
+                }
+
+                // Verify token với Google
                 GoogleJsonWebSignature.Payload payload;
                 try
                 {
@@ -136,6 +146,16 @@ namespace LearningEnglish.Application.Service
                         await _userRepository.AddUserAsync(user);
                         await _userRepository.SaveChangesAsync();
                     }
+                    else
+                    {
+                        // Email đã tồn tại với phương thức khác - chặn cross-login
+                        _logger.LogWarning("Attempt to login with Google for existing email with different method. Email: {Email}", payload.Email);
+                        
+                        response.Success = false;
+                        response.StatusCode = 409;
+                        response.Message = "Email này đã được đăng ký bằng phương thức khác. Vui lòng sử dụng phương thức đăng nhập ban đầu.";
+                        return response;
+                    }
 
                     // Tạo External Login mới
                     var newExternalLogin = new ExternalLogin
@@ -154,7 +174,7 @@ namespace LearningEnglish.Application.Service
                     await _externalLoginRepository.SaveChangesAsync();
                 }
 
-                // Bước 3: Kiểm tra trạng thái tài khoản
+                // Kiểm tra trạng thái tài khoản
                 if (user.Status == Domain.Enums.AccountStatus.Inactive)
                 {
                     response.Success = false;
@@ -163,7 +183,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Bước 4: Tạo JWT token
+                // Tạo JWT token
                 var accessToken = _tokenService.GenerateAccessToken(user);
                 var refreshToken = _tokenService.GenerateRefreshToken(user);
 

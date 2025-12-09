@@ -142,10 +142,22 @@ namespace LearningEnglish.Application.DTOs
     public class GoogleLoginDto
     {
         public string IdToken { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;  // ✅ CSRF Protection
     }
 
     public class FacebookLoginDto
     {
         public string AccessToken { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;  // ✅ CSRF Protection
+    }
+
+    public class LogoutDto
+    {
+        public string RefreshToken { get; set; } = string.Empty;
+    }
+
+    public class LogoutAllDto
+    {
+        // Logout from all devices - no parameters needed, use JWT claims
     }
 }

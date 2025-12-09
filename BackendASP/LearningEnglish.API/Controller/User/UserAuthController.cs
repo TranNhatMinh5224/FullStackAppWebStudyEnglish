@@ -18,6 +18,7 @@ namespace LearningEnglish.API.Controllers.User
         private readonly ITokenService _tokenService;
         private readonly IGoogleLoginService _googleLoginService;
         private readonly IFacebookLoginService _facebookLoginService;
+        private readonly ILogoutService _logoutService;
 
         public UserAuthController(
             IRegisterService registerService,
@@ -26,7 +27,8 @@ namespace LearningEnglish.API.Controllers.User
             IPasswordService passwordService,
             ITokenService tokenService,
             IGoogleLoginService googleLoginService,
-            IFacebookLoginService facebookLoginService)
+            IFacebookLoginService facebookLoginService,
+            ILogoutService logoutService)
         {
             _registerService = registerService;
             _loginService = loginService;
@@ -35,6 +37,7 @@ namespace LearningEnglish.API.Controllers.User
             _tokenService = tokenService;
             _googleLoginService = googleLoginService;
             _facebookLoginService = facebookLoginService;
+            _logoutService = logoutService;
         }
 
         private int GetCurrentUserId()
@@ -55,6 +58,14 @@ namespace LearningEnglish.API.Controllers.User
         public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
             var result = await _registerService.RegisterUserAsync(dto);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/user/auth/verify-email - Verify email with OTP code
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailDto dto)
+        {
+            var result = await _registerService.VerifyEmailAsync(dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -167,6 +178,48 @@ namespace LearningEnglish.API.Controllers.User
         {
             var result = await _tokenService.RefreshTokenAsync(request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/user/auth/logout - Logout from current device (revoke specific refresh token)
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout([FromBody] LogoutDto dto)
+        {
+            try 
+            {
+                var userId = GetCurrentUserId();
+                var result = await _logoutService.LogoutAsync(dto, userId);
+                return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Đã xảy ra lỗi hệ thống khi đăng xuất",
+                    error = ex.Message 
+                });
+            }
+        }
+
+        // POST: api/user/auth/logout-all - Logout from all devices (revoke all refresh tokens)
+        [HttpPost("logout-all")]
+        [Authorize]
+        public async Task<IActionResult> LogoutAll()
+        {
+            try 
+            {
+                var userId = GetCurrentUserId();
+                var result = await _logoutService.LogoutAllAsync(userId);
+                return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Đã xảy ra lỗi hệ thống khi đăng xuất khỏi tất cả thiết bị",
+                    error = ex.Message 
+                });
+            }
         }
     }
 }

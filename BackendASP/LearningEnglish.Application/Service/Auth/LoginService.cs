@@ -40,6 +40,15 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // Check email verification - QUAN TRỌNG!
+                if (!user.EmailVerified)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Vui lòng xác thực email trước khi đăng nhập. Kiểm tra hộp thư của bạn để lấy mã OTP.";
+                    return response;
+                }
+
                 // Check account status
                 if (user.Status == AccountStatus.Inactive)
                 {

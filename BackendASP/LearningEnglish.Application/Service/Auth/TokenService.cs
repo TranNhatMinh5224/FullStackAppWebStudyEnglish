@@ -7,6 +7,7 @@ using System.Text;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
+using Microsoft.Extensions.Logging;
 namespace LearningEnglish.Application.Service
 {
     public class TokenService : ITokenService
@@ -14,12 +15,14 @@ namespace LearningEnglish.Application.Service
         private readonly IConfiguration _configuration;
         private readonly IUserRepository _userRepository;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly ILogger<TokenService> _logger;
 
-        public TokenService(IConfiguration configuration, IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository)
+        public TokenService(IConfiguration configuration, IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository, ILogger<TokenService> logger)
         {
             _configuration = configuration;
             _userRepository = userRepository;
             _refreshTokenRepository = refreshTokenRepository;
+            _logger = logger;
         }
 
         public Tuple<string, DateTime> GenerateAccessToken(User user)
@@ -112,11 +115,17 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // Detect RefreshToken reuse attack
                 if (existingToken.IsRevoked)
                 {
+                    _logger.LogWarning("SECURITY: Refresh token reuse detected for User {UserId}", existingToken.UserId);
+                    
+                    // Thu hồi tất cả tokens của user này
+                    await _refreshTokenRepository.RevokeAllTokensForUserAsync(existingToken.UserId);
+                    
                     response.Success = false;
                     response.StatusCode = 401;
-                    response.Message = "Refresh token đã bị thu hồi.";
+                    response.Message = "Phát hiện token bị sử dụng trái phép. Tất cả phiên đăng nhập đã bị hủy vì lý do bảo mật.";
                     return response;
                 }
 
