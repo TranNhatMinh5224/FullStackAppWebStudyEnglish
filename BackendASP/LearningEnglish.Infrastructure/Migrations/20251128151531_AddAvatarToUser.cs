@@ -7,6 +7,8 @@ namespace LearningEnglish.Infrastructure.Migrations
     /// <inheritdoc />
     public partial class AddAvatarToUser : Migration
     {
+        private static readonly string[] columns = new[] { "AvatarKey", "AvatarType", "PasswordHash" };
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -26,7 +28,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                 table: "Users",
                 keyColumn: "UserId",
                 keyValue: 1,
-                columns: new[] { "AvatarKey", "AvatarType", "PasswordHash" },
+                columns: columns,
                 values: new object[] { null, null, "$2a$11$chvnvJ/nUaAjZ/zQJ07PP.BYx4Uzm62zc95EmaqR1ujjEGVixrJ36" });
         }
 

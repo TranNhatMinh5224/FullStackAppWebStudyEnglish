@@ -148,16 +148,16 @@ namespace LearningEnglish.Application.Service
             {
                 var currentDate = DateTime.UtcNow.Date;
                 _logger.LogInformation("GetDueFlashCardsAsync - UserId: {UserId}, CurrentDate: {CurrentDate}", userId, currentDate);
-                
+
                 var dueReviews = await _reviewRepository.GetDueReviewsAsync(userId, currentDate);
-                _logger.LogInformation("Found {Count} due reviews for user {UserId}", dueReviews.Count(), userId);
+                _logger.LogInformation("Found {Count} due reviews for user {UserId}", dueReviews.Count, userId);
 
                 var dueFlashCards = new List<DueFlashCardDto>();
 
                 foreach (var review in dueReviews)
                 {
                     var flashCard = review.FlashCard;
-                    
+
                     // Generate URLs from keys
                     string? imageUrl = null;
                     string? audioUrl = null;
@@ -296,7 +296,7 @@ namespace LearningEnglish.Application.Service
                 // Get all flashcards in module
                 var flashCards = await _flashCardRepository.GetByModuleIdAsync(moduleId);
 
-                if (!flashCards.Any())
+                if (flashCards.Count == 0)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
@@ -329,14 +329,14 @@ namespace LearningEnglish.Application.Service
 
                         await _reviewRepository.CreateAsync(newReview);
                         newCardsAdded++;
-                        
-                        _logger.LogInformation("Added new flashcard {FlashCardId} to review system for user {UserId}, NextReviewDate: {NextReviewDate}", 
+
+                        _logger.LogInformation("Added new flashcard {FlashCardId} to review system for user {UserId}, NextReviewDate: {NextReviewDate}",
                             flashCard.FlashCardId, userId, newReview.NextReviewDate);
                     }
                     else
                     {
                         existingCardsCount++;
-                        _logger.LogDebug("FlashCard {FlashCardId} already exists in review system for user {UserId}", 
+                        _logger.LogDebug("FlashCard {FlashCardId} already exists in review system for user {UserId}",
                             flashCard.FlashCardId, userId);
                     }
                 }
@@ -360,7 +360,7 @@ namespace LearningEnglish.Application.Service
                     response.Message = $"Module có {totalCards} từ: {newCardsAdded} từ mới được thêm, {existingCardsCount} từ đã có sẵn.";
                 }
 
-                _logger.LogInformation("User {UserId} started learning module {ModuleId} - Total: {Total}, New: {New}, Existing: {Existing}", 
+                _logger.LogInformation("User {UserId} started learning module {ModuleId} - Total: {Total}, New: {New}, Existing: {Existing}",
                     userId, moduleId, totalCards, newCardsAdded, existingCardsCount);
             }
             catch (Exception ex)
@@ -450,7 +450,7 @@ namespace LearningEnglish.Application.Service
                 foreach (var review in masteredReviews)
                 {
                     var flashCard = review.FlashCard;
-                    
+
                     // Generate URLs from keys
                     string? imageUrl = null;
                     string? audioUrl = null;
@@ -523,7 +523,7 @@ namespace LearningEnglish.Application.Service
             // Update Easiness Factor
             // EF' = EF + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
             var newEF = review.EasinessFactor + (0.1f - (5 - quality) * (0.08f + (5 - quality) * 0.02f));
-            
+
             // EF should not be less than 1.3
             review.EasinessFactor = Math.Max(1.3f, newEF);
 
@@ -568,7 +568,7 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        private string GetReviewMessage(int quality, int intervalDays)
+        private static string GetReviewMessage(int quality, int intervalDays)
         {
             return quality switch
             {
@@ -582,9 +582,9 @@ namespace LearningEnglish.Application.Service
             };
         }
 
-        private int CalculateCurrentStreak(List<FlashCardReview> reviews, DateTime currentDate)
+        private static int CalculateCurrentStreak(List<FlashCardReview> reviews, DateTime currentDate)
         {
-            if (!reviews.Any()) return 0;
+            if (reviews.Count == 0) return 0;
 
             var orderedDates = reviews
                 .Select(r => r.ReviewedAt.Date)
@@ -592,7 +592,7 @@ namespace LearningEnglish.Application.Service
                 .OrderByDescending(d => d)
                 .ToList();
 
-            if (!orderedDates.Any() || orderedDates[0] < currentDate.AddDays(-1))
+            if (orderedDates.Count == 0 || orderedDates[0] < currentDate.AddDays(-1))
             {
                 return 0; // Streak broken
             }
@@ -616,9 +616,9 @@ namespace LearningEnglish.Application.Service
             return streak;
         }
 
-        private int CalculateLongestStreak(List<FlashCardReview> reviews)
+        private static int CalculateLongestStreak(List<FlashCardReview> reviews)
         {
-            if (!reviews.Any()) return 0;
+            if (reviews.Count == 0) return 0;
 
             var orderedDates = reviews
                 .Select(r => r.ReviewedAt.Date)
@@ -655,7 +655,7 @@ namespace LearningEnglish.Application.Service
             {
                 // Get all flashcards in the module
                 var flashCards = await _flashCardRepository.GetByModuleIdAsync(moduleId);
-                if (!flashCards.Any()) return;
+                if (flashCards.Count == 0) return;
 
                 // Get all reviews for this user in this module
                 var moduleFlashCardIds = flashCards.Select(fc => fc.FlashCardId).ToList();

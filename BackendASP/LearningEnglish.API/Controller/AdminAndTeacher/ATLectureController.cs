@@ -67,7 +67,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
             var userId = GetCurrentUserId();
             var result = await _lectureService.CreateLectureAsync(createLectureDto, userId);
-            return result.Success 
+            return result.Success
                 ? CreatedAtAction(nameof(GetLecture), new { lectureId = result.Data?.LectureId }, result)
                 : StatusCode(result.StatusCode, result);
         }

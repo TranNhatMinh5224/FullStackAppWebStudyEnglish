@@ -16,19 +16,25 @@ namespace LearningEnglish.API.Controllers.User
         private readonly IUserManagementService _userManagementService;
         private readonly IPasswordService _passwordService;
         private readonly ITokenService _tokenService;
+        private readonly IGoogleLoginService _googleLoginService;
+        private readonly IFacebookLoginService _facebookLoginService;
 
         public UserAuthController(
             IRegisterService registerService,
             ILoginService loginService,
             IUserManagementService userManagementService,
             IPasswordService passwordService,
-            ITokenService tokenService)
+            ITokenService tokenService,
+            IGoogleLoginService googleLoginService,
+            IFacebookLoginService facebookLoginService)
         {
             _registerService = registerService;
             _loginService = loginService;
             _userManagementService = userManagementService;
             _passwordService = passwordService;
             _tokenService = tokenService;
+            _googleLoginService = googleLoginService;
+            _facebookLoginService = facebookLoginService;
         }
 
         private int GetCurrentUserId()
@@ -57,6 +63,22 @@ namespace LearningEnglish.API.Controllers.User
         public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
         {
             var result = await _loginService.LoginUserAsync(dto);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/user/auth/google-login - Authenticate user with Google
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto dto)
+        {
+            var result = await _googleLoginService.HandleGoogleLoginAsync(dto);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/user/auth/facebook-login - Authenticate user with Facebook
+        [HttpPost("facebook-login")]
+        public async Task<IActionResult> FacebookLogin([FromBody] FacebookLoginDto dto)
+        {
+            var result = await _facebookLoginService.HandleFacebookLoginAsync(dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 

@@ -36,20 +36,20 @@ public class LessonCompletion
     // Navigation Properties
     public User User { get; set; } = null!;
     public Lesson Lesson { get; set; } = null!;
-    
+
     // ===== BUSINESS LOGIC =====
     public void UpdateModuleProgress(int totalModules, int completedModules)
     {
         TotalModules = totalModules;
         CompletedModules = completedModules;
-        
+
         // Auto-calculate completion percentage based on modules
         CompletionPercentage = totalModules > 0 ? (float)completedModules / totalModules * 100 : 0;
-        
+
         // Mark as completed if >= 90%
         var wasCompleted = IsCompleted;
         IsCompleted = CompletionPercentage >= 90f;
-        
+
         // Set completion timestamp when first completed
         if (IsCompleted && !wasCompleted)
         {
@@ -60,19 +60,19 @@ public class LessonCompletion
         {
             CompletedAt = null; // Reset if dropped below 90%
         }
-        
+
         UpdatedAt = DateTime.UtcNow;
     }
-    
+
     public void MarkVideoProgress(int positionSeconds, float videoPercentage)
     {
         LastWatchedPositionSeconds = positionSeconds;
         VideoProgressPercentage = videoPercentage;
-        
+
         if (StartedAt == null) StartedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
-    
+
     public string GetProgressDisplay()
     {
         return $"{CompletedModules}/{TotalModules} modules ({CompletionPercentage:F1}%)";

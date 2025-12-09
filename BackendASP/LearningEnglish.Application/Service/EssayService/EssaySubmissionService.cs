@@ -28,7 +28,7 @@ namespace LearningEnglish.Application.Service
             IEssaySubmissionRepository essaySubmissionRepository,
             IEssayRepository essayRepository,
             IMinioFileStorage minioFileStorage,
-            IMapper mapper, 
+            IMapper mapper,
             ILogger<EssaySubmissionService> logger,
             IModuleProgressService moduleProgressService,
             IAssessmentRepository assessmentRepository,
@@ -88,8 +88,8 @@ namespace LearningEnglish.Application.Service
                 if (!string.IsNullOrWhiteSpace(dto.AttachmentTempKey))
                 {
                     var commitResult = await _minioFileStorage.CommitFileAsync(
-                        dto.AttachmentTempKey, 
-                        AttachmentBucket, 
+                        dto.AttachmentTempKey,
+                        AttachmentBucket,
                         AttachmentFolder);
 
                     if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
@@ -119,7 +119,7 @@ namespace LearningEnglish.Application.Service
                 try
                 {
                     var createdSubmission = await _essaySubmissionRepository.CreateSubmissionAsync(submission);
-                    
+
                     // ✅ Mark module as completed after essay submission
                     var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
                     if (assessment?.ModuleId != null)
@@ -129,14 +129,14 @@ namespace LearningEnglish.Application.Service
 
                     // ✅ Update streak after essay submission
                     await _streakService.UpdateStreakAsync(userId, true); // Essay submission is always successful
-                    
+
                     var submissionDto = _mapper.Map<EssaySubmissionDto>(createdSubmission);
 
                     // Build attachment URL if attachment exists
                     if (!string.IsNullOrWhiteSpace(createdSubmission.AttachmentKey))
                     {
                         submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                            AttachmentBucket, 
+                            AttachmentBucket,
                             $"{AttachmentFolder}/{createdSubmission.AttachmentKey}");
                     }
 
@@ -186,7 +186,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var submission = await _essaySubmissionRepository.GetSubmissionByIdWithDetailsAsync(submissionId);
-                
+
                 if (submission == null)
                 {
                     response.Success = false;
@@ -201,7 +201,7 @@ namespace LearningEnglish.Application.Service
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
                     submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                        AttachmentBucket, 
+                        AttachmentBucket,
                         $"{AttachmentFolder}/{submission.AttachmentKey}");
                 }
 
@@ -238,7 +238,7 @@ namespace LearningEnglish.Application.Service
                     if (submission != null && !string.IsNullOrWhiteSpace(submission.AttachmentKey))
                     {
                         submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                            AttachmentBucket, 
+                            AttachmentBucket,
                             $"{AttachmentFolder}/{submission.AttachmentKey}");
                     }
                 }
@@ -288,7 +288,7 @@ namespace LearningEnglish.Application.Service
                     if (submission != null && !string.IsNullOrWhiteSpace(submission.AttachmentKey))
                     {
                         submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                            AttachmentBucket, 
+                            AttachmentBucket,
                             $"{AttachmentFolder}/{submission.AttachmentKey}");
                     }
                 }
@@ -317,7 +317,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var submission = await _essaySubmissionRepository.GetUserSubmissionForEssayAsync(userId, essayId);
-                
+
                 if (submission == null)
                 {
                     response.Success = true;
@@ -333,7 +333,7 @@ namespace LearningEnglish.Application.Service
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
                     submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                        AttachmentBucket, 
+                        AttachmentBucket,
                         $"{AttachmentFolder}/{submission.AttachmentKey}");
                 }
 
@@ -361,7 +361,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var submission = await _essaySubmissionRepository.GetSubmissionByIdWithDetailsAsync(submissionId);
-                
+
                 if (submission == null)
                 {
                     response.Success = false;
@@ -387,8 +387,8 @@ namespace LearningEnglish.Application.Service
                 if (!string.IsNullOrWhiteSpace(dto.AttachmentTempKey))
                 {
                     var commitResult = await _minioFileStorage.CommitFileAsync(
-                        dto.AttachmentTempKey, 
-                        AttachmentBucket, 
+                        dto.AttachmentTempKey,
+                        AttachmentBucket,
                         AttachmentFolder);
 
                     if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
@@ -435,7 +435,7 @@ namespace LearningEnglish.Application.Service
                     if (!string.IsNullOrWhiteSpace(updatedSubmission.AttachmentKey))
                     {
                         submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                            AttachmentBucket, 
+                            AttachmentBucket,
                             $"{AttachmentFolder}/{updatedSubmission.AttachmentKey}");
                     }
 
@@ -482,7 +482,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var submission = await _essaySubmissionRepository.GetSubmissionByIdWithDetailsAsync(submissionId);
-                
+
                 if (submission == null)
                 {
                     response.Success = false;

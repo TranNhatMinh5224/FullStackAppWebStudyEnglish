@@ -200,7 +200,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             try
             {
                 var query = _context.Lectures.Where(l => l.ModuleId == moduleId);
-                
+
                 if (parentLectureId.HasValue)
                     query = query.Where(l => l.ParentLectureId == parentLectureId.Value);
                 else

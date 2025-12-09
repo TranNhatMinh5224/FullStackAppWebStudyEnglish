@@ -1,5 +1,6 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Pagination;
 
 namespace LearningEnglish.Application.Interface
 {
@@ -8,6 +9,7 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<CourseResponseDto>> CreateCourseAsync(TeacherCreateCourseRequestDto requestDto, int teacherId);
         Task<ServiceResponse<CourseResponseDto>> UpdateCourseAsync(int courseId, TeacherUpdateCourseRequestDto requestDto, int teacherId);
         Task<ServiceResponse<IEnumerable<CourseResponseDto>>> GetMyCoursesByTeacherAsync(int teacherId);
+        Task<ServiceResponse<PagedResult<CourseResponseDto>>> GetMyCoursesPagedAsync(int teacherId, PageRequest request);
         Task<ServiceResponse<CourseResponseDto>> DeleteCourseAsync(int courseId, int teacherId);
 
     }

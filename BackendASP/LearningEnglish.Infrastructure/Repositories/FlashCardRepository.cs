@@ -189,7 +189,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             try
             {
-                var query = _context.FlashCards.Where(fc => fc.Word.ToLower() == word.ToLower());
+                var query = _context.FlashCards.Where(fc => fc.Word.Equals(word, StringComparison.CurrentCultureIgnoreCase));
 
                 if (moduleId.HasValue)
                     query = query.Where(fc => fc.ModuleId == moduleId.Value);
@@ -208,9 +208,9 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             try
             {
-                var query = _context.FlashCards.Where(fc => 
-                    fc.ModuleId == moduleId && 
-                    fc.Word.ToLower() == word.ToLower());
+                var query = _context.FlashCards.Where(fc =>
+                    fc.ModuleId == moduleId &&
+                    fc.Word.Equals(word, StringComparison.CurrentCultureIgnoreCase));
 
                 if (excludeFlashCardId.HasValue)
                     query = query.Where(fc => fc.FlashCardId != excludeFlashCardId.Value);

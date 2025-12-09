@@ -40,7 +40,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             var validationResult = ValidateFileSize(file, bucketName);
             if (!validationResult.IsValid)
             {
-                return BadRequest(new { 
+                return BadRequest(new
+                {
                     success = false,
                     message = validationResult.ErrorMessage,
                     maxSize = validationResult.MaxSizeReadable
@@ -51,7 +52,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        private (bool IsValid, string ErrorMessage, string MaxSizeReadable) ValidateFileSize(IFormFile file, string bucketName)
+        private static (bool IsValid, string ErrorMessage, string MaxSizeReadable) ValidateFileSize(IFormFile file, string bucketName)
         {
             var contentType = file.ContentType.ToLower();
             long maxSize;
@@ -87,7 +88,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             if (file.Length > maxSize)
             {
                 var currentSizeMB = file.Length / 1024.0 / 1024.0;
-                return (false, 
+                return (false,
                     $"{fileType} file size ({currentSizeMB:F2}MB) exceeds the maximum allowed size of {maxSizeReadable}.",
                     maxSizeReadable);
             }
@@ -121,7 +122,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             {
                 _logger.LogInformation("Manual temp file cleanup triggered by admin");
                 await cleanupJob.CleanupOldTempFilesAsync();
-                return Ok(new { 
+                return Ok(new
+                {
                     success = true,
                     message = "Temp file cleanup completed successfully"
                 });
@@ -129,7 +131,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during manual temp file cleanup");
-                return StatusCode(500, new { 
+                return StatusCode(500, new
+                {
                     success = false,
                     message = "Error during cleanup",
                     error = ex.Message

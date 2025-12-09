@@ -1,4 +1,4 @@
-using LearningEnglish.Domain.Enums;
+
 
 namespace LearningEnglish.Application.DTOs
 {
@@ -10,7 +10,7 @@ namespace LearningEnglish.Application.DTOs
     }
 
     // DTOs riêng cho từng loại câu hỏi (Type-safe)
-    
+
     // DTO cho MultipleChoice và TrueFalse: Chọn 1 đáp án
     public class SingleChoiceAnswerDto
     {

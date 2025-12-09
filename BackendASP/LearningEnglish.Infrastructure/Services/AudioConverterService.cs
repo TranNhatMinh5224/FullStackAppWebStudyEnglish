@@ -160,7 +160,7 @@ namespace LearningEnglish.Infrastructure.Services
             }
         }
 
-        private string GetExtension(string format)
+        private static string GetExtension(string format)
         {
             return format.ToLowerInvariant() switch
             {

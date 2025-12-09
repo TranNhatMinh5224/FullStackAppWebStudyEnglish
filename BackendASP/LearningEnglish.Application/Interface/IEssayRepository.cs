@@ -11,7 +11,7 @@ namespace LearningEnglish.Application.Interface
         Task<List<Essay>> GetEssaysByAssessmentIdAsync(int assessmentId);
         Task<Essay> UpdateEssayAsync(Essay essay);
         Task DeleteEssayAsync(int essayId);
-        
+
         // Kiểm tra tồn tại và quyền hạn
         Task<bool> AssessmentExistsAsync(int assessmentId);
         Task<bool> IsTeacherOwnerOfAssessmentAsync(int teacherId, int assessmentId);

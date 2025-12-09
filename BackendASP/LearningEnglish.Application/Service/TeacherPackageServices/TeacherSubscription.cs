@@ -29,7 +29,7 @@ namespace LearningEnglish.Application.Service
         // xử lý mua gói teacher 
 
 
-        
+
 
         public async Task<ServiceResponse<ResPurchaseTeacherPackageDto>> AddTeacherSubscriptionAsync(PurchaseTeacherPackageDto dto, int userId)
         {
@@ -40,13 +40,13 @@ namespace LearningEnglish.Application.Service
 
                 // Check if user has an active subscription
                 var existingSubscription = await _teacherSubscriptionRepository.GetActiveSubscriptionAsync(userId);
-                
+
                 if (existingSubscription != null && existingSubscription.EndDate > DateTime.UtcNow)
                 {
                     // User has active subscription → Schedule new subscription to start after current ends
                     startDate = existingSubscription.EndDate.AddDays(1);
                     status = SubscriptionStatus.Pending; // Will auto-activate when StartDate arrives
-                    
+
                     _logger.LogInformation(
                         "User {UserId} has active subscription until {EndDate}. New subscription scheduled from {StartDate}",
                         userId, existingSubscription.EndDate, startDate);
@@ -56,7 +56,7 @@ namespace LearningEnglish.Application.Service
                     // No active subscription or expired → Start immediately
                     startDate = DateTime.UtcNow;
                     status = SubscriptionStatus.Active;
-                    
+
                     _logger.LogInformation("User {UserId} has no active subscription. New subscription starts immediately.", userId);
                 }
 
@@ -72,7 +72,7 @@ namespace LearningEnglish.Application.Service
                 await _teacherSubscriptionRepository.AddTeacherSubscriptionAsync(teacherSubscription);
 
                 var resultDto = _mapper.Map<ResPurchaseTeacherPackageDto>(teacherSubscription);
-                
+
                 string message = status == SubscriptionStatus.Pending
                     ? $"Teacher package purchased successfully. Will be activated on {startDate:yyyy-MM-dd}."
                     : "Teacher package purchased and activated successfully.";

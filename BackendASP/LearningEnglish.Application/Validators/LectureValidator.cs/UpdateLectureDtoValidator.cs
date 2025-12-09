@@ -72,8 +72,8 @@ namespace LearningEnglish.Application.Validators
 
             // Đảm bảo ít nhất một field được cập nhật
             RuleFor(x => x)
-                .Must(x => !string.IsNullOrEmpty(x.Title) || 
-                          x.OrderIndex.HasValue || 
+                .Must(x => !string.IsNullOrEmpty(x.Title) ||
+                          x.OrderIndex.HasValue ||
                           !string.IsNullOrEmpty(x.NumberingLabel) ||
                           x.Type.HasValue ||
                           !string.IsNullOrEmpty(x.MarkdownContent) ||

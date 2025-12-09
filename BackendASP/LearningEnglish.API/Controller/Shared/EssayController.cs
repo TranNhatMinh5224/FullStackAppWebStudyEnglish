@@ -57,7 +57,7 @@ namespace LearningEnglish.API.Controller.Shared
             int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
 
             var result = await _essayService.CreateEssayAsync(createDto, teacherId);
-            return result.Success 
+            return result.Success
                 ? CreatedAtAction(nameof(GetEssay), new { essayId = result.Data?.EssayId }, result)
                 : StatusCode(result.StatusCode, result);
         }

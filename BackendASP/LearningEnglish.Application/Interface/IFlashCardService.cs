@@ -14,7 +14,7 @@ namespace LearningEnglish.Application.Interface
 
         // Search and filter
         Task<ServiceResponse<List<ListFlashCardDto>>> SearchFlashCardsAsync(string searchTerm, int? moduleId = null, int? userId = null);
-        
+
         // Bulk operations
         Task<ServiceResponse<List<FlashCardDto>>> CreateBulkFlashCardsAsync(BulkImportFlashCardDto bulkImportDto, int userId, string userRole);
 

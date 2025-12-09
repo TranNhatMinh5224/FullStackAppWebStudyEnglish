@@ -1,5 +1,4 @@
-using System.Runtime.CompilerServices;
-using LearningEnglish.Domain.Entities;
+
 
 namespace LearningEnglish.Application.DTOs
 {
@@ -11,6 +10,8 @@ namespace LearningEnglish.Application.DTOs
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
+        public DateTime? DateOfBirth { get; set; }
+        public bool IsMale { get; set; } = true;
     }
     // Dto dành cho đăng nhập người dùng
     public class LoginUserDto
@@ -24,11 +25,14 @@ namespace LearningEnglish.Application.DTOs
         public int UserId { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;  // FirstName + LastName
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
+        public DateTime? DateOfBirth { get; set; }
+        public bool IsMale { get; set; }
+        public bool EmailVerified { get; set; }
         public string Status { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }
-        public string? AvatarType { get; set; }
 
         // Streak info
         public StreakDto? Streak { get; set; }
@@ -51,13 +55,14 @@ namespace LearningEnglish.Application.DTOs
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
+        public DateTime? DateOfBirth { get; set; }
+        public bool? IsMale { get; set; }
     }
 
     // Dto riêng cho update avatar
     public class UpdateAvatarDto
     {
         public string AvatarTempKey { get; set; } = string.Empty;
-        public string? AvatarType { get; set; }
     }
     // Dto thay đổi mật khẩu
     public class ChangePasswordDto
@@ -119,8 +124,28 @@ namespace LearningEnglish.Application.DTOs
 
         public List<UserDto> Users { get; set; } = new();
     }
+
+
+    // Dto xác nhận OTP cho email verification
+    public class VerifyEmailDto
+    {
+        public string Email { get; set; } = string.Empty;
+        public string OtpCode { get; set; } = string.Empty;
+    }
+
+    // Dto gửi lại OTP
+    public class ResendOtpDto
+    {
+        public string Email { get; set; } = string.Empty;
+    }
+
     public class GoogleLoginDto
     {
         public string IdToken { get; set; } = string.Empty;
+    }
+
+    public class FacebookLoginDto
+    {
+        public string AccessToken { get; set; } = string.Empty;
     }
 }

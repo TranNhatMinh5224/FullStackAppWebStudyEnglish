@@ -2,8 +2,10 @@ using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Domain.Enums;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace LearningEnglish.Application.Service
 {
@@ -21,8 +23,8 @@ namespace LearningEnglish.Application.Service
         private const string AvatarFolder = "real";
 
         public UserManagementService(
-            IUserRepository userRepository, 
-            IMapper mapper, 
+            IUserRepository userRepository,
+            IMapper mapper,
             ICourseRepository courseRepository,
             IMinioFileStorage minioFileStorage,
             IStreakService streakService,
@@ -68,7 +70,7 @@ namespace LearningEnglish.Application.Service
 
                 // Get active teacher subscription if exists
                 var subscription = await _teacherSubscriptionRepository.GetActiveSubscriptionAsync(userId);
-                response.Data.TeacherSubscription = subscription != null 
+                response.Data.TeacherSubscription = subscription != null
                     ? _mapper.Map<UserTeacherSubscriptionDto>(subscription)
                     : new UserTeacherSubscriptionDto { IsTeacher = false, PackageLevel = null };
             }
@@ -93,6 +95,19 @@ namespace LearningEnglish.Application.Service
                     response.StatusCode = 404;
                     response.Message = "Không tìm thấy người dùng";
                     return response;
+                }
+
+                // Check số điện thoại trùng (nếu thay đổi)
+                if (dto.PhoneNumber != user.PhoneNumber)
+                {
+                    var existingPhone = await _userRepository.GetUserByPhoneNumberAsync(dto.PhoneNumber);
+                    if (existingPhone != null && existingPhone.UserId != userId)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Số điện thoại đã tồn tại trong hệ thống";
+                        return response;
+                    }
                 }
 
                 _mapper.Map(dto, user);
@@ -147,7 +162,7 @@ namespace LearningEnglish.Application.Service
                     }
 
                     committedAvatarKey = commitResult.Data;
-                    
+
                     // Xóa avatar cũ nếu tồn tại
                     if (!string.IsNullOrWhiteSpace(user.AvatarKey))
                     {
@@ -155,7 +170,6 @@ namespace LearningEnglish.Application.Service
                     }
 
                     user.AvatarKey = committedAvatarKey;
-                    user.AvatarType = dto.AvatarType;
                 }
 
                 try
@@ -193,7 +207,7 @@ namespace LearningEnglish.Application.Service
 
                 // Get active teacher subscription if exists
                 var subscription = await _teacherSubscriptionRepository.GetActiveSubscriptionAsync(userId);
-                response.Data.TeacherSubscription = subscription != null 
+                response.Data.TeacherSubscription = subscription != null
                     ? _mapper.Map<UserTeacherSubscriptionDto>(subscription)
                     : new UserTeacherSubscriptionDto { IsTeacher = false, PackageLevel = null };
             }
@@ -220,6 +234,33 @@ namespace LearningEnglish.Application.Service
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+
+        public async Task<ServiceResponse<PagedResult<UserDto>>> GetAllUsersPagedAsync(PageRequest request)
+        {
+            var response = new ServiceResponse<PagedResult<UserDto>>();
+            try
+            {
+                var pagedData = await _userRepository.GetAllUsersPagedAsync(request);
+
+                var result = new PagedResult<UserDto>
+                {
+                    Items = _mapper.Map<List<UserDto>>(pagedData.Items),
+                    TotalCount = pagedData.TotalCount,
+                    PageNumber = pagedData.PageNumber,
+                    PageSize = pagedData.PageSize
+                };
+
+                response.StatusCode = 200;
+                response.Data = result;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = $"Lỗi: {ex.Message}";
             }
             return response;
         }
@@ -388,7 +429,68 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // === Giữ từ dev ===
+        // Lấy danh sách người dùng theo khóa học với phân trang
+        public async Task<ServiceResponse<PagedResult<UserDto>>> GetUsersByCourseIdPagedAsync(int courseId, int userId, string checkRole, PageRequest request)
+        {
+            var response = new ServiceResponse<PagedResult<UserDto>>();
+            try
+            {
+                var course = await _courseRepository.GetByIdAsync(courseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isAuthorized = false;
+                if (checkRole == "Admin")
+                {
+                    isAuthorized = true;
+                }
+                else if (checkRole == "Teacher")
+                {
+                    if (course.TeacherId == userId)
+                    {
+                        isAuthorized = true;
+                    }
+                }
+
+                if (!isAuthorized)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn chỉ được xem danh sách học sinh trong khóa học của mình";
+                    return response;
+                }
+
+                var pagedUsers = await _userRepository.GetUsersByCourseIdPagedAsync(courseId, request);
+
+                var userDtos = _mapper.Map<List<UserDto>>(pagedUsers.Items);
+
+                var result = new PagedResult<UserDto>
+                {
+                    Items = userDtos,
+                    TotalCount = pagedUsers.TotalCount,
+                    PageNumber = pagedUsers.PageNumber,
+                    PageSize = pagedUsers.PageSize
+                };
+
+                response.Data = result;
+                response.StatusCode = 200;
+                response.Success = true;
+                response.Message = "Lấy danh sách học sinh thành công";
+            }
+            catch (Exception)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+
         // Lấy danh sách giáo viên
         public async Task<ServiceResponse<List<UserDto>>> GetListTeachersAsync()
         {
@@ -425,7 +527,7 @@ namespace LearningEnglish.Application.Service
                     {
                         CourseId = course.CourseId,
                         Title = course.Title,
-                        Description = course.Description ?? "",
+                        Description = course.DescriptionMarkdown ?? "",
                         TeacherName = course.Teacher != null ?
                             $"{course.Teacher.FirstName} {course.Teacher.LastName}" : "System",
                         TotalUsers = usersInCourse.Count(),
@@ -436,6 +538,55 @@ namespace LearningEnglish.Application.Service
                 }
 
                 response.Data = studentsByAllCourses;
+                response.StatusCode = 200;
+                response.Success = true;
+                response.Message = "Lấy danh sách học sinh theo tất cả khóa học thành công";
+            }
+            catch (Exception)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+
+        // Lấy danh sách học sinh theo all course với phân trang
+        public async Task<ServiceResponse<PagedResult<StudentsByAllCoursesDto>>> GetStudentsByAllCoursesPagedAsync(PageRequest request)
+        {
+            var response = new ServiceResponse<PagedResult<StudentsByAllCoursesDto>>();
+            try
+            {
+                var pagedCourses = await _courseRepository.GetAllCoursesPagedAsync(request);
+                var studentsByAllCourses = new List<StudentsByAllCoursesDto>();
+
+                foreach (var course in pagedCourses.Items)
+                {
+                    var usersInCourse = await _courseRepository.GetEnrolledUsers(course.CourseId);
+
+                    var courseWithUsers = new StudentsByAllCoursesDto
+                    {
+                        CourseId = course.CourseId,
+                        Title = course.Title,
+                        Description = course.DescriptionMarkdown ?? "",
+                        TeacherName = course.Teacher != null ?
+                            $"{course.Teacher.FirstName} {course.Teacher.LastName}" : "System",
+                        TotalUsers = usersInCourse.Count(),
+                        Users = _mapper.Map<List<UserDto>>(usersInCourse)
+                    };
+
+                    studentsByAllCourses.Add(courseWithUsers);
+                }
+
+                var result = new PagedResult<StudentsByAllCoursesDto>
+                {
+                    Items = studentsByAllCourses,
+                    TotalCount = pagedCourses.TotalCount,
+                    PageNumber = pagedCourses.PageNumber,
+                    PageSize = pagedCourses.PageSize
+                };
+
+                response.Data = result;
                 response.StatusCode = 200;
                 response.Success = true;
                 response.Message = "Lấy danh sách học sinh theo tất cả khóa học thành công";

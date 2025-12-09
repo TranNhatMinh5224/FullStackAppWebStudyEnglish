@@ -8,7 +8,7 @@ namespace LearningEnglish.Domain.Entities
     {
         public int CourseId { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
+        public string DescriptionMarkdown { get; set; } = string.Empty;
         public string? ImageKey { get; set; }
         public string? ImageType { get; set; }
         public CourseType Type { get; set; } = CourseType.System;

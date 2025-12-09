@@ -13,7 +13,7 @@ namespace LearningEnglish.Application.DTOs
         public string? ImageUrl { get; set; }
         public string? AudioUrl { get; set; }
         public string? Phonetic { get; set; }
-        
+
         // Pronunciation Progress (null if never practiced)
         public PronunciationProgressSummary? Progress { get; set; }
     }
@@ -24,14 +24,14 @@ namespace LearningEnglish.Application.DTOs
         public double BestScore { get; set; }
         public DateTime? BestScoreDate { get; set; }
         public DateTime? LastPracticedAt { get; set; }
-        
+
         public double AvgPronunciationScore { get; set; }
         public double LastPronunciationScore { get; set; }
-        
+
         public int ConsecutiveDaysStreak { get; set; }
         public bool IsMastered { get; set; }
         public DateTime? MasteredAt { get; set; }
-        
+
         // Status indicators
         public string Status { get; set; } = "Not Started"; // Not Started, Practicing, Mastered
         public string StatusColor { get; set; } = "gray"; // gray, yellow, green

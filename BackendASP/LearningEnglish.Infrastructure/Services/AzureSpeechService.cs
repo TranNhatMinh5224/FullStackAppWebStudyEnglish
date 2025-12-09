@@ -292,7 +292,7 @@ namespace LearningEnglish.Infrastructure.Services
             }
         }
 
-        private string ConvertIPAToDisplay(string ipa)
+        private static string ConvertIPAToDisplay(string ipa)
         {
             // Map IPA symbols to user-friendly display
             var mapping = new Dictionary<string, string>

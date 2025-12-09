@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Common.Pagination;
 using Microsoft.AspNetCore.Authorization;
 
 namespace LearningEnglish.API.Controller.Admin
@@ -16,10 +17,18 @@ namespace LearningEnglish.API.Controller.Admin
             _userManagementService = userManagementService;
         }
 
-        // GET: api/admin/auth/users - Get all users in the system
+        // GET: api/admin/auth/users - Get all users
         [HttpGet("users")]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers([FromQuery] PageRequest? request)
         {
+            // Nếu có parameters phân trang, gọi service phân trang
+            if (request != null && (request.PageNumber > 1 || request.PageSize != 20 || !string.IsNullOrEmpty(request.SearchTerm)))
+            {
+                var pagedResult = await _userManagementService.GetAllUsersPagedAsync(request);
+                return pagedResult.Success ? Ok(pagedResult.Data) : StatusCode(pagedResult.StatusCode, new { message = pagedResult.Message });
+            }
+
+            // Không có parameters, trả về tất cả
             var result = await _userManagementService.GetAllUsersAsync();
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
@@ -56,10 +65,16 @@ namespace LearningEnglish.API.Controller.Admin
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // GET: api/admin/auth/getall-students-by-all-courses - Get students across all courses
+        // Lấy danh sách học sinh theo tất cả khóa học
         [HttpGet("getall-students-by-all-courses")]
-        public async Task<IActionResult> GetStudentsByAllCourses()
+        public async Task<IActionResult> GetStudentsByAllCourses([FromQuery] PageRequest? request)
         {
+            if (request != null && (request.PageNumber > 1 || request.PageSize != 20 || !string.IsNullOrEmpty(request.SearchTerm)))
+            {
+                var pagedResult = await _userManagementService.GetStudentsByAllCoursesPagedAsync(request);
+                return pagedResult.Success ? Ok(pagedResult.Data) : StatusCode(pagedResult.StatusCode, new { message = pagedResult.Message });
+            }
+
             var result = await _userManagementService.GetStudentsByAllCoursesAsync();
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }

@@ -54,7 +54,7 @@ namespace LearningEnglish.Application.Service.BackgroundServices
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Lỗi trong VocabularyReminderBackgroundService");
-                    
+
                     // Wait 1 hour before retry in case of error
                     await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
                 }
@@ -75,7 +75,7 @@ namespace LearningEnglish.Application.Service.BackgroundServices
             try
             {
                 var currentDate = DateTime.UtcNow.Date;
-                
+
                 // Get all users - filter for students with Role "Student"
                 var allUsers = await userRepository.GetAllUsersAsync();
                 var students = allUsers.Where(u => u.Roles.Any(r => r.Name == "Student")).ToList();
@@ -111,7 +111,7 @@ namespace LearningEnglish.Application.Service.BackgroundServices
                             if (result.Success)
                             {
                                 remindersSent++;
-                                _logger.LogInformation("Đã gửi nhắc nhở cho user {UserId} ({Email}) - {DueCount} từ cần ôn", 
+                                _logger.LogInformation("Đã gửi nhắc nhở cho user {UserId} ({Email}) - {DueCount} từ cần ôn",
                                     student.UserId, student.Email, dueCount);
                             }
                         }
@@ -122,7 +122,7 @@ namespace LearningEnglish.Application.Service.BackgroundServices
                     }
                 }
 
-                _logger.LogInformation("Hoàn thành gửi nhắc nhở: {RemindersSent}/{UsersWithDueCards} thành công", 
+                _logger.LogInformation("Hoàn thành gửi nhắc nhở: {RemindersSent}/{UsersWithDueCards} thành công",
                     remindersSent, usersWithDueCards);
             }
             catch (Exception ex)

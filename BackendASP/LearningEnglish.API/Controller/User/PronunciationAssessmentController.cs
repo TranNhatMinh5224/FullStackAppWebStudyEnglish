@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
 {
-  
+
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
@@ -35,10 +35,10 @@ namespace LearningEnglish.API.Controller.User
         {
             var userId = GetCurrentUserId();
             if (userId == 0)
-                return Unauthorized(new ServiceResponse<object> 
-                { 
-                    Success = false, 
-                    Message = "User not authenticated" 
+                return Unauthorized(new ServiceResponse<object>
+                {
+                    Success = false,
+                    Message = "User not authenticated"
                 });
 
             var result = await _service.CreateAssessmentAsync(dto, userId);

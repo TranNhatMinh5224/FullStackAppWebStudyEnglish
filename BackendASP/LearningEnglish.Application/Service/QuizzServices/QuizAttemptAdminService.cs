@@ -1,4 +1,5 @@
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
@@ -30,6 +31,30 @@ namespace LearningEnglish.Application.Service
                 response.Success = true;
                 response.Data = attempts;
                 response.Message = $"Found {attempts.Count} attempts for quiz {quizId}";
+                response.StatusCode = 200;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+                response.StatusCode = 500;
+            }
+
+            return response;
+        }
+
+        // Lấy danh sách attempts với phân trang
+        public async Task<ServiceResponse<PagedResult<QuizAttempt>>> GetQuizAttemptsPagedAsync(int quizId, PageRequest request)
+        {
+            var response = new ServiceResponse<PagedResult<QuizAttempt>>();
+
+            try
+            {
+                var pagedResult = await _quizAttemptRepository.GetQuizAttemptsPagedAsync(quizId, request);
+
+                response.Success = true;
+                response.Data = pagedResult;
+                response.Message = $"Found {pagedResult.TotalCount} attempts for quiz {quizId}";
                 response.StatusCode = 200;
             }
             catch (Exception ex)
@@ -149,6 +174,51 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
+        // Lấy điểm của học sinh với phân trang
+        public async Task<ServiceResponse<PagedResult<object>>> GetQuizScoresPagedAsync(int quizId, PageRequest request)
+        {
+            var response = new ServiceResponse<PagedResult<object>>();
+
+            try
+            {
+                var pagedResult = await _quizAttemptRepository.GetQuizScoresPagedAsync(quizId, request);
+
+                var mappedItems = pagedResult.Items.Select(a => new
+                {
+                    AttemptId = a.AttemptId,
+                    UserId = a.UserId,
+                    UserName = $"{a.User?.FirstName} {a.User?.LastName}".Trim(),
+                    AttemptNumber = a.AttemptNumber,
+                    TotalScore = a.TotalScore,
+                    Percentage = CalculatePercentage(a, a.Quiz),
+                    IsPassed = a.Quiz?.PassingScore.HasValue == true ? a.TotalScore >= a.Quiz.PassingScore.Value : false,
+                    SubmittedAt = a.SubmittedAt,
+                    TimeSpentSeconds = a.TimeSpentSeconds
+                }).ToList<object>();
+
+                var result = new PagedResult<object>
+                {
+                    Items = mappedItems,
+                    TotalCount = pagedResult.TotalCount,
+                    PageNumber = pagedResult.PageNumber,
+                    PageSize = pagedResult.PageSize
+                };
+
+                response.Success = true;
+                response.Data = result;
+                response.Message = $"Found {result.TotalCount} completed attempts for quiz {quizId}";
+                response.StatusCode = 200;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+                response.StatusCode = 500;
+            }
+
+            return response;
+        }
+
         public async Task<ServiceResponse<List<QuizAttempt>>> GetUserQuizAttemptsAsync(int userId, int quizId)
         {
             var response = new ServiceResponse<List<QuizAttempt>>();
@@ -171,7 +241,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        private double CalculatePercentage(QuizAttempt attempt, Quiz? quiz)
+        private static double CalculatePercentage(QuizAttempt attempt, Quiz? quiz)
         {
             if (quiz == null || quiz.TotalQuestions <= 0) return 0;
 

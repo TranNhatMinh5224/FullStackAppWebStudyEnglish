@@ -69,7 +69,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var lectureDto = _mapper.Map<LectureDto>(lecture);
-                
+
                 // Generate URL từ key cho MediaUrl
                 if (!string.IsNullOrWhiteSpace(lectureDto.MediaUrl))
                 {
@@ -78,7 +78,7 @@ namespace LearningEnglish.Application.Service
                         lectureDto.MediaUrl
                     );
                 }
-                
+
                 response.Data = lectureDto;
                 response.Message = "Lấy thông tin lecture thành công";
             }
@@ -101,7 +101,7 @@ namespace LearningEnglish.Application.Service
             {
                 var lectures = await _lectureRepository.GetByModuleIdWithDetailsAsync(moduleId);
                 var lectureDtos = _mapper.Map<List<ListLectureDto>>(lectures);
-                
+
                 // Generate URLs cho tất cả lectures
                 foreach (var dto in lectureDtos)
                 {
@@ -132,7 +132,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var lectures = await _lectureRepository.GetTreeByModuleIdAsync(moduleId);
-                
+
                 // Tạo cấu trúc cây
                 var rootLectures = lectures.Where(l => l.ParentLectureId == null).ToList();
                 var treeDtos = new List<LectureTreeDto>();
@@ -161,8 +161,8 @@ namespace LearningEnglish.Application.Service
         public async Task<ServiceResponse<LectureDto>> CreateLectureAsync(CreateLectureDto createLectureDto, int createdByUserId)
         {
             var response = new ServiceResponse<LectureDto>();
-            
-            _logger.LogInformation("Starting CreateLectureAsync. ModuleId: {ModuleId}, ParentLectureId: {ParentId}, Title: {Title}", 
+
+            _logger.LogInformation("Starting CreateLectureAsync. ModuleId: {ModuleId}, ParentLectureId: {ParentId}, Title: {Title}",
                 createLectureDto.ModuleId, createLectureDto.ParentLectureId, createLectureDto.Title);
 
             try
@@ -178,10 +178,10 @@ namespace LearningEnglish.Application.Service
                 if (createLectureDto.ParentLectureId.HasValue)
                 {
                     _logger.LogInformation("Checking parent lecture with ID: {ParentId}", createLectureDto.ParentLectureId.Value);
-                    
+
                     // Kiểm tra parent lecture có tồn tại không
                     var parentLecture = await _lectureRepository.GetByIdAsync(createLectureDto.ParentLectureId.Value);
-                    
+
                     if (parentLecture == null)
                     {
                         _logger.LogWarning("Parent lecture not found with ID: {ParentId}", createLectureDto.ParentLectureId.Value);
@@ -189,27 +189,27 @@ namespace LearningEnglish.Application.Service
                         response.Message = "Parent lecture không tồn tại";
                         return response;
                     }
-                    
-                    _logger.LogInformation("Parent lecture found. ParentModuleId: {ParentModuleId}, CurrentModuleId: {CurrentModuleId}", 
+
+                    _logger.LogInformation("Parent lecture found. ParentModuleId: {ParentModuleId}, CurrentModuleId: {CurrentModuleId}",
                         parentLecture.ModuleId, createLectureDto.ModuleId);
-                    
+
                     // Kiểm tra parent và lecture mới phải cùng module
                     if (parentLecture.ModuleId != createLectureDto.ModuleId)
                     {
-                        _logger.LogWarning("Module mismatch. Parent ModuleId: {ParentModuleId}, Current ModuleId: {CurrentModuleId}", 
+                        _logger.LogWarning("Module mismatch. Parent ModuleId: {ParentModuleId}, Current ModuleId: {CurrentModuleId}",
                             parentLecture.ModuleId, createLectureDto.ModuleId);
                         response.Success = false;
                         response.Message = "Parent lecture phải thuộc cùng module";
                         return response;
                     }
-                    
+
                     _logger.LogInformation("Parent validation passed successfully");
                 }
 
                 var lecture = _mapper.Map<Lecture>(createLectureDto);
-                
+
                 string? committedMediaKey = null;
-                
+
                 // Commit MediaTempKey nếu có
                 if (!string.IsNullOrWhiteSpace(createLectureDto.MediaTempKey))
                 {
@@ -218,7 +218,7 @@ namespace LearningEnglish.Application.Service
                         LectureMediaBucket,
                         LectureMediaFolder
                     );
-                    
+
                     if (!mediaResult.Success || string.IsNullOrWhiteSpace(mediaResult.Data))
                     {
                         _logger.LogError("Failed to commit lecture media: {Error}", mediaResult.Message);
@@ -226,11 +226,11 @@ namespace LearningEnglish.Application.Service
                         response.Message = $"Không thể lưu media: {mediaResult.Message}";
                         return response;
                     }
-                    
+
                     committedMediaKey = mediaResult.Data;
                     lecture.MediaKey = committedMediaKey;
                 }
-                
+
                 // Render HTML từ Markdown (đơn giản)
                 if (!string.IsNullOrEmpty(lecture.MarkdownContent))
                 {
@@ -245,19 +245,19 @@ namespace LearningEnglish.Application.Service
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "Database error while creating lecture");
-                    
+
                     // Rollback MinIO file
                     if (committedMediaKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(committedMediaKey, LectureMediaBucket);
                     }
-                    
+
                     response.Success = false;
                     response.Message = "Lỗi database khi tạo lecture";
                     return response;
                 }
                 var lectureDto = _mapper.Map<LectureDto>(createdLecture);
-                
+
                 // Generate URL cho response
                 if (!string.IsNullOrWhiteSpace(lectureDto.MediaUrl))
                 {
@@ -311,7 +311,7 @@ namespace LearningEnglish.Application.Service
                         response.Message = "Parent lecture không tồn tại";
                         return response;
                     }
-                    
+
                     // Kiểm tra parent và lecture phải cùng module
                     if (parentLecture.ModuleId != existingLecture.ModuleId)
                     {
@@ -323,10 +323,10 @@ namespace LearningEnglish.Application.Service
 
                 // Cập nhật các trường được gửi lên
                 _mapper.Map(updateLectureDto, existingLecture);
-                
+
                 string? newMediaKey = null;
                 string? oldMediaKey = !string.IsNullOrWhiteSpace(existingLecture.MediaKey) ? existingLecture.MediaKey : null;
-                
+
                 // Xử lý cập nhật MediaUrl
                 if (!string.IsNullOrWhiteSpace(updateLectureDto.MediaTempKey))
                 {
@@ -336,7 +336,7 @@ namespace LearningEnglish.Application.Service
                         LectureMediaBucket,
                         LectureMediaFolder
                     );
-                    
+
                     if (!mediaResult.Success || string.IsNullOrWhiteSpace(mediaResult.Data))
                     {
                         _logger.LogError("Failed to commit lecture media: {Error}", mediaResult.Message);
@@ -344,7 +344,7 @@ namespace LearningEnglish.Application.Service
                         response.Message = $"Không thể lưu media: {mediaResult.Message}";
                         return response;
                     }
-                    
+
                     newMediaKey = mediaResult.Data;
                     existingLecture.MediaKey = newMediaKey;
                 }
@@ -363,18 +363,18 @@ namespace LearningEnglish.Application.Service
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "Database error while updating lecture");
-                    
+
                     // Rollback new media
                     if (newMediaKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(newMediaKey, LectureMediaBucket);
                     }
-                    
+
                     response.Success = false;
                     response.Message = "Lỗi database khi cập nhật lecture";
                     return response;
                 }
-                
+
                 // Delete old media only after successful DB update
                 if (oldMediaKey != null && newMediaKey != null)
                 {
@@ -388,7 +388,7 @@ namespace LearningEnglish.Application.Service
                     }
                 }
                 var lectureDto = _mapper.Map<LectureDto>(updatedLecture);
-                
+
                 // Generate URL cho response
                 if (!string.IsNullOrWhiteSpace(lectureDto.MediaUrl))
                 {
@@ -432,7 +432,7 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Không thể xóa lecture có lecture con. Vui lòng xóa các lecture con trước";
                     return response;
                 }
-                
+
                 // Xóa media từ MinIO nếu có
                 if (!string.IsNullOrWhiteSpace(lecture.MediaKey))
                 {
@@ -594,7 +594,7 @@ namespace LearningEnglish.Application.Service
         }
 
         // Helper method - Convert Markdown to HTML (đơn giản)
-        private string ConvertMarkdownToHtml(string markdown)
+        private static string ConvertMarkdownToHtml(string markdown)
         {
             if (string.IsNullOrEmpty(markdown)) return "";
 

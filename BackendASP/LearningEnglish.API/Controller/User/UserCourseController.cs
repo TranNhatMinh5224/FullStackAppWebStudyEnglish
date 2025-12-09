@@ -38,7 +38,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/courses/{courseId} - Retrieve course details by ID with enrollment status
+        // Lấy chi tiết khóa học theo ID với trạng thái đăng ký
         [HttpGet("{courseId}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetCourseById(int courseId)
@@ -54,6 +54,14 @@ namespace LearningEnglish.API.Controller.User
             }
 
             var result = await _userCourseService.GetCourseByIdAsync(courseId, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+        // Tìm kiếm khóa học theo từ khóa
+        [HttpGet("search")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SearchCourses([FromQuery] string keyword)
+        {
+            var result = await _userCourseService.SearchCoursesAsync(keyword);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

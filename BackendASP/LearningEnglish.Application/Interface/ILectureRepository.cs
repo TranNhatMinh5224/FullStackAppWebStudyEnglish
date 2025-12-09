@@ -20,7 +20,7 @@ namespace LearningEnglish.Application.Interface
 
         // Helper operations
         Task<int> GetMaxOrderIndexAsync(int moduleId, int? parentLectureId = null);
-        
+
         // Authorization helpers
         Task<Lecture?> GetLectureWithModuleCourseAsync(int lectureId);
     }

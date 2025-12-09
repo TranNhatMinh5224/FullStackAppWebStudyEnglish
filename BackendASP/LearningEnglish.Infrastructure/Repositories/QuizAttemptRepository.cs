@@ -1,3 +1,4 @@
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Domain.Entities;
@@ -72,6 +73,46 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .Where(qa => qa.QuizId == quizId)
                 .OrderByDescending(qa => qa.StartedAt)
                 .ToListAsync();
+        }
+
+        // Lấy danh sách attempts với phân trang
+        public async Task<PagedResult<QuizAttempt>> GetQuizAttemptsPagedAsync(int quizId, PageRequest request)
+        {
+            var query = _context.QuizAttempts
+                .Include(qa => qa.Quiz)
+                .Include(qa => qa.User)
+                .Where(qa => qa.QuizId == quizId)
+                .OrderByDescending(qa => qa.StartedAt)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                query = query.Where(qa =>
+                    (qa.User.FirstName + " " + qa.User.LastName).Contains(request.SearchTerm) ||
+                    qa.User.Email.Contains(request.SearchTerm));
+            }
+
+            return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
+        }
+
+        // Lấy điểm của học sinh với phân trang
+        public async Task<PagedResult<QuizAttempt>> GetQuizScoresPagedAsync(int quizId, PageRequest request)
+        {
+            var query = _context.QuizAttempts
+                .Include(qa => qa.Quiz)
+                .Include(qa => qa.User)
+                .Where(qa => qa.QuizId == quizId && qa.Status == QuizAttemptStatus.Submitted)
+                .OrderByDescending(qa => qa.TotalScore)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                query = query.Where(qa =>
+                    (qa.User.FirstName + " " + qa.User.LastName).Contains(request.SearchTerm) ||
+                    qa.User.Email.Contains(request.SearchTerm));
+            }
+
+            return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
         }
 
         public async Task SaveChangesAsync()

@@ -7,7 +7,7 @@ namespace LearningEnglish.Application.Interface
     {
 
         Task<ServiceResponse<DictionaryLookupResultDto>> LookupWordAsync(string word, string? targetLanguage = "vi");
-        
+
 
         Task<ServiceResponse<GenerateFlashCardPreviewResponseDto>> GenerateFlashCardFromWordAsync(string word);
 

@@ -70,7 +70,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
             var userId = GetCurrentUserId();
             var result = await _flashCardService.CreateFlashCardAsync(createFlashCardDto, userId);
-            return result.Success 
+            return result.Success
                 ? CreatedAtAction(nameof(GetFlashCard), new { id = result.Data!.FlashCardId }, result)
                 : StatusCode(result.StatusCode, result);
         }
@@ -136,7 +136,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/flash-card/atflashcard/validate-word - Check if word already exists in module (TODO: implement validation)
+        // GET: api/flash-card/atflashcard/validate-word - Check if word already exists in module
         [HttpGet("validate-word")]
         public async Task<ActionResult<ServiceResponse<bool>>> ValidateWord(
             [FromQuery] string word,
@@ -152,7 +152,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 });
             }
 
-            // TODO: Add word validation method to repository/service
+            // Word validation feature not yet implemented
+            // Returns true by default - implement validation logic in FlashCardService if needed
             var result = new ServiceResponse<bool>
             {
                 Data = true,

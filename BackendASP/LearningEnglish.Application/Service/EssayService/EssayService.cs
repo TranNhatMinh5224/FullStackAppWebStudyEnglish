@@ -23,8 +23,8 @@ namespace LearningEnglish.Application.Service
         private const string EssayImageFolder = "images";
 
         public EssayService(
-            IEssayRepository essayRepository, 
-            IMapper mapper, 
+            IEssayRepository essayRepository,
+            IMapper mapper,
             ILogger<EssayService> logger,
             IMinioFileStorage minioFileStorage)
         {
@@ -149,8 +149,8 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Tạo Essay thành công";
                     response.Data = essayDto;
 
-                    _logger.LogInformation("Created Essay {EssayId} with audio: {HasAudio}, image: {HasImage}", 
-                        createdEssay.EssayId, 
+                    _logger.LogInformation("Created Essay {EssayId} with audio: {HasAudio}, image: {HasImage}",
+                        createdEssay.EssayId,
                         !string.IsNullOrWhiteSpace(committedAudioKey),
                         !string.IsNullOrWhiteSpace(committedImageKey));
 
@@ -193,7 +193,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var essay = await _essayRepository.GetEssayByIdWithDetailsAsync(essayId);
-                
+
                 if (essay == null)
                 {
                     response.Success = false;
@@ -287,7 +287,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var existingEssay = await _essayRepository.GetEssayByIdWithDetailsAsync(essayId);
-                
+
                 if (existingEssay == null)
                 {
                     response.Success = false;
@@ -311,7 +311,7 @@ namespace LearningEnglish.Application.Service
                 // Cập nhật thông tin cơ bản (nullable support)
                 if (!string.IsNullOrWhiteSpace(dto.Title))
                     existingEssay.Title = dto.Title;
-                
+
                 if (dto.Description != null)
                     existingEssay.Description = dto.Description;
 
@@ -447,7 +447,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var existingEssay = await _essayRepository.GetEssayByIdWithDetailsAsync(essayId);
-                
+
                 if (existingEssay == null)
                 {
                     response.Success = false;

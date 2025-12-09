@@ -77,20 +77,12 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
                         await HandleFlashcardReviewReminder(reminder, flashCardReviewService, notificationService);
                     }
 
-                    // Send email if enabled
+                    // Email sending is disabled in current implementation
                     if (reminder.IsEmailEnabled)
                     {
-                        // TODO: Get user email
-                        // var userEmail = reminder.User.Email;
-                        // await emailSender.SendEmailAsync(userEmail, reminder.Title, reminder.Message);
-                        _logger.LogInformation($"Email reminder sent to user {reminder.UserId}: {reminder.Title}");
+                        // Feature not yet implemented: Send email notification
+                        _logger.LogInformation($"Email reminder scheduled for user {reminder.UserId}: {reminder.Title}");
                     }
-
-                    // Push notifications removed - using email instead
-                    // if (reminder.IsPushEnabled)
-                    // {
-                    //     await pushNotificationService.SendPushNotificationAsync(reminder.UserId, reminder.Title, reminder.Message);
-                    // }
 
                     // Update reminder
                     reminder.LastSentAt = now;

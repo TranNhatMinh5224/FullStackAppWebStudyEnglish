@@ -1,3 +1,4 @@
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Domain.Entities;
 
 namespace LearningEnglish.Application.Interface
@@ -13,10 +14,18 @@ namespace LearningEnglish.Application.Interface
         Task DeleteCourse(int courseId);
 
         // === LẤY DANH SÁCH KHÓA HỌC ===
-        Task<IEnumerable<Course>> GetAllCourses(); // Admin xem tất cả
-        Task<IEnumerable<Course>> GetSystemCourses(); // User xem khóa học hệ thống
-        Task<IEnumerable<Course>> GetCoursesByTeacher(int teacherId); // Khóa học của teacher
-        Task<IEnumerable<Course>> GetEnrolledCoursesByUser(int userId); // Khóa học user đã đăng ký
+        Task<IEnumerable<Course>> GetAllCourses();
+        
+        // Lấy tất cả khóa học với phân trang
+        Task<PagedResult<Course>> GetAllCoursesPagedAsync(PageRequest request);
+        
+        Task<IEnumerable<Course>> GetSystemCourses();
+        Task<IEnumerable<Course>> GetCoursesByTeacher(int teacherId);
+
+        // Lấy khóa học của giáo viên với phân trang
+        Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, PageRequest request);
+
+        Task<IEnumerable<Course>> GetEnrolledCoursesByUser(int userId);
 
         // === KIỂM TRA & ĐĂNG KÝ ===
         Task<bool> IsUserEnrolled(int courseId, int userId);
@@ -27,9 +36,9 @@ namespace LearningEnglish.Application.Interface
         Task<int> CountLessons(int courseId);
         Task<int> CountEnrolledUsers(int courseId);
         Task<IEnumerable<User>> GetEnrolledUsers(int courseId);
-        Task<int> GetTotalStudentsByTeacher(int teacherId); // THÊM: Tổng students của teacher
+        Task<int> GetTotalStudentsByTeacher(int teacherId);
 
-
+        Task<IEnumerable<Course>> SearchCoursesByClassCode(string keyword);
         Task<IEnumerable<Course>> SearchCourses(string keyword);
     }
 }

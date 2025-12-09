@@ -10,6 +10,14 @@ public class User
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public DateTime? DateOfBirth { get; set; }
+    public bool IsMale { get; set; } = true;
+
+    // Computed property for display name
+    public string DisplayName => $"{FirstName} {LastName}".Trim();
+    public string FullName => $"{FirstName} {LastName}".Trim();
+
+
     public string NormalizedEmail { get; set; } = string.Empty;
     public bool EmailVerified { get; set; } = false;
 
@@ -17,7 +25,6 @@ public class User
     public string PhoneNumber { get; set; } = string.Empty;
 
     public string? AvatarKey { get; set; }
-    public string? AvatarType { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -45,6 +52,7 @@ public class User
 
     public List<ExternalLogin> ExternalLogins { get; set; } = new();
 
+    // ===== Password Methods =====
     public void SetPassword(string password) =>
         PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
 
@@ -52,4 +60,18 @@ public class User
         PasswordHash != null && BCrypt.Net.BCrypt.Verify(password, PasswordHash);
 
     public bool HasLocalPassword() => !string.IsNullOrEmpty(PasswordHash);
+
+
+
+    public bool HasExternalLogin(string provider) =>
+        ExternalLogins.Any(el => el.Provider.Equals(provider, StringComparison.OrdinalIgnoreCase));
+
+    public ExternalLogin? GetExternalLogin(string provider) =>
+        ExternalLogins.FirstOrDefault(el => el.Provider.Equals(provider, StringComparison.OrdinalIgnoreCase));
+
+    public bool IsExternalUserOnly() =>
+        !HasLocalPassword() && ExternalLogins.Count != 0;
+
+    public bool CanUnlinkProvider(string provider) =>
+        HasLocalPassword() || ExternalLogins.Any(el => !el.Provider.Equals(provider, StringComparison.OrdinalIgnoreCase));
 }

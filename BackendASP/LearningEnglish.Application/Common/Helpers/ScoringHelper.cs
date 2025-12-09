@@ -48,11 +48,8 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
 
                 // Parse metadataJson: {"left": ["hello", "book"], "right": ["a greeting", "something to read"]}
                 var metadata = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(metadataJson);
-                if (metadata == null || !metadata.ContainsKey("left") || !metadata.ContainsKey("right"))
+                if (metadata == null || !metadata.TryGetValue("left", out List<string>? leftTexts) || !metadata.TryGetValue("right", out List<string>? rightTexts))
                     return null;
-
-                var leftTexts = metadata["left"];
-                var rightTexts = metadata["right"];
 
                 // Tạo mapping từ left text sang right text index
                 var textToRightIndex = new Dictionary<string, int>();

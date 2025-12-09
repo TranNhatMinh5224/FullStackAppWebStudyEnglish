@@ -178,7 +178,7 @@ namespace LearningEnglish.Application.Service
                 await _paymentRepository.UpdatePaymentStatusAsync(existingPayment);
                 await _paymentRepository.SaveChangesAsync();
 
-                
+
                 try
                 {
                     var processor = _paymentStrategies.FirstOrDefault(s => s.ProductType == existingPayment.ProductType);
@@ -334,7 +334,7 @@ namespace LearningEnglish.Application.Service
         }
         // Lấy tên sản phẩm dựa trên loại và ID sản phẩm
 
-        private Task<string> GetProductNameAsync(int productId, ProductType productType)
+        private static Task<string> GetProductNameAsync(int productId, ProductType productType)
         {
             // Return generic product name based on type
             // For full product details, query Course/TeacherPackage repositories separately

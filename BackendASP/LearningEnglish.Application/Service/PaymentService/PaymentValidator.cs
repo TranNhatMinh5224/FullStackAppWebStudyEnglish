@@ -90,7 +90,7 @@ namespace LearningEnglish.Application.Service
             response.Data = course.Price.Value;
             _logger.LogInformation("Xác thực khóa học thành công: {CourseId}, Tiêu đề: {Title}, Giá: {Price}",
                 course.CourseId, course.Title, course.Price);
-            
+
             return response;
         }
 
@@ -118,7 +118,7 @@ namespace LearningEnglish.Application.Service
             response.Data = package.Price;
             _logger.LogInformation("Xác thực gói giáo viên thành công: {PackageId}, Giá: {Price}",
                 package.TeacherPackageId, package.Price);
-            
+
             return response;
         }
 

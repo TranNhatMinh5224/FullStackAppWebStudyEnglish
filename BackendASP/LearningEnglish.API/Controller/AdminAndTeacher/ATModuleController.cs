@@ -55,8 +55,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new 
-                { 
+                return BadRequest(new
+                {
                     success = false,
                     statusCode = 400,
                     message = "Dữ liệu đầu vào không hợp lệ",
@@ -66,7 +66,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
             var userId = GetCurrentUserId();
             var result = await _moduleService.CreateModuleAsync(createModuleDto, userId);
-            return result.Success 
+            return result.Success
                 ? CreatedAtAction(nameof(GetModule), new { moduleId = result.Data!.ModuleId }, result)
                 : StatusCode(result.StatusCode, result);
         }
@@ -77,8 +77,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new 
-                { 
+                return BadRequest(new
+                {
                     success = false,
                     statusCode = 400,
                     message = "Dữ liệu đầu vào không hợp lệ",

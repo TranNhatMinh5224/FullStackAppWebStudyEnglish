@@ -14,7 +14,7 @@ namespace LearningEnglish.Application.Interface
         Task<EssaySubmission?> GetUserSubmissionForEssayAsync(int userId, int essayId);
         Task<EssaySubmission> UpdateSubmissionAsync(EssaySubmission submission);
         Task DeleteSubmissionAsync(int submissionId);
-        
+
         // Kiểm tra quyền hạn và tồn tại
         Task<bool> IsUserOwnerOfSubmissionAsync(int userId, int submissionId);
         Task<bool> AssessmentExistsAsync(int assessmentId);

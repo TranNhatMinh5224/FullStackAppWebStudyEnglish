@@ -94,7 +94,7 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
 
                     if (objectsToDelete.Count > 0)
                     {
-                        _logger.LogInformation("Deleted {Count} temp files from bucket {BucketName}", 
+                        _logger.LogInformation("Deleted {Count} temp files from bucket {BucketName}",
                             objectsToDelete.Count, bucketName);
                     }
                 }
@@ -106,7 +106,7 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
 
             var sizeMB = totalSize / 1024.0 / 1024.0;
             _logger.LogInformation(
-                "Temp file cleanup completed. Total deleted: {Count} files, {Size:F2} MB", 
+                "Temp file cleanup completed. Total deleted: {Count} files, {Size:F2} MB",
                 totalDeleted, sizeMB
             );
         }

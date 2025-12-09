@@ -56,14 +56,14 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<TeacherPackage?> GetInformationTeacherpackageAsync(int teacherId, DateTime date)
         {
             var result = await (from tp in _context.TeacherPackages
-                         join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
-                         where ts.UserId == teacherId 
-                               && ts.StartDate <= date 
-                               && ts.EndDate >= date
-                               && (ts.Status == SubscriptionStatus.Active || ts.Status == SubscriptionStatus.Pending)
-                         orderby ts.EndDate descending
-                         select tp).FirstOrDefaultAsync();
-            
+                                join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
+                                where ts.UserId == teacherId
+                                      && ts.StartDate <= date
+                                      && ts.EndDate >= date
+                                      && (ts.Status == SubscriptionStatus.Active || ts.Status == SubscriptionStatus.Pending)
+                                orderby ts.EndDate descending
+                                select tp).FirstOrDefaultAsync();
+
             return result;
         }
 
@@ -73,14 +73,14 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             var now = DateTime.UtcNow;
             var result = await (from tp in _context.TeacherPackages
-                         join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
-                         where ts.UserId == teacherId 
-                               && ts.StartDate <= now 
-                               && ts.EndDate >= now
-                               && (ts.Status == SubscriptionStatus.Active || ts.Status == SubscriptionStatus.Pending)
-                         orderby ts.EndDate descending
-                         select tp).FirstOrDefaultAsync();
-            
+                                join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
+                                where ts.UserId == teacherId
+                                      && ts.StartDate <= now
+                                      && ts.EndDate >= now
+                                      && (ts.Status == SubscriptionStatus.Active || ts.Status == SubscriptionStatus.Pending)
+                                orderby ts.EndDate descending
+                                select tp).FirstOrDefaultAsync();
+
             return result;
         }
     }

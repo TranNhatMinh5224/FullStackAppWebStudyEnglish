@@ -9,6 +9,8 @@ namespace LearningEnglish.Infrastructure.Migrations
     /// <inheritdoc />
     public partial class AddPronunciationProgressAndModuleSummary : Migration
     {
+        private static readonly string[] columns = new[] { "UserId", "ModuleId" };
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -133,7 +135,7 @@ namespace LearningEnglish.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_ModulePronunciationSummaries_UserId_ModuleId",
                 table: "ModulePronunciationSummaries",
-                columns: new[] { "UserId", "ModuleId" },
+                columns: columns,
                 unique: true);
 
             migrationBuilder.CreateIndex(

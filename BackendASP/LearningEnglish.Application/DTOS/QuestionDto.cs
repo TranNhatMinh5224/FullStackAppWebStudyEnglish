@@ -21,7 +21,7 @@ namespace LearningEnglish.Application.DTOs
         public string MetadataJson { get; set; } = "{}";
 
         public string? Explanation { get; set; }
-        
+
         // Media handling
         public string? MediaType { get; set; }
         public string? MediaTempKey { get; set; } // MinIO temp key for file upload
@@ -34,7 +34,7 @@ namespace LearningEnglish.Application.DTOs
         public string Text { get; set; } = string.Empty;
         public bool IsCorrect { get; set; }
         public string? Feedback { get; set; }
-        
+
         // Media handling
         public string? MediaType { get; set; }
         public string? MediaTempKey { get; set; } // MinIO temp key for file upload

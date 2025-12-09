@@ -21,7 +21,7 @@ namespace LearningEnglish.Application.Interface
 
         // Bulk operations
         Task<List<FlashCard>> CreateBulkAsync(List<FlashCard> flashCards);
-        
+
         // Authorization helpers
         Task<FlashCard?> GetFlashCardWithModuleCourseAsync(int flashCardId);
     }

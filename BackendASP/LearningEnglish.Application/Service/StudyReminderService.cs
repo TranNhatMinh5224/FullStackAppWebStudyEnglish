@@ -208,18 +208,12 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Send email if enabled
+                // Email sending is disabled in current implementation
+                // Enable this feature by implementing user email retrieval
                 if (reminder.IsEmailEnabled)
                 {
-                    // TODO: Get user email
-                    // await _emailSender.SendEmailAsync(userEmail, reminder.Title, reminder.Message);
+                    // Feature not yet implemented: Send email notification
                 }
-
-                // TODO: Send push notification if enabled
-                // if (reminder.IsPushEnabled)
-                // {
-                //     await _pushNotificationService.SendPushNotificationAsync(reminder.UserId, reminder.Title, reminder.Message);
-                // }
 
                 reminder.LastSentAt = DateTime.UtcNow;
                 reminder.SentCount++;

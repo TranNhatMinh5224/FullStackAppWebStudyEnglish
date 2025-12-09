@@ -99,16 +99,16 @@ namespace LearningEnglish.Application.Mappings
             // Lesson mappings
             CreateMap<Lesson, LessonDto>()
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey));
-            
-                        CreateMap<Lesson, LessonWithProgressDto>()
-                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
-                .ForMember(dest => dest.CompletionPercentage, opt => opt.Ignore()) // Set in service
-                .ForMember(dest => dest.IsCompleted, opt => opt.Ignore()) // Set in service
-                .ForMember(dest => dest.CompletedModules, opt => opt.Ignore()) // Set in service
-                .ForMember(dest => dest.TotalModules, opt => opt.Ignore()) // Set in service
-                .ForMember(dest => dest.VideoProgressPercentage, opt => opt.Ignore()) // Set in service
-                .ForMember(dest => dest.StartedAt, opt => opt.Ignore()) // Set in service
-                .ForMember(dest => dest.CompletedAt, opt => opt.Ignore()); // Set in service
+
+            CreateMap<Lesson, LessonWithProgressDto>()
+    .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
+    .ForMember(dest => dest.CompletionPercentage, opt => opt.Ignore()) // Set in service
+    .ForMember(dest => dest.IsCompleted, opt => opt.Ignore()) // Set in service
+    .ForMember(dest => dest.CompletedModules, opt => opt.Ignore()) // Set in service
+    .ForMember(dest => dest.TotalModules, opt => opt.Ignore()) // Set in service
+    .ForMember(dest => dest.VideoProgressPercentage, opt => opt.Ignore()) // Set in service
+    .ForMember(dest => dest.StartedAt, opt => opt.Ignore()) // Set in service
+    .ForMember(dest => dest.CompletedAt, opt => opt.Ignore()); // Set in service
 
             CreateMap<AdminCreateLessonDto, Lesson>()
                 .ForMember(dest => dest.LessonId, opt => opt.Ignore())
@@ -156,17 +156,17 @@ namespace LearningEnglish.Application.Mappings
 
             // User mappings
             CreateMap<User, UserDto>()
+                .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.DisplayName))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
-                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarKey))
-                .ForMember(dest => dest.AvatarType, opt => opt.MapFrom(src => src.AvatarType));
-            
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarKey));
+
             CreateMap<RegisterUserDto, User>()
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
 
             CreateMap<UpdateUserDto, User>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-            
+
             CreateMap<UpdateAvatarDto, User>()
                 .ForMember(dest => dest.AvatarKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
@@ -226,9 +226,9 @@ namespace LearningEnglish.Application.Mappings
             // Mapping for UserDto TeacherSubscription property
             CreateMap<TeacherSubscription, UserTeacherSubscriptionDto>()
             .ForMember(dest => dest.IsTeacher, opt => opt.MapFrom(src => src.Status == SubscriptionStatus.Active))
-            .ForMember(dest => dest.PackageLevel, opt => opt.MapFrom(src => 
-                src.Status == SubscriptionStatus.Active && src.TeacherPackage != null 
-                ? src.TeacherPackage.Level.ToString() 
+            .ForMember(dest => dest.PackageLevel, opt => opt.MapFrom(src =>
+                src.Status == SubscriptionStatus.Active && src.TeacherPackage != null
+                ? src.TeacherPackage.Level.ToString()
                 : null));
 
             // FlashCard mappings
@@ -316,17 +316,17 @@ namespace LearningEnglish.Application.Mappings
 
             CreateMap<UpdateQuizSectionDto, QuizSection>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-                
+
             // QuizGroup mappings
             CreateMap<QuizGroup, QuizGroupDto>()
                 .ForMember(dest => dest.ImgUrl, opt => opt.MapFrom(src => src.ImgKey))
                 .ForMember(dest => dest.VideoUrl, opt => opt.MapFrom(src => src.VideoKey));
-            
+
             CreateMap<CreateQuizGroupDto, QuizGroup>()
                 .ForMember(dest => dest.QuizGroupId, opt => opt.Ignore())
                 .ForMember(dest => dest.ImgKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForMember(dest => dest.VideoKey, opt => opt.Ignore()); // Set manually in service after commit
-            
+
             CreateMap<UpdateQuizGroupDto, QuizGroup>()
                 .ForMember(dest => dest.ImgKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForMember(dest => dest.VideoKey, opt => opt.Ignore()) // Set manually in service after commit
@@ -357,30 +357,20 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<AnswerOptionCreateDto, AnswerOption>()
                 .ForMember(dest => dest.AnswerOptionId, opt => opt.Ignore())
                 .ForMember(dest => dest.QuestionId, opt => opt.Ignore())
-                .ForMember(dest => dest.MediaKey, opt => opt.Ignore()); // Set manually in service after commit
+                .ForMember(dest => dest.MediaKey, opt => opt.Ignore()); // 
 
             // QuizAttempt mappings
             CreateMap<QuizAttempt, QuizAttemptDto>();
 
             CreateMap<QuizAttempt, QuizAttemptWithQuestionsDto>()
-                .ForMember(dest => dest.QuizSections, opt => opt.Ignore()); // Sẽ set trong service
+                .ForMember(dest => dest.QuizSections, opt => opt.Ignore());
 
             CreateMap<QuizAttempt, QuizAttemptResultDto>();
 
-            // QuizUserAnswer to AttemptAnswerDto - Bỏ vì không lưu answers
-            // CreateMap<QuizUserAnswer, AttemptAnswerDto>()
-            //     .ForMember(dest => dest.SelectedOptionIds, opt => opt.MapFrom(src => 
-            //         src.SelectedOptionId.HasValue 
-            //             ? new List<int> { src.SelectedOptionId.Value }
-            //         : src.SelectedOptions.Select(so => so.AnswerOptionId).ToList()))
-            //     .ForMember(dest => dest.AnswerText, opt => opt.MapFrom(src => src.AnswerDataJson))
-            //     .ForMember(dest => dest.PointsAwarded, opt => opt.MapFrom(src => (decimal?)src.PointsEarned));
 
-            // PronunciationAssessment mappings - using PronunciationAssessmentProfile
-            // Removed old mappings, now using dedicated profile
 
         }
-           
+
 
         private static TimeSpan? ParseTimeSpan(string? timeLimitString)
         {

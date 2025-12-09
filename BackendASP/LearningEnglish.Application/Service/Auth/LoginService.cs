@@ -28,7 +28,10 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<AuthResponseDto>();
             try
             {
+                // Login by Email only
                 var user = await _userRepository.GetUserByEmailAsync(dto.Email);
+
+                // Check if user exists and password is correct
                 if (user == null || !user.VerifyPassword(dto.Password))
                 {
                     response.Success = false;
@@ -36,6 +39,8 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Email hoặc mật khẩu không đúng";
                     return response;
                 }
+
+                // Check account status
                 if (user.Status == AccountStatus.Inactive)
                 {
                     response.Success = false;
@@ -46,7 +51,6 @@ namespace LearningEnglish.Application.Service
                         User = _mapper.Map<UserDto>(user),
                     };
                     return response;
-
                 }
 
                 var accessToken = _tokenService.GenerateAccessToken(user);
@@ -67,22 +71,22 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        public async Task<ServiceResponse<AuthResponseDto>> LoginByGoogleAsync(GoogleLoginDto dto) 
+        public async Task<ServiceResponse<AuthResponseDto>> LoginByGoogleAsync(GoogleLoginDto dto)
         {
-            var response = new ServiceResponse<AuthResponseDto>() ; 
+            var response = new ServiceResponse<AuthResponseDto>();
             try
             {
-                
+
             }
             catch (Exception)
-            {   
-                
+            {
+
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = $"Đã xảy ra lỗi hệ thống";
             }
-            
-           
+
+
             return response;
 
 

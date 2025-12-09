@@ -112,7 +112,7 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
 
                     var endDate = subscriptionResult.Data?.EndDate ?? DateTime.Now.AddYears(1);
                     await _notificationService.SendTeacherPackagePaymentNotificationAsync(userId, productId, endDate);
-                    
+
                     _logger.LogInformation("Email thông báo đã được gửi đến User {UserId} cho việc mua gói giáo viên {PackageId}",
                         userId, productId);
                 }

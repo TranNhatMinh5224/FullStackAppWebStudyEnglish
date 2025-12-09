@@ -16,7 +16,7 @@ public class FlashCard
 
     public string? ImageType { get; set; } = "image";
     public string? AudioType { get; set; } = "audio";
-    
+
     // Thông tin bổ sung
     public string? PartOfSpeech { get; set; }               // Từ loại: Noun, Verb, Adjective...
     public string? Example { get; set; }                          // "She is a beautiful woman"

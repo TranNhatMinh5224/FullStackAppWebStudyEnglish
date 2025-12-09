@@ -51,7 +51,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionCreateDto questionCreateDto)
         {
             var result = await _questionService.AddQuestionAsync(questionCreateDto);
-            return result.Success 
+            return result.Success
                 ? StatusCode(result.StatusCode > 0 ? result.StatusCode : 201, result)
                 : StatusCode(result.StatusCode, result);
         }
@@ -61,7 +61,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<IActionResult> CreateBulkQuestions([FromBody] QuestionBulkCreateDto questionBulkCreateDto)
         {
             var result = await _questionService.AddBulkQuestionsAsync(questionBulkCreateDto);
-            return result.Success 
+            return result.Success
                 ? StatusCode(result.StatusCode > 0 ? result.StatusCode : 201, result)
                 : StatusCode(result.StatusCode, result);
         }

@@ -76,7 +76,7 @@ namespace LearningEnglish.Application.Common.Helpers
 
             if (userAnswer is List<int> intList)
                 return intList;
-            
+
             if (userAnswer is List<object> objectList)
             {
                 var convertedList = new List<int>();
@@ -140,7 +140,7 @@ namespace LearningEnglish.Application.Common.Helpers
                         else if (kvp.Value is string s && int.TryParse(s, out int parsed)) value = parsed;
                         else if (kvp.Value is JsonElement je && je.TryGetInt32(out int jeInt)) value = jeInt;
                         else continue;
-                        
+
                         result[key] = value;
                     }
                 }
@@ -172,7 +172,7 @@ namespace LearningEnglish.Application.Common.Helpers
             {
                 case JsonValueKind.String:
                     return element.GetString() ?? string.Empty;
-                
+
                 case JsonValueKind.Number:
                     // Thử parse thành int trước, nếu không được thì decimal
                     if (element.TryGetInt32(out int intValue))
@@ -180,13 +180,13 @@ namespace LearningEnglish.Application.Common.Helpers
                     if (element.TryGetDecimal(out decimal decimalValue))
                         return decimalValue;
                     return element.GetDouble();
-                
+
                 case JsonValueKind.True:
                     return true;
-                
+
                 case JsonValueKind.False:
                     return false;
-                
+
                 case JsonValueKind.Array:
                     // Kiểm tra xem có phải là array of numbers không (List<int>)
                     var arrayList = element.EnumerateArray().ToList();
@@ -194,7 +194,7 @@ namespace LearningEnglish.Application.Common.Helpers
                     {
                         return new List<int>();
                     }
-                    
+
                     var firstElement = arrayList[0];
                     if (firstElement.ValueKind == JsonValueKind.Number)
                     {
@@ -218,11 +218,11 @@ namespace LearningEnglish.Application.Common.Helpers
                     }
                     // Fallback: return as JsonElement
                     return element;
-                
+
                 case JsonValueKind.Object:
                     // Nested object, return as JsonElement hoặc có thể deserialize thêm
                     return element;
-                
+
                 case JsonValueKind.Null:
                 default:
                     return null!;

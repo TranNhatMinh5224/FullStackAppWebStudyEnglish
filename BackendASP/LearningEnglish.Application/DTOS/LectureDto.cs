@@ -14,22 +14,22 @@ namespace LearningEnglish.Application.DTOs
         public string TypeName => Type.ToString();
         public string? MarkdownContent { get; set; }
         public string RenderedHtml { get; set; } = string.Empty;
-        
+
         public string? MediaUrl { get; set; }
         public string? MediaType { get; set; }
         public long? MediaSize { get; set; }
         public int? Duration { get; set; }
-        
+
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        
+
         // Tree structure
         public int? ParentLectureId { get; set; }
         public string? ParentTitle { get; set; }
-        
+
         // Navigation info
         public string? ModuleName { get; set; }
-        
+
         // Child count
         public int ChildrenCount { get; set; }
         public int AssessmentCount { get; set; }
@@ -61,7 +61,7 @@ namespace LearningEnglish.Application.DTOs
         public LectureType Type { get; set; } = LectureType.Content;
         public string? MarkdownContent { get; set; }
         public int? ParentLectureId { get; set; }
-        
+
         // Media handling
         public string? MediaTempKey { get; set; }  // Temp key from MinIO upload
         public string? MediaType { get; set; }
@@ -78,7 +78,7 @@ namespace LearningEnglish.Application.DTOs
         public LectureType? Type { get; set; }
         public string? MarkdownContent { get; set; }
         public int? ParentLectureId { get; set; }
-        
+
         // Media handling
         public string? MediaTempKey { get; set; }  // Temp key from MinIO upload
         public string? MediaType { get; set; }

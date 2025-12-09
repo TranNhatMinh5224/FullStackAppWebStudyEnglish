@@ -90,7 +90,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             var maxOrder = await _context.Modules
                 .Where(m => m.LessonId == lessonId)
                 .MaxAsync(m => (int?)m.OrderIndex);
-            
+
             return maxOrder ?? 0;
         }
 

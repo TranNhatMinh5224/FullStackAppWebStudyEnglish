@@ -36,7 +36,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             return await _context.EssaySubmissions
                 .Include(s => s.User)
                 .Include(s => s.Essay)
-                    .ThenInclude(e => e.Assessment)
+                    .ThenInclude(e => e.Assessment!)
                         .ThenInclude(a => a.Module)
                 .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
         }

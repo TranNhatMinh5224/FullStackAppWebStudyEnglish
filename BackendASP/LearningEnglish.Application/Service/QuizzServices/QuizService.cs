@@ -186,7 +186,7 @@ namespace LearningEnglish.Application.Service
         }
 
 
-        private decimal CalculateTotalPossibleScore(Quiz quiz)
+        private static decimal CalculateTotalPossibleScore(Quiz quiz)
         {
             decimal maxScore = 0;
             foreach (var section in quiz.QuizSections)

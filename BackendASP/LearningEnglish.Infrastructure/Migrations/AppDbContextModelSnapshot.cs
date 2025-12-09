@@ -32,7 +32,8 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<string>("Action")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone");
@@ -56,22 +57,26 @@ namespace LearningEnglish.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AnswerOptionId"));
 
                     b.Property<string>("Feedback")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<bool>("IsCorrect")
                         .HasColumnType("boolean");
 
                     b.Property<string>("MediaKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("MediaType")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("QuestionId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Text")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.HasKey("AnswerOptionId");
 
@@ -89,7 +94,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AssessmentId"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<DateTime?>("DueAt")
                         .HasColumnType("timestamp with time zone");
@@ -111,7 +117,8 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<decimal>("TotalPoints")
                         .HasPrecision(18, 2)
@@ -133,23 +140,27 @@ namespace LearningEnglish.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CourseId"));
 
                     b.Property<string>("ClassCode")
-                        .HasColumnType("text");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("DescriptionMarkdown")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(200000)
+                        .HasColumnType("character varying(200000)");
 
                     b.Property<int>("EnrollmentCount")
                         .HasColumnType("integer");
 
                     b.Property<string>("ImageKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("ImageType")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("boolean");
@@ -169,7 +180,8 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -179,7 +191,20 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.HasKey("CourseId");
 
+                    b.HasIndex("ClassCode");
+
+                    b.HasIndex("Status");
+
                     b.HasIndex("TeacherId");
+
+                    b.HasIndex("Title")
+                        .HasDatabaseName("IX_Course_Title_SystemType")
+                        .HasFilter("\"Type\" = 1");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Title"), "GIN");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Title"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex("Type");
 
                     b.ToTable("Courses", (string)null);
                 });
@@ -225,6 +250,57 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.ToTable("CourseProgresses", (string)null);
                 });
 
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.EmailVerificationToken", b =>
+                {
+                    b.Property<int>("EmailVerificationTokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EmailVerificationTokenId"));
+
+                    b.Property<int>("AttemptsCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("BlockedUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("OtpCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("EmailVerificationTokenId");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("OtpCode");
+
+                    b.HasIndex("Email", "OtpCode");
+
+                    b.HasIndex("UserId", "IsUsed");
+
+                    b.ToTable("EmailVerificationTokens", (string)null);
+                });
+
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Essay", b =>
                 {
                     b.Property<int>("EssayId")
@@ -237,23 +313,29 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("AudioKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("AudioType")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<string>("ImageKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("ImageType")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -274,10 +356,12 @@ namespace LearningEnglish.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SubmissionId"));
 
                     b.Property<string>("AttachmentKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("AttachmentType")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("EssayId")
                         .HasColumnType("integer");
@@ -289,7 +373,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("TextContent")
-                        .HasColumnType("text");
+                        .HasMaxLength(20000)
+                        .HasColumnType("character varying(20000)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -303,6 +388,56 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.ToTable("EssaySubmissions", (string)null);
                 });
 
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.ExternalLogin", b =>
+                {
+                    b.Property<int>("ExternalLoginId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ExternalLoginId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ProviderEmail")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ProviderPhotoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ProviderUserId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ExternalLoginId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Provider", "ProviderUserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ExternalLogin_Provider_ProviderUserId");
+
+                    b.ToTable("ExternalLogins", (string)null);
+                });
+
             modelBuilder.Entity("LearningEnglish.Domain.Entities.FlashCard", b =>
                 {
                     b.Property<int>("FlashCardId")
@@ -312,51 +447,63 @@ namespace LearningEnglish.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FlashCardId"));
 
                     b.Property<string>("Antonyms")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("AudioKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("AudioType")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Example")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("ExampleTranslation")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("ImageKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("ImageType")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Meaning")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<int?>("ModuleId")
                         .HasColumnType("integer");
 
                     b.Property<string>("PartOfSpeech")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Pronunciation")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Synonyms")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Word")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("FlashCardId");
 
@@ -421,22 +568,26 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("MarkdownContent")
-                        .HasColumnType("text");
+                        .HasMaxLength(50000)
+                        .HasColumnType("character varying(50000)");
 
                     b.Property<string>("MediaKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<long?>("MediaSize")
                         .HasColumnType("bigint");
 
                     b.Property<string>("MediaType")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("ModuleId")
                         .HasColumnType("integer");
 
                     b.Property<string>("NumberingLabel")
-                        .HasColumnType("text");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("OrderIndex")
                         .HasColumnType("integer");
@@ -450,7 +601,8 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -460,9 +612,9 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.HasKey("LectureId");
 
-                    b.HasIndex("ModuleId");
-
                     b.HasIndex("ParentLectureId");
+
+                    b.HasIndex("ModuleId", "OrderIndex");
 
                     b.ToTable("Lectures", (string)null);
                 });
@@ -482,27 +634,31 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("ImageKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("ImageType")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("OrderIndex")
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("LessonId");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("CourseId", "OrderIndex");
 
                     b.ToTable("Lessons", (string)null);
                 });
@@ -578,14 +734,16 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<int>("LessonId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int>("OrderIndex")
                         .HasColumnType("integer");
@@ -595,7 +753,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.HasKey("ModuleId");
 
-                    b.HasIndex("LessonId");
+                    b.HasIndex("LessonId", "OrderIndex");
 
                     b.ToTable("Modules", (string)null);
                 });
@@ -695,6 +853,12 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AttemptsCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("BlockedUntil")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -702,18 +866,25 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Token")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("Token");
+
+                    b.HasIndex("UserId", "IsUsed");
 
                     b.ToTable("PasswordResetTokens", (string)null);
                 });
@@ -734,7 +905,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PaymentMethod")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("integer");
@@ -743,7 +915,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("ProviderTransactionId")
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -850,26 +1023,32 @@ namespace LearningEnglish.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("QuestionId"));
 
                     b.Property<string>("CorrectAnswersJson")
-                        .HasColumnType("text");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Explanation")
-                        .HasColumnType("text");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<string>("MediaKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("MediaType")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("MetadataJson")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
 
                     b.Property<decimal>("Points")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int?>("QuizGroupId")
                         .HasColumnType("integer");
@@ -878,11 +1057,13 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("StemHtml")
-                        .HasColumnType("text");
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
 
                     b.Property<string>("StemText")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -917,13 +1098,15 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<int?>("Duration")
                         .HasColumnType("integer");
 
                     b.Property<string>("Instructions")
-                        .HasColumnType("text");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<int?>("MaxAttempts")
                         .HasColumnType("integer");
@@ -948,10 +1131,12 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<decimal>("TotalPossibleScore")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("TotalQuestions")
                         .HasColumnType("integer");
@@ -978,7 +1163,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AttemptId"));
 
                     b.Property<string>("AnswersJson")
-                        .HasColumnType("text");
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)");
 
                     b.Property<int>("AttemptNumber")
                         .HasColumnType("integer");
@@ -987,7 +1173,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("ScoresJson")
-                        .HasColumnType("text");
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)");
 
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1002,7 +1189,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("TotalScore")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -1028,17 +1216,21 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("ImgKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("ImgType")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int>("QuizSectionId")
                         .HasColumnType("integer");
@@ -1048,7 +1240,8 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1057,10 +1250,12 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("VideoKey")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("VideoType")
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("QuizGroupId");
 
@@ -1081,14 +1276,16 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<int>("QuizId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1115,18 +1312,25 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsRevoked")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Token")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("Token");
+
+                    b.HasIndex("UserId", "IsRevoked");
 
                     b.ToTable("RefreshTokens", (string)null);
                 });
@@ -1141,7 +1345,8 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("RoleId");
 
@@ -1235,24 +1440,28 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<string>("Message")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<DateTime?>("NextScheduledAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ScheduledTime")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
 
                     b.Property<int>("SentCount")
                         .HasColumnType("integer");
 
                     b.Property<string>("TimeZone")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -1295,7 +1504,8 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<string>("PackageName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
@@ -1355,10 +1565,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserId"));
 
                     b.Property<string>("AvatarKey")
-                        .HasColumnType("text");
-
-                    b.Property<string>("AvatarType")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1366,25 +1574,47 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int?>("CurrentTeacherSubscriptionId")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("EmailVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsMale")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -1394,10 +1624,25 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.HasKey("UserId");
 
+                    b.HasIndex("CreatedAt");
+
                     b.HasIndex("CurrentTeacherSubscriptionId");
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("EmailVerified");
+
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("EmailVerified", "CreatedAt")
+                        .HasDatabaseName("IX_User_EmailVerified_CreatedAt");
+
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("IX_User_Status_CreatedAt");
 
                     b.ToTable("Users", (string)null);
 
@@ -1407,9 +1652,12 @@ namespace LearningEnglish.Infrastructure.Migrations
                             UserId = 1,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "minhxoandev@gmail.com",
+                            EmailVerified = false,
                             FirstName = "Admin",
+                            IsMale = true,
                             LastName = "System",
-                            PasswordHash = "$2a$11$RBElVukuK3s6.KQRVdzn9usCsY6CJNVrBpKoH2BL.cZrDoWTP9SDy",
+                            NormalizedEmail = "",
+                            PasswordHash = "$2a$11$Epg2fvvbQdzSQUE7YA2FSeBoxojMeFwMg/GljYKwj6r/cTtB8K6Ym",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -1532,6 +1780,17 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.EmailVerificationToken", b =>
+                {
+                    b.HasOne("LearningEnglish.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Essay", b =>
                 {
                     b.HasOne("LearningEnglish.Domain.Entities.Assessment", "Assessment")
@@ -1558,6 +1817,17 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Essay");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.ExternalLogin", b =>
+                {
+                    b.HasOne("LearningEnglish.Domain.Entities.User", "User")
+                        .WithMany("ExternalLogins")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -1989,6 +2259,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("CreatedCourses");
 
                     b.Navigation("EssaySubmissions");
+
+                    b.Navigation("ExternalLogins");
 
                     b.Navigation("FlashCardReviews");
 

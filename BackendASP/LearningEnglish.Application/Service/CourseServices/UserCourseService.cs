@@ -15,7 +15,7 @@ namespace LearningEnglish.Application.Service
         private readonly IMapper _mapper;
         private readonly ILogger<UserCourseService> _logger;
 
-        
+
         private const string CourseImageBucket = "courses";
 
         public UserCourseService(
@@ -52,7 +52,7 @@ namespace LearningEnglish.Application.Service
                             courseDto.ImageUrl
                         );
                     }
-                    
+
                     // Check enrollment status nếu user đã login
                     if (userId.HasValue)
                     {
@@ -69,7 +69,7 @@ namespace LearningEnglish.Application.Service
                 response.Message = "Lấy danh sách khóa học hệ thống thành công";
                 response.Success = true;
 
-                _logger.LogInformation("User retrieved {Count} system courses", courseDtos.Count());
+                _logger.LogInformation("User retrieved {Count} system courses", courseDtos.Count);
             }
             catch (Exception ex)
             {
@@ -111,7 +111,7 @@ namespace LearningEnglish.Application.Service
                 if (userId.HasValue)
                 {
                     courseDto.IsEnrolled = await _courseRepository.IsUserEnrolled(courseId, userId.Value);
-                    
+
                     //  Add progress info if enrolled
                     if (courseDto.IsEnrolled)
                     {
@@ -148,6 +148,46 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
-       
+        // Tìm kiếm khóa học
+        public async Task<ServiceResponse<IEnumerable<SystemCoursesListResponseDto>>> SearchCoursesAsync(string keyword)
+        {
+            var response = new ServiceResponse<IEnumerable<SystemCoursesListResponseDto>>();
+
+            try
+            {
+                var courses = await _courseRepository.SearchCourses(keyword);
+
+                var courseDtos = _mapper.Map<IEnumerable<SystemCoursesListResponseDto>>(courses).ToList();
+
+                // Generate URL từ key cho tất cả courses
+                foreach (var courseDto in courseDtos)
+                {
+                    if (!string.IsNullOrWhiteSpace(courseDto.ImageUrl))
+                    {
+                        courseDto.ImageUrl = BuildPublicUrl.BuildURL(
+                            CourseImageBucket,
+                            courseDto.ImageUrl
+                        );
+                    }
+                }
+
+                response.StatusCode = 200;
+                response.Data = courseDtos;
+                response.Message = "Tìm kiếm khóa học thành công";
+                response.Success = true;
+
+                _logger.LogInformation("Searched courses with keyword '{Keyword}', found {Count} results", keyword, courseDtos.Count);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = $"Lỗi khi tìm kiếm khóa học: {ex.Message}";
+                _logger.LogError(ex, "Error in SearchCoursesAsync with keyword '{Keyword}'", keyword);
+            }
+
+            return response;
+        }
+
     }
 }

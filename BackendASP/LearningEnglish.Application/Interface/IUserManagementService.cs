@@ -1,5 +1,6 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Pagination;
 
 namespace LearningEnglish.Application.Interface
 {
@@ -8,7 +9,10 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<UserDto>> GetUserProfileAsync(int userId);
         Task<ServiceResponse<UserDto>> UpdateUserProfileAsync(int userId, UpdateUserDto dto);
         Task<ServiceResponse<UserDto>> UpdateAvatarAsync(int userId, UpdateAvatarDto dto);
+
         Task<ServiceResponse<List<UserDto>>> GetAllUsersAsync();
+        Task<ServiceResponse<PagedResult<UserDto>>> GetAllUsersPagedAsync(PageRequest request);
+
         Task<ServiceResponse<BlockAccountResponseDto>> BlockAccountAsync(int userId);
         Task<ServiceResponse<UnblockAccountResponseDto>> UnblockAccountAsync(int userId);
         Task<ServiceResponse<List<UserDto>>> GetListBlockedAccountsAsync();
@@ -16,10 +20,12 @@ namespace LearningEnglish.Application.Interface
         // Giữ từ feature/LVE-107-GetUserbyCourseId
         // Lấy danh sách người dùng theo id khóa học
         Task<ServiceResponse<List<UserDto>>> GetUsersByCourseIdAsync(int courseId, int userId, string checkRole);
+        Task<ServiceResponse<PagedResult<UserDto>>> GetUsersByCourseIdPagedAsync(int courseId, int userId, string checkRole, PageRequest request);
 
         // Giữ từ dev
         Task<ServiceResponse<List<UserDto>>> GetListTeachersAsync();
         //Lấy danh sách học sinh theo all course
         Task<ServiceResponse<List<StudentsByAllCoursesDto>>> GetStudentsByAllCoursesAsync();
+        Task<ServiceResponse<PagedResult<StudentsByAllCoursesDto>>> GetStudentsByAllCoursesPagedAsync(PageRequest request);
     }
 }

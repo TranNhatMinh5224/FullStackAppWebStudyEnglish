@@ -169,8 +169,8 @@ public class StreakService : IStreakService
                 NewCurrentStreak = streak.CurrentStreak,
                 NewLongestStreak = streak.LongestStreak,
                 IsNewRecord = isNewRecord,
-                Message = isNewRecord 
-                    ? $"🎉 Kỷ lục mới! Streak hiện tại: {streak.CurrentStreak} ngày" 
+                Message = isNewRecord
+                    ? $"🎉 Kỷ lục mới! Streak hiện tại: {streak.CurrentStreak} ngày"
                     : $"Streak hiện tại: {streak.CurrentStreak} ngày"
             };
 
@@ -192,7 +192,7 @@ public class StreakService : IStreakService
         }
     }
 
-    private StreakDto MapToDto(Streak streak)
+    private static StreakDto MapToDto(Streak streak)
     {
         var today = DateTime.UtcNow.Date;
         var lastActivity = streak.LastActivityDate?.Date;

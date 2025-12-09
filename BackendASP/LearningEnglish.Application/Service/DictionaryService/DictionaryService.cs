@@ -68,7 +68,7 @@ namespace LearningEnglish.Application.Service
 
                 // Fallback to Free Dictionary API
                 _logger.LogInformation("Oxford API unavailable, falling back to Free Dictionary API for word: {Word}", word);
-                
+
                 var client = _httpClientFactory.CreateClient();
                 client.Timeout = TimeSpan.FromSeconds(10);
 
@@ -89,7 +89,7 @@ namespace LearningEnglish.Application.Service
                     PropertyNameCaseInsensitive = true
                 });
 
-                if (dictionaryData == null || !dictionaryData.Any())
+                if (dictionaryData == null || dictionaryData.Count == 0)
                 {
                     response.Success = false;
                     response.Message = "No data found for this word";
@@ -168,7 +168,7 @@ namespace LearningEnglish.Application.Service
             {
                 // Lookup word in dictionary with audio URL extraction
                 var lookupResult = await LookupWordWithAudioAsync(word, "vi");
-                
+
                 if (!lookupResult.Success || lookupResult.Data == null)
                 {
                     response.Success = false;
@@ -278,8 +278,8 @@ namespace LearningEnglish.Application.Service
                         .Distinct()
                         .Take(10)
                         .ToList();
-                    
-                    if (allSynonyms.Any())
+
+                    if (allSynonyms.Count != 0)
                     {
                         flashCard.Synonyms = JsonSerializer.Serialize(allSynonyms);
                     }
@@ -290,8 +290,8 @@ namespace LearningEnglish.Application.Service
                         .Distinct()
                         .Take(10)
                         .ToList();
-                    
-                    if (allAntonyms.Any())
+
+                    if (allAntonyms.Count != 0)
                     {
                         flashCard.Antonyms = JsonSerializer.Serialize(allAntonyms);
                     }
@@ -338,14 +338,14 @@ namespace LearningEnglish.Application.Service
                 // Simple Google Translate API (free, no auth)
                 var client = _httpClientFactory.CreateClient();
                 var url = $"{GOOGLE_TRANSLATE_API}?client=gtx&sl=en&tl={targetLanguage}&dt=t&q={Uri.EscapeDataString(text)}";
-                
+
                 var apiResponse = await client.GetAsync(url);
                 if (apiResponse.IsSuccessStatusCode)
                 {
                     var content = await apiResponse.Content.ReadAsStringAsync();
                     // Parse Google Translate response (format: [[["translation","source",null,null,0]]])
                     var translatedText = ParseGoogleTranslateResponse(content);
-                    
+
                     response.Data = translatedText ?? text;
                     response.Message = "Translation successful";
                 }
@@ -364,7 +364,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        private string? ParseGoogleTranslateResponse(string json)
+        private static string? ParseGoogleTranslateResponse(string json)
         {
             try
             {
@@ -393,14 +393,14 @@ namespace LearningEnglish.Application.Service
         private async Task<ServiceResponse<DictionaryLookupResultDto>> LookupWordWithAudioAsync(string word, string? targetLanguage = "vi")
         {
             var response = await LookupWordAsync(word, targetLanguage);
-            
+
             // Try to extract audio URL from Oxford or Free Dictionary
             if (response.Success && response.Data != null)
             {
                 var audioUrl = await ExtractAudioUrlAsync(word);
                 response.Data.AudioUrl = audioUrl;
             }
-            
+
             return response;
         }
 
@@ -478,7 +478,7 @@ namespace LearningEnglish.Application.Service
             {
                 var client = _httpClientFactory.CreateClient();
                 var response = await client.GetAsync(audioUrl);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var bytes = await response.Content.ReadAsByteArrayAsync();
@@ -489,7 +489,7 @@ namespace LearningEnglish.Application.Service
             {
                 _logger.LogError(ex, "Failed to download audio from URL: {Url}", audioUrl);
             }
-            
+
             return null;
         }
 
@@ -509,7 +509,7 @@ namespace LearningEnglish.Application.Service
                 };
 
                 var uploadResult = await _minioService.UpLoadFileTempAsync(formFile, AUDIO_BUCKET_NAME, FOLDERTEMP);
-                
+
                 if (uploadResult.Success && uploadResult.Data != null)
                 {
                     return uploadResult.Data.TempKey;
@@ -519,7 +519,7 @@ namespace LearningEnglish.Application.Service
             {
                 _logger.LogError(ex, "Failed to upload audio to MinIO: {FileName}", fileName);
             }
-            
+
             return null;
         }
 
@@ -559,7 +559,7 @@ namespace LearningEnglish.Application.Service
                     PropertyNameCaseInsensitive = true
                 });
 
-                if (oxfordData?.Results == null || !oxfordData.Results.Any())
+                if (oxfordData?.Results == null || oxfordData.Results.Count == 0)
                 {
                     response.Success = false;
                     response.Message = "No data found in Oxford dictionary";
@@ -584,7 +584,7 @@ namespace LearningEnglish.Application.Service
                         };
 
                         // Get pronunciation
-                        if (lexEntry.Pronunciations != null && lexEntry.Pronunciations.Any())
+                        if (lexEntry.Pronunciations != null && lexEntry.Pronunciations.Count != 0)
                         {
                             result.Phonetic = lexEntry.Pronunciations.First().PhoneticSpelling;
                         }
@@ -623,14 +623,14 @@ namespace LearningEnglish.Application.Service
                             }
                         }
 
-                        if (meaningDto.Definitions.Any())
+                        if (meaningDto.Definitions.Count != 0)
                         {
                             result.Meanings.Add(meaningDto);
                         }
                     }
                 }
 
-                if (!result.Meanings.Any())
+                if (result.Meanings.Count == 0)
                 {
                     response.Success = false;
                     response.Message = "No definitions found in Oxford dictionary";
@@ -676,7 +676,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!searchResponse.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("Unsplash search failed with status: {StatusCode} for query: {Query}", 
+                    _logger.LogWarning("Unsplash search failed with status: {StatusCode} for query: {Query}",
                         searchResponse.StatusCode, query);
                     return null;
                 }
@@ -687,7 +687,7 @@ namespace LearningEnglish.Application.Service
                     PropertyNameCaseInsensitive = true
                 });
 
-                if (searchResult?.Results == null || !searchResult.Results.Any())
+                if (searchResult?.Results == null || searchResult.Results.Count == 0)
                 {
                     _logger.LogWarning("No images found on Unsplash for query: {Query}", query);
                     return null;
@@ -739,7 +739,7 @@ namespace LearningEnglish.Application.Service
                 };
 
                 var uploadResult = await _minioService.UpLoadFileTempAsync(formFile, IMAGE_BUCKET_NAME, FOLDERTEMP);
-                
+
                 if (uploadResult.Success && uploadResult.Data != null)
                 {
                     return uploadResult.Data.TempKey;
@@ -749,7 +749,7 @@ namespace LearningEnglish.Application.Service
             {
                 _logger.LogError(ex, "Failed to upload image to MinIO: {FileName}", fileName);
             }
-            
+
             return null;
         }
     }

@@ -20,9 +20,9 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
             var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
             if (correctOption != null && correctOption.AnswerOptionId == selectedOptionId.Value)
             {
-                return question.Points; 
+                return question.Points;
             }
             return 0m;
-        } 
+        }
     }
 }

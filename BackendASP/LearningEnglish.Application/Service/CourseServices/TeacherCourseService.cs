@@ -4,8 +4,10 @@ using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Utils;
 using LearningEnglish.Application.Common.Helpers;
+using LearningEnglish.Application.Common.Pagination;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace LearningEnglish.Application.Service
 {
@@ -92,7 +94,7 @@ namespace LearningEnglish.Application.Service
                 var course = new Course
                 {
                     Title = requestDto.Title,
-                    Description = requestDto.Description,
+                    DescriptionMarkdown = requestDto.Description,
                     Type = requestDto.Type,
                     TeacherId = teacherId,
                     ClassCode = classCode,
@@ -102,7 +104,7 @@ namespace LearningEnglish.Application.Service
                 };
 
                 string? committedImageKey = null;
-                
+
                 // Convert temp file → real file nếu có ImageTempKey
                 if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))
                 {
@@ -131,13 +133,13 @@ namespace LearningEnglish.Application.Service
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "Database error while creating course");
-                    
+
                     // Rollback MinIO file
                     if (committedImageKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(committedImageKey, CourseImageBucket);
                     }
-                    
+
                     response.Success = false;
                     response.StatusCode = 500;
                     response.Message = "Lỗi database khi tạo khóa học";
@@ -178,6 +180,7 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
+        // Cập nhật khóa học
 
         public async Task<ServiceResponse<CourseResponseDto>> UpdateCourseAsync(
             int courseId,
@@ -236,13 +239,13 @@ namespace LearningEnglish.Application.Service
 
                 // Cập nhật course basic info
                 course.Title = requestDto.Title;
-                course.Description = requestDto.Description;
+                course.DescriptionMarkdown = requestDto.Description;
                 course.Type = requestDto.Type;
                 course.MaxStudent = requestDto.MaxStudent > 0 ? requestDto.MaxStudent : teacherPackage.MaxStudents;
 
                 string? newImageKey = null;
                 string? oldImageKey = !string.IsNullOrWhiteSpace(course.ImageKey) ? course.ImageKey : null;
-                
+
                 // Xử lý file ảnh: commit new first
                 if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))
                 {
@@ -273,19 +276,19 @@ namespace LearningEnglish.Application.Service
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "Database error while updating course");
-                    
+
                     // Rollback new image
                     if (newImageKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(newImageKey, CourseImageBucket);
                     }
-                    
+
                     response.Success = false;
                     response.StatusCode = 500;
                     response.Message = "Lỗi database khi cập nhật khóa học";
                     return response;
                 }
-                
+
                 // Delete old image only after successful DB update
                 if (oldImageKey != null && newImageKey != null)
                 {
@@ -330,6 +333,7 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
+        // Lấy danh sách khóa học của teacher
 
         public async Task<ServiceResponse<IEnumerable<CourseResponseDto>>> GetMyCoursesByTeacherAsync(int teacherId)
         {
@@ -374,6 +378,48 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
+
+        public async Task<ServiceResponse<PagedResult<CourseResponseDto>>> GetMyCoursesPagedAsync(int teacherId, PageRequest request)
+        {
+            var response = new ServiceResponse<PagedResult<CourseResponseDto>>();
+            try
+            {
+                var pagedData = await _courseRepository.GetCoursesByTeacherPagedAsync(teacherId, request);
+
+                var items = new List<CourseResponseDto>();
+                foreach (var course in pagedData.Items)
+                {
+                    var dto = _mapper.Map<CourseResponseDto>(course);
+                    dto.LessonCount = await _courseRepository.CountLessons(course.CourseId);
+                    dto.StudentCount = await _courseRepository.CountEnrolledUsers(course.CourseId);
+
+                    if (!string.IsNullOrWhiteSpace(course.ImageKey))
+                    {
+                        dto.ImageUrl = BuildPublicUrl.BuildURL(CourseImageBucket, course.ImageKey);
+                        dto.ImageType = course.ImageType;
+                    }
+                    items.Add(dto);
+                }
+
+                response.Data = new PagedResult<CourseResponseDto>
+                {
+                    Items = items,
+                    TotalCount = pagedData.TotalCount,
+                    PageNumber = pagedData.PageNumber,
+                    PageSize = pagedData.PageSize
+                };
+                response.Success = true;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Error: {ex.Message}";
+                _logger.LogError(ex, "Error for TeacherId: {TeacherId}", teacherId);
+            }
+            return response;
+        }
+
+        // Xóa khóa học
         public async Task<ServiceResponse<CourseResponseDto>> DeleteCourseAsync(int courseId, int teacherId)
         {
             var response = new ServiceResponse<CourseResponseDto>();

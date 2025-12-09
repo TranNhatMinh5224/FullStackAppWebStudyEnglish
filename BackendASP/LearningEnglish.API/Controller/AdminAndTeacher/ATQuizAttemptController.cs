@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Common.Pagination;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
@@ -16,10 +17,16 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _quizAttemptAdminService = quizAttemptAdminService;
         }
 
-        // GET: api/AdminTeacher/QuizAttempt/quiz/{quizId} - Lấy tất cả các lần làm bài của một quiz
+        // Lấy tất cả các lần làm bài của một quiz
         [HttpGet("quiz/{quizId}")]
-        public async Task<IActionResult> GetQuizAttempts(int quizId)
+        public async Task<IActionResult> GetQuizAttempts(int quizId, [FromQuery] PageRequest? request)
         {
+            if (request != null && (request.PageNumber > 1 || request.PageSize != 20 || !string.IsNullOrEmpty(request.SearchTerm)))
+            {
+                var pagedResult = await _quizAttemptAdminService.GetQuizAttemptsPagedAsync(quizId, request);
+                return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
+            }
+
             var result = await _quizAttemptAdminService.GetQuizAttemptsAsync(quizId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -49,10 +56,16 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/AdminTeacher/QuizAttempt/scores/{quizId} - Lấy điểm của các user đã hoàn thành quiz
+        // Lấy điểm của các user đã hoàn thành quiz
         [HttpGet("scores/{quizId}")]
-        public async Task<IActionResult> GetQuizScores(int quizId)
+        public async Task<IActionResult> GetQuizScores(int quizId, [FromQuery] PageRequest? request)
         {
+            if (request != null && (request.PageNumber > 1 || request.PageSize != 20 || !string.IsNullOrEmpty(request.SearchTerm)))
+            {
+                var pagedResult = await _quizAttemptAdminService.GetQuizScoresPagedAsync(quizId, request);
+                return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
+            }
+
             var result = await _quizAttemptAdminService.GetQuizScoresAsync(quizId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

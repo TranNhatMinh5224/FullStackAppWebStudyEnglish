@@ -28,7 +28,7 @@ namespace LearningEnglish.Application.DTOs
     public class GenerateFlashCardRequestDto
     {
         public string Word { get; set; } = string.Empty;
-    
+
         public bool TranslateToVietnamese { get; set; } = true;
     }
 
@@ -43,11 +43,11 @@ namespace LearningEnglish.Application.DTOs
         public string? ExampleTranslation { get; set; }
         public string? Synonyms { get; set; }
         public string? Antonyms { get; set; }
-        
+
         // URLs for preview
         public string? AudioUrl { get; set; }
         public string? ImageUrl { get; set; }
-        
+
         // Temp keys for create operation
         public string? AudioTempKey { get; set; }
         public string? ImageTempKey { get; set; }

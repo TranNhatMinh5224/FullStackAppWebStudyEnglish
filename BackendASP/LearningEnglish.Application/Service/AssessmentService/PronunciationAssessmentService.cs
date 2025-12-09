@@ -47,7 +47,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                _logger.LogInformation("Starting pronunciation assessment for user {UserId}, flashCard {FlashCardId}", 
+                _logger.LogInformation("Starting pronunciation assessment for user {UserId}, flashCard {FlashCardId}",
                     userId, dto.FlashCardId);
 
                 // 1. Get FlashCard
@@ -75,7 +75,7 @@ namespace LearningEnglish.Application.Service
                     tempAudioUrl,
                     referenceText);
 
-                _logger.LogInformation("Azure result: Success={Success}, Score={Score}", 
+                _logger.LogInformation("Azure result: Success={Success}, Score={Score}",
                     azureResult.Success, azureResult.PronunciationScore);
 
                 // 4. Update ONLY PronunciationProgress (aggregated data)
@@ -122,20 +122,20 @@ namespace LearningEnglish.Application.Service
                     AudioType = dto.AudioType,
                     AudioSize = dto.AudioSize,
                     DurationInSeconds = dto.DurationInSeconds,
-                    
+
                     AccuracyScore = azureResult.AccuracyScore,
                     FluencyScore = azureResult.FluencyScore,
                     CompletenessScore = azureResult.CompletenessScore,
                     PronunciationScore = azureResult.PronunciationScore,
-                    
+
                     RecognizedText = azureResult.RecognizedText,
                     Feedback = azureResult.Success ? GenerateFeedback(azureResult) : azureResult.ErrorMessage,
                     Status = azureResult.Success ? "Completed" : "Failed",
-                    
+
                     Words = azureResult.Words,
                     ProblemPhonemes = azureResult.ProblemPhonemes,
                     StrongPhonemes = azureResult.StrongPhonemes,
-                    
+
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                     FlashCardWord = flashCard.Word
@@ -168,7 +168,7 @@ namespace LearningEnglish.Application.Service
             {
                 // Get all flashcards in module
                 var flashCards = await _flashCardRepository.GetByModuleIdAsync(moduleId);
-                
+
                 // Get all pronunciation progress for this user in this module
                 var progresses = await _progressRepository.GetByModuleIdAsync(userId, moduleId);
                 var progressDict = progresses.ToDictionary(p => p.FlashCardId);
@@ -177,13 +177,13 @@ namespace LearningEnglish.Application.Service
                 var result = flashCards.Select(fc =>
                 {
                     var hasProgress = progressDict.TryGetValue(fc.FlashCardId, out var progress);
-                    
+
                     PronunciationProgressSummary? progressSummary = null;
                     if (hasProgress && progress != null)
                     {
                         string status = "Practicing";
                         string statusColor = "yellow";
-                        
+
                         if (progress.IsMastered)
                         {
                             status = "Mastered";
@@ -217,11 +217,11 @@ namespace LearningEnglish.Application.Service
                         Word = fc.Word,
                         Definition = fc.Meaning,
                         Example = fc.Example,
-                        ImageUrl = !string.IsNullOrWhiteSpace(fc.ImageKey) 
-                            ? BuildPublicUrl.BuildURL("flashcards", fc.ImageKey) 
+                        ImageUrl = !string.IsNullOrWhiteSpace(fc.ImageKey)
+                            ? BuildPublicUrl.BuildURL("flashcards", fc.ImageKey)
                             : null,
-                        AudioUrl = !string.IsNullOrWhiteSpace(fc.AudioKey) 
-                            ? BuildPublicUrl.BuildURL("flashcards", fc.AudioKey) 
+                        AudioUrl = !string.IsNullOrWhiteSpace(fc.AudioKey)
+                            ? BuildPublicUrl.BuildURL("flashcards", fc.AudioKey)
                             : null,
                         Phonetic = fc.Pronunciation,
                         Progress = progressSummary
@@ -242,7 +242,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        private string GenerateFeedback(AzureSpeechAssessmentResult result)
+        private static string GenerateFeedback(AzureSpeechAssessmentResult result)
         {
             var feedback = new List<string>();
 
@@ -259,15 +259,15 @@ namespace LearningEnglish.Application.Service
             // Specific feedback
             if (result.AccuracyScore < 70)
                 feedback.Add($"⚠️ Focus on accuracy (current: {result.AccuracyScore:F1}%). Practice the correct pronunciation.");
-            
+
             if (result.FluencyScore < 70)
                 feedback.Add($"🗣️ Work on fluency (current: {result.FluencyScore:F1}%). Try speaking more naturally.");
-            
+
             if (result.CompletenessScore < 90)
                 feedback.Add($"📝 Completeness needs work (current: {result.CompletenessScore:F1}%). Make sure to pronounce the full word.");
 
             // Problem phonemes
-            if (result.ProblemPhonemes.Any())
+            if (result.ProblemPhonemes.Count != 0)
             {
                 var phonemeList = string.Join(", ", result.ProblemPhonemes.Take(3));
                 feedback.Add($"🎯 Focus on these sounds: {phonemeList}");
