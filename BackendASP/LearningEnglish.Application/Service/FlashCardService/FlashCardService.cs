@@ -145,23 +145,6 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-
-                // Kiểm tra từ đã tồn tại chưa
-                if (createFlashCardDto.ModuleId.HasValue)
-                {
-                    var wordExists = await _flashCardRepository.WordExistsInModuleAsync(
-                        createFlashCardDto.Word, createFlashCardDto.ModuleId.Value);
-
-                    if (wordExists)
-                    {
-                        response.Success = false;
-                        response.Message = $"Từ '{createFlashCardDto.Word}' đã tồn tại trong module này";
-                        response.StatusCode = 400;
-                        return response;
-
-                    }
-                }
-
                 var flashCard = _mapper.Map<FlashCard>(createFlashCardDto);
 
                 // Xử lý ImageTempKey nếu có
@@ -271,22 +254,6 @@ namespace LearningEnglish.Application.Service
                     response.Success = false;
                     response.Message = "Không tìm thấy FlashCard";
                     return response;
-                }
-
-                // Kiểm tra từ trùng lặp nếu có thay đổi từ
-                if (!string.IsNullOrEmpty(updateFlashCardDto.Word) &&
-                    updateFlashCardDto.Word != existingFlashCard.Word &&
-                    existingFlashCard.ModuleId.HasValue)
-                {
-                    var wordExists = await _flashCardRepository.WordExistsInModuleAsync(
-                        updateFlashCardDto.Word, existingFlashCard.ModuleId.Value, flashCardId);
-
-                    if (wordExists)
-                    {
-                        response.Success = false;
-                        response.Message = $"Từ '{updateFlashCardDto.Word}' đã tồn tại trong module này";
-                        return response;
-                    }
                 }
 
                 // Cập nhật các trường được gửi lên
@@ -457,52 +424,6 @@ namespace LearningEnglish.Application.Service
                 _logger.LogError(ex, "Lỗi khi xác thực và cập nhật FlashCard: {FlashCardId}", flashCardId);
                 response.Success = false;
                 response.Message = "Có lỗi khi cập nhật FlashCard";
-            }
-
-            return response;
-        }
-
-        // + Tìm kiếm flashcards
-        public async Task<ServiceResponse<List<ListFlashCardDto>>> SearchFlashCardsAsync(string searchTerm, int? moduleId = null, int? userId = null)
-        {
-            var response = new ServiceResponse<List<ListFlashCardDto>>();
-
-            try
-            {
-                var flashCards = await _flashCardRepository.SearchFlashCardsAsync(searchTerm, moduleId);
-                var dtos = _mapper.Map<List<ListFlashCardDto>>(flashCards);
-
-                if (userId.HasValue)
-                {
-                    foreach (var dto in dtos)
-                    {
-                        var fc = flashCards.FirstOrDefault(f => f.FlashCardId == dto.FlashCardId);
-                        if (fc != null)
-                        {
-                            var userReviews = fc.Reviews.Where(r => r.UserId == userId.Value).ToList();
-                            dto.ReviewCount = userReviews.Count;
-                            dto.SuccessRate = userReviews.Count > 0 ? (decimal)userReviews.Count(r => r.Quality >= 2) / userReviews.Count * 100 : 0;
-                            var latest = userReviews.OrderByDescending(r => r.ReviewedAt).FirstOrDefault();
-                            dto.CurrentLevel = latest?.RepetitionCount ?? 0;
-                        }
-                    }
-                }
-
-                // Generate URLs
-                foreach (var dto in dtos)
-                {
-                    if (!string.IsNullOrWhiteSpace(dto.ImageUrl)) dto.ImageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, dto.ImageUrl);
-                    if (!string.IsNullOrWhiteSpace(dto.AudioUrl)) dto.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, dto.AudioUrl);
-                }
-
-                response.Data = dtos;
-                response.Message = $"Found {dtos.Count} flashcards";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi tìm kiếm FlashCards");
-                response.Success = false;
-                response.Message = "Có lỗi khi tìm kiếm FlashCard";
             }
 
             return response;

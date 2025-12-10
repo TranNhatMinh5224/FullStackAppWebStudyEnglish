@@ -135,33 +135,5 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             var result = await _flashCardService.CreateBulkFlashCardsAsync(bulkImportDto, userId, userRole);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
-
-        // GET: api/flash-card/atflashcard/validate-word - Check if word already exists in module
-        [HttpGet("validate-word")]
-        public async Task<ActionResult<ServiceResponse<bool>>> ValidateWord(
-            [FromQuery] string word,
-            [FromQuery] int moduleId,
-            [FromQuery] int? excludeFlashCardId = null)
-        {
-            if (string.IsNullOrWhiteSpace(word))
-            {
-                return BadRequest(new ServiceResponse<bool>
-                {
-                    Success = false,
-                    Message = "Từ vựng không được để trống"
-                });
-            }
-
-            // Word validation feature not yet implemented
-            // Returns true by default - implement validation logic in FlashCardService if needed
-            var result = new ServiceResponse<bool>
-            {
-                Data = true,
-                Message = "Từ vựng hợp lệ"
-            };
-
-            await Task.CompletedTask;
-            return Ok(result);
-        }
     }
 }
