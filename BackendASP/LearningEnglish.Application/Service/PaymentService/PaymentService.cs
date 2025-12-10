@@ -19,6 +19,7 @@ namespace LearningEnglish.Application.Service
         private readonly IMapper _mapper;
         private readonly ILogger<PaymentService> _logger;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IPayOSService _payOSService;
 
         public PaymentService(
             IPaymentRepository paymentRepository,
@@ -26,7 +27,8 @@ namespace LearningEnglish.Application.Service
             IEnumerable<IPaymentStrategy> paymentStrategies,
             IMapper mapper,
             ILogger<PaymentService> logger,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IPayOSService payOSService)
         {
             _paymentRepository = paymentRepository;
             _paymentValidator = paymentValidator;
@@ -34,6 +36,7 @@ namespace LearningEnglish.Application.Service
             _mapper = mapper;
             _logger = logger;
             _unitOfWork = unitOfWork;
+            _payOSService = payOSService;
         }
         // POST /api/payments - Create Payment
         // service tao process payment
@@ -51,6 +54,7 @@ namespace LearningEnglish.Application.Service
                 if (!userValidationResult.Success)
                 {
                     response.Success = false;
+                    response.StatusCode = 400; // Bad Request
                     response.Message = userValidationResult.Message;
                     return response;
                 }
@@ -60,6 +64,7 @@ namespace LearningEnglish.Application.Service
                 if (!productValidationResult.Success)
                 {
                     response.Success = false;
+                    response.StatusCode = 404; // Not Found (product không tồn tại)
                     response.Message = productValidationResult.Message;
                     return response;
                 }
@@ -110,9 +115,11 @@ namespace LearningEnglish.Application.Service
                 _logger.LogError(ex, "Xử lý thanh toán thất bại cho User {UserId}, Sản phẩm {ProductId}, Loại {TypeProduct}",
                     userId, request.ProductId, request.typeproduct);
                 response.Success = false;
+                response.StatusCode = 500; // Internal Server Error
                 response.Message = "Đã xảy ra lỗi khi xử lý thanh toán";
                 return response;
             }
+            response.StatusCode = 200; // Success
             return response;
         }
 
@@ -126,6 +133,7 @@ namespace LearningEnglish.Application.Service
                 {
                     _logger.LogWarning("Không tìm thấy thanh toán {PaymentId}", paymentDto.PaymentId);
                     response.Success = false;
+                    response.StatusCode = 404; // Not Found
                     response.Message = "Không tìm thấy thanh toán";
                     return response;
                 }
@@ -134,6 +142,7 @@ namespace LearningEnglish.Application.Service
                 {
                     _logger.LogWarning("User {UserId} không có quyền truy cập thanh toán {PaymentId}", userId, paymentDto.PaymentId);
                     response.Success = false;
+                    response.StatusCode = 403; // Forbidden
                     response.Message = "Không có quyền truy cập";
                     return response;
                 }
@@ -142,6 +151,7 @@ namespace LearningEnglish.Application.Service
                 {
                     _logger.LogWarning("Thanh toán {PaymentId} đã được xử lý", paymentDto.PaymentId);
                     response.Success = false;
+                    response.StatusCode = 400; // Bad Request
                     response.Message = "Thanh toán đã được xử lý";
                     return response;
                 }
@@ -152,6 +162,7 @@ namespace LearningEnglish.Application.Service
                     _logger.LogWarning("Amount mismatch cho Payment {PaymentId}. Expected: {ExpectedAmount}, Received: {ReceivedAmount}",
                         paymentDto.PaymentId, existingPayment.Amount, paymentDto.Amount);
                     response.Success = false;
+                    response.StatusCode = 400; // Bad Request
                     response.Message = "Số tiền thanh toán không khớp";
                     return response;
                 }
@@ -162,6 +173,7 @@ namespace LearningEnglish.Application.Service
                     _logger.LogWarning("Product mismatch cho Payment {PaymentId}. Expected: {ExpectedProduct}/{ExpectedType}, Received: {ReceivedProduct}/{ReceivedType}",
                         paymentDto.PaymentId, existingPayment.ProductId, existingPayment.ProductType, paymentDto.ProductId, paymentDto.ProductType);
                     response.Success = false;
+                    response.StatusCode = 400; // Bad Request
                     response.Message = "Thông tin sản phẩm không khớp";
                     return response;
                 }
@@ -187,6 +199,7 @@ namespace LearningEnglish.Application.Service
                     {
                         _logger.LogError("No payment strategy found for product type {ProductType}", existingPayment.ProductType);
                         response.Success = false;
+                        response.StatusCode = 400; // Bad Request
                         response.Message = "Loại sản phẩm không được hỗ trợ";
                         await _unitOfWork.RollbackAsync();
                         return response;
@@ -202,6 +215,7 @@ namespace LearningEnglish.Application.Service
                         _logger.LogError("Post-payment processing failed for Payment {PaymentId}: {Message}",
                             paymentDto.PaymentId, postPaymentResult.Message);
                         response.Success = false;
+                        response.StatusCode = 500; // Internal Server Error
                         response.Message = postPaymentResult.Message;
                         await _unitOfWork.RollbackAsync();
                         return response;
@@ -214,6 +228,7 @@ namespace LearningEnglish.Application.Service
                     _logger.LogError(ex, "Unsupported product type {ProductType} for Payment {PaymentId}",
                         existingPayment.ProductType, paymentDto.PaymentId);
                     response.Success = false;
+                    response.StatusCode = 400; // Bad Request
                     response.Message = "Loại sản phẩm không được hỗ trợ";
                     await _unitOfWork.RollbackAsync();
                     return response;
@@ -223,6 +238,7 @@ namespace LearningEnglish.Application.Service
                 await _unitOfWork.CommitAsync();
 
                 _logger.LogInformation("Xác nhận thanh toán {PaymentId} thành công", paymentDto.PaymentId);
+                response.StatusCode = 200; // Success
                 response.Data = true;
             }
             catch (Exception ex)
@@ -230,6 +246,7 @@ namespace LearningEnglish.Application.Service
                 _logger.LogError(ex, "Lỗi khi xác nhận thanh toán {PaymentId} cho User {UserId}", paymentDto.PaymentId, userId);
                 await _unitOfWork.RollbackAsync();
                 response.Success = false;
+                response.StatusCode = 500; // Internal Server Error
                 response.Message = "Đã xảy ra lỗi khi xác nhận thanh toán. Vui lòng thử lại sau.";
                 response.Data = false;
             }
@@ -277,11 +294,13 @@ namespace LearningEnglish.Application.Service
                 };
 
                 _logger.LogInformation("Retrieved {Count} transactions for User {UserId}", transactionDtos.Count, userId);
+                response.StatusCode = 200; // Success
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting transaction history for User {UserId}", userId);
                 response.Success = false;
+                response.StatusCode = 500; // Internal Server Error
                 response.Message = "Đã xảy ra lỗi khi lấy lịch sử giao dịch";
             }
             return response;
@@ -299,6 +318,7 @@ namespace LearningEnglish.Application.Service
                 if (payment == null)
                 {
                     response.Success = false;
+                    response.StatusCode = 404; // Not Found
                     response.Message = "Không tìm thấy giao dịch";
                     return response;
                 }
@@ -323,26 +343,111 @@ namespace LearningEnglish.Application.Service
                 };
 
                 _logger.LogInformation("Retrieved transaction detail for Payment {PaymentId}", paymentId);
+                response.StatusCode = 200; // Success
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting transaction detail for Payment {PaymentId}", paymentId);
                 response.Success = false;
+                response.StatusCode = 500; // Internal Server Error
                 response.Message = "Đã xảy ra lỗi khi lấy chi tiết giao dịch";
             }
             return response;
         }
-        // Lấy tên sản phẩm dựa trên loại và ID sản phẩm
+        public async Task<ServiceResponse<PayOSLinkResponse>> CreatePayOSPaymentLinkAsync(int paymentId, int userId)
+        {
+            var response = new ServiceResponse<PayOSLinkResponse>();
+            try
+            {
+                _logger.LogInformation("Creating PayOS payment link for Payment {PaymentId}, User {UserId}", paymentId, userId);
 
+                // 1. Validate payment
+                var payment = await _paymentRepository.GetPaymentByIdAsync(paymentId);
+                if (payment == null)
+                {
+                    _logger.LogWarning("Payment {PaymentId} not found for User {UserId}", paymentId, userId);
+                    response.Success = false;
+                    response.StatusCode = 404; // Not Found
+                    response.Message = "Payment not found";
+                    return response;
+                }
+
+                if (payment.UserId != userId)
+                {
+                    _logger.LogWarning("User {UserId} access denied for Payment {PaymentId}", userId, paymentId);
+                    response.Success = false;
+                    response.StatusCode = 403; // Forbidden
+                    response.Message = "Access denied";
+                    return response;
+                }
+
+                if (payment.Status != PaymentStatus.Pending)
+                {
+                    _logger.LogWarning("Payment {PaymentId} already processed with status {Status}", paymentId, payment.Status);
+                    response.Success = false;
+                    response.StatusCode = 400; // Bad Request
+                    response.Message = "Payment already processed";
+                    return response;
+                }
+
+                // 2. Get product name
+                var productName = await GetProductNameAsync(payment.ProductId, payment.ProductType);
+                var description = $"Thanh toán {productName}";
+
+                // 3. Create PayOS link
+                var linkRequest = new CreatePayOSLinkRequest
+                {
+                    PaymentId = payment.PaymentId
+                };
+
+                var linkResponse = await _payOSService.CreatePaymentLinkAsync(
+                    linkRequest, 
+                    payment.Amount, 
+                    productName, 
+                    description);
+
+                if (!linkResponse.Success || linkResponse.Data == null)
+                {
+                    _logger.LogError("Failed to create PayOS link: {Message}", linkResponse.Message);
+                    response.Success = false;
+                    response.StatusCode = 500; // Internal Server Error (PayOS API error)
+                    response.Message = linkResponse.Message ?? "Failed to create PayOS payment link";
+                    return response;
+                }
+
+                // 4. Update payment with orderCode
+                payment.ProviderTransactionId = linkResponse.Data.OrderCode;
+                await _paymentRepository.UpdatePaymentStatusAsync(payment);
+                await _paymentRepository.SaveChangesAsync();
+
+                _logger.LogInformation("PayOS payment link created successfully for Payment {PaymentId}, OrderCode: {OrderCode}",
+                    paymentId, linkResponse.Data.OrderCode);
+
+                response.Data = linkResponse.Data;
+                response.Success = true;
+                response.StatusCode = 200; // Success
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating PayOS link for Payment {PaymentId}", paymentId);
+                response.Success = false;
+                response.StatusCode = 500; // Internal Server Error
+                response.Message = $"Error: {ex.Message}";
+            }
+
+            return response;
+        }
+
+        // Lấy tên sản phẩm dựa trên loại và ID sản phẩm
         private static Task<string> GetProductNameAsync(int productId, ProductType productType)
         {
             // Return generic product name based on type
             // For full product details, query Course/TeacherPackage repositories separately
             var productName = productType switch
             {
-                ProductType.Course => $"Course #{productId}",
-                ProductType.TeacherPackage => $"Teacher Package #{productId}",
-                _ => "Unknown Product"
+                ProductType.Course => $"Khóa học #{productId}",
+                ProductType.TeacherPackage => $"Gói giáo viên #{productId}",
+                _ => "Sản phẩm"
             };
 
             return Task.FromResult(productName);

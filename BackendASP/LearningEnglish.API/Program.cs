@@ -219,6 +219,18 @@ builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection("
 // Facebook Auth Configuration
 builder.Services.Configure<FacebookAuthOptions>(builder.Configuration.GetSection("FacebookAuth"));
 
+// PayOS Configuration
+builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
+
+// PayOS HttpClient
+builder.Services.AddHttpClient("PayOS", client =>
+{
+    client.BaseAddress = new Uri("https://api-merchant.payos.vn");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// PayOS Service
+builder.Services.AddScoped<IPayOSService, PayOSService>();
 
 // MinIO Client (Singleton - dùng chung cho toàn bộ app)
 builder.Services.AddSingleton<IMinioClient>(sp =>
