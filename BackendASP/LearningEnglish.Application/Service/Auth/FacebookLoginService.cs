@@ -105,12 +105,12 @@ namespace LearningEnglish.Application.Service.Auth
                 var userInfoJson = await userInfoResponse.Content.ReadAsStringAsync();
                 var facebookUser = JsonSerializer.Deserialize<FacebookUserInfo>(userInfoJson);
 
+                // Nếu Facebook không trả về email, tạo email tự động (như TikTok, Instagram)
                 if (string.IsNullOrEmpty(facebookUser?.Email))
                 {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = "Email không được cung cấp bởi Facebook. Vui lòng cấp quyền email.";
-                    return response;
+                    // Tạo email từ Facebook ID - user có thể update sau
+                    facebookUser.Email = $"facebook_{facebookUser?.Id}@noemail.local";
+                    _logger.LogInformation("Facebook user {UserId} không có email, tạo email tự động: {Email}", facebookUser?.Id, facebookUser.Email);
                 }
 
                 // Kiểm tra Facebook login history
