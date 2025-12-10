@@ -9,7 +9,7 @@ namespace LearningEnglish.API.Controller.User
 {
 
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/user/pronunciation-assessments")]
     [Authorize]
     public class PronunciationAssessmentController : ControllerBase
     {

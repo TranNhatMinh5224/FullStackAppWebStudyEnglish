@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
-    [Route("api/admin/quiz-sections")]
+    [Route("api/quiz-sections")]
     [Authorize(Roles = "Admin,Teacher")]
     public class QuizSectionController : ControllerBase
     {

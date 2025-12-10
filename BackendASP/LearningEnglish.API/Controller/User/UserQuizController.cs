@@ -6,7 +6,7 @@ using LearningEnglish.Application.DTOs;
 namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
-    [Route("api/User/")]
+    [Route("api/user/quizzes")]
     [Authorize(Roles = "Student")]
     public class UserQuizController : ControllerBase
     {

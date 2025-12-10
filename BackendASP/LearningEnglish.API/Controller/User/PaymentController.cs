@@ -10,8 +10,8 @@ using LearningEnglish.Application.Validators.Payment;
 namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
-    [Route("api/payment")]
-    [Authorize(Roles = "Student,User")]
+    [Route("api/user/payments")]
+    [Authorize(Roles = "Student")]
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentService _paymentService;

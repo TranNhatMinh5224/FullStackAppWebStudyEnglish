@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
 {
-    [Route("api/User/EssaySubmission")]
+    [Route("api/user/essay-submissions")]
     [ApiController]
     [Authorize(Roles = "Student")]
     public class UserEssaySubmissionController : ControllerBase

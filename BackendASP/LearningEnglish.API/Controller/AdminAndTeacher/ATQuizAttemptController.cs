@@ -6,7 +6,7 @@ using LearningEnglish.Application.Common.Pagination;
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
-    [Route("api/AdminTeacher/QuizAttempt")]
+    [Route("api/quiz-attempts")]
     [Authorize(Roles = "Admin,Teacher")]
     public class ATQuizAttemptController : ControllerBase
     {

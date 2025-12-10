@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.Shared
 {
-    [Route("api/essays")]
+    [Route("api/shared/essays")]
     [ApiController]
     [Authorize]
     public class EssayController : ControllerBase
@@ -29,7 +29,7 @@ namespace LearningEnglish.API.Controller.Shared
             return User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
         }
 
-        // GET: api/essays/{essayId} - Get essay by ID (all roles)
+        // GET: api/shared/essays/{essayId} - Get essay by ID (all roles)
         [HttpGet("{essayId}")]
         public async Task<IActionResult> GetEssay(int essayId)
         {
@@ -37,7 +37,7 @@ namespace LearningEnglish.API.Controller.Shared
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/essays/assessment/{assessmentId} - Get essays by assessment ID (all roles)
+        // GET: api/shared/essays/assessment/{assessmentId} - Get essays by assessment ID (all roles)
         [HttpGet("assessment/{assessmentId}")]
         public async Task<IActionResult> GetEssaysByAssessment(int assessmentId)
         {
@@ -45,7 +45,7 @@ namespace LearningEnglish.API.Controller.Shared
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/essays - Create new essay (Admin/Teacher only)
+        // POST: api/shared/essays - Create new essay (Admin/Teacher only)
         [HttpPost]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> CreateEssay([FromBody] CreateEssayDto createDto)
@@ -62,7 +62,7 @@ namespace LearningEnglish.API.Controller.Shared
                 : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/essays/{essayId} - Update essay (Admin: any, Teacher: own only)
+        // PUT: api/shared/essays/{essayId} - Update essay (Admin: any, Teacher: own only)
         [HttpPut("{essayId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> UpdateEssay(int essayId, [FromBody] UpdateEssayDto updateDto)
@@ -77,7 +77,7 @@ namespace LearningEnglish.API.Controller.Shared
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/essays/{essayId} - Delete essay (Admin: any, Teacher: own only)
+        // DELETE: api/shared/essays/{essayId} - Delete essay (Admin: any, Teacher: own only)
         [HttpDelete("{essayId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> DeleteEssay(int essayId)

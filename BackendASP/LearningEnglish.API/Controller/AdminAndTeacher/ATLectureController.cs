@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
-    [Route("api/[controller]")]
+    [Route("api/lectures")]
     [ApiController]
     [Authorize]
     public class ATLectureController : ControllerBase
@@ -31,7 +31,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(ClaimTypes.Role)?.Value ?? "";
         }
 
-        // GET: api/atlecture/{lectureId} - Get lecture details by ID
+        // GET: api/lectures/{lectureId} - Get lecture details by ID
         [HttpGet("{lectureId}")]
         public async Task<IActionResult> GetLecture(int lectureId)
         {
@@ -40,7 +40,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/atlecture/module/{moduleId} - Get all lectures within a module
+        // GET: api/lectures/module/{moduleId} - Get all lectures within a module
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetLecturesByModule(int moduleId)
         {

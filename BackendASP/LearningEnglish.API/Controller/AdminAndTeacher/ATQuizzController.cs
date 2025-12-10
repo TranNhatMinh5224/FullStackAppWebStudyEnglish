@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
-    [Route("api/Quiz/[controller]")]
+    [Route("api/quizzes")]
     [ApiController]
     [Authorize(Roles = "Admin, Teacher")]
     public class ATQuizzController : ControllerBase

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace LearningEnglish.API.Controller.User
 {
-    [Route("api/user/streak")]
+    [Route("api/user/streaks")]
     [ApiController]
     [Authorize]
     public class StreakController : ControllerBase

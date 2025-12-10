@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
-    [Route("api/files")]
+    [Route("api/shared/files")]
     [Authorize(Roles = "Admin, Teacher, Student")]
     public class FilesController : ControllerBase
     {
@@ -26,7 +26,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _logger = logger;
         }
 
-        // POST: api/files/temp-file - Upload temporary file with size validation
+        // POST: api/shared/files/temp-file - Upload temporary file with size validation
         [HttpPost("temp-file")]
         [RequestSizeLimit(52_428_800)]  // Max 50MB
         public async Task<IActionResult> UploadTemplateFile(IFormFile file, [FromQuery] string bucketName, [FromQuery] string tempFolder = "temp")
@@ -112,7 +112,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/files/cleanup-temp - Manual trigger cleanup temp files (Admin only)
+        // POST: api/shared/files/cleanup-temp - Manual trigger cleanup temp files (Admin only)
         [HttpPost("cleanup-temp")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CleanupTempFiles(

@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
-    [Route("api/user/")]
+    [Route("api/user/teacher-packages")]
     [Authorize]
     public class TeacherPackageController : ControllerBase
     {

@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
-    [Route("api/Flash-Card/[controller]")]
+    [Route("api/flashcards")]
     [Authorize(Roles = "Admin,Teacher")]
     public class ATFlashCardController : ControllerBase
     {

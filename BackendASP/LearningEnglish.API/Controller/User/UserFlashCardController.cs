@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
-    [Route("api/user/[controller]")]
+    [Route("api/user/flashcards")]
     [Authorize(Roles = "Student")]
     public class UserFlashCardController : ControllerBase
     {
