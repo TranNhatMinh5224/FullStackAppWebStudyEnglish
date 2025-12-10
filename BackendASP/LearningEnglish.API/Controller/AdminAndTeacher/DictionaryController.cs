@@ -7,7 +7,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/public/dictionary")]
-    [Authorize] // All authenticated users can lookup words
+    [Authorize] 
     public class DictionaryController : ControllerBase
     {
         private readonly IDictionaryService _dictionaryService;
