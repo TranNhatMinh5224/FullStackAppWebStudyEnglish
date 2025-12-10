@@ -25,18 +25,7 @@ export const AuthService = {
   // Login user
   login: async (credentials) => {
     try {
-      console.log('[AuthService] Login request:', { email: credentials.email });
       const result = await httpClient.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
-      
-      console.log('[AuthService] Login response:', {
-        success: result.success,
-        hasData: !!result.data,
-        dataStructure: result.data ? Object.keys(result.data) : [],
-        hasUser: !!result.data?.user,
-        hasDataData: !!result.data?.data,
-        user: result.data?.user || result.data?.data?.user,
-        hasToken: !!(result.data?.accessToken || result.data?.data?.accessToken)
-      });
       
       if (result.success && result.data) {
         // Backend response format: { success: true, message: "...", data: { accessToken, refreshToken, user, expiresAt } }
@@ -47,16 +36,10 @@ export const AuthService = {
         // Store tokens and user data
         if (responseData.accessToken && responseData.refreshToken) {
           TokenManager.setTokens(responseData.accessToken, responseData.refreshToken);
-          console.log('[AuthService] Tokens stored');
-        } else {
-          console.error('[AuthService] Missing tokens in response!', responseData);
         }
         
         if (responseData.user) {
           localStorage.setItem('user', JSON.stringify(responseData.user));
-          console.log('[AuthService] User stored:', responseData.user);
-        } else {
-          console.error('[AuthService] No user data in response!', responseData);
         }
         
         // Update result.data to point to the unwrapped data

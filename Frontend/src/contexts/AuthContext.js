@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { AuthAPI, TokenManager } from "../services/api/user";
-import { getUserInfoFromToken, getPrimaryRole, hasRole, USER_ROLES } from "../utils/jwtUtils";
+import { getUserInfoFromToken, getPrimaryRole, USER_ROLES } from "../utils/jwtUtils";
 
 const AuthContext = createContext();
 
@@ -97,16 +97,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Vui lòng điền đầy đủ email và mật khẩu');
       }
 
-      console.log('[AuthContext] Login called with email:', credentials.email);
       const result = await AuthAPI.login(credentials);
-      
-      console.log('[AuthContext] Login result:', {
-        success: result.success,
-        hasData: !!result.data,
-        dataKeys: result.data ? Object.keys(result.data) : [],
-        hasUser: !!result.data?.user,
-        user: result.data?.user
-      });
       
       if (result.success && result.data) {
         // result.data should already be unwrapped by authService
@@ -114,15 +105,12 @@ export const AuthProvider = ({ children }) => {
         const userData = result.data.user;
         const accessToken = TokenManager.getAccessToken();
         
-        console.log('[AuthContext] Access token retrieved:', accessToken ? 'Yes' : 'No');
-        console.log('[AuthContext] User data:', userData);
-        
         if (!accessToken) {
           throw new Error('Không nhận được token từ server');
         }
         
         if (!userData) {
-          console.error('[AuthContext] No user data in response!', result.data);
+          console.error('No user data in response!', result.data);
           throw new Error('Không nhận được thông tin người dùng từ server');
         }
         
@@ -131,19 +119,13 @@ export const AuthProvider = ({ children }) => {
         
         const userInfo = getUserInfoFromToken(accessToken);
         const primaryRole = getPrimaryRole(accessToken);
-        console.log('[AuthContext] User info from token:', {
-          userId: userInfo?.userId,
-          email: userInfo?.email,
-          roles: userInfo?.roles,
-          primaryRole: primaryRole
-        });
         
         // Verify user data matches token
         if (userInfo && userInfo.userId && userData.userId) {
           const tokenUserId = parseInt(userInfo.userId);
           const responseUserId = userData.userId;
           if (tokenUserId !== responseUserId) {
-            console.error('[AuthContext] User ID mismatch!', {
+            console.error('User ID mismatch!', {
               tokenUserId,
               responseUserId
             });
@@ -156,8 +138,6 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         localStorage.removeItem('isGuest');
         
-        console.log('[AuthContext] Login successful, user set:', userData);
-        
         return { 
           success: true, 
           user: userData,
@@ -166,7 +146,7 @@ export const AuthProvider = ({ children }) => {
         };
       } else {
         const errorMsg = result.error || result.data?.message || 'Đăng nhập thất bại';
-        console.error('[AuthContext] Login failed:', errorMsg, result);
+        console.error('Login failed:', errorMsg, result);
         throw new Error(errorMsg);
       }
     } catch (err) {
@@ -249,7 +229,7 @@ export const AuthProvider = ({ children }) => {
   const updateProfile = async (updateData) => {
     try {
       clearError();
-      console.log('AuthContext updateProfile called with:', updateData);
+      console.log('updateProfile called with:', updateData);
       
       // Validation
       if (!updateData || !updateData.firstName || !updateData.lastName) {
@@ -338,8 +318,7 @@ export const AuthProvider = ({ children }) => {
   const changePassword = async (passwordData) => {
     try {
       clearError();
-      console.log('AuthContext changePassword called');
-      
+
       if (!passwordData.currentPassword || !passwordData.newPassword) {
         throw new Error('Vui lòng điền đầy đủ thông tin mật khẩu');
       }
@@ -372,7 +351,7 @@ export const AuthProvider = ({ children }) => {
   const sendPasswordResetEmail = async (email) => {
     try {
       clearError();
-      console.log('AuthContext sendPasswordResetEmail called with:', email);
+      console.log('sendPasswordResetEmail called with:', email);
       
       if (!email) {
         throw new Error('Vui lòng nhập email');
@@ -390,24 +369,6 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error('Send password reset email error in AuthContext:', err);
       const errorMessage = err.message || 'Có lỗi xảy ra khi gửi email';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    }
-  };
-
-  const validateResetToken = async (token, email) => {
-    try {
-      clearError();
-      
-      if (!token || !email) {
-        throw new Error('Token hoặc email không hợp lệ');
-      }
-
-      // For now, we'll just return success
-      // Backend will validate when actually resetting password
-      return { success: true };
-    } catch (err) {
-      const errorMessage = err.message || 'Token không hợp lệ';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -459,10 +420,9 @@ export const AuthProvider = ({ children }) => {
       }
 
       // Call the same forgot password API to resend OTP
-      const result = await AuthAPI.forgotPassword(email);
+      await AuthAPI.forgotPassword(email);
       
-      console.log('AuthContext resendOTP result:', result);
-      
+
       return { 
         success: true, 
         message: 'Mã OTP mới đã được gửi đến email của bạn!' 
