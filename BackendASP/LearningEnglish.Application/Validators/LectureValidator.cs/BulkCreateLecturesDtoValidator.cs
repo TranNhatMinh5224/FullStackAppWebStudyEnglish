@@ -50,7 +50,7 @@ namespace LearningEnglish.Application.Validators
                 .WithMessage("Tiêu đề lecture không được để trống")
                 .Length(2, 255)
                 .WithMessage("Tiêu đề lecture phải từ 2 đến 255 ký tự")
-                .Matches(@"^[\p{L}\p{N}\s\-_.,()!?]+$")
+                .Matches(@"^[\p{L}\p{N}\s\-_.,()!?:&\[\]]+$")
                 .WithMessage("Tiêu đề lecture chỉ được chứa chữ cái, số, khoảng trắng và các ký tự đặc biệt cơ bản");
 
             // Validate OrderIndex
