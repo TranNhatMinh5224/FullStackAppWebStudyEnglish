@@ -1,6 +1,7 @@
 using AutoMapper;
 using Google.Apis.Auth;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace LearningEnglish.Application.Service
 {
+    // Service xử lý đăng nhập bằng Google OAuth
     public class GoogleLoginService : IGoogleLoginService
     {
         private readonly IUserRepository _userRepository;
@@ -21,9 +23,10 @@ namespace LearningEnglish.Application.Service
         private readonly GoogleAuthOptions _googleAuthOptions;
         private readonly IMinioFileStorage _minioService;
         private readonly HttpClient _httpClient;
-        private const string AVATAR_BUCKET_NAME = "avatar";
-        private const string FOLDERTEMP = "temp";
+        private const string AVATAR_BUCKET_NAME = "avatars";
+        private const string FOLDERREAL = "real";
 
+        // Constructor khởi tạo các dependency injection
         public GoogleLoginService(
             IUserRepository userRepository,
             IExternalLoginRepository externalLoginRepository,
@@ -44,12 +47,13 @@ namespace LearningEnglish.Application.Service
             _httpClient = httpClientFactory.CreateClient();
         }
 
+        // Xử lý đăng nhập bằng Google OAuth với bảo mật CSRF
         public async Task<ServiceResponse<AuthResponseDto>> HandleGoogleLoginAsync(GoogleLoginDto googleLoginDto)
         {
             var response = new ServiceResponse<AuthResponseDto>();
             try
             {
-                // Validate CSRF state parameter
+                // Kiểm tra tham số CSRF state để bảo mật
                 if (string.IsNullOrEmpty(googleLoginDto.State))
                 {
                     _logger.LogWarning("Google login attempt without CSRF state parameter");
@@ -59,7 +63,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Verify token với Google
+                // Xác thực ID token với Google API
                 GoogleJsonWebSignature.Payload payload;
                 try
                 {
@@ -78,6 +82,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // Kiểm tra thông tin email từ Google payload
                 if (payload == null || string.IsNullOrEmpty(payload.Email))
                 {
                     response.Success = false;
@@ -86,7 +91,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Bước 2: Kiểm tra xem đã từng đăng nhập bằng Google chưa
+                // Tìm kiếm thông tin đăng nhập Google đã có
                 var existingExternalLogin = await _externalLoginRepository
                     .GetByProviderAndUserIdAsync("Google", payload.Subject);
 
@@ -94,7 +99,7 @@ namespace LearningEnglish.Application.Service
 
                 if (existingExternalLogin != null)
                 {
-                    // Đã có External Login → lấy User
+                    // Đã có tài khoản Google - lấy thông tin người dùng
                     user = await _userRepository.GetByIdAsync(existingExternalLogin.UserId);
 
                     if (user == null)
@@ -105,25 +110,25 @@ namespace LearningEnglish.Application.Service
                         return response;
                     }
 
-                    // Cập nhật LastUsedAt
+                    // Cập nhật thời gian đăng nhập gần nhất
                     existingExternalLogin.LastUsedAt = DateTime.UtcNow;
                     await _externalLoginRepository.SaveChangesAsync();
                 }
                 else
                 {
-                    // Chưa có External Login → kiểm tra email có tồn tại không
+                    // Chưa có tài khoản Google - kiểm tra email đã tồn tại chưa
                     user = await _userRepository.GetUserByEmailAsync(payload.Email);
 
                     if (user == null)
                     {
-                        // Download và upload avatar lên MinIO
+                        // Tải xuống và upload avatar lên MinIO
                         string? avatarKey = null;
                         if (!string.IsNullOrEmpty(payload.Picture))
                         {
                             avatarKey = await DownloadAndUploadAvatarAsync(payload.Picture, payload.Email);
                         }
 
-                        // Tạo User mới
+                        // Tạo tài khoản người dùng mới từ thông tin Google
                         user = new User
                         {
                             Email = payload.Email,
@@ -131,12 +136,12 @@ namespace LearningEnglish.Application.Service
                             LastName = payload.FamilyName ?? "",
                             EmailVerified = payload.EmailVerified,
                             NormalizedEmail = payload.Email.ToUpper(),
-                            AvatarKey = avatarKey,  // Lưu MinIO key thay vì URL
+                            AvatarKey = avatarKey,  // Lưu MinIO key
                             CreatedAt = DateTime.UtcNow,
                             UpdatedAt = DateTime.UtcNow
                         };
 
-                        // Lấy role Student mặc định
+                        // Gán quyền Student mặc định cho tài khoản mới
                         var studentRole = await _userRepository.GetRoleByNameAsync("Student");
                         if (studentRole != null)
                         {
@@ -148,7 +153,7 @@ namespace LearningEnglish.Application.Service
                     }
                     else
                     {
-                        // Email đã tồn tại với phương thức khác - chặn cross-login
+                        // Email đã tồn tại - ngăn chặn đăng nhập chéo phương thức
                         _logger.LogWarning("Attempt to login with Google for existing email with different method. Email: {Email}", payload.Email);
                         
                         response.Success = false;
@@ -157,7 +162,7 @@ namespace LearningEnglish.Application.Service
                         return response;
                     }
 
-                    // Tạo External Login mới
+                    // Tạo bản ghi đăng nhập Google mới
                     var newExternalLogin = new ExternalLogin
                     {
                         Provider = "Google",
@@ -174,7 +179,7 @@ namespace LearningEnglish.Application.Service
                     await _externalLoginRepository.SaveChangesAsync();
                 }
 
-                // Kiểm tra trạng thái tài khoản
+                // Kiểm tra trạng thái hoạt động của tài khoản
                 if (user.Status == Domain.Enums.AccountStatus.Inactive)
                 {
                     response.Success = false;
@@ -183,19 +188,28 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Tạo JWT token
+                // Tạo JWT access token và refresh token
                 var accessToken = _tokenService.GenerateAccessToken(user);
                 var refreshToken = _tokenService.GenerateRefreshToken(user);
 
                 response.Success = true;
                 response.StatusCode = 200;
                 response.Message = "Đăng nhập bằng Google thành công";
+                
+                var userDto = _mapper.Map<UserDto>(user);
+                
+                // Tạo URL công khai cho avatar nếu có
+                if (!string.IsNullOrWhiteSpace(user.AvatarKey))
+                {
+                    userDto.AvatarUrl = BuildPublicUrl.BuildURL(AVATAR_BUCKET_NAME, user.AvatarKey);
+                }
+                
                 response.Data = new AuthResponseDto
                 {
                     AccessToken = accessToken.Item1,
                     RefreshToken = refreshToken.Token,
                     ExpiresAt = accessToken.Item2,
-                    User = _mapper.Map<UserDto>(user)
+                    User = userDto
                 };
             }
             catch (Exception ex)
@@ -209,11 +223,12 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
+        // Tải xuống ảnh đại diện từ Google và upload lên MinIO
         private async Task<string?> DownloadAndUploadAvatarAsync(string avatarUrl, string userEmail)
         {
             try
             {
-                // Download ảnh từ URL
+                // Tải ảnh từ URL Google cung cấp
                 var imageResponse = await _httpClient.GetAsync(avatarUrl);
                 if (!imageResponse.IsSuccessStatusCode)
                 {
@@ -223,7 +238,7 @@ namespace LearningEnglish.Application.Service
 
                 var imageStream = await imageResponse.Content.ReadAsStreamAsync();
 
-                // Convert sang IFormFile để upload lên MinIO
+                // Chuyển đổi stream thành IFormFile để upload
                 var memoryStream = new MemoryStream();
                 await imageStream.CopyToAsync(memoryStream);
                 memoryStream.Position = 0;
@@ -235,13 +250,13 @@ namespace LearningEnglish.Application.Service
                     ContentType = "image/jpeg"
                 };
 
-                // Upload lên MinIO
-                var uploadResult = await _minioService.UpLoadFileTempAsync(formFile, AVATAR_BUCKET_NAME, FOLDERTEMP);
+                // Upload trực tiếp vào thư mục thực (không qua temp)
+                var uploadResult = await _minioService.UpLoadFileTempAsync(formFile, AVATAR_BUCKET_NAME, FOLDERREAL);
 
                 if (uploadResult.Success && uploadResult.Data != null)
                 {
                     _logger.LogInformation("Upload avatar thành công cho user: {Email}", userEmail);
-                    return uploadResult.Data.TempKey;
+                    return uploadResult.Data.TempKey; // Thực tế là key thực
                 }
                 else
                 {
@@ -251,7 +266,7 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi download/upload avatar từ URL: {Url}", avatarUrl);
+                _logger.LogError(ex, "Lỗi khi tải xuống/upload avatar từ URL: {Url}", avatarUrl);
                 return null;
             }
         }

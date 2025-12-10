@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using LearningEnglish.Infrastructure.Data;
@@ -16,7 +17,6 @@ using LearningEnglish.Application.Service.Auth;
 using LearningEnglish.Application.Service.PaymentProcessors;
 using LearningEnglish.Application.Service.ScoringStrategies;
 using LearningEnglish.Application.Service.BackgroundJobs;
-using LearningEnglish.Application.Service.BackgroundServices;
 using LearningEnglish.Application.Validators;
 using LearningEnglish.Infrastructure.Repositories;
 using LearningEnglish.Infrastructure.Services;
@@ -251,9 +251,6 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateLectureDtoValidator>();
 
-builder.Services.AddTransient<FluentValidation.IValidator<LearningEnglish.Application.DTOs.CreateNotificationDto>, LearningEnglish.Application.Validators.NotificationValidators.CreateNotificationDtoValidator>();
-builder.Services.AddTransient<FluentValidation.IValidator<LearningEnglish.Application.DTOs.CreateStudyReminderDto>, LearningEnglish.Application.Validators.StudyReminderValidators.CreateStudyReminderDtoValidator>();
-
 // Scoring strategies
 builder.Services.AddScoped<IScoringStrategy, FillBlankScoringStrategy>();
 builder.Services.AddScoped<IScoringStrategy, MultipleChoiceScoringStrategy>();
@@ -264,16 +261,14 @@ builder.Services.AddScoped<IScoringStrategy, OrderingScoringStrategy>();
 
 // Background services
 builder.Services.AddHostedService<QuizAutoSubmitService>();
+// Background Services - CHỈ CẦN CÁC SERVICE THIẾT YẾU
 builder.Services.AddHostedService<TempFileCleanupHostedService>();
-builder.Services.AddHostedService<StudyReminderJob>();
-builder.Services.AddHostedService<VocabularyReminderBackgroundService>();
 builder.Services.AddHostedService<OtpCleanupService>(); // Tự động xóa OTP hết hạn mỗi 30 phút
 
-// Notification services
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IStudyReminderService, StudyReminderService>();
+// 📚 VOCABULARY REMINDER SYSTEM - CHỈ NHẮC HỌC TỪ VỰNG + EMAIL
+builder.Services.AddScoped<SimpleNotificationService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<IStudyReminderRepository, StudyReminderRepository>();
+builder.Services.AddHostedService<VocabularyReminderService>(); // 12:00 UTC = 19:00 VN
 
 // Build app
 var app = builder.Build();

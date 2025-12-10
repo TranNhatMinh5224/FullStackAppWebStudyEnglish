@@ -10,6 +10,7 @@ using LearningEnglish.Application.DTOs;
 using Microsoft.Extensions.Logging;
 namespace LearningEnglish.Application.Service
 {
+    // Service xử lý JWT token và refresh token
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
@@ -17,6 +18,7 @@ namespace LearningEnglish.Application.Service
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly ILogger<TokenService> _logger;
 
+        // Constructor khởi tạo các dependency injection
         public TokenService(IConfiguration configuration, IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository, ILogger<TokenService> logger)
         {
             _configuration = configuration;
@@ -25,6 +27,7 @@ namespace LearningEnglish.Application.Service
             _logger = logger;
         }
 
+        // Tạo JWT access token cho người dùng
         public Tuple<string, DateTime> GenerateAccessToken(User user)
         {
             var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");

@@ -159,7 +159,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.DisplayName))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
-                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarKey));
+                .ForMember(dest => dest.AvatarUrl, opt => opt.Ignore()); // Handled in service layer
 
             CreateMap<RegisterUserDto, User>()
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));

@@ -40,7 +40,6 @@ public class User
     public List<PasswordResetToken> PasswordResetTokens { get; set; } = new();
     public List<Payment> Payments { get; set; } = new();
     public List<ActivityLog> ActivityLogs { get; set; } = new();
-    public List<StudyReminder> StudyReminders { get; set; } = new();
     public List<Streak> Streaks { get; set; } = new();
     public List<LessonCompletion> LessonCompletions { get; set; } = new();
     public List<ModuleCompletion> ModuleCompletions { get; set; } = new();

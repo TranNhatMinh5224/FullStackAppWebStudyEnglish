@@ -7,6 +7,7 @@ using AutoMapper;
 
 namespace LearningEnglish.Application.Service
 {
+    // Service xử lý đăng ký tài khoản người dùng mới
     public class RegisterService : IRegisterService
     {
         private readonly IUserRepository _userRepository;
@@ -14,6 +15,7 @@ namespace LearningEnglish.Application.Service
         private readonly IEmailSender _emailSender;
         private readonly IMapper _mapper;
 
+        // Constructor khởi tạo các dependency injection
         public RegisterService(
             IUserRepository userRepository,
             IEmailVerificationTokenRepository emailVerificationTokenRepository,
@@ -26,12 +28,13 @@ namespace LearningEnglish.Application.Service
             _mapper = mapper;
         }
 
+        // Xử lý đăng ký tài khoản người dùng mới với xác thực email
         public async Task<ServiceResponse<UserDto>> RegisterUserAsync(RegisterUserDto dto)
         {
             var response = new ServiceResponse<UserDto>();
             try
             {
-                // Check email đã tồn tại VÀ đã verify
+                // Kiểm tra email đã tồn tại và được xác thực chưa
                 var existingUser = await _userRepository.GetUserByEmailAsync(dto.Email);
                 if (existingUser != null && existingUser.EmailVerified)
                 {
@@ -41,7 +44,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Nếu email tồn tại NHƯNG chưa verify → Cho phép đăng ký lại (xóa user cũ)
+                // Nếu email tồn tại nhưng chưa xác thực - cho phép đăng ký lại
                 if (existingUser != null && !existingUser.EmailVerified)
                 {
                     // Xóa user cũ chưa verify và OTP cũ
@@ -81,18 +84,18 @@ namespace LearningEnglish.Application.Service
                 {
                     User = user,
                     OtpCode = otpCode,
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(15), // token hết hạn sau 15 phút
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(5), // token hết hạn sau 5 phút
                     Email = dto.Email  // Lưu email để query
                 };
                 await _emailVerificationTokenRepository.AddAsync(emailToken);
                 await _emailVerificationTokenRepository.SaveChangesAsync();
 
                 // Send OTP email via EmailSender
-                await _emailSender.SendEmailAsync(dto.Email, "Xác thực tài khoản", $"Mã OTP của bạn là: {otpCode}. Mã này có hiệu lực trong 15 phút.");
+                await _emailSender.SendEmailAsync(dto.Email, "Xác thực tài khoản", $"Mã OTP của bạn là: {otpCode}. Mã này có hiệu lực trong 5 phút.");
 
                 response.StatusCode = 200;
                 response.Data = _mapper.Map<UserDto>(user);
-                response.Message = "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản trong vòng 15 phút.";
+                response.Message = "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản trong vòng 5 phút.";
             }
             catch (Exception ex)
             {
@@ -146,7 +149,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // ANTI-SPAM CHECK: Kiểm tra xem có đang bị block không
+                //  CHECK: Kiểm tra xem có đang bị block không
                 if (token.BlockedUntil.HasValue && token.BlockedUntil.Value > DateTime.UtcNow)
                 {
                     var remainingMinutes = Math.Ceiling((token.BlockedUntil.Value - DateTime.UtcNow).TotalMinutes);
@@ -163,31 +166,15 @@ namespace LearningEnglish.Application.Service
                     // BRUTE-FORCE PROTECTION: Tăng số lần thử sai
                     token.AttemptsCount++;
 
-                    // Nếu nhập sai >= 5 lần, khóa 20 phút
+                    // Nếu nhập sai >= 5 lần, xóa token
                     if (token.AttemptsCount >= 5)
                     {
-                        token.BlockedUntil = DateTime.UtcNow.AddMinutes(20);
-                        await _emailVerificationTokenRepository.UpdateAsync(token);
-
-                        // XÓA OTP bị khóa - không còn khả năng sử dụng
-                        await _emailVerificationTokenRepository.DeleteAsync(token);
-
-                        response.Success = false;
-                        response.StatusCode = 429;
-                        response.Message = "Bạn đã nhập sai OTP quá 5 lần. Tài khoản bị khóa trong 20 phút";
-                        response.Data = false;
-                        return response;
-                    }
-
-                    // Nếu nhập sai >= 10 lần, mark as used
-                    if (token.AttemptsCount >= 10)
-                    {
-                        // XÓA OTP quá nhiều lần thử - không còn khả năng sử dụng
+                        // XÓA OTP sau 5 lần thử sai - không còn khả năng sử dụng
                         await _emailVerificationTokenRepository.DeleteAsync(token);
 
                         response.Success = false;
                         response.StatusCode = 400;
-                        response.Message = "Quá nhiều lần thử. Vui lòng yêu cầu mã OTP mới";
+                        response.Message = "Bạn đã nhập sai OTP quá 5 lần. Vui lòng đăng ký lại";
                         response.Data = false;
                         return response;
                     }

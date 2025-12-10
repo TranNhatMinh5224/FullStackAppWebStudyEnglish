@@ -7,6 +7,7 @@ using System.Security.Claims;
 
 namespace LearningEnglish.API.Controllers.User
 {
+    // Controller xử lý các chức năng xác thực người dùng
     [ApiController]
     [Route("api/user/auth")]
     public class UserAuthController : ControllerBase
@@ -20,6 +21,7 @@ namespace LearningEnglish.API.Controllers.User
         private readonly IFacebookLoginService _facebookLoginService;
         private readonly ILogoutService _logoutService;
 
+        // Constructor khởi tạo các dependency injection
         public UserAuthController(
             IRegisterService registerService,
             ILoginService loginService,
@@ -40,6 +42,7 @@ namespace LearningEnglish.API.Controllers.User
             _logoutService = logoutService;
         }
 
+        // Lấy ID người dùng hiện tại từ JWT token
         private int GetCurrentUserId()
         {
             var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
@@ -53,7 +56,7 @@ namespace LearningEnglish.API.Controllers.User
             return userId;
         }
 
-        // POST: api/user/auth/register - Register new user account
+        // Đăng ký tài khoản người dùng mới
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
@@ -69,7 +72,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/auth/login - Authenticate user and return JWT tokens
+        // Đăng nhập bằng email và mật khẩu
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
         {
@@ -77,7 +80,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/auth/google-login - Authenticate user with Google
+        // Đăng nhập bằng Google OAuth
         [HttpPost("google-login")]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto dto)
         {
@@ -85,7 +88,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/auth/facebook-login - Authenticate user with Facebook
+        // Đăng nhập bằng Facebook OAuth
         [HttpPost("facebook-login")]
         public async Task<IActionResult> FacebookLogin([FromBody] FacebookLoginDto dto)
         {
@@ -93,7 +96,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/auth/profile - Get authenticated user's profile information
+        // Lấy thông tin profile người dùng đã đăng nhập
         [Authorize]
         [HttpGet("profile")]
         public async Task<IActionResult> GetProfile()

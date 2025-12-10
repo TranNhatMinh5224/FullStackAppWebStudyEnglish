@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Infrastructure.Data
 {
@@ -34,7 +35,6 @@ namespace LearningEnglish.Infrastructure.Data
         public DbSet<FlashCardReview> FlashCardReviews => Set<FlashCardReview>();
         public DbSet<PronunciationProgress> PronunciationProgresses => Set<PronunciationProgress>();
         public DbSet<Streak> Streaks => Set<Streak>();
-        public DbSet<StudyReminder> StudyReminders => Set<StudyReminder>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
         public DbSet<EssaySubmission> EssaySubmissions => Set<EssaySubmission>();
@@ -895,33 +895,6 @@ namespace LearningEnglish.Infrastructure.Data
                  .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // StudyReminder
-            modelBuilder.Entity<StudyReminder>(e =>
-            {
-                e.ToTable("StudyReminders");
-
-                // Column constraints
-                e.Property(sr => sr.Title)
-                 .IsRequired()
-                 .HasMaxLength(255);
-
-                e.Property(sr => sr.Message)
-                 .IsRequired()
-                 .HasMaxLength(1000);
-
-                e.Property(sr => sr.ScheduledTime)
-                 .IsRequired()
-                 .HasMaxLength(10);
-
-                e.Property(sr => sr.TimeZone)
-                 .HasMaxLength(100);
-
-                e.HasOne(sr => sr.User)
-                 .WithMany(u => u.StudyReminders)
-                 .HasForeignKey(sr => sr.UserId)
-                 .OnDelete(DeleteBehavior.Cascade);
-            });
-
             // Notification
             modelBuilder.Entity<Notification>(e =>
             {
@@ -1035,11 +1008,17 @@ namespace LearningEnglish.Infrastructure.Data
                     FirstName = "Admin",
                     LastName = "System",
                     Email = "minhxoandev@gmail.com",
+                    NormalizedEmail = "MINHXOANDEV@GMAIL.COM",
                     PasswordHash = adminPasswordHash,
                     PhoneNumber = "0257554479",
+                    DateOfBirth = new DateTime(2004, 2, 5),
+                    IsMale = true,
+                    EmailVerified = true,
+                    AvatarKey = null,
                     CreatedAt = fixedCreated,
                     UpdatedAt = fixedCreated,
-                    Status = LearningEnglish.Domain.Enums.AccountStatus.Active
+                    Status = AccountStatus.Active,
+                    CurrentTeacherSubscriptionId = null
                 }
             );
 

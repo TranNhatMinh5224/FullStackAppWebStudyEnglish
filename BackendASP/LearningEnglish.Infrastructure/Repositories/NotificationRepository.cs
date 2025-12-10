@@ -2,9 +2,6 @@ using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LearningEnglish.Infrastructure.Repositories
 {
@@ -17,28 +14,24 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<Notification?> GetByIdAsync(int id)
+        // ✅ TẠO THÔNG BÁO - Chức năng chính
+        public async Task AddAsync(Notification notification)
         {
-            return await _context.Notifications.FindAsync(id);
+            await _context.Notifications.AddAsync(notification);
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Notification>> GetUserNotificationsAsync(int userId, bool unreadOnly = false, int pageNumber = 1, int pageSize = 20)
+        // ✅ LẤY DANH SÁCH THÔNG BÁO - Đơn giản nhất
+        public async Task<IEnumerable<Notification>> GetUserNotificationsAsync(int userId)
         {
-            IQueryable<Notification> query = _context.Notifications
+            return await _context.Notifications
                 .Where(n => n.UserId == userId)
-                .OrderByDescending(n => n.CreatedAt);
-
-            if (unreadOnly)
-            {
-                query = query.Where(n => !n.IsRead);
-            }
-
-            return await query
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
+                .OrderByDescending(n => n.CreatedAt)
+                .Take(50) // Giới hạn 50 thông báo gần nhất
                 .ToListAsync();
         }
 
+        // ✅ ĐẾM THÔNG BÁO CHƯA ĐỌC - Hiển thị badge
         public async Task<int> GetUnreadCountAsync(int userId)
         {
             return await _context.Notifications
@@ -46,28 +39,7 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .CountAsync();
         }
 
-        public async Task AddAsync(Notification notification)
-        {
-            await _context.Notifications.AddAsync(notification);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(Notification notification)
-        {
-            _context.Notifications.Update(notification);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            var notification = await GetByIdAsync(id);
-            if (notification != null)
-            {
-                _context.Notifications.Remove(notification);
-                await _context.SaveChangesAsync();
-            }
-        }
-
+        // ✅ ĐÁNH DẤU ĐÃ ĐỌC - Optional
         public async Task MarkAsReadAsync(int notificationId, int userId)
         {
             var notification = await _context.Notifications
@@ -79,21 +51,6 @@ namespace LearningEnglish.Infrastructure.Repositories
                 notification.ReadAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }
-        }
-
-        public async Task MarkAllAsReadAsync(int userId)
-        {
-            var unreadNotifications = await _context.Notifications
-                .Where(n => n.UserId == userId && !n.IsRead)
-                .ToListAsync();
-
-            foreach (var notification in unreadNotifications)
-            {
-                notification.IsRead = true;
-                notification.ReadAt = DateTime.UtcNow;
-            }
-
-            await _context.SaveChangesAsync();
         }
     }
 }

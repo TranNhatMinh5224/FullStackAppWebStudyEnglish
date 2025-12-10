@@ -1,5 +1,6 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Cofigurations;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace LearningEnglish.Application.Service.Auth
 {
+    // Service xử lý đăng nhập bằng Facebook OAuth
     public class FacebookLoginService : IFacebookLoginService
     {
         private readonly IUserRepository _userRepository;
@@ -22,9 +24,10 @@ namespace LearningEnglish.Application.Service.Auth
         private readonly FacebookAuthOptions _facebookAuthOptions;
         private readonly HttpClient _httpClient;
         private readonly IMinioFileStorage _minioService;
-        private const string AVATAR_BUCKET_NAME = "avatar";
-        private const string FOLDERTEMP = "temp";
+        private const string AVATAR_BUCKET_NAME = "avatars";
+        private const string FOLDERREAL = "real";
 
+        // Constructor khởi tạo các dependency injection
         public FacebookLoginService(
             IUserRepository userRepository,
             IExternalLoginRepository externalLoginRepository,
@@ -45,6 +48,7 @@ namespace LearningEnglish.Application.Service.Auth
             _minioService = minioService;
         }
 
+        // Xử lý đăng nhập bằng Facebook OAuth với bảo mật CSRF  
         public async Task<ServiceResponse<AuthResponseDto>> HandleFacebookLoginAsync(FacebookLoginDto facebookLoginDto)
         {
             var response = new ServiceResponse<AuthResponseDto>();
@@ -214,12 +218,21 @@ namespace LearningEnglish.Application.Service.Auth
                 response.Success = true;
                 response.StatusCode = 200;
                 response.Message = "Đăng nhập bằng Facebook thành công";
+                
+                var userDto = _mapper.Map<UserDto>(user);
+                
+                // Build URL cho avatar nếu tồn tại
+                if (!string.IsNullOrWhiteSpace(user.AvatarKey))
+                {
+                    userDto.AvatarUrl = BuildPublicUrl.BuildURL(AVATAR_BUCKET_NAME, user.AvatarKey);
+                }
+                
                 response.Data = new AuthResponseDto
                 {
                     AccessToken = accessToken.Item1,
                     RefreshToken = refreshToken.Token,
                     ExpiresAt = accessToken.Item2,
-                    User = _mapper.Map<UserDto>(user)
+                    User = userDto
                 };
             }
             catch (Exception ex)
@@ -305,13 +318,13 @@ namespace LearningEnglish.Application.Service.Auth
                     ContentType = "image/jpeg"
                 };
 
-                // Upload lên MinIO
-                var uploadResult = await _minioService.UpLoadFileTempAsync(formFile, AVATAR_BUCKET_NAME, FOLDERTEMP);
+                // Upload trực tiếp vào real folder (không qua temp)
+                var uploadResult = await _minioService.UpLoadFileTempAsync(formFile, AVATAR_BUCKET_NAME, FOLDERREAL);
 
                 if (uploadResult.Success && uploadResult.Data != null)
                 {
                     _logger.LogInformation("Upload avatar thành công cho user: {Email}", userEmail);
-                    return uploadResult.Data.TempKey;
+                    return uploadResult.Data.TempKey; // Thực tế là real key
                 }
                 else
                 {

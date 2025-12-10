@@ -5,12 +5,14 @@ using LearningEnglish.Domain.Entities;
 
 namespace LearningEnglish.Application.Service
 {
+    // Service xử lý các chức năng liên quan đến mật khẩu
     public class PasswordService : IPasswordService
     {
         private readonly IUserRepository _userRepository;
         private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
         private readonly IEmailService _emailService;
 
+        // Constructor khởi tạo các dependency injection
         public PasswordService(IUserRepository userRepository, IPasswordResetTokenRepository passwordResetTokenRepository, IEmailService emailService)
         {
             _userRepository = userRepository;
@@ -18,6 +20,7 @@ namespace LearningEnglish.Application.Service
             _emailService = emailService;
         }
 
+        // Thay đổi mật khẩu cho người dùng đã đăng nhập
         public async Task<ServiceResponse<bool>> ChangePasswordAsync(int userId, ChangePasswordDto dto)
         {
             var response = new ServiceResponse<bool>();
@@ -26,14 +29,14 @@ namespace LearningEnglish.Application.Service
                 var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null || !user.VerifyPassword(dto.CurrentPassword))
                 {
-                    // Log failed attempt for security monitoring
+                    // Ghi log để giám sát bảo mật
                     response.Success = false;
                     response.StatusCode = 400;
                     response.Message = "Mật khẩu hiện tại không đúng";
                     return response;
                 }
 
-                // Validate new password strength
+                // Kiểm tra độ mạnh của mật khẩu mới
                 if (!IsPasswordStrong(dto.NewPassword))
                 {
                     response.Success = false;
@@ -152,13 +155,8 @@ namespace LearningEnglish.Application.Service
                 response.Data = true;
                 response.Message = "Email khôi phục mật khẩu đã được gửi";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"[ERROR] InnerException: {ex.InnerException.Message}");
-                }
-
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Đã xảy ra lỗi hệ thống";

@@ -78,6 +78,9 @@ public class ModuleProgressService : IModuleProgressService
             {
                 await UpdateCourseProgressAsync(userId, lesson.CourseId);
             }
+
+            _logger.LogInformation("✅ User {UserId} hoàn thành module {ModuleId} - CẦN GỬI NOTIFICATION", 
+                userId, moduleId);
         }
         catch (Exception ex)
         {
