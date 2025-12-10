@@ -26,12 +26,12 @@ namespace LearningEnglish.Application.Validators
                 .WithMessage("Thứ tự không được vượt quá 999")
                 .When(x => x.OrderIndex.HasValue);
 
-            // Validate NumberingLabel - nếu có, tối đa 20 ký tự
+            // Validate NumberingLabel - nếu có (hỗ trợ tiếng Việt)
             RuleFor(x => x.NumberingLabel)
-                .MaximumLength(20)
-                .WithMessage("Nhãn đánh số không được vượt quá 20 ký tự")
-                .Matches(@"^[0-9a-zA-Z\-._]*$")
-                .WithMessage("Nhãn đánh số chỉ được chứa chữ, số và các ký tự -, ., _")
+                .MaximumLength(50)
+                .WithMessage("Nhãn đánh số không được vượt quá 50 ký tự")
+                .Matches(@"^[\p{L}\p{N}\s\-._]*$")
+                .WithMessage("Nhãn đánh số chỉ được chứa chữ, số, khoảng trắng và các ký tự -, ., _")
                 .When(x => !string.IsNullOrEmpty(x.NumberingLabel));
 
             // Validate Type - nếu có, phải là enum hợp lệ

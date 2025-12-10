@@ -109,4 +109,38 @@ namespace LearningEnglish.Application.DTOs
     {
         public List<LectureTreeDto> Children { get; set; } = new();
     }
+
+    // DTO for bulk create lectures with parent-child hierarchy
+    public class BulkCreateLecturesDto
+    {
+        public int ModuleId { get; set; }
+        public List<LectureNodeDto> Lectures { get; set; } = new();
+    }
+
+    // DTO for individual lecture node in bulk create
+    public class LectureNodeDto
+    {
+        public string TempId { get; set; } = string.Empty; // Temporary ID for referencing (e.g., "temp-1", "temp-2")
+        public string? ParentTempId { get; set; }  // Reference to parent's TempId
+        
+        public int OrderIndex { get; set; }
+        public string? NumberingLabel { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public LectureType Type { get; set; } = LectureType.Content;
+        public string? MarkdownContent { get; set; }
+
+        // Media handling
+        public string? MediaTempKey { get; set; }
+        public string? MediaType { get; set; }
+        public long? MediaSize { get; set; }
+        public int? Duration { get; set; }
+    }
+
+    // Response DTO for bulk create
+    public class BulkCreateLecturesResponseDto
+    {
+        public int TotalCreated { get; set; }
+        public Dictionary<string, LectureDto> CreatedLectures { get; set; } = new(); // TempId → LectureDto
+        public List<string> Errors { get; set; } = new();
+    }
 }

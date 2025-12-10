@@ -72,6 +72,21 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
+        // POST: api/atlecture/bulk - Create multiple lectures with parent-child hierarchy (Admin/Teacher)
+        [HttpPost("bulk")]
+        public async Task<IActionResult> BulkCreateLectures([FromBody] BulkCreateLecturesDto bulkCreateDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userId = GetCurrentUserId();
+            var result = await _lectureService.BulkCreateLecturesAsync(bulkCreateDto, userId);
+            
+            return result.Success 
+                ? Ok(result) 
+                : StatusCode(result.StatusCode, result);
+        }
+
         // PUT: api/atlecture/{lectureId} - Update lecture (Admin: any, Teacher: own only)
         [HttpPut("{lectureId}")]
         public async Task<IActionResult> UpdateLecture(int lectureId, [FromBody] UpdateLectureDto updateLectureDto)

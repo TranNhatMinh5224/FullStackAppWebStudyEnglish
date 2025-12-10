@@ -277,6 +277,254 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
+        // + Tạo nhiều lectures cùng lúc với cấu trúc cha-con (Bulk Create)
+        public async Task<ServiceResponse<BulkCreateLecturesResponseDto>> BulkCreateLecturesAsync(
+            BulkCreateLecturesDto bulkCreateDto, 
+            int createdByUserId)
+        {
+            var response = new ServiceResponse<BulkCreateLecturesResponseDto>
+            {
+                Data = new BulkCreateLecturesResponseDto()
+            };
+
+            _logger.LogInformation("Starting BulkCreateLecturesAsync for ModuleId: {ModuleId}, TotalLectures: {Count}",
+                bulkCreateDto.ModuleId, bulkCreateDto.Lectures.Count);
+
+            try
+            {
+                // Validation: Check if module exists by trying to get existing lectures
+                // If no error thrown, module exists (even if no lectures yet)
+                var existingLectures = await _lectureRepository.GetByModuleIdAsync(bulkCreateDto.ModuleId);
+                
+                _logger.LogInformation("Found {Count} existing lectures in module {ModuleId}", 
+                    existingLectures.Count, bulkCreateDto.ModuleId);
+
+                // Validation: Check for duplicate TempIds
+                var tempIds = bulkCreateDto.Lectures.Select(l => l.TempId).ToList();
+                var duplicates = tempIds.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+                if (duplicates.Any())
+                {
+                    response.Success = false;
+                    response.Message = $"TempId bị trùng lặp: {string.Join(", ", duplicates)}";
+                    response.Data.Errors.Add($"TempId bị trùng lặp: {string.Join(", ", duplicates)}");
+                    return response;
+                }
+
+                // Validation: Check if all ParentTempIds reference valid TempIds
+                var invalidParents = bulkCreateDto.Lectures
+                    .Where(l => !string.IsNullOrEmpty(l.ParentTempId) && !tempIds.Contains(l.ParentTempId))
+                    .Select(l => l.TempId)
+                    .ToList();
+
+                if (invalidParents.Any())
+                {
+                    response.Success = false;
+                    response.Message = $"ParentTempId không hợp lệ cho các lecture: {string.Join(", ", invalidParents)}";
+                    response.Data.Errors.Add($"ParentTempId không hợp lệ: {string.Join(", ", invalidParents)}");
+                    return response;
+                }
+
+                // Map TempId → LectureEntity (chưa có ID thật)
+                var tempIdToLecture = new Dictionary<string, Lecture>();
+                var tempIdToMediaKey = new Dictionary<string, string>(); // Track committed media keys for rollback
+                var committedMediaKeys = new List<string>(); // For cleanup on error
+
+                // Step 1: Process media uploads first (commit from temp to real)
+                foreach (var lectureNode in bulkCreateDto.Lectures)
+                {
+                    string? committedMediaKey = null;
+
+                    if (!string.IsNullOrWhiteSpace(lectureNode.MediaTempKey))
+                    {
+                        var mediaResult = await _minioFileStorage.CommitFileAsync(
+                            lectureNode.MediaTempKey,
+                            LectureMediaBucket,
+                            LectureMediaFolder
+                        );
+
+                        if (!mediaResult.Success || string.IsNullOrWhiteSpace(mediaResult.Data))
+                        {
+                            _logger.LogError("Failed to commit media for TempId: {TempId}, Error: {Error}",
+                                lectureNode.TempId, mediaResult.Message);
+
+                            // Rollback all previously committed media
+                            foreach (var key in committedMediaKeys)
+                            {
+                                await _minioFileStorage.DeleteFileAsync(key, LectureMediaBucket);
+                            }
+
+                            response.Success = false;
+                            response.Message = $"Không thể lưu media cho lecture '{lectureNode.Title}': {mediaResult.Message}";
+                            response.Data.Errors.Add($"Media upload failed for {lectureNode.TempId}");
+                            return response;
+                        }
+
+                        committedMediaKey = mediaResult.Data;
+                        committedMediaKeys.Add(committedMediaKey);
+                        tempIdToMediaKey[lectureNode.TempId] = committedMediaKey;
+                    }
+
+                    // Create Lecture entity
+                    var lecture = new Lecture
+                    {
+                        ModuleId = bulkCreateDto.ModuleId,
+                        OrderIndex = lectureNode.OrderIndex,
+                        NumberingLabel = lectureNode.NumberingLabel,
+                        Title = lectureNode.Title,
+                        Type = lectureNode.Type,
+                        MarkdownContent = lectureNode.MarkdownContent,
+                        MediaKey = committedMediaKey,
+                        MediaType = lectureNode.MediaType,
+                        MediaSize = lectureNode.MediaSize,
+                        Duration = lectureNode.Duration,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        ParentLectureId = null // Will be set after parents are created
+                    };
+
+                    // Render HTML from Markdown if present
+                    if (!string.IsNullOrEmpty(lecture.MarkdownContent))
+                    {
+                        lecture.RenderedHtml = ConvertMarkdownToHtml(lecture.MarkdownContent);
+                    }
+
+                    tempIdToLecture[lectureNode.TempId] = lecture;
+                }
+
+                // Step 2: Topological sort to create parents before children
+                var sortedLectures = TopologicalSort(bulkCreateDto.Lectures);
+                if (sortedLectures == null)
+                {
+                    // Rollback media
+                    foreach (var key in committedMediaKeys)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(key, LectureMediaBucket);
+                    }
+
+                    response.Success = false;
+                    response.Message = "Phát hiện circular dependency trong cấu trúc cha-con";
+                    response.Data.Errors.Add("Circular dependency detected");
+                    return response;
+                }
+
+                // Step 3: Create lectures in order (parents first) using transaction
+                var tempIdToRealId = new Dictionary<string, int>();
+
+                try
+                {
+                    foreach (var lectureNode in sortedLectures)
+                    {
+                        var lecture = tempIdToLecture[lectureNode.TempId];
+
+                        // Set ParentLectureId if parent exists
+                        if (!string.IsNullOrEmpty(lectureNode.ParentTempId))
+                        {
+                            if (tempIdToRealId.ContainsKey(lectureNode.ParentTempId))
+                            {
+                                lecture.ParentLectureId = tempIdToRealId[lectureNode.ParentTempId];
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException(
+                                    $"Parent lecture with TempId '{lectureNode.ParentTempId}' has not been created yet");
+                            }
+                        }
+
+                        // Save to database
+                        var createdLecture = await _lectureRepository.CreateAsync(lecture);
+                        tempIdToRealId[lectureNode.TempId] = createdLecture.LectureId;
+
+                        // Map to DTO for response
+                        var lectureDto = _mapper.Map<LectureDto>(createdLecture);
+                        if (!string.IsNullOrWhiteSpace(lectureDto.MediaUrl))
+                        {
+                            lectureDto.MediaUrl = BuildPublicUrl.BuildURL(LectureMediaBucket, lectureDto.MediaUrl);
+                        }
+
+                        response.Data.CreatedLectures[lectureNode.TempId] = lectureDto;
+                        response.Data.TotalCreated++;
+
+                        _logger.LogInformation("Created lecture with TempId: {TempId}, RealId: {RealId}",
+                            lectureNode.TempId, createdLecture.LectureId);
+                    }
+
+                    response.Success = true;
+                    response.Message = $"Tạo thành công {response.Data.TotalCreated} lectures";
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error during bulk create");
+
+                    // Rollback: Delete all committed media files
+                    foreach (var key in committedMediaKeys)
+                    {
+                        try
+                        {
+                            await _minioFileStorage.DeleteFileAsync(key, LectureMediaBucket);
+                        }
+                        catch (Exception cleanupEx)
+                        {
+                            _logger.LogWarning(cleanupEx, "Failed to cleanup media file: {Key}", key);
+                        }
+                    }
+
+                    // Note: Database rollback is handled by transaction (if using one)
+                    // If not using explicit transaction, created lectures will remain in DB
+                    response.Success = false;
+                    response.Message = "Lỗi database khi tạo lectures. Đã rollback media files.";
+                    response.Data.Errors.Add($"Database error: {dbEx.Message}");
+                    return response;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in BulkCreateLecturesAsync");
+                response.Success = false;
+                response.Message = "Có lỗi xảy ra khi tạo bulk lectures";
+                response.Data.Errors.Add(ex.Message);
+            }
+
+            return response;
+        }
+
+        // Helper: Topological sort to ensure parents are created before children
+        private List<LectureNodeDto>? TopologicalSort(List<LectureNodeDto> lectures)
+        {
+            var sorted = new List<LectureNodeDto>();
+            var visited = new HashSet<string>();
+            var visiting = new HashSet<string>();
+
+            var lectureMap = lectures.ToDictionary(l => l.TempId);
+
+            bool Visit(string tempId)
+            {
+                if (visited.Contains(tempId)) return true;
+                if (visiting.Contains(tempId)) return false; // Circular dependency
+
+                visiting.Add(tempId);
+
+                var lecture = lectureMap[tempId];
+                if (!string.IsNullOrEmpty(lecture.ParentTempId))
+                {
+                    if (!Visit(lecture.ParentTempId))
+                        return false; // Circular dependency
+                }
+
+                visiting.Remove(tempId);
+                visited.Add(tempId);
+                sorted.Add(lecture);
+                return true;
+            }
+
+            foreach (var lecture in lectures)
+            {
+                if (!Visit(lecture.TempId))
+                    return null; // Circular dependency detected
+            }
+
+            return sorted;
+        }
+
         // + Cập nhật lecture
         public async Task<ServiceResponse<LectureDto>> UpdateLectureAsync(int lectureId, UpdateLectureDto updateLectureDto, int updatedByUserId)
         {
