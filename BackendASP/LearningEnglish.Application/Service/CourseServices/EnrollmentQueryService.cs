@@ -14,7 +14,7 @@ namespace LearningEnglish.Application.Service
         private readonly IMapper _mapper;
         private readonly ILogger<EnrollmentQueryService> _logger;
 
-    
+
         private const string CourseImageBucket = "courses";
 
         public EnrollmentQueryService(
@@ -45,16 +45,16 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // ✅ Map to EnrolledCourseWithProgressDto and populate progress data
+                //  Map to EnrolledCourseWithProgressDto and populate progress data
                 var courseDtos = new List<EnrolledCourseWithProgressDto>();
 
                 foreach (var course in courses)
                 {
                     var courseDto = _mapper.Map<EnrolledCourseWithProgressDto>(course);
 
-                    // ✅ Get progress information for this course
+                    // Get progress information for this course
                     var courseProgress = await _courseProgressRepository.GetByUserAndCourseAsync(userId, course.CourseId);
-                    
+
                     if (courseProgress != null)
                     {
                         courseDto.ProgressPercentage = courseProgress.ProgressPercentage;

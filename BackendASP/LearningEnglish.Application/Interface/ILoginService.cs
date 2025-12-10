@@ -6,6 +6,5 @@ namespace LearningEnglish.Application.Interface
     public interface ILoginService
     {
         Task<ServiceResponse<AuthResponseDto>> LoginUserAsync(LoginUserDto dto);
-
     }
 }

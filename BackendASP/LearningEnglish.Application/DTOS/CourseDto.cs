@@ -107,7 +107,7 @@ namespace LearningEnglish.Application.DTOs
         public int TotalLessons { get; set; }
         public List<LessonSummaryDto> Lessons { get; set; } = new();
         public DateTime CreatedAt { get; set; }
-        
+
         // ✅ Progress information (for enrolled users)
         public decimal ProgressPercentage { get; set; } = 0; // 0-100%
         public int CompletedLessons { get; set; } = 0;
@@ -182,7 +182,7 @@ namespace LearningEnglish.Application.DTOs
         public string TeacherName { get; set; } = string.Empty;
         public int LessonCount { get; set; }
         public int StudentCount { get; set; }
-        
+
         // ✅ Progress information
         public decimal ProgressPercentage { get; set; } = 0; // 0-100%
         public int CompletedLessons { get; set; } = 0;

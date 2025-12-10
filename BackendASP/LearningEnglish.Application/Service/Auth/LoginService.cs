@@ -1,20 +1,23 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Interface;
-using LearningEnglish.Domain.Entities;
+using LearningEnglish.Application.Common.Helpers;
 using AutoMapper;
 using LearningEnglish.Domain.Enums;
-using Microsoft.Extensions.Configuration;
+
 
 namespace LearningEnglish.Application.Service
 {
+    // Service xử lý đăng nhập bằng email và mật khẩu
     public class LoginService : ILoginService
     {
         private readonly IUserRepository _userRepository;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
+        private const string AvatarBucket = "avatars";
 
+        // Constructor khởi tạo các dependency injection
         public LoginService(IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository, IMapper mapper, ITokenService tokenService)
         {
             _userRepository = userRepository;
@@ -23,12 +26,16 @@ namespace LearningEnglish.Application.Service
             _tokenService = tokenService;
         }
 
+        // Xử lý đăng nhập bằng email và mật khẩu
         public async Task<ServiceResponse<AuthResponseDto>> LoginUserAsync(LoginUserDto dto)
         {
             var response = new ServiceResponse<AuthResponseDto>();
             try
             {
+                // Đăng nhập bằng email
                 var user = await _userRepository.GetUserByEmailAsync(dto.Email);
+
+                // Kiểm tra người dùng tồn tại và mật khẩu đúng
                 if (user == null || !user.VerifyPassword(dto.Password))
                 {
                     response.Success = false;
@@ -36,6 +43,17 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Email hoặc mật khẩu không đúng";
                     return response;
                 }
+
+                // Kiểm tra email đã được xác thực chưa
+                if (!user.EmailVerified)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Vui lòng xác thực email trước khi đăng nhập. Kiểm tra hộp thư của bạn để lấy mã OTP.";
+                    return response;
+                }
+
+                // Kiểm tra trạng thái tài khoản
                 if (user.Status == AccountStatus.Inactive)
                 {
                     response.Success = false;
@@ -46,9 +64,9 @@ namespace LearningEnglish.Application.Service
                         User = _mapper.Map<UserDto>(user),
                     };
                     return response;
-                    
                 }
 
+                // Tạo JWT access token và refresh token
                 var accessToken = _tokenService.GenerateAccessToken(user);
                 var refreshToken = _tokenService.GenerateRefreshToken(user);
 
@@ -57,7 +75,22 @@ namespace LearningEnglish.Application.Service
 
                 response.StatusCode = 200;
                 response.Message = "Đăng nhập thành công";
-                response.Data = new AuthResponseDto { AccessToken = accessToken.Item1, RefreshToken = refreshToken.Token, ExpiresAt = accessToken.Item2, User = _mapper.Map<UserDto>(user) };
+                
+                var userDto = _mapper.Map<UserDto>(user);
+                
+                // Tạo URL công khai cho avatar nếu có
+                if (!string.IsNullOrWhiteSpace(user.AvatarKey))
+                {
+                    userDto.AvatarUrl = BuildPublicUrl.BuildURL(AvatarBucket, user.AvatarKey);
+                }
+                
+                response.Data = new AuthResponseDto 
+                { 
+                    AccessToken = accessToken.Item1, 
+                    RefreshToken = refreshToken.Token, 
+                    ExpiresAt = accessToken.Item2, 
+                    User = userDto 
+                };
             }
             catch (Exception)
             {
@@ -68,4 +101,5 @@ namespace LearningEnglish.Application.Service
             return response;
         }
     }
+
 }

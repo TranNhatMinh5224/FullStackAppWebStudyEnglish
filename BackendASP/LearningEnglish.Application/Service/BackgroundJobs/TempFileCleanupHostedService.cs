@@ -19,7 +19,7 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
-            
+
             // Chạy mỗi 6 giờ
             _interval = TimeSpan.FromHours(6);
         }

@@ -8,10 +8,13 @@ namespace LearningEnglish.Application.Validators.User
         public LoginUserDtoValidator()
         {
             RuleFor(x => x.Email)
-                .NotEmpty().EmailAddress();
+                .NotEmpty().WithMessage("Email is required")
+                .EmailAddress().WithMessage("Invalid email format")
+                .MaximumLength(255).WithMessage("Email must not exceed 255 characters");
 
             RuleFor(x => x.Password)
-                .NotEmpty();
+                .NotEmpty().WithMessage("Password is required")
+                .MinimumLength(6).WithMessage("Password must be at least 6 characters");
         }
     }
 }

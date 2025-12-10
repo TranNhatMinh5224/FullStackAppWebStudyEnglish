@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using LearningEnglish.Infrastructure.Data;
@@ -12,10 +13,10 @@ using LearningEnglish.Application.Mappings;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Application.Service;
+using LearningEnglish.Application.Service.Auth;
 using LearningEnglish.Application.Service.PaymentProcessors;
 using LearningEnglish.Application.Service.ScoringStrategies;
 using LearningEnglish.Application.Service.BackgroundJobs;
-using LearningEnglish.Application.Service.BackgroundServices;
 using LearningEnglish.Application.Validators;
 using LearningEnglish.Infrastructure.Repositories;
 using LearningEnglish.Infrastructure.Services;
@@ -132,6 +133,7 @@ builder.Services.AddScoped<IAssessmentRepository, AssessmentRepository>();
 builder.Services.AddScoped<IEssayRepository, EssayRepository>();
 builder.Services.AddScoped<IEssaySubmissionRepository, EssaySubmissionRepository>();
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+builder.Services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ITeacherPackageRepository, TeacherPackageRepository>();
@@ -145,6 +147,7 @@ builder.Services.AddScoped<IPronunciationProgressRepository, PronunciationProgre
 builder.Services.AddScoped<ICourseProgressRepository, CourseProgressRepository>();
 builder.Services.AddScoped<ILessonCompletionRepository, LessonCompletionRepository>();
 builder.Services.AddScoped<IModuleCompletionRepository, ModuleCompletionRepository>();
+builder.Services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
@@ -152,7 +155,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAdminCourseService, AdminCourseService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<IModuleService, ModuleService>();
-builder.Services.AddScoped<IModuleProgressService, ModuleProgressService>(); // ✅ Progress tracking
+builder.Services.AddScoped<IModuleProgressService, ModuleProgressService>();
 builder.Services.AddScoped<ILectureService, LectureService>();
 builder.Services.AddScoped<IFlashCardService, FlashCardService>();
 builder.Services.AddScoped<IFlashCardReviewService, FlashCardReviewService>();
@@ -170,6 +173,9 @@ builder.Services.AddScoped<IUserEnrollmentService, UserEnrollmentService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
+builder.Services.AddScoped<IGoogleLoginService, GoogleLoginService>();
+builder.Services.AddScoped<IFacebookLoginService, FacebookLoginService>();
+builder.Services.AddScoped<ILogoutService, LogoutService>(); // ✅ Logout Service
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -192,6 +198,9 @@ builder.Services.AddScoped<IAudioConverterService, AudioConverterService>();
 builder.Services.AddHttpClient<IAzureSpeechService, AzureSpeechService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
+//  SMTP Configuration for Email Service
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
+
 // HttpClient for Dictionary API
 builder.Services.AddHttpClient();
 
@@ -203,6 +212,13 @@ builder.Services.Configure<UnsplashOptions>(builder.Configuration.GetSection("Un
 
 // MinIO Configuration
 builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("MinIO"));
+
+// Google Auth Configuration
+builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection("GoogleAuth"));
+
+// Facebook Auth Configuration
+builder.Services.Configure<FacebookAuthOptions>(builder.Configuration.GetSection("FacebookAuth"));
+
 
 // MinIO Client (Singleton - dùng chung cho toàn bộ app)
 builder.Services.AddSingleton<IMinioClient>(sp =>
@@ -234,9 +250,6 @@ builder.Services.AddScoped<IPaymentStrategy, TeacherPackagePaymentProcessor>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateLectureDtoValidator>();
-// Explicit validators for notifications and reminders (also discovered via assembly scan)
-builder.Services.AddTransient<FluentValidation.IValidator<LearningEnglish.Application.DTOs.CreateNotificationDto>, LearningEnglish.Application.Validators.NotificationValidators.CreateNotificationDtoValidator>();
-builder.Services.AddTransient<FluentValidation.IValidator<LearningEnglish.Application.DTOs.CreateStudyReminderDto>, LearningEnglish.Application.Validators.StudyReminderValidators.CreateStudyReminderDtoValidator>();
 
 // Scoring strategies
 builder.Services.AddScoped<IScoringStrategy, FillBlankScoringStrategy>();
@@ -248,28 +261,20 @@ builder.Services.AddScoped<IScoringStrategy, OrderingScoringStrategy>();
 
 // Background services
 builder.Services.AddHostedService<QuizAutoSubmitService>();
+// Background Services - CHỈ CẦN CÁC SERVICE THIẾT YẾU
 builder.Services.AddHostedService<TempFileCleanupHostedService>();
-builder.Services.AddHostedService<StudyReminderJob>();
-builder.Services.AddHostedService<VocabularyReminderBackgroundService>();
+builder.Services.AddHostedService<OtpCleanupService>(); // Tự động xóa OTP hết hạn mỗi 30 phút
 
-// Notification services
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IStudyReminderService, StudyReminderService>();
+// 📚 VOCABULARY REMINDER SYSTEM - CHỈ NHẮC HỌC TỪ VỰNG + EMAIL
+builder.Services.AddScoped<SimpleNotificationService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<IStudyReminderRepository, StudyReminderRepository>();
+builder.Services.AddHostedService<VocabularyReminderService>(); // 12:00 UTC = 19:00 VN
 
 // Build app
 var app = builder.Build();
 
 // Configure BuildPublicUrl helper for MinIO public URLs
 LearningEnglish.Application.Common.Helpers.BuildPublicUrl.Configure(builder.Configuration);
-
-// Auto-migrate database - TEMPORARILY DISABLED (DNS issue)
-// using (var scope = app.Services.CreateScope())
-// {
-//     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-//     db.Database.Migrate();
-// }
 
 // Middleware pipeline
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")

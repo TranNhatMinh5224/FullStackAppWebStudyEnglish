@@ -22,7 +22,7 @@ namespace LearningEnglish.Application.DTOs
         public string? ImageUrl { get; set; }
         public string? ImageType { get; set; }
         public int CourseId { get; set; }
-        
+
         // ✅ Progress information
         public float CompletionPercentage { get; set; } = 0; // 0-100%
         public bool IsCompleted { get; set; } = false;
@@ -49,7 +49,7 @@ namespace LearningEnglish.Application.DTOs
         public string? ImageTempKey { get; set; }
         public string? ImageType { get; set; }
     }
-    
+
     public class UpdateLessonDto
     {
         public string Title { get; set; } = string.Empty;

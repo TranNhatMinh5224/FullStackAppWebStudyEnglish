@@ -164,7 +164,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 // Tìm course theo classCode
-                var courses = await _courseRepository.SearchCourses(classCode);
+                var courses = await _courseRepository.SearchCoursesByClassCode(classCode);
                 var course = courses.FirstOrDefault();
                 if (course == null)
                 {

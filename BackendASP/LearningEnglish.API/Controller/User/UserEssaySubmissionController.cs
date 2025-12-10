@@ -36,7 +36,7 @@ namespace LearningEnglish.API.Controller.User
                 return BadRequest("Không thể lấy thông tin người dùng từ token");
 
             var result = await _essaySubmissionService.CreateSubmissionAsync(submissionDto, userId);
-            return result.Success 
+            return result.Success
                 ? CreatedAtAction("GetSubmission", "EssaySubmission", new { submissionId = result.Data?.SubmissionId }, result)
                 : StatusCode(result.StatusCode, result);
         }

@@ -7,6 +7,7 @@ using System.Security.Claims;
 
 namespace LearningEnglish.API.Controllers.User
 {
+    // Controller xử lý các chức năng xác thực người dùng
     [ApiController]
     [Route("api/user/auth")]
     public class UserAuthController : ControllerBase
@@ -16,21 +17,32 @@ namespace LearningEnglish.API.Controllers.User
         private readonly IUserManagementService _userManagementService;
         private readonly IPasswordService _passwordService;
         private readonly ITokenService _tokenService;
+        private readonly IGoogleLoginService _googleLoginService;
+        private readonly IFacebookLoginService _facebookLoginService;
+        private readonly ILogoutService _logoutService;
 
+        // Constructor khởi tạo các dependency injection
         public UserAuthController(
             IRegisterService registerService,
             ILoginService loginService,
             IUserManagementService userManagementService,
             IPasswordService passwordService,
-            ITokenService tokenService)
+            ITokenService tokenService,
+            IGoogleLoginService googleLoginService,
+            IFacebookLoginService facebookLoginService,
+            ILogoutService logoutService)
         {
             _registerService = registerService;
             _loginService = loginService;
             _userManagementService = userManagementService;
             _passwordService = passwordService;
             _tokenService = tokenService;
+            _googleLoginService = googleLoginService;
+            _facebookLoginService = facebookLoginService;
+            _logoutService = logoutService;
         }
 
+        // Lấy ID người dùng hiện tại từ JWT token
         private int GetCurrentUserId()
         {
             var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
@@ -44,7 +56,7 @@ namespace LearningEnglish.API.Controllers.User
             return userId;
         }
 
-        // POST: api/user/auth/register - Register new user account
+        // Đăng ký tài khoản người dùng mới
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
@@ -52,7 +64,15 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/auth/login - Authenticate user and return JWT tokens
+        // POST: api/user/auth/verify-email - Verify email with OTP code
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailDto dto)
+        {
+            var result = await _registerService.VerifyEmailAsync(dto);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // Đăng nhập bằng email và mật khẩu
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
         {
@@ -60,7 +80,23 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/auth/profile - Get authenticated user's profile information
+        // Đăng nhập bằng Google OAuth
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto dto)
+        {
+            var result = await _googleLoginService.HandleGoogleLoginAsync(dto);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // Đăng nhập bằng Facebook OAuth
+        [HttpPost("facebook-login")]
+        public async Task<IActionResult> FacebookLogin([FromBody] FacebookLoginDto dto)
+        {
+            var result = await _facebookLoginService.HandleFacebookLoginAsync(dto);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // Lấy thông tin profile người dùng đã đăng nhập
         [Authorize]
         [HttpGet("profile")]
         public async Task<IActionResult> GetProfile()
@@ -145,6 +181,48 @@ namespace LearningEnglish.API.Controllers.User
         {
             var result = await _tokenService.RefreshTokenAsync(request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/user/auth/logout - Logout from current device (revoke specific refresh token)
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout([FromBody] LogoutDto dto)
+        {
+            try 
+            {
+                var userId = GetCurrentUserId();
+                var result = await _logoutService.LogoutAsync(dto, userId);
+                return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Đã xảy ra lỗi hệ thống khi đăng xuất",
+                    error = ex.Message 
+                });
+            }
+        }
+
+        // POST: api/user/auth/logout-all - Logout from all devices (revoke all refresh tokens)
+        [HttpPost("logout-all")]
+        [Authorize]
+        public async Task<IActionResult> LogoutAll()
+        {
+            try 
+            {
+                var userId = GetCurrentUserId();
+                var result = await _logoutService.LogoutAllAsync(userId);
+                return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Đã xảy ra lỗi hệ thống khi đăng xuất khỏi tất cả thiết bị",
+                    error = ex.Message 
+                });
+            }
         }
     }
 }

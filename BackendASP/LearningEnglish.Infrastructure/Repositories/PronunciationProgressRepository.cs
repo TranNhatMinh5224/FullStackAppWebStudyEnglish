@@ -81,7 +81,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
         public async Task<PronunciationProgress> UpsertAsync(
-            int userId, 
+            int userId,
             int flashCardId,
             double accuracyScore,
             double fluencyScore,
@@ -115,7 +115,7 @@ namespace LearningEnglish.Infrastructure.Repositories
                 strongPhonemes,
                 attemptTime
             );
-            
+
             await _context.SaveChangesAsync();
             return existing;
         }
@@ -148,7 +148,7 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .Where(p => p.UserId == userId && p.TotalAttempts > 0)
                 .ToListAsync();
 
-            return progresses.Any() ? progresses.Average(p => p.BestScore) : 0;
+            return progresses.Count != 0 ? progresses.Average(p => p.BestScore) : 0;
         }
     }
 }

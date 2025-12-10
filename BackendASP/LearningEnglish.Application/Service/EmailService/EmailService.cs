@@ -23,7 +23,7 @@ namespace LearningEnglish.Application.Service
             var subject = "Your OTP Code - Catalunya English";
             var body = _templateService.GenerateOTPEmailTemplate(otpCode, userName);
 
-            Console.WriteLine($"[DEBUG] EmailService - Generated email body with template");
+
             await _emailSender.SendEmailAsync(toEmail, subject, body);
         }
 

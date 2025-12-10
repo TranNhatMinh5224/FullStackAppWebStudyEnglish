@@ -21,7 +21,7 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
 
             foreach (var correctAnswer in correctAnswersList)
             {
-                if (userAnswerStr == (correctAnswer?.Trim() ?? string.Empty).ToLower())
+                if (userAnswerStr.Equals(correctAnswer?.Trim() ?? string.Empty, StringComparison.CurrentCultureIgnoreCase))
                 {
                     return question.Points;
                 }

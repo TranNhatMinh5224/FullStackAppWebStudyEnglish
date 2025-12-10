@@ -19,7 +19,7 @@ public enum DaysOfWeek
     Friday = 16,
     Saturday = 32,
     Sunday = 64,
-    
+
     // Common combinations
     Weekdays = Monday | Tuesday | Wednesday | Thursday | Friday,
     Weekend = Saturday | Sunday,

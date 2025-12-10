@@ -3,8 +3,10 @@ using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
+using LearningEnglish.Application.Common.Pagination;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace LearningEnglish.Application.Service
 {
@@ -91,15 +93,47 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
+        public async Task<ServiceResponse<PagedResult<AdminCourseListResponseDto>>> GetAllCoursesPagedAsync(PageRequest request)
+        {
+            var response = new ServiceResponse<PagedResult<AdminCourseListResponseDto>>();
+            try
+            {
+                var pagedData = await _courseRepository.GetAllCoursesPagedAsync(request);
 
+                var items = new List<AdminCourseListResponseDto>();
+                foreach (var course in pagedData.Items)
+                {
+                    var dto = _mapper.Map<AdminCourseListResponseDto>(course);
+                    dto.LessonCount = await _courseRepository.CountLessons(course.CourseId);
+                    dto.StudentCount = await _courseRepository.CountEnrolledUsers(course.CourseId);
+                    dto.TeacherName = course.Teacher?.FirstName + " " + course.Teacher?.LastName ?? "System Admin";
 
+                    if (!string.IsNullOrWhiteSpace(course.ImageKey))
+                    {
+                        dto.ImageUrl = BuildPublicUrl.BuildURL(CourseImageBucket, course.ImageKey);
+                        dto.ImageType = course.ImageType;
+                    }
+                    items.Add(dto);
+                }
 
-
-
-
-
-
-
+                response.StatusCode = 200;
+                response.Data = new PagedResult<AdminCourseListResponseDto>
+                {
+                    Items = items,
+                    TotalCount = pagedData.TotalCount,
+                    PageNumber = pagedData.PageNumber,
+                    PageSize = pagedData.PageSize
+                };
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+                _logger.LogError(ex, "Error");
+            }
+            return response;
+        }
 
         // Service cho Admin Tạo mới khóa học
 
@@ -114,7 +148,7 @@ namespace LearningEnglish.Application.Service
                 var course = new Course
                 {
                     Title = requestDto.Title,
-                    Description = requestDto.Description,
+                    DescriptionMarkdown = requestDto.Description,
                     Type = requestDto.Type,
                     Price = requestDto.Price,
                     TeacherId = null,
@@ -224,19 +258,19 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(requestDto.Title))
                     course.Title = requestDto.Title;
-                
+
                 if (!string.IsNullOrWhiteSpace(requestDto.Description))
-                    course.Description = requestDto.Description;
-                
+                    course.DescriptionMarkdown = requestDto.Description;
+
                 if (requestDto.Price.HasValue)
                     course.Price = requestDto.Price.Value;
-                
+
                 if (requestDto.MaxStudent.HasValue && requestDto.MaxStudent.Value > 0)
                     course.MaxStudent = requestDto.MaxStudent.Value;
-                
+
                 if (requestDto.IsFeatured.HasValue)
                     course.IsFeatured = requestDto.IsFeatured.Value;
-                
+
                 if (requestDto.Type.HasValue)
                     course.Type = requestDto.Type.Value;
 
@@ -301,9 +335,9 @@ namespace LearningEnglish.Application.Service
 
                 var courseResponseDto = _mapper.Map<CourseResponseDto>(course);
                 courseResponseDto.LessonCount = await _courseRepository.CountLessons(courseId);
-                 courseResponseDto.TeacherName = course.Teacher != null
-                    ? $"{course.Teacher.FirstName} {course.Teacher.LastName}"
-                    : "System Admin";
+                courseResponseDto.TeacherName = course.Teacher != null
+                   ? $"{course.Teacher.FirstName} {course.Teacher.LastName}"
+                   : "System Admin";
 
                 // Generate URL từ key
                 if (!string.IsNullOrWhiteSpace(course.ImageKey))

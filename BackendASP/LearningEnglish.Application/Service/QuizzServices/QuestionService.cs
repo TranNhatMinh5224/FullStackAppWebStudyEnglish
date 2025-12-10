@@ -410,10 +410,10 @@ namespace LearningEnglish.Application.Service
                     if (!string.IsNullOrWhiteSpace(tempKey))
                     {
                         // Backup old media key của option này trước khi thay thế
-                        string? oldMediaKey = (optionOldMediaKeys.Count > i && !string.IsNullOrWhiteSpace(optionOldMediaKeys[i])) 
-                            ? optionOldMediaKeys[i] 
+                        string? oldMediaKey = (optionOldMediaKeys.Count > i && !string.IsNullOrWhiteSpace(optionOldMediaKeys[i]))
+                            ? optionOldMediaKeys[i]
                             : null;
-                        
+
                         if (oldMediaKey != null)
                         {
                             oldOptionMediaKeys.Add((i, oldMediaKey));
@@ -576,7 +576,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                if (questionBulkCreateDto.Questions == null || !questionBulkCreateDto.Questions.Any())
+                if (questionBulkCreateDto.Questions == null || questionBulkCreateDto.Questions.Count == 0)
                 {
                     response.Success = false;
                     response.Message = "Danh sách câu hỏi không được để trống.";

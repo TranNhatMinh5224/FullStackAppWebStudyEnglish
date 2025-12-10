@@ -7,21 +7,27 @@ using System.Text;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
+using Microsoft.Extensions.Logging;
 namespace LearningEnglish.Application.Service
 {
+    // Service xử lý JWT token và refresh token
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
         private readonly IUserRepository _userRepository;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly ILogger<TokenService> _logger;
 
-        public TokenService(IConfiguration configuration, IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository)
+        // Constructor khởi tạo các dependency injection
+        public TokenService(IConfiguration configuration, IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository, ILogger<TokenService> logger)
         {
             _configuration = configuration;
             _userRepository = userRepository;
             _refreshTokenRepository = refreshTokenRepository;
+            _logger = logger;
         }
 
+        // Tạo JWT access token cho người dùng
         public Tuple<string, DateTime> GenerateAccessToken(User user)
         {
             var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
@@ -102,7 +108,7 @@ namespace LearningEnglish.Application.Service
             {
                 var refreshToken = request.RefreshToken;
                 var accessToken = request.AccessToken;
-                
+
                 var existingToken = await _refreshTokenRepository.GetByTokenAsync(refreshToken);
                 if (existingToken == null || existingToken.ExpiresAt < DateTime.UtcNow)
                 {
@@ -111,15 +117,21 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Refresh token không hợp lệ hoặc đã hết hạn.";
                     return response;
                 }
-                
+
+                // Detect RefreshToken reuse attack
                 if (existingToken.IsRevoked)
                 {
+                    _logger.LogWarning("SECURITY: Refresh token reuse detected for User {UserId}", existingToken.UserId);
+                    
+                    // Thu hồi tất cả tokens của user này
+                    await _refreshTokenRepository.RevokeAllTokensForUserAsync(existingToken.UserId);
+                    
                     response.Success = false;
                     response.StatusCode = 401;
-                    response.Message = "Refresh token đã bị thu hồi.";
+                    response.Message = "Phát hiện token bị sử dụng trái phép. Tất cả phiên đăng nhập đã bị hủy vì lý do bảo mật.";
                     return response;
                 }
-                
+
                 // Giải mã access token  
                 var tokenprincipal = GetPrincipalFromExpiredToken(accessToken);
                 if (tokenprincipal == null)
@@ -129,10 +141,10 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Access token không hợp lệ.";
                     return response;
                 }
-                
-                var userIdClaim = tokenprincipal.FindFirstValue(ClaimTypes.NameIdentifier) ?? 
+
+                var userIdClaim = tokenprincipal.FindFirstValue(ClaimTypes.NameIdentifier) ??
                                  tokenprincipal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-                
+
                 if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
                 {
                     response.Success = false;
@@ -140,7 +152,7 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Không thể lấy thông tin user từ token.";
                     return response;
                 }
-                
+
                 if (userId != existingToken.UserId)
                 {
                     response.Success = false;
@@ -148,7 +160,7 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Refresh token không thuộc về user này.";
                     return response;
                 }
-                
+
                 // Lấy thông tin user 
                 var userinfor = await _userRepository.GetByIdAsync(userId);
                 if (userinfor == null)
@@ -158,25 +170,25 @@ namespace LearningEnglish.Application.Service
                     response.Message = "User không tồn tại.";
                     return response;
                 }
-                
+
                 // Vô hiệu hóa refresh token cũ
                 existingToken.IsRevoked = true;
                 await _refreshTokenRepository.UpdateAsync(existingToken);
-                
+
                 // Tạo tokens mới
                 var newRT = GenerateRefreshToken(userinfor);
                 var newAT = GenerateAccessToken(userinfor);
-                
+
                 // Thêm refresh token mới
                 await _refreshTokenRepository.AddAsync(newRT);
-                
+
                 response.Data = new RefreshTokenResponseDto
                 {
                     AccessToken = newAT.Item1,
                     RefreshToken = newRT.Token,
                     ExpiresAt = newAT.Item2
                 };
-                
+
                 response.Success = true;
                 response.StatusCode = 200;
                 response.Message = "Refresh token created successfully.";

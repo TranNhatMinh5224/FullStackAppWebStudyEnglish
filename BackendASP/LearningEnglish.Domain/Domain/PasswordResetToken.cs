@@ -8,7 +8,11 @@ public class PasswordResetToken
     public DateTime ExpiresAt { get; set; }
     public bool IsUsed { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
+    // Anti-spam fields
+    public int AttemptsCount { get; set; } = 0;  // Số lần nhập sai OTP
+    public DateTime? BlockedUntil { get; set; }   // Thời điểm hết block (null = không bị block)
+
     // Navigation Properties
     public User? User { get; set; }
 }

@@ -24,8 +24,8 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<PasswordResetToken?> GetActiveTokenByUserIdAsync(int userId)
         {
             return await _context.PasswordResetTokens
-                .Where(prt => prt.UserId == userId && 
-                             prt.ExpiresAt > DateTime.UtcNow && 
+                .Where(prt => prt.UserId == userId &&
+                             prt.ExpiresAt > DateTime.UtcNow &&
                              !prt.IsUsed)
                 .OrderByDescending(prt => prt.CreatedAt)
                 .FirstOrDefaultAsync();
@@ -34,10 +34,18 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<List<PasswordResetToken>> GetActiveTokensByUserIdAsync(int userId)
         {
             return await _context.PasswordResetTokens
-                .Where(prt => prt.UserId == userId && 
-                             prt.ExpiresAt > DateTime.UtcNow && 
+                .Where(prt => prt.UserId == userId &&
+                             prt.ExpiresAt > DateTime.UtcNow &&
                              !prt.IsUsed)
                 .ToListAsync();
+        }
+
+        public async Task<int> CountRecentTokensByUserIdAsync(int userId, int minutes)
+        {
+            var cutoffTime = DateTime.UtcNow.AddMinutes(-minutes);
+            return await _context.PasswordResetTokens
+                .CountAsync(prt => prt.UserId == userId &&
+                                   prt.CreatedAt >= cutoffTime);
         }
 
         public async Task AddAsync(PasswordResetToken passwordResetToken)
@@ -49,6 +57,12 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task UpdateAsync(PasswordResetToken passwordResetToken)
         {
             _context.PasswordResetTokens.Update(passwordResetToken);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(PasswordResetToken passwordResetToken)
+        {
+            _context.PasswordResetTokens.Remove(passwordResetToken);
             await _context.SaveChangesAsync();
         }
 

@@ -1,6 +1,6 @@
 namespace LearningEnglish.Domain.Entities
 {
-    
+
     public class Notification
     {
         public int Id { get; set; }

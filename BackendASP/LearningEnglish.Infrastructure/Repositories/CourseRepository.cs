@@ -1,3 +1,4 @@
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Interface;
@@ -82,9 +83,25 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        // Lấy tất cả khóa học với phân trang
+        public async Task<PagedResult<Course>> GetAllCoursesPagedAsync(PageRequest request)
+        {
+            var query = _context.Courses
+                .Include(c => c.Teacher)
+                .OrderBy(c => c.Title)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                query = query.Where(c =>
+                    c.Title.Contains(request.SearchTerm) ||
+                    (c.ClassCode != null && c.ClassCode.Contains(request.SearchTerm)));
+            }
+
+            return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
+        }
 
         // Lấy khóa học hệ thống (User trang chủ)
-
         public async Task<IEnumerable<Course>> GetAllCourseSystem()
         {
             return await _context.Courses
@@ -103,6 +120,26 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .Include(c => c.Lessons)
                 .Include(c => c.UserCourses)
                 .ToListAsync();
+        }
+
+        // Lấy khóa học của giáo viên với phân trang
+        public async Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, PageRequest request)
+        {
+            var query = _context.Courses
+                .Where(c => c.TeacherId == teacherId && c.Type == CourseType.Teacher)
+                .Include(c => c.Teacher)
+                .OrderBy(c => c.Title)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                var term = request.SearchTerm.ToLower();
+                query = query.Where(c =>
+                    c.Title.ToLower().Contains(term) ||
+                    (c.ClassCode != null && c.ClassCode.ToLower().Contains(term)));
+            }
+
+            return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
         }
 
 
@@ -282,12 +319,21 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
         // tìm kiem khoa học theo classcode 
-        public async Task<IEnumerable<Course>> SearchCourses(string keyword)
+        public async Task<IEnumerable<Course>> SearchCoursesByClassCode(string keyword)
         {
             return await _context.Courses
                 .Where(c => c.ClassCode == keyword)
                 .ToListAsync();
 
+        }
+        public async Task<IEnumerable<Course>> SearchCourses(string keyword)
+        {
+            return await _context.Courses
+                .Where(c => EF.Functions.ILike(c.Title, $"%{keyword}%") ||
+                            EF.Functions.ILike(c.DescriptionMarkdown, $"%{keyword}%"))
+                .OrderBy(c => c.Title)
+                .Take(10)
+                .ToListAsync();
         }
 
     }

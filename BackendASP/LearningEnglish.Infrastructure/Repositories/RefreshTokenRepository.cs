@@ -64,5 +64,33 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context.RefreshTokens.RemoveRange(expiredTokens);
             await _context.SaveChangesAsync();
         }
+
+        // Thu hồi tất cả tokens của user (security)
+        public async Task RevokeAllTokensForUserAsync(int userId)
+        {
+            var userTokens = await _context.RefreshTokens
+                .Where(rt => rt.UserId == userId)
+                .ToListAsync();
+
+            foreach (var token in userTokens)
+            {
+                token.IsRevoked = true;
+            }
+
+            _context.RefreshTokens.UpdateRange(userTokens);
+            await _context.SaveChangesAsync();
+        }
+
+        // Thu hồi token cụ thể (logout)
+        public async Task RevokeTokenAsync(string token)
+        {
+            var refreshToken = await GetByTokenAsync(token);
+            if (refreshToken != null)
+            {
+                refreshToken.IsRevoked = true;
+                _context.RefreshTokens.Update(refreshToken);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

@@ -10,7 +10,7 @@ public class TeacherPackage
     public PackageLevel Level { get; set; }
     public decimal Price { get; set; }
 
- 
+
     public int DurationMonths { get; set; } = 12;
 
     // Limits

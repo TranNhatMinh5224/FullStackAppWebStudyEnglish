@@ -127,7 +127,7 @@ namespace LearningEnglish.Application.Service
                 response.StatusCode = 201; // Created
                 response.Message = "Tạo module thành công";
 
-                _logger.LogInformation("Module {ModuleId} được tạo thành công bởi user {UserId}", 
+                _logger.LogInformation("Module {ModuleId} được tạo thành công bởi user {UserId}",
                     createdModule.ModuleId, createdByUserId);
 
                 return response;
@@ -169,7 +169,7 @@ namespace LearningEnglish.Application.Service
                 response.Data = moduleDto;
                 response.Message = "Cập nhật module thành công";
 
-                _logger.LogInformation("Module {ModuleId} được cập nhật thành công bởi user {UserId}", 
+                _logger.LogInformation("Module {ModuleId} được cập nhật thành công bởi user {UserId}",
                     moduleId, updatedByUserId);
 
                 return response;
@@ -207,7 +207,7 @@ namespace LearningEnglish.Application.Service
 
                 if (result)
                 {
-                    _logger.LogInformation("Module {ModuleId} được xóa thành công bởi user {UserId}", 
+                    _logger.LogInformation("Module {ModuleId} được xóa thành công bởi user {UserId}",
                         moduleId, deletedByUserId);
                 }
 
@@ -352,7 +352,7 @@ namespace LearningEnglish.Application.Service
                 foreach (var module in modules)
                 {
                     var dto = _mapper.Map<ModuleWithProgressDto>(module);
-                    
+
                     // Lấy thông tin tiến độ học tập từ bảng ModuleCompletion
                     var completion = module.ModuleCompletions?.FirstOrDefault(mc => mc.UserId == userId);
                     if (completion != null)
@@ -406,7 +406,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var dto = _mapper.Map<ModuleWithProgressDto>(module);
-                
+
                 // Lấy thông tin tiến độ học tập cá nhân của user
                 var completion = module.ModuleCompletions?.FirstOrDefault(mc => mc.UserId == userId);
                 if (completion != null)

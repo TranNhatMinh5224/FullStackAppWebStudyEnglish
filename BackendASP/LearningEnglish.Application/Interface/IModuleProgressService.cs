@@ -11,12 +11,12 @@ public interface IModuleProgressService
     /// - Tự động cập nhật CourseProgress
     /// </summary>
     Task CompleteModuleAsync(int userId, int moduleId);
-    
+
     /// <summary>
     /// Đánh dấu module bắt đầu (gọi khi user vào module lần đầu)
     /// </summary>
     Task StartModuleAsync(int userId, int moduleId);
-    
+
     /// <summary>
     /// Cập nhật tiến độ video trong lesson
     /// </summary>

@@ -25,7 +25,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 return BadRequest(ModelState);
 
             var result = await _quizSectionService.CreateQuizSectionAsync(createDto);
-            return result.Success 
+            return result.Success
                 ? CreatedAtAction(nameof(GetQuizSectionById), new { id = result.Data?.QuizSectionId }, result)
                 : StatusCode(result.StatusCode, result);
         }

@@ -21,7 +21,7 @@ namespace LearningEnglish.Application.Service
         private readonly IQuestionRepository _questionRepository;
         private readonly IModuleProgressService _moduleProgressService;
         private readonly IStreakService _streakService;
-        
+
         // MinIO bucket constant
         private const string QuestionBucket = "questions";
 
@@ -143,7 +143,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 //  Tính AttemptNumber cho lần làm bài mới
-                int newAttemptNumber = quizAttempts.Any()
+                int newAttemptNumber = quizAttempts.Count != 0
                     ? quizAttempts.Max(a => a.AttemptNumber) + 1
                     : 1;
 
@@ -186,7 +186,7 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        private List<AttemptQuizSectionDto> ShuffleQuizForAttempt(Quiz quiz, int attemptId)
+        private static List<AttemptQuizSectionDto> ShuffleQuizForAttempt(Quiz quiz, int attemptId)
         {
             // Sao chép structure (questions trong groups giữ nguyên)
             var sections = quiz.QuizSections.Select(s => new AttemptQuizSectionDto
@@ -197,18 +197,18 @@ namespace LearningEnglish.Application.Service
                 {
                     GroupId = g.QuizGroupId,
                     Name = g.Name,
-                    ImgUrl = !string.IsNullOrWhiteSpace(g.ImgKey) 
-                        ? BuildPublicUrl.BuildURL("quizgroups", g.ImgKey) 
+                    ImgUrl = !string.IsNullOrWhiteSpace(g.ImgKey)
+                        ? BuildPublicUrl.BuildURL("quizgroups", g.ImgKey)
                         : null,
-                    VideoUrl = !string.IsNullOrWhiteSpace(g.VideoKey) 
-                        ? BuildPublicUrl.BuildURL("quizgroups", g.VideoKey) 
+                    VideoUrl = !string.IsNullOrWhiteSpace(g.VideoKey)
+                        ? BuildPublicUrl.BuildURL("quizgroups", g.VideoKey)
                         : null,
                     Questions = g.Questions.Select(q => new QuestionDto  // Giữ nguyên thứ tự
                     {
                         QuestionId = q.QuestionId,
                         QuestionText = q.StemText,
-                        MediaUrl = !string.IsNullOrWhiteSpace(q.MediaKey) 
-                            ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaKey) 
+                        MediaUrl = !string.IsNullOrWhiteSpace(q.MediaKey)
+                            ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaKey)
                             : null,
                         Type = q.Type,
                         Points = q.Points,
@@ -218,8 +218,8 @@ namespace LearningEnglish.Application.Service
                         {
                             OptionId = o.AnswerOptionId,
                             OptionText = o.Text ?? string.Empty,
-                            MediaUrl = !string.IsNullOrWhiteSpace(o.MediaKey) 
-                                ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaKey) 
+                            MediaUrl = !string.IsNullOrWhiteSpace(o.MediaKey)
+                                ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaKey)
                                 : null
                         }).ToList()
                     }).ToList()
@@ -228,8 +228,8 @@ namespace LearningEnglish.Application.Service
                 {
                     QuestionId = q.QuestionId,
                     QuestionText = q.StemText,
-                    MediaUrl = !string.IsNullOrWhiteSpace(q.MediaKey) 
-                        ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaKey) 
+                    MediaUrl = !string.IsNullOrWhiteSpace(q.MediaKey)
+                        ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaKey)
                         : null,
                     Type = q.Type,
                     Points = q.Points,
@@ -239,8 +239,8 @@ namespace LearningEnglish.Application.Service
                     {
                         OptionId = o.AnswerOptionId,
                         OptionText = o.Text ?? string.Empty,
-                        MediaUrl = !string.IsNullOrWhiteSpace(o.MediaKey) 
-                            ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaKey) 
+                        MediaUrl = !string.IsNullOrWhiteSpace(o.MediaKey)
+                            ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaKey)
                             : null
                     }).ToList()
                 }).ToList() ?? new List<QuestionDto>()
@@ -570,10 +570,10 @@ namespace LearningEnglish.Application.Service
                     {
                         foreach (var question in group.Questions)
                         {
-                            if (currentAnswers.ContainsKey(question.QuestionId))
+                            if (currentAnswers.TryGetValue(question.QuestionId, out object? value))
                             {
                                 question.IsAnswered = true;
-                                question.UserAnswer = currentAnswers[question.QuestionId];
+                                question.UserAnswer = value;
 
                                 // Normalize answer theo QuestionType để đảm bảo format đúng cho frontend
                                 question.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
@@ -590,10 +590,10 @@ namespace LearningEnglish.Application.Service
                     // Standalone questions
                     foreach (var question in section.Questions)
                     {
-                        if (currentAnswers.ContainsKey(question.QuestionId))
+                        if (currentAnswers.TryGetValue(question.QuestionId, out object? value))
                         {
                             question.IsAnswered = true;
-                            question.UserAnswer = currentAnswers[question.QuestionId];
+                            question.UserAnswer = value;
 
                             // Normalize answer theo QuestionType để đảm bảo format đúng cho frontend
                             question.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
@@ -657,7 +657,7 @@ namespace LearningEnglish.Application.Service
             return correctAnswers;
         }
 
-        private CorrectAnswerDto CreateCorrectAnswerDto(Question question)
+        private static CorrectAnswerDto CreateCorrectAnswerDto(Question question)
         {
             var correctOptions = new List<string>();
 

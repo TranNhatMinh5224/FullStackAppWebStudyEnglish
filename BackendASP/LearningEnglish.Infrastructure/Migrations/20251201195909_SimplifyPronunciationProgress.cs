@@ -91,6 +91,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                 value: "$2a$11$Z3lRLWi0T0iTZUo6.BKAYuxkevfzydYgXnxIFZAPQUvjsHRxFOLCm");
         }
 
+        private static readonly string[] columns = new[] { "UserId", "ModuleId" };
+
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
@@ -262,7 +264,7 @@ namespace LearningEnglish.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_ModulePronunciationSummaries_UserId_ModuleId",
                 table: "ModulePronunciationSummaries",
-                columns: new[] { "UserId", "ModuleId" },
+                columns: columns,
                 unique: true);
 
             migrationBuilder.AddForeignKey(

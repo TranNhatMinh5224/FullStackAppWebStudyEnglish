@@ -6,30 +6,30 @@ namespace LearningEnglish.Application.DTOs
         public int UserId { get; set; }
         public int? FlashCardId { get; set; }
         public int? AssessmentId { get; set; }
-        
+
         public string ReferenceText { get; set; } = string.Empty;
         public string AudioUrl { get; set; } = string.Empty;
         public string? AudioType { get; set; }
         public long? AudioSize { get; set; }
         public float? DurationInSeconds { get; set; }
-        
+
         // Scores from Azure
         public double AccuracyScore { get; set; }
         public double FluencyScore { get; set; }
         public double CompletenessScore { get; set; }
         public double PronunciationScore { get; set; }
-        
+
         public string? RecognizedText { get; set; }
         public string? Feedback { get; set; }
         public string Status { get; set; } = string.Empty;
-        
+
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        
+
         // Navigation info
         public string? UserName { get; set; }
         public string? FlashCardWord { get; set; }
-        
+
         // 🆕 Word-level detailed feedback
         public List<WordPronunciationDetail> Words { get; set; } = new();
         public List<string> ProblemPhonemes { get; set; } = new();
@@ -41,34 +41,34 @@ namespace LearningEnglish.Application.DTOs
     {
         // FlashCard ID is REQUIRED - referenceText will be fetched from FlashCard.Word
         public int FlashCardId { get; set; }
-        
-        
+
+
         public string AudioTempKey { get; set; } = string.Empty;
-        
+
         // Optional fields
         public string? AudioType { get; set; }
         public long? AudioSize { get; set; }
         public float? DurationInSeconds { get; set; }
     }
-    
+
     // DTO for Azure Speech assessment result
     public class AzureSpeechAssessmentResult
     {
         public bool Success { get; set; }
         public string? ErrorMessage { get; set; }
-        
+
         public double AccuracyScore { get; set; }
         public double FluencyScore { get; set; }
         public double CompletenessScore { get; set; }
         public double PronunciationScore { get; set; }
-        
+
         public string? RecognizedText { get; set; }
         public string? DetailedResultJson { get; set; }
         public string? RawResponse { get; set; }
-        
+
         // 🆕 Word-level details
         public List<WordPronunciationDetail> Words { get; set; } = new();
-        
+
         // 🆕 Phoneme analysis
         public List<string> ProblemPhonemes { get; set; } = new();
         public List<string> StrongPhonemes { get; set; } = new();

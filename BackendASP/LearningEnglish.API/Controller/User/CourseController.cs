@@ -41,8 +41,8 @@ namespace LearningEnglish.API.Controller.User
 
             var result = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, userId);
 
-            return result.Success 
-                ? Ok(result) 
+            return result.Success
+                ? Ok(result)
                 : StatusCode(result.StatusCode, result);
         }
 
@@ -56,8 +56,8 @@ namespace LearningEnglish.API.Controller.User
 
             var result = await _userEnrollmentService.UnenrollFromCourseAsync(courseId, userId);
 
-            return result.Success 
-                ? Ok(result) 
+            return result.Success
+                ? Ok(result)
                 : StatusCode(result.StatusCode, result);
         }
 
@@ -71,8 +71,8 @@ namespace LearningEnglish.API.Controller.User
 
             var result = await _enrollmentQueryService.GetMyEnrolledCoursesAsync(userId);
 
-            return result.Success 
-                ? Ok(result) 
+            return result.Success
+                ? Ok(result)
                 : StatusCode(result.StatusCode, result);
         }
 
@@ -89,9 +89,11 @@ namespace LearningEnglish.API.Controller.User
 
             var result = await _userEnrollmentService.EnrollInCourseByClassCodeAsync(joinDto.ClassCode, userId);
 
-            return result.Success 
-                ? Ok(result) 
+            return result.Success
+                ? Ok(result)
                 : StatusCode(result.StatusCode, result);
         }
+
+
     }
 }

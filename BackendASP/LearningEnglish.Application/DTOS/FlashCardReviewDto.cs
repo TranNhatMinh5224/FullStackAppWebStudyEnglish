@@ -4,7 +4,7 @@ namespace LearningEnglish.Application.DTOs
     public class ReviewFlashCardDto
     {
         public int FlashCardId { get; set; }
-        
+
         /// <summary>
         /// Quality rating (0-5):
         /// 0 = Quên hoàn toàn (Complete blackout)
@@ -24,13 +24,13 @@ namespace LearningEnglish.Application.DTOs
         public int FlashCardId { get; set; }
         public string Word { get; set; } = string.Empty;
         public int Quality { get; set; }
-        
+
         // Spaced Repetition metrics
         public float EasinessFactor { get; set; }
         public int IntervalDays { get; set; }
         public int RepetitionCount { get; set; }
         public DateTime NextReviewDate { get; set; }
-        
+
         public string Message { get; set; } = string.Empty; // User-friendly message
     }
 
@@ -47,7 +47,7 @@ namespace LearningEnglish.Application.DTOs
         public string? PartOfSpeech { get; set; }
         public string? Example { get; set; }
         public string? ExampleTranslation { get; set; }
-        
+
         // Review info
         public DateTime NextReviewDate { get; set; }
         public int IntervalDays { get; set; }
@@ -74,18 +74,18 @@ namespace LearningEnglish.Application.DTOs
         public int NewToday { get; set; }
         public int ReviewedToday { get; set; }
         public int MasteredCards { get; set; } // IntervalDays >= 21 (3 weeks)
-        
+
         // Weekly stats
         public int ReviewedThisWeek { get; set; }
         public int NewThisWeek { get; set; }
-        
+
         // Performance
         public decimal AverageQuality { get; set; } // Average quality score (0-5)
         public decimal SuccessRate { get; set; } // % of reviews with quality >= 3
-        
+
         // Upcoming reviews
         public Dictionary<string, int> UpcomingReviews { get; set; } = new(); // Date -> Count
-        
+
         // Streak
         public int CurrentStreak { get; set; } // Days in a row with reviews
         public int LongestStreak { get; set; }

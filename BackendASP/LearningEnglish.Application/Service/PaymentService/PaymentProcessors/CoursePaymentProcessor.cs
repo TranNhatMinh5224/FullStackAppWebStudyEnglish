@@ -79,7 +79,7 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
             {
                 _logger.LogInformation("Thanh toán hoàn tất cho khóa học {CourseId}. Tự động đăng ký User {UserId}", productId, userId);
 
-                // Auto-enroll user into course using post-payment method (skip payment check)
+
                 var enrollDto = new EnrollCourseDto { CourseId = productId };
                 var enrollResult = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, userId);
 
@@ -88,7 +88,7 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                     _logger.LogWarning("Tự động đăng ký thất bại cho thanh toán {PaymentId}: {Message}", paymentId, enrollResult.Message);
                     _logger.LogError("Thanh toán {PaymentId} hoàn tất nhưng tự động đăng ký thất bại. User {UserId} có thể đăng ký thủ công vào khóa học {CourseId}",
                         paymentId, userId, productId);
-                    
+
                     response.Success = false;
                     response.Message = "Thanh toán thành công nhưng đăng ký khóa học thất bại: " + enrollResult.Message;
                     return response;

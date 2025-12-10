@@ -55,7 +55,7 @@ namespace LearningEnglish.API.Controller.Admin
                 return BadRequest(ModelState);
 
             var result = await _teacherPackageService.UpdateTeacherPackageAsync(id, teacherPackageDto);
-            return result.Success 
+            return result.Success
                 ? Ok(new { Message = "Teacher package updated successfully.", Data = result.Data })
                 : StatusCode(result.StatusCode, new { Message = result.Message });
         }

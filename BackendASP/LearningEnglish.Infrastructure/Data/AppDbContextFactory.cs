@@ -21,7 +21,7 @@ namespace LearningEnglish.Infrastructure.Data
 
             // Read connection string from appsettings.json
             var connectionString = configuration.GetConnectionString("DefaultConnection");
-            
+
             if (string.IsNullOrEmpty(connectionString))
             {
                 // Fallback: build from individual settings

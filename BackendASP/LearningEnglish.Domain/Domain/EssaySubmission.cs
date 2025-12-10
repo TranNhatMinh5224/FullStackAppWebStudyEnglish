@@ -11,11 +11,11 @@ public class EssaySubmission
 
     // Nội dung bài làm
     public string? TextContent { get; set; }
-    
+
     // File đính kèm (PDF, DOCX, etc.)
     public string? AttachmentKey { get; set; }
     public string? AttachmentType { get; set; }
-    
+
     public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
     public SubmissionStatus Status { get; set; } = SubmissionStatus.Submitted;
 

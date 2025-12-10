@@ -60,7 +60,7 @@ namespace LearningEnglish.API.Controller.User
         {
             var userId = GetCurrentUserId();
             _logger.LogInformation("User {UserId} đang lấy danh sách từ cần ôn tập", userId);
-            
+
             var result = await _reviewService.GetDueFlashCardsAsync(userId);
             return Ok(result);
         }
@@ -78,7 +78,7 @@ namespace LearningEnglish.API.Controller.User
         public async Task<ActionResult<ServiceResponse<ReviewFlashCardResponseDto>>> ReviewFlashCard([FromBody] ReviewFlashCardDto reviewDto)
         {
             var userId = GetCurrentUserId();
-            _logger.LogInformation("User {UserId} đang review flashcard {FlashCardId} với quality {Quality}", 
+            _logger.LogInformation("User {UserId} đang review flashcard {FlashCardId} với quality {Quality}",
                 userId, reviewDto.FlashCardId, reviewDto.Quality);
 
             var result = await _reviewService.ReviewFlashCardAsync(userId, reviewDto);

@@ -11,6 +11,8 @@ namespace LearningEnglish.Infrastructure.Migrations
     /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
+        private static readonly string[] columns = new[] { "RoleId", "Name" };
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -800,7 +802,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             migrationBuilder.InsertData(
                 table: "Roles",
-                columns: new[] { "RoleId", "Name" },
+                columns: columns,
                 values: new object[,]
                 {
                     { 1, "Admin" },

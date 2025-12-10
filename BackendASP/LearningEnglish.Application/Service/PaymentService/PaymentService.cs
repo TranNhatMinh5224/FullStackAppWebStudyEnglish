@@ -6,6 +6,7 @@ using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Pagination;
 
 namespace LearningEnglish.Application.Service
 {
@@ -34,6 +35,8 @@ namespace LearningEnglish.Application.Service
             _logger = logger;
             _unitOfWork = unitOfWork;
         }
+        // POST /api/payments - Create Payment
+        // service tao process payment
 
         public async Task<ServiceResponse<CreateInforPayment>> ProcessPaymentAsync(int userId, requestPayment request)
         {
@@ -167,7 +170,7 @@ namespace LearningEnglish.Application.Service
 
                 _logger.LogInformation("Xác nhận thanh toán {PaymentId} cho User {UserId}", paymentDto.PaymentId, userId);
 
-                // CẬP NHẬT PAYMENT STATUS TRƯỚC để UserEnrollmentService có thể kiểm tra
+
                 _logger.LogInformation("Cập nhật payment status thành Completed cho Payment {PaymentId}", paymentDto.PaymentId);
                 existingPayment.PaymentMethod = paymentDto.PaymentMethod;
                 existingPayment.Status = PaymentStatus.Completed;
@@ -176,7 +179,7 @@ namespace LearningEnglish.Application.Service
                 await _paymentRepository.UpdatePaymentStatusAsync(existingPayment);
                 await _paymentRepository.SaveChangesAsync();
 
-                // SAU KHI update payment status, mới xử lý post-payment actions
+
                 try
                 {
                     var processor = _paymentStrategies.FirstOrDefault(s => s.ProductType == existingPayment.ProductType);
@@ -232,10 +235,11 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Service laays ra thong tin lich su giao dich
 
-        public async Task<ServiceResponse<paginationResponseDto<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
+        public async Task<ServiceResponse<PagedResult<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
         {
-            var response = new ServiceResponse<paginationResponseDto<TransactionHistoryDto>>();
+            var response = new ServiceResponse<PagedResult<TransactionHistoryDto>>();
             try
             {
                 _logger.LogInformation("Getting transaction history for User {UserId}, Page {PageNumber}, Size {PageSize}",
@@ -248,7 +252,7 @@ namespace LearningEnglish.Application.Service
                 foreach (var payment in payments)
                 {
                     var productName = await GetProductNameAsync(payment.ProductId, payment.ProductType);
-                    
+
                     transactionDtos.Add(new TransactionHistoryDto
                     {
                         PaymentId = payment.PaymentId,
@@ -264,13 +268,12 @@ namespace LearningEnglish.Application.Service
                     });
                 }
 
-                response.Data = new paginationResponseDto<TransactionHistoryDto>
+                response.Data = new PagedResult<TransactionHistoryDto>
                 {
                     Items = transactionDtos,
-                    TotalItems = totalCount,
+                    TotalCount = totalCount,
                     PageNumber = pageNumber,
-                    PageSize = pageSize,
-                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                    PageSize = pageSize
                 };
 
                 _logger.LogInformation("Retrieved {Count} transactions for User {UserId}", transactionDtos.Count, userId);
@@ -283,6 +286,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // service lay chi tiet giao dich
 
         public async Task<ServiceResponse<TransactionDetailDto>> GetTransactionDetailAsync(int paymentId, int userId)
         {
@@ -328,8 +332,9 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Lấy tên sản phẩm dựa trên loại và ID sản phẩm
 
-        private Task<string> GetProductNameAsync(int productId, ProductType productType)
+        private static Task<string> GetProductNameAsync(int productId, ProductType productType)
         {
             // Return generic product name based on type
             // For full product details, query Course/TeacherPackage repositories separately

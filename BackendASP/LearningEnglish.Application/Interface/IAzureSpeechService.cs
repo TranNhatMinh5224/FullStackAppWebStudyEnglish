@@ -15,16 +15,16 @@ namespace LearningEnglish.Application.Interface
         /// <param name="locale">Language locale (default: en-US)</param>
         /// <returns>Assessment result with scores</returns>
         Task<AzureSpeechAssessmentResult> AssessPronunciationAsync(
-            string audioUrl, 
-            string referenceText, 
+            string audioUrl,
+            string referenceText,
             string locale = "en-US");
 
         /// <summary>
         /// Assess pronunciation from audio stream
         /// </summary>
         Task<AzureSpeechAssessmentResult> AssessPronunciationFromStreamAsync(
-            Stream audioStream, 
-            string referenceText, 
+            Stream audioStream,
+            string referenceText,
             string locale = "en-US");
 
         /// <summary>
@@ -35,8 +35,8 @@ namespace LearningEnglish.Application.Interface
         /// <param name="voiceName">Azure voice name (default: en-US-JennyNeural)</param>
         /// <returns>Audio stream in MP3 format</returns>
         Task<Stream?> GenerateSpeechAsync(
-            string text, 
-            string locale = "en-US", 
+            string text,
+            string locale = "en-US",
             string voiceName = "en-US-JennyNeural");
     }
 }

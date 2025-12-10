@@ -14,10 +14,10 @@ namespace LearningEnglish.Application.DTOs
         public string ContentTypeName => ContentType.ToString();
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        
+
         // Navigation info
         public string? LessonTitle { get; set; }
-        
+
         // Content counts
         public int LectureCount { get; set; }
         public int FlashCardCount { get; set; }

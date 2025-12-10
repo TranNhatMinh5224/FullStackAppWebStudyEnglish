@@ -85,37 +85,25 @@ const LoginScreen = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent any event bubbling
+    e.stopPropagation();
     setLocalError("");
-    
-    console.log('[DEBUG] Login submit started');
     
     // Validate form before submission
     if (!validateForm()) {
-      console.log('[DEBUG] Form validation failed');
       return;
     }
     
     setIsLoading(true);
-    console.log('[DEBUG] Calling login API with:', { email: formData.email, password: '***' });
     
     try {
       // Login with API
       const loginResult = await login(formData);
       
-      console.log('[DEBUG] Login result:', loginResult);
-      
       if (loginResult && loginResult.success) {
-        console.log('[DEBUG] Login successful');
-        console.log('[DEBUG] User role:', loginResult.role);
-        
         // Redirect based on user role
         const dashboardRoute = getDashboardRoute(loginResult.role);
-        console.log('[DEBUG] Redirecting to:', dashboardRoute);
-        
         navigate(dashboardRoute);
       } else {
-        console.log('[DEBUG] Login failed, showing error. Result:', loginResult);
         // Handle specific login errors
         const errorMsg = loginResult?.error || 'Unknown error';
         if (errorMsg.includes('Invalid email or password')) {
@@ -123,13 +111,11 @@ const LoginScreen = () => {
         } else {
           setLocalError(errorMsg || "Đăng nhập thất bại. Vui lòng thử lại!");
         }
-        console.log('[DEBUG] Error message set:', localError);
       }
     } catch (err) {
-      console.error('[DEBUG] Login exception:', err);
+      console.error('Login exception:', err);
       setLocalError("Có lỗi xảy ra. Vui lòng thử lại!");
     } finally {
-      console.log('[DEBUG] Setting loading to false');
       setIsLoading(false);
     }
   };

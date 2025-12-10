@@ -62,10 +62,10 @@ namespace LearningEnglish.Application.Service
                 if (user != null && teacherPackage != null)
                 {
                     await _emailService.SendNotifyPurchaseTeacherPackageAsync(
-                        user.Email, 
-                        teacherPackage.PackageName, 
-                        user.FirstName, 
-                        teacherPackage.Price, 
+                        user.Email,
+                        teacherPackage.PackageName,
+                        user.FirstName,
+                        teacherPackage.Price,
                         validUntil);
 
                     _logger.LogInformation("Teacher package payment notification sent to {Email} for Package {PackageId}",

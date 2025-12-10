@@ -18,7 +18,7 @@ namespace LearningEnglish.Domain.Entities
         public string? ImageType { get; set; }
 
         public AssessmentType Type { get; set; } = AssessmentType.Essay;
-        
+
         // Navigation Properties
         public Assessment? Assessment { get; set; }
         public List<EssaySubmission> EssaySubmissions { get; set; } = new();

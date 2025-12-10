@@ -12,13 +12,13 @@ namespace LearningEnglish.Application.Service
         private readonly IQuizGroupRepository _quizGroupRepository;
         private readonly IMapper _mapper;
         private readonly IMinioFileStorage _minioFileStorage;
-        
+
         // MinIO bucket constants
         private const string QuizGroupBucket = "quizgroups";
         private const string QuizGroupFolder = "real";
 
         public QuizGroupService(
-            IQuizGroupRepository quizGroupRepository, 
+            IQuizGroupRepository quizGroupRepository,
             IMapper mapper,
             IMinioFileStorage minioFileStorage)
         {
@@ -45,7 +45,7 @@ namespace LearningEnglish.Application.Service
                 var quizGroup = _mapper.Map<QuizGroup>(createDto);
                 string? committedImgKey = null;
                 string? committedVideoKey = null;
-                
+
                 // Commit ImgTempKey nếu có
                 if (!string.IsNullOrWhiteSpace(createDto.ImgTempKey))
                 {
@@ -54,18 +54,18 @@ namespace LearningEnglish.Application.Service
                         QuizGroupBucket,
                         QuizGroupFolder
                     );
-                    
+
                     if (!imgResult.Success || string.IsNullOrWhiteSpace(imgResult.Data))
                     {
                         response.Success = false;
                         response.Message = $"Không thể lưu ảnh: {imgResult.Message}";
                         return response;
                     }
-                    
+
                     committedImgKey = imgResult.Data;
                     quizGroup.ImgKey = committedImgKey;
                 }
-                
+
                 // Commit VideoTempKey nếu có
                 if (!string.IsNullOrWhiteSpace(createDto.VideoTempKey))
                 {
@@ -74,7 +74,7 @@ namespace LearningEnglish.Application.Service
                         QuizGroupBucket,
                         QuizGroupFolder
                     );
-                    
+
                     if (!videoResult.Success || string.IsNullOrWhiteSpace(videoResult.Data))
                     {
                         // Rollback img nếu đã commit
@@ -82,16 +82,16 @@ namespace LearningEnglish.Application.Service
                         {
                             await _minioFileStorage.DeleteFileAsync(committedImgKey, QuizGroupBucket);
                         }
-                        
+
                         response.Success = false;
                         response.Message = $"Không thể lưu video: {videoResult.Message}";
                         return response;
                     }
-                    
+
                     committedVideoKey = videoResult.Data;
                     quizGroup.VideoKey = committedVideoKey;
                 }
-                
+
                 // Save to database with rollback
                 QuizGroup createdQuizGroup;
                 try
@@ -109,14 +109,14 @@ namespace LearningEnglish.Application.Service
                     {
                         await _minioFileStorage.DeleteFileAsync(committedVideoKey, QuizGroupBucket);
                     }
-                    
+
                     response.Success = false;
                     response.Message = $"Lỗi database: {dbEx.Message}";
                     return response;
                 }
 
                 var quizGroupDto = _mapper.Map<QuizGroupDto>(createdQuizGroup);
-                
+
                 // Generate URLs cho response
                 if (!string.IsNullOrWhiteSpace(quizGroupDto.ImgUrl))
                 {
@@ -126,7 +126,7 @@ namespace LearningEnglish.Application.Service
                 {
                     quizGroupDto.VideoUrl = BuildPublicUrl.BuildURL(QuizGroupBucket, quizGroupDto.VideoUrl);
                 }
-                
+
                 response.Data = quizGroupDto;
                 response.Success = true;
                 response.Message = "Tạo nhóm câu hỏi thành công.";
@@ -155,7 +155,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var quizGroupDto = _mapper.Map<QuizGroupDto>(quizGroup);
-                
+
                 // Generate URLs từ keys
                 if (!string.IsNullOrWhiteSpace(quizGroupDto.ImgUrl))
                 {
@@ -165,7 +165,7 @@ namespace LearningEnglish.Application.Service
                 {
                     quizGroupDto.VideoUrl = BuildPublicUrl.BuildURL(QuizGroupBucket, quizGroupDto.VideoUrl);
                 }
-                
+
                 response.Data = quizGroupDto;
                 response.Success = true;
                 response.Message = "Lấy thông tin nhóm câu hỏi thành công.";
@@ -187,7 +187,7 @@ namespace LearningEnglish.Application.Service
             {
                 var quizGroups = await _quizGroupRepository.GetQuizGroupsByQuizSectionIdAsync(quizSectionId);
                 var quizGroupDtos = _mapper.Map<List<QuizGroupDto>>(quizGroups);
-                
+
                 // Generate URLs cho tất cả quiz groups
                 foreach (var dto in quizGroupDtos)
                 {
@@ -200,7 +200,7 @@ namespace LearningEnglish.Application.Service
                         dto.VideoUrl = BuildPublicUrl.BuildURL(QuizGroupBucket, dto.VideoUrl);
                     }
                 }
-                
+
                 response.Data = quizGroupDtos;
                 response.Success = true;
                 response.Message = "Lấy danh sách nhóm câu hỏi thành công.";
@@ -236,12 +236,12 @@ namespace LearningEnglish.Application.Service
                 existingQuizGroup.VideoType = updateDto.VideoType;
                 existingQuizGroup.VideoDuration = updateDto.VideoDuration;
                 existingQuizGroup.SumScore = updateDto.SumScore;
-                
+
                 string? newImgKey = null;
                 string? newVideoKey = null;
                 string? oldImgKey = existingQuizGroup.ImgKey;
                 string? oldVideoKey = existingQuizGroup.VideoKey;
-                
+
                 // Xử lý cập nhật ImgUrl
                 if (!string.IsNullOrWhiteSpace(updateDto.ImgTempKey))
                 {
@@ -250,18 +250,18 @@ namespace LearningEnglish.Application.Service
                         QuizGroupBucket,
                         QuizGroupFolder
                     );
-                    
+
                     if (!imgResult.Success || string.IsNullOrWhiteSpace(imgResult.Data))
                     {
                         response.Success = false;
                         response.Message = $"Không thể lưu ảnh mới: {imgResult.Message}";
                         return response;
                     }
-                    
+
                     newImgKey = imgResult.Data;
                     existingQuizGroup.ImgKey = newImgKey;
                 }
-                
+
                 // Xử lý cập nhật VideoUrl
                 if (!string.IsNullOrWhiteSpace(updateDto.VideoTempKey))
                 {
@@ -270,7 +270,7 @@ namespace LearningEnglish.Application.Service
                         QuizGroupBucket,
                         QuizGroupFolder
                     );
-                    
+
                     if (!videoResult.Success || string.IsNullOrWhiteSpace(videoResult.Data))
                     {
                         // Rollback img if committed
@@ -279,12 +279,12 @@ namespace LearningEnglish.Application.Service
                             await _minioFileStorage.DeleteFileAsync(newImgKey, QuizGroupBucket);
                             existingQuizGroup.ImgKey = oldImgKey;
                         }
-                        
+
                         response.Success = false;
                         response.Message = $"Không thể lưu video mới: {videoResult.Message}";
                         return response;
                     }
-                    
+
                     newVideoKey = videoResult.Data;
                     existingQuizGroup.VideoKey = newVideoKey;
                 }
@@ -306,12 +306,12 @@ namespace LearningEnglish.Application.Service
                     {
                         await _minioFileStorage.DeleteFileAsync(newVideoKey, QuizGroupBucket);
                     }
-                    
+
                     response.Success = false;
                     response.Message = $"Lỗi database: {dbEx.Message}";
                     return response;
                 }
-                
+
                 // Only delete old files after successful DB update
                 if (newImgKey != null && !string.IsNullOrWhiteSpace(oldImgKey))
                 {
@@ -323,7 +323,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var quizGroupDto = _mapper.Map<QuizGroupDto>(updatedQuizGroup);
-                
+
                 // Generate URLs cho response
                 if (!string.IsNullOrWhiteSpace(quizGroupDto.ImgUrl))
                 {
@@ -333,7 +333,7 @@ namespace LearningEnglish.Application.Service
                 {
                     quizGroupDto.VideoUrl = BuildPublicUrl.BuildURL(QuizGroupBucket, quizGroupDto.VideoUrl);
                 }
-                
+
                 response.Data = quizGroupDto;
                 response.Success = true;
                 response.Message = "Cập nhật nhóm câu hỏi thành công.";
@@ -368,13 +368,13 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Không thể xóa nhóm câu hỏi đã có câu hỏi. Vui lòng xóa các câu hỏi trước.";
                     return response;
                 }
-                
+
                 // Xóa ảnh từ MinIO nếu có
                 if (!string.IsNullOrWhiteSpace(quizGroup.ImgKey))
                 {
                     await _minioFileStorage.DeleteFileAsync(QuizGroupBucket, quizGroup.ImgKey);
                 }
-                
+
                 // Xóa video từ MinIO nếu có
                 if (!string.IsNullOrWhiteSpace(quizGroup.VideoKey))
                 {

@@ -82,7 +82,7 @@ namespace LearningEnglish.Application.Service
                 };
 
                 string? committedImageKey = null;
-                
+
                 // Convert temp file → real file nếu có ImageTempKey
                 if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                 {
@@ -112,13 +112,13 @@ namespace LearningEnglish.Application.Service
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "Database error while creating lesson");
-                    
+
                     // Rollback MinIO file
                     if (committedImageKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(committedImageKey, LessonImageBucket);
                     }
-                    
+
                     response.Success = false;
                     response.StatusCode = 500;
                     response.Message = "Lỗi database khi tạo bài học";
@@ -216,7 +216,7 @@ namespace LearningEnglish.Application.Service
                 };
 
                 string? committedImageKey = null;
-                
+
                 // Convert temp file → real file nếu có ImageTempKey
                 if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                 {
@@ -246,13 +246,13 @@ namespace LearningEnglish.Application.Service
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "Database error while creating lesson");
-                    
+
                     // Rollback MinIO file
                     if (committedImageKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(committedImageKey, LessonImageBucket);
                     }
-                    
+
                     response.Success = false;
                     response.StatusCode = 500;
                     response.Message = "Lỗi database khi tạo bài học";
@@ -298,7 +298,7 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Không tìm thấy khóa học";
                     return response;
                 }
-                
+
                 // Authorization checks
                 if (userRole == "Teacher")
                 {
@@ -331,7 +331,7 @@ namespace LearningEnglish.Application.Service
 
                 var lessons = await _lessonRepository.GetListLessonByCourseId(CourseId);
                 var lessonDtos = new List<LessonWithProgressDto>();
-                
+
                 // Map lessons with progress (for Students) or without progress (for Admin/Teacher)
                 foreach (var lesson in lessons)
                 {
@@ -344,7 +344,7 @@ namespace LearningEnglish.Application.Service
                         CourseId = lesson.CourseId,
                         ImageType = lesson.ImageType
                     };
-                    
+
                     // Generate image URL
                     if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                     {
@@ -353,7 +353,7 @@ namespace LearningEnglish.Application.Service
                             lesson.ImageKey
                         );
                     }
-                    
+
                     // ✅ Add progress info for Students
                     if (userRole == "Student")
                     {
@@ -369,10 +369,10 @@ namespace LearningEnglish.Application.Service
                             lessonDto.CompletedAt = lessonCompletion.CompletedAt;
                         }
                     }
-                    
+
                     lessonDtos.Add(lessonDto);
                 }
-                
+
                 response.StatusCode = 200;
                 response.Data = lessonDtos;
             }
@@ -449,7 +449,7 @@ namespace LearningEnglish.Application.Service
 
 
                 var lessonDto = _mapper.Map<LessonDto>(lesson);
-                
+
                 // Generate URL từ key
                 if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                 {
@@ -458,7 +458,7 @@ namespace LearningEnglish.Application.Service
                         lesson.ImageKey
                     );
                 }
-                
+
                 response.StatusCode = 200;
                 response.Data = lessonDto;
             }
@@ -494,7 +494,7 @@ namespace LearningEnglish.Application.Service
 
                 string? newImageKey = null;
                 string? oldImageKey = !string.IsNullOrWhiteSpace(lesson.ImageKey) ? lesson.ImageKey : null;
-                
+
                 // Xử lý file ảnh: commit new file first
                 if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                 {
@@ -525,19 +525,19 @@ namespace LearningEnglish.Application.Service
                 catch (Exception dbEx)
                 {
                     _logger.LogError(dbEx, "Database error while updating lesson");
-                    
+
                     // Rollback new image
                     if (newImageKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(newImageKey, LessonImageBucket);
                     }
-                    
+
                     response.Success = false;
                     response.StatusCode = 500;
                     response.Message = "Lỗi database khi cập nhật bài học";
                     return response;
                 }
-                
+
                 // Delete old image only after successful DB update
                 if (oldImageKey != null && newImageKey != null)
                 {
@@ -839,7 +839,7 @@ namespace LearningEnglish.Application.Service
 
                     // ✅ Get progress information for this lesson
                     var lessonCompletion = await _lessonCompletionRepository.GetByUserAndLessonAsync(userId, lesson.LessonId);
-                    
+
                     if (lessonCompletion != null)
                     {
                         lessonDto.CompletionPercentage = lessonCompletion.CompletionPercentage;

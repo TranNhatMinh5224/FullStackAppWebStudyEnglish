@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
+using LearningEnglish.Application.Common.Pagination;
 using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
@@ -41,11 +42,19 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return userId;
         }
 
-        // GET: api/admin/all - Admin retrieves all courses in the system
+        // GET: api/admin/all - Admin retrieves all courses
         [HttpGet("admin/all")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAllCourses()
+        public async Task<IActionResult> GetAllCourses([FromQuery] PageRequest? request)
         {
+            // Nếu có parameters phân trang, gọi service phân trang
+            if (request != null && (request.PageNumber > 1 || request.PageSize != 20 || !string.IsNullOrEmpty(request.SearchTerm)))
+            {
+                var pagedResult = await _adminCourseService.GetAllCoursesPagedAsync(request);
+                return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
+            }
+
+            // Không có parameters, trả về tất cả
             var result = await _adminCourseService.GetAllCoursesAsync();
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -70,7 +79,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             }
 
             var result = await _adminCourseService.AdminCreateCourseAsync(requestDto);
-            return result.Success 
+            return result.Success
                 ? CreatedAtAction(null, new { courseId = result.Data?.CourseId }, result)
                 : StatusCode(result.StatusCode, result);
         }
@@ -87,17 +96,26 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
             var teacherId = GetCurrentUserId();
             var result = await _teacherCourseService.CreateCourseAsync(requestDto, teacherId);
-            return result.Success 
+            return result.Success
                 ? CreatedAtAction(null, new { courseId = result.Data?.CourseId }, result)
                 : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/teacher/my-courses - Teacher retrieves all courses they own
+        // GET: api/teacher/my-courses - Teacher retrieves all courses
         [HttpGet("teacher/my-courses")]
         [Authorize(Roles = "Teacher")]
-        public async Task<IActionResult> GetMyCourses()
+        public async Task<IActionResult> GetMyCourses([FromQuery] PageRequest? request)
         {
             var teacherId = GetCurrentUserId();
+
+            // Nếu có parameters phân trang, gọi service phân trang
+            if (request != null && (request.PageNumber > 1 || request.PageSize != 20 || !string.IsNullOrEmpty(request.SearchTerm)))
+            {
+                var pagedResult = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, request);
+                return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
+            }
+
+            // Không có parameters, trả về tất cả
             var result = await _teacherCourseService.GetMyCoursesByTeacherAsync(teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -131,10 +149,10 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/getusersbycourse/{courseId} - Admin/Teacher retrieves all enrolled users for a course
+        // Lấy danh sách học sinh trong khóa học
         [HttpGet("getusersbycourse/{courseId}")]
         [Authorize(Roles = "Admin, Teacher")]
-        public async Task<IActionResult> GetUsersByCourseId(int courseId)
+        public async Task<IActionResult> GetUsersByCourseId(int courseId, [FromQuery] PageRequest? request)
         {
             var userId = GetCurrentUserId();
             var checkRole = User.FindFirst(ClaimTypes.Role)?.Value;
@@ -142,6 +160,12 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             if (string.IsNullOrEmpty(checkRole))
             {
                 return Unauthorized(new { message = "User role not found" });
+            }
+
+            if (request != null && (request.PageNumber > 1 || request.PageSize != 20 || !string.IsNullOrEmpty(request.SearchTerm)))
+            {
+                var pagedResult = await _userManagementService.GetUsersByCourseIdPagedAsync(courseId, userId, checkRole, request);
+                return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
             }
 
             var result = await _userManagementService.GetUsersByCourseIdAsync(courseId, userId, checkRole);

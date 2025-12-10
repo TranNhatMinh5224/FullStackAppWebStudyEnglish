@@ -15,22 +15,22 @@ namespace LearningEnglish.Domain.Entities
         public double BestScore { get; set; } = 0;
         public DateTime? BestScoreDate { get; set; }
         public DateTime? LastPracticedAt { get; set; }
-        
+
         // Average scores (rolling average of all attempts)
         public double AvgAccuracyScore { get; set; } = 0;
         public double AvgFluencyScore { get; set; } = 0;
         public double AvgCompletenessScore { get; set; } = 0;
         public double AvgPronunciationScore { get; set; } = 0;
-        
+
         // Last attempt scores (for comparison)
         public double LastAccuracyScore { get; set; } = 0;
         public double LastFluencyScore { get; set; } = 0;
         public double LastPronunciationScore { get; set; } = 0;
-        
+
         // Phoneme tracking (JSON: {"θ": 65.5, "ð": 58.2})
         public string? WeakPhonemesJson { get; set; }  // Phonemes with avg score < 70
         public string? StrongPhonemesJson { get; set; } // Phonemes with avg score >= 85
-        
+
         // Practice streak
         public int ConsecutiveDaysStreak { get; set; } = 0;
         public DateTime? LastStreakDate { get; set; }
@@ -52,7 +52,7 @@ namespace LearningEnglish.Domain.Entities
         /// </summary>
         public void UpdateAfterAssessment(
             double accuracyScore,
-            double fluencyScore, 
+            double fluencyScore,
             double completenessScore,
             double pronunciationScore,
             List<string> problemPhonemes,
@@ -61,7 +61,7 @@ namespace LearningEnglish.Domain.Entities
         {
             TotalAttempts++;
             LastPracticedAt = attemptTime;
-            
+
             // Update last scores
             LastAccuracyScore = accuracyScore;
             LastFluencyScore = fluencyScore;
@@ -90,13 +90,13 @@ namespace LearningEnglish.Domain.Entities
                 BestScore = pronunciationScore;
                 BestScoreDate = attemptTime;
             }
-            
+
             // Update phoneme tracking (aggregate from all attempts)
             UpdatePhonemeTracking(problemPhonemes, strongPhonemes);
-            
+
             // Update practice streak
             UpdatePracticeStreak(attemptTime);
-            
+
             // Check mastery status
             if (BestScore >= 90 && AvgPronunciationScore >= 85 && !IsMastered)
             {
@@ -106,21 +106,21 @@ namespace LearningEnglish.Domain.Entities
 
             UpdatedAt = DateTime.UtcNow;
         }
-        
+
         private void UpdatePhonemeTracking(List<string> problemPhonemes, List<string> strongPhonemes)
         {
             // Simple JSON merge logic - you can enhance with proper scoring
-            if (problemPhonemes.Any())
+            if (problemPhonemes.Count != 0)
             {
                 WeakPhonemesJson = System.Text.Json.JsonSerializer.Serialize(problemPhonemes.Distinct().ToList());
             }
-            
-            if (strongPhonemes.Any())
+
+            if (strongPhonemes.Count != 0)
             {
                 StrongPhonemesJson = System.Text.Json.JsonSerializer.Serialize(strongPhonemes.Distinct().ToList());
             }
         }
-        
+
         private void UpdatePracticeStreak(DateTime attemptTime)
         {
             if (LastStreakDate == null)
@@ -129,9 +129,9 @@ namespace LearningEnglish.Domain.Entities
                 LastStreakDate = attemptTime.Date;
                 return;
             }
-            
+
             var daysSinceLastPractice = (attemptTime.Date - LastStreakDate.Value.Date).Days;
-            
+
             if (daysSinceLastPractice == 1)
             {
                 // Consecutive day
@@ -143,7 +143,7 @@ namespace LearningEnglish.Domain.Entities
                 ConsecutiveDaysStreak = 1;
             }
             // Same day = no change
-            
+
             LastStreakDate = attemptTime.Date;
         }
     }

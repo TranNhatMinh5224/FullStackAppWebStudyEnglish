@@ -15,10 +15,10 @@ namespace LearningEnglish.Application.Service.ScoringStrategies
 
             // User answer có thể là int (optionId) hoặc bool
             int? selectedOptionId = null;
-            
+
             // Thử normalize về int trước
             selectedOptionId = AnswerNormalizer.NormalizeToInt(userAnswer);
-            
+
             // Nếu không được, thử parse từ bool
             if (!selectedOptionId.HasValue && userAnswer is bool boolAnswer)
             {
