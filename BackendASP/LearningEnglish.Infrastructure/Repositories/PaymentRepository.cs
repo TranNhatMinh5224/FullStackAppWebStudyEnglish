@@ -84,6 +84,13 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.PaymentId == paymentId && p.UserId == userId);
         }
 
+        public async Task<Payment?> GetPaymentByTransactionIdAsync(string transactionId)
+        {
+            return await _context.Payments
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.ProviderTransactionId == transactionId);
+        }
+
     }
 }
 

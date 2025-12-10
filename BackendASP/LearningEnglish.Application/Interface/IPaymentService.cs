@@ -10,5 +10,6 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<bool>> ConfirmPaymentAsync(CompletePayment dto, int userId);
         Task<ServiceResponse<PagedResult<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize);
         Task<ServiceResponse<TransactionDetailDto>> GetTransactionDetailAsync(int paymentId, int userId);
+        Task<ServiceResponse<PayOSLinkResponse>> CreatePayOSPaymentLinkAsync(int paymentId, int userId);
     }
 }
