@@ -14,11 +14,6 @@ namespace LearningEnglish.Application.Interface
         Task<bool> DeleteAsync(int flashCardId);
         Task<bool> ExistsAsync(int flashCardId);
 
-        // Search and filter operations
-        Task<List<FlashCard>> SearchFlashCardsAsync(string searchTerm, int? moduleId = null);
-        Task<List<FlashCard>> GetFlashCardsByWordAsync(string word, int? moduleId = null);
-        Task<bool> WordExistsInModuleAsync(string word, int moduleId, int? excludeFlashCardId = null); // chức năng kiểm tra từ đã tồn tại trong module chưa, dùng khi tạo mới hoặc cập nhật
-
         // Bulk operations
         Task<List<FlashCard>> CreateBulkAsync(List<FlashCard> flashCards);
 

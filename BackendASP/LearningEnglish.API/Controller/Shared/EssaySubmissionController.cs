@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.Shared
 {
-    [Route("api/essay-submissions")]
+    [Route("api/shared/essay-submissions")]
     [ApiController]
     [Authorize]
     public class EssaySubmissionController : ControllerBase
@@ -29,7 +29,7 @@ namespace LearningEnglish.API.Controller.Shared
             return User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
         }
 
-        // GET: api/essay-submissions/{submissionId} - Get submission by ID (all roles with authorization)
+        // GET: api/shared/essay-submissions/{submissionId} - Get submission by ID (all roles with authorization)
         [HttpGet("{submissionId}")]
         public async Task<IActionResult> GetSubmission(int submissionId)
         {
@@ -37,7 +37,7 @@ namespace LearningEnglish.API.Controller.Shared
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/essay-submissions/assessment/{assessmentId} - Get submissions by assessment (Admin/Teacher only)
+        // GET: api/shared/essay-submissions/assessment/{assessmentId} - Get submissions by assessment (Admin/Teacher only)
         [HttpGet("assessment/{assessmentId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> GetSubmissionsByAssessment(int assessmentId)
@@ -49,7 +49,7 @@ namespace LearningEnglish.API.Controller.Shared
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/essay-submissions/user/{userId} - Get submissions by user (Admin/Teacher only)
+        // GET: api/shared/essay-submissions/user/{userId} - Get submissions by user (Admin/Teacher only)
         [HttpGet("user/{userId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> GetSubmissionsByUser(int userId)

@@ -6,7 +6,7 @@ using FluentValidation;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
-    [Route("api/[controller]")]
+    [Route("api/questions")]
     [ApiController]
     [Authorize(Roles = "Admin, Teacher")]
     public class QuestionController : ControllerBase
@@ -22,7 +22,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _bulkCreateValidator = bulkCreateValidator;
         }
 
-        // GET: api/Question/{questionId} - Get question by ID
+        // GET: api/questions/{questionId} - Get question by ID
         [HttpGet("{questionId}")]
         public async Task<IActionResult> GetQuestionById(int questionId)
         {
@@ -30,7 +30,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/Question/quiz-group/{quizGroupId} - Get questions by quiz group ID
+        // GET: api/questions/quiz-group/{quizGroupId} - Get questions by quiz group ID
         [HttpGet("quiz-group/{quizGroupId}")]
         public async Task<IActionResult> GetQuestionsByQuizGroupId(int quizGroupId)
         {
@@ -38,7 +38,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/Question/quiz-section/{quizSectionId} - Get questions by quiz section ID
+        // GET: api/questions/quiz-section/{quizSectionId} - Get questions by quiz section ID
         [HttpGet("quiz-section/{quizSectionId}")]
         public async Task<IActionResult> GetQuestionsByQuizSectionId(int quizSectionId)
         {
@@ -46,8 +46,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/Question/create - Create new question with answers
-        [HttpPost("create")]
+        // POST: api/questions - Create new question with answers
+        [HttpPost]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionCreateDto questionCreateDto)
         {
             var result = await _questionService.AddQuestionAsync(questionCreateDto);
@@ -56,8 +56,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/Question/bulk-create - Bulk create questions with answers
-        [HttpPost("bulk-create")]
+        // POST: api/questions/bulk - Bulk create questions with answers
+        [HttpPost("bulk")]
         public async Task<IActionResult> CreateBulkQuestions([FromBody] QuestionBulkCreateDto questionBulkCreateDto)
         {
             var result = await _questionService.AddBulkQuestionsAsync(questionBulkCreateDto);
@@ -66,16 +66,16 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/Question/update/{questionId} - Update question
-        [HttpPut("update/{questionId}")]
+        // PUT: api/questions/{questionId} - Update question
+        [HttpPut("{questionId}")]
         public async Task<IActionResult> UpdateQuestion(int questionId, [FromBody] QuestionUpdateDto questionUpdateDto)
         {
             var result = await _questionService.UpdateQuestionAsync(questionId, questionUpdateDto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/Question/delete/{questionId} - Delete question
-        [HttpDelete("delete/{questionId}")]
+        // DELETE: api/questions/{questionId} - Delete question
+        [HttpDelete("{questionId}")]
         public async Task<IActionResult> DeleteQuestion(int questionId)
         {
             var result = await _questionService.DeleteQuestionAsync(questionId);

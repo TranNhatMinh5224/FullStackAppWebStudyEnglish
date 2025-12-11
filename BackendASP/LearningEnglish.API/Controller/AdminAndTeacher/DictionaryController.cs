@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
-    [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Teacher")]
+    [Route("api/public/dictionary")]
+    [Authorize] 
     public class DictionaryController : ControllerBase
     {
         private readonly IDictionaryService _dictionaryService;
@@ -21,7 +21,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _logger = logger;
         }
 
-        // GET: api/dictionary/lookup/{word} - Look up word definition in external dictionary API
+        // GET: api/public/dictionary/lookup/{word} - Look up word definition in external dictionary API
         [HttpGet("lookup/{word}")]
         [ProducesResponseType(typeof(DictionaryLookupResultDto), 200)]
         public async Task<IActionResult> LookupWord(string word, [FromQuery] string? targetLanguage = "vi")
@@ -30,7 +30,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/dictionary/generate-flashcard - Generate flashcard preview from word definition
+        // POST: api/public/dictionary/generate-flashcard - Generate flashcard preview from word definition
         [HttpPost("generate-flashcard")]
         [ProducesResponseType(typeof(GenerateFlashCardPreviewResponseDto), 200)]
         public async Task<IActionResult> GenerateFlashCard([FromBody] GenerateFlashCardRequestDto request)

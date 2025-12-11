@@ -73,6 +73,13 @@ namespace LearningEnglish.Application.Service
                 user.NormalizedEmail = dto.Email.ToUpper();
                 user.EmailVerified = false;  // ← CHƯA XÁC THỰC
 
+                // Gắn role Student mặc định cho user mới
+                var studentRole = await _userRepository.GetRoleByNameAsync("Student");
+                if (studentRole != null)
+                {
+                    user.Roles.Add(studentRole);
+                }
+
                 // Lưu user vào DB (trạng thái pending)
                 await _userRepository.AddUserAsync(user);
                 await _userRepository.SaveChangesAsync();

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace LearningEnglish.API.Controller.Admin
 {
     [ApiController]
-    [Route("api/admin/auth")]
+    [Route("api/admin/users")]
     [Authorize(Roles = "Admin")]
     public class AdminAuthController : ControllerBase
     {

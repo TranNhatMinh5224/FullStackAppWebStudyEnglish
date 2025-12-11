@@ -20,7 +20,7 @@ namespace LearningEnglish.Application.DTOs
 
         // Navigation Properties
         public QuizSectionDto? QuizSection { get; set; }
-        public List<QuestionDto> Questions { get; set; } = new();
+        public List<QuestionReadDto> Questions { get; set; } = new();
     }
 
     public class CreateQuizGroupDto

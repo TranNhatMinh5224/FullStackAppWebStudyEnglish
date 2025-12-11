@@ -5,7 +5,7 @@ using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
 {
-    [Route("api/user/Assessment")]
+    [Route("api/user/assessments")]
     [ApiController]
     [Authorize]
     public class UserAssessmentController : ControllerBase

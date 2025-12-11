@@ -6,7 +6,7 @@ using LearningEnglish.Application.DTOs;
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/quiz-groups")]
     [Authorize(Roles = "Admin,Teacher")]
     public class QuizGroupController : ControllerBase
     {
@@ -17,7 +17,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _quizGroupService = quizGroupService;
         }
 
-        // POST: api/QuizGroup - Create quiz group
+        // POST: api/quiz-groups - Create quiz group
         [HttpPost]
         public async Task<IActionResult> CreateQuizGroup([FromBody] CreateQuizGroupDto createDto)
         {
@@ -28,7 +28,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/QuizGroup/{id} - Get quiz group by ID
+        // GET: api/quiz-groups/{id} - Get quiz group by ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetQuizGroup(int id)
         {
@@ -44,7 +44,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/QuizGroup/{id} - Update quiz group
+        // PUT: api/quiz-groups/{id} - Update quiz group
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateQuizGroup(int id, [FromBody] UpdateQuizGroupDto updateDto)
         {
@@ -55,7 +55,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/QuizGroup/{id} - Delete quiz group
+        // DELETE: api/quiz-groups/{id} - Delete quiz group
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteQuizGroup(int id)
         {

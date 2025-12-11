@@ -1,3 +1,5 @@
+using LearningEnglish.Domain.Enums;
+
 namespace LearningEnglish.Domain.Entities
 {
 
@@ -30,17 +32,5 @@ namespace LearningEnglish.Domain.Entities
         public DateTime? EmailSentAt { get; set; }
     }
 
-    public enum NotificationType
-    {
-        CourseEnrollment,
-        CourseCompletion,
-        LessonReminder,
-        QuizDeadline,
-        AssessmentGraded,
-        PaymentSuccess,
-        SystemAnnouncement,
-        StudyStreak,
-        Achievement,
-        General
-    }
+   
 }

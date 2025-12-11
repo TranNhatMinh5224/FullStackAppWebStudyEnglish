@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
-    [Route("api/")]
+    [Route("api/courses")]
     [Authorize(Roles = "Admin, Teacher")]
     public class CourseController : ControllerBase
     {
@@ -42,8 +42,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return userId;
         }
 
-        // GET: api/admin/all - Admin retrieves all courses
-        [HttpGet("admin/all")]
+        // GET: api/courses?scope=all - Admin retrieves all courses
+        [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllCourses([FromQuery] PageRequest? request)
         {
@@ -59,8 +59,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/admin/{courseId} - Admin deletes a course by ID
-        [HttpDelete("admin/{courseId}")]
+        // DELETE: api/courses/{courseId} - Admin deletes a course by ID
+        [HttpDelete("{courseId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCourse(int courseId)
         {
@@ -68,8 +68,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/admin/create - Admin creates a new course with system-level permissions
-        [HttpPost("admin/create")]
+        // POST: api/courses - Admin creates a new course with system-level permissions
+        [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminCreateCourse([FromBody] AdminCreateCourseRequestDto requestDto)
         {
@@ -84,8 +84,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/teacher/create - Teacher creates a new course owned by their account
-        [HttpPost("teacher/create")]
+        // POST: api/courses/teacher - Teacher creates a new course owned by their account
+        [HttpPost("teacher")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> CreateCourse([FromBody] TeacherCreateCourseRequestDto requestDto)
         {
@@ -101,8 +101,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/teacher/my-courses - Teacher retrieves all courses
-        [HttpGet("teacher/my-courses")]
+        // GET: api/courses/teacher - Teacher retrieves their courses
+        [HttpGet("teacher")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> GetMyCourses([FromQuery] PageRequest? request)
         {
@@ -120,8 +120,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/admin/{courseId} - Admin updates any course with full permissions
-        [HttpPut("admin/{courseId}")]
+        // PUT: api/courses/{courseId} - Admin updates any course with full permissions
+        [HttpPut("{courseId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminUpdateCourse(int courseId, [FromBody] AdminUpdateCourseRequestDto requestDto)
         {
@@ -134,7 +134,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/teacher/{courseId} - Teacher updates their own course
+        // PUT: api/courses/teacher/{courseId} - Teacher updates their own course
         [HttpPut("teacher/{courseId}")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] TeacherUpdateCourseRequestDto requestDto)
@@ -149,8 +149,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy danh sách học sinh trong khóa học
-        [HttpGet("getusersbycourse/{courseId}")]
+        // GET: api/courses/{courseId}/students - Get students in course
+        [HttpGet("{courseId}/students")]
         [Authorize(Roles = "Admin, Teacher")]
         public async Task<IActionResult> GetUsersByCourseId(int courseId, [FromQuery] PageRequest? request)
         {

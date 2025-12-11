@@ -10,6 +10,7 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<List<ListLectureDto>>> GetLecturesByModuleIdAsync(int moduleId, int? userId = null);
         Task<ServiceResponse<List<LectureTreeDto>>> GetLectureTreeByModuleIdAsync(int moduleId, int? userId = null);
         Task<ServiceResponse<LectureDto>> CreateLectureAsync(CreateLectureDto createLectureDto, int createdByUserId);
+        Task<ServiceResponse<BulkCreateLecturesResponseDto>> BulkCreateLecturesAsync(BulkCreateLecturesDto bulkCreateDto, int createdByUserId);
         Task<ServiceResponse<LectureDto>> UpdateLectureAsync(int lectureId, UpdateLectureDto updateLectureDto, int updatedByUserId);
         Task<ServiceResponse<bool>> DeleteLectureAsync(int lectureId, int deletedByUserId);
 

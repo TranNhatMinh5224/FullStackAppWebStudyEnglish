@@ -9,7 +9,7 @@ namespace LearningEnglish.API.Controllers.User
 {
     // Controller xử lý các chức năng xác thực người dùng
     [ApiController]
-    [Route("api/user/auth")]
+    [Route("api/auth")]
     public class UserAuthController : ControllerBase
     {
         private readonly IRegisterService _registerService;

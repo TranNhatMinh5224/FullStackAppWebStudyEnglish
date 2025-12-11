@@ -10,7 +10,7 @@ namespace LearningEnglish.API.Controller.User
     /// 3 API endpoints cơ bản: Get, Get Count, Mark Read
     /// </summary>
     [ApiController]
-    [Route("api/notifications")]
+    [Route("api/user/notifications")]
     [Authorize]
     public class NotificationController : ControllerBase
     {

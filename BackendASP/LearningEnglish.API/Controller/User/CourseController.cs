@@ -7,7 +7,7 @@ using System.Security.Claims;
 namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
-    [Route("api/user/enroll")]
+    [Route("api/user/enrollments")]
     [Authorize(Roles = "Student")]
     public class EnrollCourseController : ControllerBase
     {
