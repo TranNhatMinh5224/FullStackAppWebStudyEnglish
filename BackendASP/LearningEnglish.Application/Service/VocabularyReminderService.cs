@@ -52,14 +52,35 @@ public class VocabularyReminderService : BackgroundService
                     await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
                 }
             }
+            catch (TaskCanceledException)
+            {
+                // Task bị cancel khi service shutdown - đây là hành vi bình thường
+                _logger.LogInformation("⏹️ VocabularyReminderService đang shutdown...");
+                break;
+            }
+            catch (OperationCanceledException)
+            {
+                // Task bị cancel khi service shutdown - đây là hành vi bình thường
+                _logger.LogInformation("⏹️ VocabularyReminderService đang shutdown...");
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Lỗi trong VocabularyReminderService");
-                await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
+                
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    _logger.LogInformation("⏹️ VocabularyReminderService đang shutdown sau lỗi...");
+                    break;
+                }
             }
         }
 
-        _logger.LogInformation("⏹️ VocabularyReminderService đã dừng");
+        _logger.LogInformation("✅ VocabularyReminderService đã dừng");
     }
 
     /// <summary>
