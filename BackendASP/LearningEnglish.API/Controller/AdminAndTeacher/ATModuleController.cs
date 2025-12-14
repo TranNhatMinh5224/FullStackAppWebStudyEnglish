@@ -54,7 +54,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<IActionResult> CreateModule([FromBody] CreateModuleDto createModuleDto)
         {
             var userId = GetCurrentUserId();
-            var result = await _moduleService.CreateModuleAsync(createModuleDto, userId);
+            var userRole = GetCurrentUserRole();
+            var result = await _moduleService.CreateModuleAsync(createModuleDto, userId, userRole);
             return result.Success
                 ? CreatedAtAction(nameof(GetModule), new { moduleId = result.Data!.ModuleId }, result)
                 : StatusCode(result.StatusCode, result);

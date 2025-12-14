@@ -5,6 +5,7 @@ using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Domain.Enums;
 using AutoMapper;
+using Microsoft.Extensions.Logging;
 
 
 namespace LearningEnglish.Application.Service
@@ -18,6 +19,7 @@ namespace LearningEnglish.Application.Service
         private readonly IStreakService _streakService;
         private readonly ITeacherSubscriptionRepository _teacherSubscriptionRepository;
         private readonly ICourseProgressRepository _courseProgressRepository;
+        private readonly ILogger<UserManagementService> _logger;
 
         // Bucket + folder cho avatar người dùng
         private const string AvatarBucket = "avatars";
@@ -30,7 +32,8 @@ namespace LearningEnglish.Application.Service
             IMinioFileStorage minioFileStorage,
             IStreakService streakService,
             ITeacherSubscriptionRepository teacherSubscriptionRepository,
-            ICourseProgressRepository courseProgressRepository)
+            ICourseProgressRepository courseProgressRepository,
+            ILogger<UserManagementService> logger)
         {
             _userRepository = userRepository;
             _mapper = mapper;
@@ -39,6 +42,7 @@ namespace LearningEnglish.Application.Service
             _streakService = streakService;
             _teacherSubscriptionRepository = teacherSubscriptionRepository;
             _courseProgressRepository = courseProgressRepository;
+            _logger = logger;
         }
 
 
@@ -401,8 +405,9 @@ namespace LearningEnglish.Application.Service
                 response.Success = true;
                 response.Message = "Lấy danh sách học sinh thành công";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error in GetUsersByCourseIdPagedAsync for CourseId: {CourseId}", courseId);
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Đã xảy ra lỗi hệ thống";

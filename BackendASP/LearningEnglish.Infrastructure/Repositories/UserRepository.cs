@@ -50,8 +50,9 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             var query = _context.UserCourses
                 .Where(uc => uc.CourseId == courseId && uc.User != null)
+                .Include(uc => uc.User!)
+                    .ThenInclude(u => u.Roles)
                 .Select(uc => uc.User!)
-                .Include(u => u.Roles)
                 .OrderBy(u => u.FirstName)
                 .AsQueryable();
 

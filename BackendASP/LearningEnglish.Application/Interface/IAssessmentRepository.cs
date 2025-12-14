@@ -14,5 +14,6 @@ namespace LearningEnglish.Application.Interface
         Task<bool> ModuleExists(int moduleId);
 
         Task<bool> IsTeacherOwnerOfModule(int teacherId, int moduleId);
+        Task<bool> IsTeacherOwnerOfAssessmentAsync(int teacherId, int assessmentId);
     }
 }

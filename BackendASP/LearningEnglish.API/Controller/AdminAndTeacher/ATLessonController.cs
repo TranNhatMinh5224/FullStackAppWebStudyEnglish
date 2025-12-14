@@ -54,7 +54,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> AddLessonForTeacher(TeacherCreateLessonDto dto)
         {
-            var result = await _lessonService.TeacherAddLesson(dto);
+            var userId = GetCurrentUserId();
+            var result = await _lessonService.TeacherAddLesson(dto, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 

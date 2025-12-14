@@ -456,6 +456,18 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // 🔒 Kiểm tra quyền Teacher nếu có
+                if (teacherId.HasValue)
+                {
+                    if (!await _essayRepository.IsTeacherOwnerOfAssessmentAsync(teacherId.Value, existingEssay.AssessmentId))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Teacher không có quyền xóa Essay này";
+                        return response;
+                    }
+                }
+
                 // Lưu keys trước khi xóa
                 string? audioKey = existingEssay.AudioKey;
                 string? imageKey = existingEssay.ImageKey;

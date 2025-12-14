@@ -202,6 +202,17 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // 🔒 Explicit ownership check (defense in depth)
+                if (!course.TeacherId.HasValue || course.TeacherId.Value != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền chỉnh sửa khóa học này";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to update course {CourseId} owned by {OwnerId}",
+                        teacherId, courseId, course.TeacherId);
+                    return response;
+                }
+
                 // Kiểm tra package limit khi update MaxStudent
                 var teacherPackage = await _teacherPackageRepository.GetInformationTeacherpackage(teacherId);
                 if (teacherPackage == null)
@@ -383,6 +394,17 @@ namespace LearningEnglish.Application.Service
                     response.Success = false;
                     response.StatusCode = 404;
                     response.Message = "Course not found or you do not have permission to access it";
+                    return response;
+                }
+
+                // 🔒 Explicit ownership check (defense in depth)
+                if (!course.TeacherId.HasValue || course.TeacherId.Value != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền xóa khóa học này";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to delete course {CourseId} owned by {OwnerId}",
+                        teacherId, courseId, course.TeacherId);
                     return response;
                 }
 
