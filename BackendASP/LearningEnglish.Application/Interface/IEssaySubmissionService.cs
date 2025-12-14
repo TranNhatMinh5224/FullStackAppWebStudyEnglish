@@ -16,7 +16,7 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<List<EssaySubmissionListDto>>> GetSubmissionsByEssayIdAsync(int essayId);
         
         // Teacher/Student - Get submission detail by ID (với RLS policy)
-        Task<ServiceResponse<EssaySubmissionDto>> GetSubmissionByIdAsync(int submissionId);
+        Task<ServiceResponse<EssaySubmissionDto>> GetSubmissionByIdAsync(int submissionId, int? userId = null);
         
         // Student - Check if submitted
         Task<ServiceResponse<EssaySubmissionDto?>> GetUserSubmissionForEssayAsync(int userId, int essayId);

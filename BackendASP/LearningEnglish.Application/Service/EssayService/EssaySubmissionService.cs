@@ -184,7 +184,7 @@ namespace LearningEnglish.Application.Service
             }
         }
         // Implement cho phương thức Lấy thông tin submission theo ID
-        public async Task<ServiceResponse<EssaySubmissionDto>> GetSubmissionByIdAsync(int submissionId)
+        public async Task<ServiceResponse<EssaySubmissionDto>> GetSubmissionByIdAsync(int submissionId, int? userId = null)
         {
             var response = new ServiceResponse<EssaySubmissionDto>();
 
@@ -197,6 +197,15 @@ namespace LearningEnglish.Application.Service
                     response.Success = false;
                     response.StatusCode = 404;
                     response.Message = "Submission không tồn tại";
+                    return response;
+                }
+
+                // 🔒 Validate ownership if userId is provided (Student)
+                if (userId.HasValue && submission.UserId != userId.Value)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền xem bài nộp này";
                     return response;
                 }
 

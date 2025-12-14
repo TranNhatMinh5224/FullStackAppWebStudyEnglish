@@ -22,7 +22,11 @@ namespace LearningEnglish.Infrastructure.Repositories
 
             _context.EssaySubmissions.Add(submission);
             await _context.SaveChangesAsync();
-            return submission;
+
+            // Reload with User navigation property for mapping
+            return await _context.EssaySubmissions
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.SubmissionId == submission.SubmissionId) ?? submission;
         }
 
         public async Task<EssaySubmission?> GetSubmissionByIdAsync(int submissionId)

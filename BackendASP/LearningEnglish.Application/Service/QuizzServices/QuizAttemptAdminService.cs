@@ -1,3 +1,4 @@
+using AutoMapper;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
@@ -12,24 +13,28 @@ namespace LearningEnglish.Application.Service
     {
         private readonly IQuizAttemptService _quizAttemptService;
         private readonly IQuizAttemptRepository _quizAttemptRepository;
+        private readonly IMapper _mapper;
 
         public QuizAttemptAdminService(
             IQuizAttemptService quizAttemptService,
-            IQuizAttemptRepository quizAttemptRepository)
+            IQuizAttemptRepository quizAttemptRepository,
+            IMapper mapper)
         {
             _quizAttemptService = quizAttemptService;
             _quizAttemptRepository = quizAttemptRepository;
+            _mapper = mapper;
         }
 
-        public async Task<ServiceResponse<List<QuizAttempt>>> GetQuizAttemptsAsync(int quizId)
+        public async Task<ServiceResponse<List<QuizAttemptDto>>> GetQuizAttemptsAsync(int quizId)
         {
-            var response = new ServiceResponse<List<QuizAttempt>>();
+            var response = new ServiceResponse<List<QuizAttemptDto>>();
 
             try
             {
                 var attempts = await _quizAttemptRepository.GetByQuizIdAsync(quizId);
+                var attemptDtos = _mapper.Map<List<QuizAttemptDto>>(attempts);
                 response.Success = true;
-                response.Data = attempts;
+                response.Data = attemptDtos;
                 response.Message = $"Found {attempts.Count} attempts for quiz {quizId}";
                 response.StatusCode = 200;
             }
@@ -44,16 +49,26 @@ namespace LearningEnglish.Application.Service
         }
 
         // Lấy danh sách attempts với phân trang
-        public async Task<ServiceResponse<PagedResult<QuizAttempt>>> GetQuizAttemptsPagedAsync(int quizId, PageRequest request)
+        public async Task<ServiceResponse<PagedResult<QuizAttemptDto>>> GetQuizAttemptsPagedAsync(int quizId, PageRequest request)
         {
-            var response = new ServiceResponse<PagedResult<QuizAttempt>>();
+            var response = new ServiceResponse<PagedResult<QuizAttemptDto>>();
 
             try
             {
                 var pagedResult = await _quizAttemptRepository.GetQuizAttemptsPagedAsync(quizId, request);
 
+                // Map entities to DTOs
+                var attemptDtos = _mapper.Map<List<QuizAttemptDto>>(pagedResult.Items);
+                var pagedDto = new PagedResult<QuizAttemptDto>
+                {
+                    Items = attemptDtos,
+                    TotalCount = pagedResult.TotalCount,
+                    PageNumber = pagedResult.PageNumber,
+                    PageSize = pagedResult.PageSize
+                };
+
                 response.Success = true;
-                response.Data = pagedResult;
+                response.Data = pagedDto;
                 response.Message = $"Found {pagedResult.TotalCount} attempts for quiz {quizId}";
                 response.StatusCode = 200;
             }
@@ -67,9 +82,9 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        public async Task<ServiceResponse<QuizAttempt>> GetAttemptDetailsAsync(int attemptId)
+        public async Task<ServiceResponse<QuizAttemptDto>> GetAttemptDetailsAsync(int attemptId)
         {
-            var response = new ServiceResponse<QuizAttempt>();
+            var response = new ServiceResponse<QuizAttemptDto>();
 
             try
             {
@@ -82,8 +97,10 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                var attemptDto = _mapper.Map<QuizAttemptDto>(attempt);
+
                 response.Success = true;
-                response.Data = attempt;
+                response.Data = attemptDto;
                 response.StatusCode = 200;
             }
             catch (Exception ex)
@@ -220,15 +237,16 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        public async Task<ServiceResponse<List<QuizAttempt>>> GetUserQuizAttemptsAsync(int userId, int quizId)
+        public async Task<ServiceResponse<List<QuizAttemptDto>>> GetUserQuizAttemptsAsync(int userId, int quizId)
         {
-            var response = new ServiceResponse<List<QuizAttempt>>();
+            var response = new ServiceResponse<List<QuizAttemptDto>>();
 
             try
             {
                 var attempts = await _quizAttemptRepository.GetByUserAndQuizAsync(userId, quizId);
+                var attemptDtos = _mapper.Map<List<QuizAttemptDto>>(attempts.OrderByDescending(a => a.StartedAt).ToList());
                 response.Success = true;
-                response.Data = attempts.OrderByDescending(a => a.StartedAt).ToList();
+                response.Data = attemptDtos;
                 response.Message = $"Found {attempts.Count} attempts for user {userId} on quiz {quizId}";
                 response.StatusCode = 200;
             }

@@ -36,9 +36,19 @@ namespace LearningEnglish.API.Controller.User
                 return BadRequest("Không thể lấy thông tin người dùng từ token");
 
             var result = await _essaySubmissionService.CreateSubmissionAsync(submissionDto, userId);
-            return result.Success
-                ? CreatedAtAction("GetSubmission", "EssaySubmission", new { submissionId = result.Data?.SubmissionId }, result)
-                : StatusCode(result.StatusCode, result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // GET: api/User/EssaySubmission/{submissionId} - Get submission by ID
+        [HttpGet("{submissionId}")]
+        public async Task<IActionResult> GetSubmission(int submissionId)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return BadRequest("Không thể lấy thông tin người dùng từ token");
+
+            var result = await _essaySubmissionService.GetSubmissionByIdAsync(submissionId, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // GET: api/User/EssaySubmission/submission-status/essay/{essayId} - Check if student has submitted for an essay

@@ -20,9 +20,8 @@ namespace LearningEnglish.Application.DTOs
 
         public string Type { get; set; } = "Essay";
 
-        // Navigation properties
-        public AssessmentDto? Assessment { get; set; }
-        public List<EssaySubmissionDto>? EssaySubmissions { get; set; }
+        // Submission count (thay vì full list để tránh circular reference)
+        public int TotalSubmissions { get; set; }
     }
 
 
@@ -76,9 +75,9 @@ namespace LearningEnglish.Application.DTOs
         public DateTime SubmittedAt { get; set; }
         public string Status { get; set; } = string.Empty;
 
-        // Navigation properties
-        public UserDto? User { get; set; }
-        public EssayDto? Essay { get; set; }
+        // User info (không include full UserDto để tránh circular reference)
+        public string? UserName { get; set; }
+        public string? UserEmail { get; set; }
     }
 
 

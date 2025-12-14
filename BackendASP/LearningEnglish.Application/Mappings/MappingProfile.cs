@@ -268,7 +268,9 @@ namespace LearningEnglish.Application.Mappings
             // EssaySubmission mappings
             CreateMap<EssaySubmission, EssaySubmissionDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.AttachmentUrl, opt => opt.MapFrom(src => src.AttachmentKey)); // Will be replaced with URL in service
+                .ForMember(dest => dest.AttachmentUrl, opt => opt.MapFrom(src => src.AttachmentKey)) // Will be replaced with URL in service
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : null))
+                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
 
             // EssaySubmission to List DTO (basic info for listing)
             CreateMap<EssaySubmission, EssaySubmissionListDto>()
@@ -289,7 +291,8 @@ namespace LearningEnglish.Application.Mappings
             // Quiz mappings
             CreateMap<Quiz, QuizDto>()
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.TotalPossibleScore, opt => opt.MapFrom(src => src.TotalPossibleScore));
 
             CreateMap<QuizCreateDto, Quiz>()
                 .ForMember(dest => dest.QuizId, opt => opt.Ignore())
@@ -353,12 +356,18 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.MediaKey, opt => opt.Ignore()); // 
 
             // QuizAttempt mappings
-            CreateMap<QuizAttempt, QuizAttemptDto>();
+            CreateMap<QuizAttempt, QuizAttemptDto>()
+                .ForMember(dest => dest.EndTime, opt => opt.Ignore()); // Calculated in service
 
             CreateMap<QuizAttempt, QuizAttemptWithQuestionsDto>()
-                .ForMember(dest => dest.QuizSections, opt => opt.Ignore());
+                .ForMember(dest => dest.QuizSections, opt => opt.Ignore())
+                .ForMember(dest => dest.EndTime, opt => opt.Ignore());
 
-            CreateMap<QuizAttempt, QuizAttemptResultDto>();
+            CreateMap<QuizAttempt, QuizAttemptResultDto>()
+                .ForMember(dest => dest.Percentage, opt => opt.Ignore())
+                .ForMember(dest => dest.IsPassed, opt => opt.Ignore())
+                .ForMember(dest => dest.ScoresByQuestion, opt => opt.Ignore())
+                .ForMember(dest => dest.CorrectAnswers, opt => opt.Ignore());
 
 
 
