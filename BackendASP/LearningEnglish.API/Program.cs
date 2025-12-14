@@ -194,7 +194,7 @@ builder.Services.AddScoped<IPronunciationAssessmentService, PronunciationAssessm
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
 
 // 🎤 Azure Speech Service for Pronunciation Assessment
-builder.Services.Configure<AzureSpeechOptions>(builder.Configuration.GetSection("Azure:Speech"));
+builder.Services.Configure<AzureSpeechOptions>(builder.Configuration.GetSection("AzureSpeech"));
 builder.Services.AddScoped<IAudioConverterService, AudioConverterService>();
 builder.Services.AddHttpClient<IAzureSpeechService, AzureSpeechService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(5));

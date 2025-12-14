@@ -68,7 +68,8 @@ namespace LearningEnglish.Infrastructure.Services
                 try
                 {
                     // 5. Setup Azure Speech SDK
-                    var speechConfig = SpeechConfig.FromSubscription(_options.Key, _options.Region);
+                    _logger.LogInformation("Configuring Azure Speech with Region: {Region}", _options.Region);
+                    var speechConfig = SpeechConfig.FromSubscription(_options.SubscriptionKey, _options.Region);
                     speechConfig.SpeechRecognitionLanguage = locale;
                     speechConfig.SetProperty(
                         PropertyId.SpeechServiceResponse_RequestDetailedResultTrueFalse,
