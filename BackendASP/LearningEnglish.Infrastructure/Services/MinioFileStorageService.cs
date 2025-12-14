@@ -243,6 +243,77 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
 
 
 
+        // Download file từ MinIO và trả về Stream
+        public async Task<ServiceResponse<Stream>> DownloadFileAsync(string objectKey, string BucketName)
+        {
+            var response = new ServiceResponse<Stream>();
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(objectKey))
+                {
+                    response.Success = false;
+                    response.Message = "Object key is null or empty.";
+                    response.StatusCode = 400;
+                    return response;
+                }
+
+                // Kiểm tra bucket tồn tại
+                var bucketExists = await _minioClient.BucketExistsAsync(
+                    new BucketExistsArgs().WithBucket(BucketName));
+
+                if (!bucketExists)
+                {
+                    response.Success = false;
+                    response.Message = "Bucket does not exist.";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                // Tạo MemoryStream để lưu file data
+                var memoryStream = new MemoryStream();
+
+                // Download file từ MinIO
+                var getObjectArgs = new GetObjectArgs()
+                    .WithBucket(BucketName)
+                    .WithObject(objectKey)
+                    .WithCallbackStream(async (stream) =>
+                    {
+                        await stream.CopyToAsync(memoryStream);
+                    });
+
+                await _minioClient.GetObjectAsync(getObjectArgs);
+
+                // Reset position về đầu stream để có thể đọc
+                memoryStream.Position = 0;
+
+                _logger?.LogInformation("Downloaded file successfully. Bucket={Bucket}, Key={Key}", BucketName, objectKey);
+
+                response.Data = memoryStream;
+                response.Success = true;
+                response.Message = "File downloaded successfully.";
+                response.StatusCode = 200;
+            }
+            catch (MinioException mEx)
+            {
+                _logger?.LogError(mEx, "MinIO exception during DownloadFileAsync. Bucket={Bucket}, Key={Key}", BucketName, objectKey);
+                response.Success = false;
+                response.Data = null;
+                response.Message = mEx.Message;
+                response.StatusCode = 500;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Exception during DownloadFileAsync. Bucket={Bucket}, Key={Key}", BucketName, objectKey);
+                response.Success = false;
+                response.Data = null;
+                response.Message = ex.Message;
+                response.StatusCode = 500;
+            }
+
+            return response;
+        }
+
         private async Task EnsureBucketExistsAsync(string bucketName)
         {
             var exists = await _minioClient.BucketExistsAsync(

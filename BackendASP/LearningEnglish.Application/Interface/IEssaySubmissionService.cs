@@ -26,5 +26,8 @@ namespace LearningEnglish.Application.Interface
         
         // Student - Delete own submission
         Task<ServiceResponse<bool>> DeleteSubmissionAsync(int submissionId, int userId);
+        
+        // Teacher - Download file attachment of submission
+        Task<ServiceResponse<(Stream fileStream, string fileName, string contentType)>> DownloadSubmissionFileAsync(int submissionId);
     }
 }

@@ -80,5 +80,28 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             var result = await _essaySubmissionService.GetSubmissionByIdAsync(submissionId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
+
+        /// <summary>
+        /// Download file đính kèm của submission
+        /// - Teacher: Chỉ download được files từ courses mình dạy (RLS tự động filter)
+        /// - Admin: Download tất cả files
+        /// </summary>
+        /// <param name="submissionId">ID của submission</param>
+        /// <returns>File stream để download</returns>
+        [HttpGet("{submissionId}/download")]
+        public async Task<IActionResult> DownloadSubmissionFile(int submissionId)
+        {
+            var result = await _essaySubmissionService.DownloadSubmissionFileAsync(submissionId);
+            
+            if (!result.Success)
+            {
+                return StatusCode(result.StatusCode, new { message = result.Message });
+            }
+
+            var (fileStream, fileName, contentType) = result.Data;
+            
+            // Trả về file để browser download
+            return File(fileStream, contentType, fileName);
+        }
     }
 }

@@ -548,5 +548,64 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
         }
+
+        // Teacher - Download file attachment of submission
+        public async Task<ServiceResponse<(Stream fileStream, string fileName, string contentType)>> DownloadSubmissionFileAsync(int submissionId)
+        {
+            var response = new ServiceResponse<(Stream, string, string)>();
+
+            try
+            {
+                // Lấy thông tin submission
+                var submission = await _essaySubmissionRepository.GetSubmissionByIdAsync(submissionId);
+                if (submission == null)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy bài nộp";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                // Kiểm tra có file đính kèm không
+                if (string.IsNullOrWhiteSpace(submission.AttachmentKey))
+                {
+                    response.Success = false;
+                    response.Message = "Bài nộp không có file đính kèm";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                // Download file từ MinIO
+                var downloadResult = await _minioFileStorage.DownloadFileAsync(submission.AttachmentKey, AttachmentBucket);
+                if (!downloadResult.Success || downloadResult.Data == null)
+                {
+                    response.Success = false;
+                    response.Message = $"Không thể tải file: {downloadResult.Message}";
+                    response.StatusCode = downloadResult.StatusCode;
+                    return response;
+                }
+
+                // Lấy tên file từ AttachmentKey (lấy phần cuối của path)
+                var fileName = Path.GetFileName(submission.AttachmentKey);
+                var contentType = submission.AttachmentType ?? "application/octet-stream";
+
+                response.Data = (downloadResult.Data, fileName, contentType);
+                response.Success = true;
+                response.Message = "Tải file thành công";
+                response.StatusCode = 200;
+
+                _logger.LogInformation("Downloaded submission file. SubmissionId={SubmissionId}, FileName={FileName}", 
+                    submissionId, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi tải file submission. SubmissionId={SubmissionId}", submissionId);
+                response.Success = false;
+                response.Message = $"Lỗi: {ex.Message}";
+                response.StatusCode = 500;
+            }
+
+            return response;
+        }
     }
 }
