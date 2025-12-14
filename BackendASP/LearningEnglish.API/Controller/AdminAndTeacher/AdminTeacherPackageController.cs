@@ -68,7 +68,9 @@ namespace LearningEnglish.API.Controller.Admin
                 return BadRequest(new { message = "Invalid ID provided." });
 
             var result = await _teacherPackageService.DeleteTeacherPackageAsync(id);
-            return result.Success ? NoContent() : StatusCode(result.StatusCode, new { message = result.Message });
+            return result.Success 
+                ? Ok(new { message = result.Message, data = result.Data }) 
+                : StatusCode(result.StatusCode, new { message = result.Message });
         }
     }
 }

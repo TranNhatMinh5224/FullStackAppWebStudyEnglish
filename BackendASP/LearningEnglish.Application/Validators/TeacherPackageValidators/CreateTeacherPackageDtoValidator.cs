@@ -15,7 +15,7 @@ namespace LearningEnglish.Application.Validators.TeacherPackageValidators
                 .IsInEnum().WithMessage("Invalid package level");
 
             RuleFor(x => x.Price)
-                .GreaterThan(0).WithMessage("Price must be greater than 0")
+                .GreaterThanOrEqualTo(0).WithMessage("Price must be greater than or equal to 0")
                 .LessThanOrEqualTo(100000000).WithMessage("Price must not exceed 100,000,000");
 
             RuleFor(x => x.MaxCourses)

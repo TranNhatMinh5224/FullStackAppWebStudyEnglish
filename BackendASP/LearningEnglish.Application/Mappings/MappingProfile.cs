@@ -24,6 +24,7 @@ namespace LearningEnglish.Application.Mappings
 
             // Course mappings - Entity to Response DTOs
             CreateMap<Course, CourseResponseDto>()
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
@@ -31,19 +32,22 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
 
             CreateMap<Course, AdminCourseListResponseDto>()
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
 
-            // ✅ Mapping cho GET /api/user/courses/system-courses
+            // Mapping cho GET /api/user/courses/system-courses
             CreateMap<Course, SystemCoursesListResponseDto>()
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore()); // Set trong service
 
-            // ✅ Mapping cho GET /api/user/courses/{courseId}
+            // Mapping cho GET /api/user/courses/{courseId}
             CreateMap<Course, CourseDetailWithEnrollmentDto>()
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.TotalLessons, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.Lessons, opt => opt.MapFrom(src => src.Lessons))
@@ -52,25 +56,9 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<Lesson, LessonSummaryDto>()
                 .ForMember(dest => dest.Order, opt => opt.MapFrom(src => src.OrderIndex));
 
-            // Deprecated - use SystemCoursesListResponseDto
-            CreateMap<Course, TeacherCourseResponseDto>()
-                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
-                .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
-                .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
-                .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
-
-            CreateMap<Course, UserCourseSummaryDto>()
-                .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
-                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
-                .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore());
-
-            CreateMap<Course, AdminCourseSummaryDto>()
-                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
-                .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
-                .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
-
             // Course with Progress mapping (for enrolled courses)
             CreateMap<Course, EnrolledCourseWithProgressDto>()
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
@@ -173,7 +161,6 @@ namespace LearningEnglish.Application.Mappings
 
             // TeacherPackage mappings
             CreateMap<CreateTeacherPackageDto, TeacherPackage>();
-            CreateMap<UpdateTeacherPackageDto, TeacherPackage>();
             CreateMap<TeacherPackage, TeacherPackageDto>();
 
             // Lecture mappings

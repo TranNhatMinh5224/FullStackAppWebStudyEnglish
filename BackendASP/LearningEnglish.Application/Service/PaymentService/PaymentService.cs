@@ -92,6 +92,49 @@ namespace LearningEnglish.Application.Service
                     _logger.LogInformation("Tạo thanh toán {PaymentId} thành công cho User {UserId}, Số tiền: {Amount}",
                         payment.PaymentId, userId, amount);
 
+                    // Nếu amount = 0 (miễn phí), tự động confirm ngay
+                    if (amount == 0)
+                    {
+                        _logger.LogInformation("Payment {PaymentId} có amount = 0, tự động confirm miễn phí", payment.PaymentId);
+
+                        payment.Status = PaymentStatus.Completed;
+                        payment.PaidAt = DateTime.UtcNow;
+                        payment.PaymentMethod = "Free";
+                        await _paymentRepository.UpdatePaymentStatusAsync(payment);
+                        await _paymentRepository.SaveChangesAsync();
+
+                        // Kích hoạt sản phẩm ngay
+                        var processor = _paymentStrategies.FirstOrDefault(s => s.ProductType == payment.ProductType);
+                        if (processor == null)
+                        {
+                            _logger.LogError("No payment strategy found for product type {ProductType}", payment.ProductType);
+                            response.Success = false;
+                            response.StatusCode = 400;
+                            response.Message = "Loại sản phẩm không được hỗ trợ";
+                            await _unitOfWork.RollbackAsync();
+                            return response;
+                        }
+
+                        var postPaymentResult = await processor.ProcessPostPaymentAsync(
+                            payment.UserId,
+                            payment.ProductId,
+                            payment.PaymentId);
+
+                        if (!postPaymentResult.Success)
+                        {
+                            _logger.LogError("Post-payment processing failed for free Payment {PaymentId}: {Message}",
+                                payment.PaymentId, postPaymentResult.Message);
+                            response.Success = false;
+                            response.StatusCode = 500;
+                            response.Message = postPaymentResult.Message;
+                            await _unitOfWork.RollbackAsync();
+                            return response;
+                        }
+
+                        _logger.LogInformation("Sản phẩm miễn phí đã được kích hoạt thành công cho Payment {PaymentId}", payment.PaymentId);
+                        response.Message = "Nhận sản phẩm miễn phí thành công";
+                    }
+
                     response.Data = new CreateInforPayment
                     {
                         PaymentId = payment.PaymentId,

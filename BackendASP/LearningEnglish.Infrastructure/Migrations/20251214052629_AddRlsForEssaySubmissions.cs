@@ -38,13 +38,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                 CREATE POLICY essay_submissions_admin_all ON ""EssaySubmissions""
                 FOR ALL
                 TO PUBLIC
-                USING (
-                    EXISTS (
-                        SELECT 1 FROM ""Users"" 
-                        WHERE ""UserId"" = current_setting('app.current_user_id')::INTEGER
-                        AND ""Role"" = 'Admin'
-                    )
-                );
+                USING (current_setting('app.current_user_role', true) = 'Admin');
             ");
 
             // Policy 2: Teacher - Full access to submissions for essays in their courses
@@ -54,7 +48,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                 FOR ALL
                 TO PUBLIC
                 USING (
-                    EXISTS (
+                    current_setting('app.current_user_role', true) = 'Teacher'
+                    AND EXISTS (
                         SELECT 1 
                         FROM ""Essays"" e
                         INNER JOIN ""Assessments"" a ON e.""AssessmentId"" = a.""AssessmentId""
@@ -73,7 +68,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                 FOR ALL
                 TO PUBLIC
                 USING (
-                    ""UserId"" = current_setting('app.current_user_id')::INTEGER
+                    current_setting('app.current_user_role', true) = 'Student'
+                    AND ""UserId"" = current_setting('app.current_user_id')::INTEGER
                 );
             ");
 
