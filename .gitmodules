@@ -1,3 +1,0 @@
-[submodule "docker-registry"]
-	path = docker-registry
-	url = https://github.com/yourname/docker-registry.git
