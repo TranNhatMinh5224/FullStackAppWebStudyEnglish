@@ -441,5 +441,60 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
+
+        public async Task<ServiceResponse<TeacherCourseDetailDto>> GetCourseDetailAsync(int courseId, int teacherId)
+        {
+            var response = new ServiceResponse<TeacherCourseDetailDto>();
+
+            try
+            {
+                // Lấy course với đầy đủ thông tin lessons và teacher
+                var course = await _courseRepository.GetCourseById(courseId);
+
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Course not found";
+                    return response;
+                }
+
+                // Kiểm tra ownership: Teacher chỉ được xem khóa học của mình
+                if (course.TeacherId != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "You do not have permission to view this course";
+                    _logger.LogWarning(
+                        "Teacher {TeacherId} attempted to access Course {CourseId} owned by Teacher {OwnerId}",
+                        teacherId, courseId, course.TeacherId
+                    );
+                    return response;
+                }
+
+                // Map course entity to detailed DTO using AutoMapper
+                var courseDetailDto = _mapper.Map<TeacherCourseDetailDto>(course);
+
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Data = courseDetailDto;
+                response.Message = "Course details retrieved successfully";
+
+                _logger.LogInformation(
+                    "Teacher {TeacherId} retrieved details for Course {CourseId}",
+                    teacherId, courseId
+                );
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "An error occurred while retrieving course details";
+                _logger.LogError(ex, "Error in GetCourseDetailAsync for CourseId: {CourseId}, TeacherId: {TeacherId}", 
+                    courseId, teacherId);
+            }
+
+            return response;
+        }
     }
 }

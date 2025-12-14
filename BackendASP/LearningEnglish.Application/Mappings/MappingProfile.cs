@@ -56,6 +56,16 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<Lesson, LessonSummaryDto>()
                 .ForMember(dest => dest.Order, opt => opt.MapFrom(src => src.OrderIndex));
 
+            // Mapping cho Teacher Course Detail
+            CreateMap<Course, TeacherCourseDetailDto>()
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
+                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? src.Teacher.FullName : "Unknown"))
+                .ForMember(dest => dest.TotalLessons, opt => opt.MapFrom(src => src.Lessons.Count))
+                .ForMember(dest => dest.TotalStudents, opt => opt.MapFrom(src => src.UserCourses.Count))
+                .ForMember(dest => dest.TotalModules, opt => opt.MapFrom(src => src.Lessons.Sum(l => l.Modules.Count)))
+                .ForMember(dest => dest.Lessons, opt => opt.MapFrom(src => src.Lessons.OrderBy(l => l.OrderIndex).ToList()));
+
             // Course with Progress mapping (for enrolled courses)
             CreateMap<Course, EnrolledCourseWithProgressDto>()
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))

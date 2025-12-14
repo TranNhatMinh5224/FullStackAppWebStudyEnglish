@@ -98,6 +98,16 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
         }
 
+        // GET: api/courses/teacher/{courseId} - Teacher retrieves detailed information of their own course
+        [HttpGet("teacher/{courseId}")]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> GetCourseDetail(int courseId)
+        {
+            var teacherId = GetCurrentUserId();
+            var result = await _teacherCourseService.GetCourseDetailAsync(courseId, teacherId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
         // PUT: api/courses/{courseId} - Admin updates any course with full permissions
         [HttpPut("{courseId}")]
         [Authorize(Roles = "Admin")]
