@@ -308,4 +308,27 @@ app.UseAuthorization();   // 2. Kiểm tra quyền [Authorize]
 app.UseRlsMiddleware();   // 3. Thiết lập context cho RLS
 
 app.MapControllers();  // 4. Thực thi controller actions
+
+
+
+// AUTO-APPLY MIGRATIONS ON STARTUP (Development/Docker environments)
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        logger.LogInformation("Applying database migrations...");
+        await dbContext.Database.MigrateAsync();
+        logger.LogInformation("database migrations completed successfully");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error applying database migrations");
+        throw;
+    }
+}
+
 app.Run();
