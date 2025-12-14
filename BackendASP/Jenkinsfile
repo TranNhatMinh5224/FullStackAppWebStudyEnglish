@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOTNET_CLI_HOME = '/tmp/.dotnet'
-        REGISTRY = "localhost:5000"
+        REGISTRY = "host.docker.internal:5000"
         IMAGE_NAME = "learningenglish-api"
         IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'latest'}"
         IMAGE_TAG_LATEST = "latest"
@@ -36,7 +36,11 @@ pipeline {
                     sh 'dotnet build -c Release --no-restore'
                 }
             }
-        }dir('BackendASP') {
+        }
+
+        stage('Test') {
+            steps {
+                dir('BackendASP') {
                     sh 'dotnet test -c Release --no-build --logger trx --results-directory TestResults || true'
                 }
             }
@@ -50,13 +54,13 @@ pipeline {
                       -c Release \
                       -o publish
                     '''
-                }'''
-                dotnet publish LearningEnglish.API/LearningEnglish.API.csproj \
-                  -c Release \
-                  -o publish
-                '''
+                }
             }
-        }dir('BackendASP') {
+        }
+
+        stage('Docker Build') {
+            steps {
+                dir('BackendASP') {
                     sh '''
                     docker build -t ${FULL_IMAGE} -t ${FULL_IMAGE_LATEST} .
                     '''
@@ -70,7 +74,11 @@ pipeline {
                 docker push ${FULL_IMAGE}
                 docker push ${FULL_IMAGE_LATEST}
                 echo "Pushed images: ${FULL_IMAGE} and ${FULL_IMAGE_LATEST}"
-        stage('Docker Push') {
+                '''
+            }
+        }
+
+        stage('Deploy') {
             steps {
                 dir('BackendASP') {
                     sh '''
@@ -100,14 +108,6 @@ pipeline {
         }
         cleanup {
             cleanWs()
-        always {
-            archiveArtifacts artifacts: 'TestResults/**/*.trx', allowEmptyArchive: true
-        }
-        success {
-            echo 'CI/CD pipeline SUCCESS'
-        }
-        failure {
-            echo ' CI/CD pipeline FAILED'
         }
     }
 }
