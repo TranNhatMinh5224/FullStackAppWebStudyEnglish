@@ -113,13 +113,24 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Cập nhật trực tiếp entity đã tồn tại thay vì tạo mới
-                existingPackage.PackageName = dto.PackageName;
-                existingPackage.Level = dto.Level;
-                existingPackage.Price = dto.Price;
-                existingPackage.MaxCourses = dto.MaxCourses;
-                existingPackage.MaxLessons = dto.MaxLessons;
-                existingPackage.MaxStudents = dto.MaxStudents;
+                // Partial update - chỉ cập nhật những trường không null
+                if (!string.IsNullOrWhiteSpace(dto.PackageName))
+                    existingPackage.PackageName = dto.PackageName;
+
+                if (dto.Level.HasValue)
+                    existingPackage.Level = dto.Level.Value;
+
+                if (dto.Price.HasValue)
+                    existingPackage.Price = dto.Price.Value;
+
+                if (dto.MaxCourses.HasValue)
+                    existingPackage.MaxCourses = dto.MaxCourses.Value;
+
+                if (dto.MaxLessons.HasValue)
+                    existingPackage.MaxLessons = dto.MaxLessons.Value;
+
+                if (dto.MaxStudents.HasValue)
+                    existingPackage.MaxStudents = dto.MaxStudents.Value;
 
                 await _teacherPackageRepository.UpdateTeacherPackageAsync(existingPackage);
 

@@ -1,24 +1,15 @@
 services:
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: learning-english-api
+    build: .
     ports:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
-      - ASPNETCORE_URLS=http://+:8080
     depends_on:
-      db:
-        condition: service_started
-    networks:
-      - learning-network
-    restart: unless-stopped
+      - db
 
   db:
     image: postgres:15
-    container_name: learning-english-db
     environment:
       - POSTGRES_DB=Db_Test_Elearning
       - POSTGRES_USER=postgres
@@ -27,15 +18,7 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - learning-network
-    restart: unless-stopped
-
-networks:
-  learning-network:
-    driver: bridge  
-## bridge network to allow communication between api and db services
+      - ./db-init:/docker-entrypoint-initdb.d
 
 volumes:
   postgres_data:
-    driver: local

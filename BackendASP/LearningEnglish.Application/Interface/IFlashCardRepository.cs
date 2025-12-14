@@ -9,6 +9,8 @@ namespace LearningEnglish.Application.Interface
         Task<FlashCard?> GetByIdWithDetailsAsync(int flashCardId);
         Task<List<FlashCard>> GetByModuleIdAsync(int moduleId);
         Task<List<FlashCard>> GetByModuleIdWithDetailsAsync(int moduleId);
+        Task<FlashCard?> GetSingleFlashCardByModuleAsync(int moduleId, int cardIndex);
+        Task<int> GetFlashCardCountByModuleAsync(int moduleId);
         Task<FlashCard> CreateAsync(FlashCard flashCard);
         Task<FlashCard> UpdateAsync(FlashCard flashCard);
         Task<bool> DeleteAsync(int flashCardId);

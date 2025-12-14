@@ -17,21 +17,31 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _quizAttemptAdminService = quizAttemptAdminService;
         }
 
-        // Lấy tất cả các lần làm bài của một quiz
-        [HttpGet("quiz/{quizId}")]
-        public async Task<IActionResult> GetQuizAttempts(int quizId, [FromQuery] PageRequest? request)
+        /// <summary>
+        /// Lấy danh sách attempts của một quiz (CÓ PHÂN TRANG)
+        /// PageRequest có giá trị mặc định, luôn dùng phân trang
+        /// </summary>
+        [HttpGet("quiz/{quizId}/paged")]
+        public async Task<IActionResult> GetQuizAttemptsPaged(int quizId, [FromQuery] PageRequest request)
         {
-            if (request != null && (request.PageNumber > 1 || request.PageSize != 20 || !string.IsNullOrEmpty(request.SearchTerm)))
-            {
-                var pagedResult = await _quizAttemptAdminService.GetQuizAttemptsPagedAsync(quizId, request);
-                return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
-            }
+            var pagedResult = await _quizAttemptAdminService.GetQuizAttemptsPagedAsync(quizId, request);
+            return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
+        }
 
+        /// <summary>
+        /// Lấy danh sách attempts của một quiz (KHÔNG PHÂN TRANG)
+        /// Trả về tất cả attempts
+        /// </summary>
+        [HttpGet("quiz/{quizId}")]
+        public async Task<IActionResult> GetQuizAttempts(int quizId)
+        {
             var result = await _quizAttemptAdminService.GetQuizAttemptsAsync(quizId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/AdminTeacher/QuizAttempt/{attemptId} - Lấy chi tiết một lần làm bài
+        /// <summary>
+        /// Lấy chi tiết một lần làm bài
+        /// </summary>
         [HttpGet("{attemptId}")]
         public async Task<IActionResult> GetAttemptDetails(int attemptId)
         {
@@ -48,7 +58,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/AdminTeacher/QuizAttempt/stats/{quizId} - Lấy thống kê các lần làm bài của quiz
+        /// <summary>
+        /// Lấy thống kê các lần làm bài của quiz
+        /// </summary>
         [HttpGet("stats/{quizId}")]
         public async Task<IActionResult> GetQuizAttemptStats(int quizId)
         {
@@ -56,21 +68,31 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy điểm của các user đã hoàn thành quiz
-        [HttpGet("scores/{quizId}")]
-        public async Task<IActionResult> GetQuizScores(int quizId, [FromQuery] PageRequest? request)
+        /// <summary>
+        /// Lấy điểm của các user đã hoàn thành quiz (CÓ PHÂN TRANG)
+        /// PageRequest có giá trị mặc định, luôn dùng phân trang
+        /// </summary>
+        [HttpGet("scores/{quizId}/paged")]
+        public async Task<IActionResult> GetQuizScoresPaged(int quizId, [FromQuery] PageRequest request)
         {
-            if (request != null && (request.PageNumber > 1 || request.PageSize != 20 || !string.IsNullOrEmpty(request.SearchTerm)))
-            {
-                var pagedResult = await _quizAttemptAdminService.GetQuizScoresPagedAsync(quizId, request);
-                return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
-            }
+            var pagedResult = await _quizAttemptAdminService.GetQuizScoresPagedAsync(quizId, request);
+            return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
+        }
 
+        /// <summary>
+        /// Lấy điểm của các user đã hoàn thành quiz (KHÔNG PHÂN TRANG)
+        /// Trả về tất cả điểm
+        /// </summary>
+        [HttpGet("scores/{quizId}")]
+        public async Task<IActionResult> GetQuizScores(int quizId)
+        {
             var result = await _quizAttemptAdminService.GetQuizScoresAsync(quizId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/AdminTeacher/QuizAttempt/user/{userId}/quiz/{quizId} - Lấy lịch sử làm bài của user cho một quiz
+        /// <summary>
+        /// Lấy lịch sử làm bài của user cho một quiz
+        /// </summary>
         [HttpGet("user/{userId}/quiz/{quizId}")]
         public async Task<IActionResult> GetUserQuizAttempts(int userId, int quizId)
         {

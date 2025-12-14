@@ -4,16 +4,21 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace LearningEnglish.API.Controller.Shared
+namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
-    [Route("api/shared/essays")]
+    /// <summary>
+    /// Controller quản lý Essays cho Admin và Teacher
+    /// Admin: CRUD tất cả essays trong hệ thống
+    /// Teacher: CRUD chỉ essays thuộc courses mình dạy (filtered by RLS hoặc teacherId check)
+    /// </summary>
+    [Route("api/admin-teacher/essays")]
     [ApiController]
-    [Authorize]
-    public class EssayController : ControllerBase
+    [Authorize(Roles = "Admin,Teacher")]
+    public class ATEssayController : ControllerBase
     {
         private readonly IEssayService _essayService;
 
-        public EssayController(IEssayService essayService)
+        public ATEssayController(IEssayService essayService)
         {
             _essayService = essayService;
         }
@@ -29,7 +34,11 @@ namespace LearningEnglish.API.Controller.Shared
             return User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
         }
 
-        // GET: api/shared/essays/{essayId} - Get essay by ID (all roles)
+        /// <summary>
+        /// Xem chi tiết một essay
+        /// - Teacher: Chỉ xem essays từ courses mình dạy
+        /// - Admin: Xem tất cả
+        /// </summary>
         [HttpGet("{essayId}")]
         public async Task<IActionResult> GetEssay(int essayId)
         {
@@ -37,7 +46,11 @@ namespace LearningEnglish.API.Controller.Shared
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/shared/essays/assessment/{assessmentId} - Get essays by assessment ID (all roles)
+        /// <summary>
+        /// Lấy danh sách essays theo assessment ID
+        /// - Teacher: Chỉ thấy essays từ courses mình dạy
+        /// - Admin: Xem tất cả
+        /// </summary>
         [HttpGet("assessment/{assessmentId}")]
         public async Task<IActionResult> GetEssaysByAssessment(int assessmentId)
         {
@@ -45,9 +58,12 @@ namespace LearningEnglish.API.Controller.Shared
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/shared/essays - Create new essay (Admin/Teacher only)
+        /// <summary>
+        /// Tạo essay mới
+        /// - Teacher: Chỉ tạo essays trong courses mình dạy (kiểm tra teacherId)
+        /// - Admin: Tạo essays trong bất kỳ course nào
+        /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> CreateEssay([FromBody] CreateEssayDto createDto)
         {
             if (!ModelState.IsValid)
@@ -62,9 +78,12 @@ namespace LearningEnglish.API.Controller.Shared
                 : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/shared/essays/{essayId} - Update essay (Admin: any, Teacher: own only)
+        /// <summary>
+        /// Cập nhật essay
+        /// - Teacher: Chỉ cập nhật essays trong courses mình dạy (kiểm tra teacherId)
+        /// - Admin: Cập nhật bất kỳ essay nào
+        /// </summary>
         [HttpPut("{essayId}")]
-        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> UpdateEssay(int essayId, [FromBody] UpdateEssayDto updateDto)
         {
             if (!ModelState.IsValid)
@@ -77,9 +96,12 @@ namespace LearningEnglish.API.Controller.Shared
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/shared/essays/{essayId} - Delete essay (Admin: any, Teacher: own only)
+        /// <summary>
+        /// Xóa essay
+        /// - Teacher: Chỉ xóa essays trong courses mình dạy (kiểm tra teacherId)
+        /// - Admin: Xóa bất kỳ essay nào
+        /// </summary>
         [HttpDelete("{essayId}")]
-        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> DeleteEssay(int essayId)
         {
             var userRole = GetCurrentUserRole();

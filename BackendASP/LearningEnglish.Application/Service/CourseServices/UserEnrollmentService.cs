@@ -210,8 +210,8 @@ namespace LearningEnglish.Application.Service
                     }
                 }
 
-                // Đăng ký user vào course (courseId first, userId second theo interface)
-                await _courseRepository.EnrollUserInCourse(course.CourseId, userId);
+                // Đăng ký user vào course
+                await _courseRepository.EnrollUserInCourse(userId, course.CourseId);
 
                 response.Success = true;
                 response.StatusCode = 200;

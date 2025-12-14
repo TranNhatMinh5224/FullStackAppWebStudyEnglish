@@ -107,7 +107,7 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
 
-            if (package.Price <= 0)
+            if (package.Price < 0)
             {
                 _logger.LogWarning("Gói giáo viên {PackageId} có giá không hợp lệ {Price}", packageId, package.Price);
                 response.Success = false;

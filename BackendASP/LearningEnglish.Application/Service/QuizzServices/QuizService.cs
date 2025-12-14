@@ -73,7 +73,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
         // Create new quiz
-        public async Task<ServiceResponse<QuizDto>> CreateQuizAsync(QuizCreateDto quizDto)
+        public async Task<ServiceResponse<QuizDto>> CreateQuizAsync(QuizCreateDto quizDto, int? teacherId = null)
         {
             var response = new ServiceResponse<QuizDto>();
             try
@@ -86,6 +86,18 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Assessment not found";
                     response.StatusCode = 404;
                     return response;
+                }
+
+                // 🔒 Check Teacher ownership if teacherId is provided
+                if (teacherId.HasValue)
+                {
+                    if (!await _assessmentRepository.IsTeacherOwnerOfAssessmentAsync(teacherId.Value, quizDto.AssessmentId))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Teacher không có quyền tạo Quiz cho Assessment này";
+                        return response;
+                    }
                 }
 
                 var quiz = _mapper.Map<Quiz>(quizDto);
@@ -113,7 +125,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
         // Update quiz
-        public async Task<ServiceResponse<QuizDto>> UpdateQuizAsync(int quizId, QuizUpdateDto quizDto)
+        public async Task<ServiceResponse<QuizDto>> UpdateQuizAsync(int quizId, QuizUpdateDto quizDto, int? teacherId = null)
         {
             var response = new ServiceResponse<QuizDto>();
             try
@@ -127,6 +139,17 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // 🔒 Check Teacher ownership if teacherId is provided
+                if (teacherId.HasValue)
+                {
+                    if (!await _assessmentRepository.IsTeacherOwnerOfAssessmentAsync(teacherId.Value, existingQuiz.AssessmentId))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Teacher không có quyền cập nhật Quiz này";
+                        return response;
+                    }
+                }
 
                 _mapper.Map(quizDto, existingQuiz);
                 await _quizRepository.UpdateQuizAsync(existingQuiz);
@@ -153,7 +176,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
         // Delete quiz
-        public async Task<ServiceResponse<bool>> DeleteQuizAsync(int quizId)
+        public async Task<ServiceResponse<bool>> DeleteQuizAsync(int quizId, int? teacherId = null)
         {
             var response = new ServiceResponse<bool>();
             try
@@ -166,6 +189,19 @@ namespace LearningEnglish.Application.Service
                     response.StatusCode = 404;
                     response.Data = false;
                     return response;
+                }
+
+                // 🔒 Check Teacher ownership if teacherId is provided
+                if (teacherId.HasValue)
+                {
+                    if (!await _assessmentRepository.IsTeacherOwnerOfAssessmentAsync(teacherId.Value, existingQuiz.AssessmentId))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Teacher không có quyền xóa Quiz này";
+                        response.Data = false;
+                        return response;
+                    }
                 }
 
                 await _quizRepository.DeleteQuizAsync(quizId);

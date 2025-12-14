@@ -138,6 +138,112 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
+        // + Lấy một flashcard theo chỉ số (phân trang từng card cho chế độ học)
+        public async Task<ServiceResponse<PaginatedFlashCardDto>> GetFlashCardByIndexAsync(int moduleId, int cardIndex, int? userId = null)
+        {
+            var response = new ServiceResponse<PaginatedFlashCardDto>();
+
+            try
+            {
+                // Validate cardIndex
+                if (cardIndex < 1)
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "Chỉ số thẻ phải lớn hơn 0";
+                    return response;
+                }
+
+                // Get total count
+                var totalCards = await _flashCardRepository.GetFlashCardCountByModuleAsync(moduleId);
+
+                if (totalCards == 0)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Module không có flashcard nào";
+                    return response;
+                }
+
+                // Validate cardIndex against total
+                if (cardIndex > totalCards)
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = $"Chỉ số thẻ vượt quá tổng số thẻ ({totalCards})";
+                    return response;
+                }
+
+                // Get the single flashcard at the index
+                var flashCard = await _flashCardRepository.GetSingleFlashCardByModuleAsync(moduleId, cardIndex);
+
+                if (flashCard == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy flashcard";
+                    return response;
+                }
+
+                var flashCardDto = _mapper.Map<FlashCardDto>(flashCard);
+
+                // Calculate review statistics from Reviews collection
+                if (flashCard.Reviews != null && flashCard.Reviews.Any())
+                {
+                    var reviews = flashCard.Reviews.ToList();
+                    flashCardDto.ReviewCount = reviews.Count;
+                    
+                    var successfulReviews = reviews.Count(r => r.Quality >= 3); // Quality >= 3 is considered successful
+                    flashCardDto.SuccessRate = reviews.Count > 0 
+                        ? Math.Round((decimal)successfulReviews / reviews.Count * 100, 2) 
+                        : 0;
+                    
+                    var lastReview = reviews.OrderByDescending(r => r.ReviewedAt).FirstOrDefault();
+                    if (lastReview != null)
+                    {
+                        flashCardDto.LastReviewedAt = lastReview.ReviewedAt;
+                        flashCardDto.CurrentLevel = lastReview.RepetitionCount; // SRS level (số lần ôn thành công)
+                        flashCardDto.NextReviewAt = lastReview.NextReviewDate;
+                    }
+                }
+                else
+                {
+                    flashCardDto.ReviewCount = 0;
+                    flashCardDto.SuccessRate = 0;
+                    flashCardDto.CurrentLevel = 0;
+                }
+
+                // Generate URLs
+                if (!string.IsNullOrWhiteSpace(flashCardDto.ImageUrl))
+                {
+                    flashCardDto.ImageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, flashCardDto.ImageUrl);
+                }
+                if (!string.IsNullOrWhiteSpace(flashCardDto.AudioUrl))
+                {
+                    flashCardDto.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, flashCardDto.AudioUrl);
+                }
+
+                // Create paginated response
+                response.Data = new PaginatedFlashCardDto
+                {
+                    FlashCard = flashCardDto,
+                    CurrentIndex = cardIndex,
+                    TotalCards = totalCards
+                };
+
+                response.Message = $"Lấy flashcard {cardIndex}/{totalCards} thành công";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy flashcard index {CardIndex} theo ModuleId: {ModuleId}", cardIndex, moduleId);
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Có lỗi xảy ra khi lấy flashcard";
+            }
+
+            return response;
+        }
+
         // + Tạo flashcard mới
         public async Task<ServiceResponse<FlashCardDto>> CreateFlashCardAsync(CreateFlashCardDto createFlashCardDto, int createdByUserId)
         {

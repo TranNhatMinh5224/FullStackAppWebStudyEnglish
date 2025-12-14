@@ -1,8 +1,7 @@
 namespace LearningEnglish.Application.DTOs
 {
-    /// <summary>
-    /// FlashCard with pronunciation progress for practice view
-    /// </summary>
+
+
     public class FlashCardWithPronunciationDto
     {
         // FlashCard info
@@ -14,7 +13,7 @@ namespace LearningEnglish.Application.DTOs
         public string? AudioUrl { get; set; }
         public string? Phonetic { get; set; }
 
-        // Pronunciation Progress (null if never practiced)
+
         public PronunciationProgressSummary? Progress { get; set; }
     }
 
@@ -35,5 +34,15 @@ namespace LearningEnglish.Application.DTOs
         // Status indicators
         public string Status { get; set; } = "Not Started"; // Not Started, Practicing, Mastered
         public string StatusColor { get; set; } = "gray"; // gray, yellow, green
+    }
+
+    // DTO for paginated single flashcard with pronunciation progress (for practice mode)
+    public class PaginatedFlashCardWithPronunciationDto
+    {
+        public FlashCardWithPronunciationDto? FlashCard { get; set; }
+        public int CurrentIndex { get; set; }
+        public int TotalCards { get; set; }
+        public bool HasPrevious => CurrentIndex > 1;
+        public bool HasNext => CurrentIndex < TotalCards;
     }
 }

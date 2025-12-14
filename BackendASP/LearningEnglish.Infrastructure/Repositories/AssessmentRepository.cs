@@ -63,5 +63,15 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .AnyAsync(m => m.ModuleId == moduleId &&
                               m.Lesson!.Course!.TeacherId == teacherId);
         }
+
+        public async Task<bool> IsTeacherOwnerOfAssessmentAsync(int teacherId, int assessmentId)
+        {
+            return await _context.Assessments
+                .Include(a => a.Module)
+                    .ThenInclude(m => m!.Lesson)
+                        .ThenInclude(l => l!.Course)
+                .AnyAsync(a => a.AssessmentId == assessmentId &&
+                              a.Module!.Lesson!.Course!.TeacherId == teacherId);
+        }
     }
 }

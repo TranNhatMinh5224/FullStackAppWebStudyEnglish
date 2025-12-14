@@ -140,11 +140,6 @@ namespace LearningEnglish.API.Controllers.User
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
         {
-            if (dto == null || string.IsNullOrEmpty(dto.Email))
-            {
-                return BadRequest(new { success = false, message = "Email là bắt buộc" });
-            }
-
             var result = await _passwordService.ForgotPasswordAsync(dto.Email);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -153,11 +148,6 @@ namespace LearningEnglish.API.Controllers.User
         [HttpPost("verify-otp")]
         public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto dto)
         {
-            if (dto == null)
-            {
-                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ" });
-            }
-
             var result = await _passwordService.VerifyOtpAsync(dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -166,11 +156,6 @@ namespace LearningEnglish.API.Controllers.User
         [HttpPost("set-new-password")]
         public async Task<IActionResult> SetNewPassword([FromBody] SetNewPasswordDto dto)
         {
-            if (dto == null)
-            {
-                return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ" });
-            }
-
             var result = await _passwordService.SetNewPasswordAsync(dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -188,20 +173,9 @@ namespace LearningEnglish.API.Controllers.User
         [Authorize]
         public async Task<IActionResult> Logout([FromBody] LogoutDto dto)
         {
-            try 
-            {
-                var userId = GetCurrentUserId();
-                var result = await _logoutService.LogoutAsync(dto, userId);
-                return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { 
-                    success = false, 
-                    message = "Đã xảy ra lỗi hệ thống khi đăng xuất",
-                    error = ex.Message 
-                });
-            }
+            var userId = GetCurrentUserId();
+            var result = await _logoutService.LogoutAsync(dto, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // POST: api/user/auth/logout-all - Logout from all devices (revoke all refresh tokens)
@@ -209,20 +183,9 @@ namespace LearningEnglish.API.Controllers.User
         [Authorize]
         public async Task<IActionResult> LogoutAll()
         {
-            try 
-            {
-                var userId = GetCurrentUserId();
-                var result = await _logoutService.LogoutAllAsync(userId);
-                return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { 
-                    success = false, 
-                    message = "Đã xảy ra lỗi hệ thống khi đăng xuất khỏi tất cả thiết bị",
-                    error = ex.Message 
-                });
-            }
+            var userId = GetCurrentUserId();
+            var result = await _logoutService.LogoutAllAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

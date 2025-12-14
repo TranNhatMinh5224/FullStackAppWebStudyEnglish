@@ -60,7 +60,22 @@ namespace LearningEnglish.API.Controller.User
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
 
+            _logger.LogInformation("🔍 GetLessonById called: LessonId={LessonId}, UserId={UserId}, Role={Role}", 
+                lessonId, userId, userRole);
+
             var result = await _lessonService.GetLessonById(lessonId, userId, userRole);
+            
+            if (result.Success && result.Data != null)
+            {
+                _logger.LogInformation("✅ Lesson {LessonId} returned for User {UserId} (Role: {Role})", 
+                    lessonId, userId, userRole);
+            }
+            else
+            {
+                _logger.LogWarning("❌ Lesson {LessonId} NOT returned for User {UserId} (Role: {Role}). Status: {StatusCode}, Message: {Message}", 
+                    lessonId, userId, userRole, result.StatusCode, result.Message);
+            }
+
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

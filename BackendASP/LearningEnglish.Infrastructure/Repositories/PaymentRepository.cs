@@ -70,6 +70,14 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Payment>> GetAllTransactionHistoryAsync(int userId)
+        {
+            return await _context.Payments
+                .Where(p => p.UserId == userId)
+                .OrderByDescending(p => p.PaymentId)
+                .ToListAsync();
+        }
+
         public async Task<int> GetTransactionCountAsync(int userId)
         {
             return await _context.Payments

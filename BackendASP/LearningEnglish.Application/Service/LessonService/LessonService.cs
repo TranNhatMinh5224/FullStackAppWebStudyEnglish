@@ -151,7 +151,7 @@ namespace LearningEnglish.Application.Service
         }
         // teacher thêm lesson
 
-        public async Task<ServiceResponse<LessonDto>> TeacherAddLesson(TeacherCreateLessonDto dto)
+        public async Task<ServiceResponse<LessonDto>> TeacherAddLesson(TeacherCreateLessonDto dto, int userId)
         {
             var response = new ServiceResponse<LessonDto>();
             try
@@ -171,6 +171,17 @@ namespace LearningEnglish.Application.Service
                     response.Success = false;
                     response.StatusCode = 403;
                     response.Message = "Chỉ có thể thêm bài học vào khóa học của giáo viên";
+                    return response;
+                }
+
+                // ✅ Kiểm tra teacher có phải chủ sở hữu course không
+                if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền thêm bài học vào khóa học này";
+                    _logger.LogWarning("Teacher {UserId} attempted to add lesson to course {CourseId} owned by {OwnerId}",
+                        userId, dto.CourseId, course.TeacherId);
                     return response;
                 }
 
@@ -290,45 +301,35 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<List<LessonWithProgressDto>>();
             try
             {
+                // RLS đã tự động filter courses theo role:
+                // - Admin: thấy tất cả courses
+                // - Teacher: chỉ thấy own courses
+                // - Student: chỉ thấy enrolled courses
                 var course = await _courseRepository.GetCourseById(CourseId);
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy khóa học";
+                    response.Message = "Không tìm thấy khóa học hoặc bạn không có quyền truy cập";
                     return response;
                 }
 
-                // Authorization checks
+                // 🔒 For Teacher: validate ownership
                 if (userRole == "Teacher")
                 {
-                    if (course.Type != CourseType.Teacher || course.TeacherId != userId)
+                    if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
                     {
                         response.Success = false;
                         response.StatusCode = 403;
-                        response.Message = "Bạn chỉ có thể xem bài học của khóa học do mình tạo";
+                        response.Message = "Bạn không có quyền truy cập các bài học của khóa học này";
+                        _logger.LogWarning("Teacher {UserId} attempted to access lessons in course {CourseId} owned by {OwnerId}",
+                            userId, CourseId, course.TeacherId);
                         return response;
                     }
-                }
-                else if (userRole == "Student")
-                {
-                    bool isEnrolled = await _courseRepository.IsUserEnrolled(course.CourseId, userId);
-                    if (!isEnrolled)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Khóa học này mà bạn chưa đăng ký, xin vui lòng đăng ký để xem những bài học mà bạn muốn.";
-                        return response;
-                    }
-                }
-                else if (userRole != "Admin")
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "Không có quyền truy cập";
-                    return response;
                 }
 
+                // RLS policy lessons_policy_* đã tự động filter lessons theo role
+                // Nếu không có quyền, GetListLessonByCourseId sẽ trả về empty list
                 var lessons = await _lessonRepository.GetListLessonByCourseId(CourseId);
                 var lessonDtos = new List<LessonWithProgressDto>();
 
@@ -390,63 +391,39 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<LessonDto>();
             try
             {
+                // RLS policy lessons_policy_* đã tự động filter lessons theo role
+                // Nếu lesson == null → không tồn tại hoặc không có quyền truy cập
                 var lesson = await _lessonRepository.GetLessonById(lessonId);
                 if (lesson == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy bài học";
+                    response.Message = "Không tìm thấy bài học hoặc bạn không có quyền truy cập";
                     return response;
                 }
 
-
-                var course = await _courseRepository.GetCourseById(lesson.CourseId);
-                if (course == null)
+                // 🔒 For Teacher: validate ownership via course
+                if (userRole == "Teacher")
                 {
-                    response.Success = false;
-                    response.StatusCode = 404;
-                    response.Message = "Không tìm thấy khóa học";
-                    return response;
-                }
+                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                    if (course == null)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 404;
+                        response.Message = "Không tìm thấy khóa học của bài học này";
+                        return response;
+                    }
 
-
-                if (userRole == "Admin")
-                {
-                    response.StatusCode = 200;
-                    response.Data = _mapper.Map<LessonDto>(lesson);
-                }
-
-                else if (userRole == "Teacher")
-                {
-                    if (course.Type != CourseType.Teacher || course.TeacherId != userId)
+                    if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
                     {
                         response.Success = false;
                         response.StatusCode = 403;
-                        response.Message = "Bạn chỉ có thể xem bài học của khóa học do mình tạo";
+                        response.Message = "Bạn không có quyền truy cập bài học này";
+                        _logger.LogWarning("Teacher {UserId} attempted to access lesson {LessonId} in course {CourseId} owned by {OwnerId}",
+                            userId, lessonId, lesson.CourseId, course.TeacherId);
                         return response;
                     }
                 }
-
-                else if (userRole == "Student")
-                {
-                    bool isEnrolled = await _courseRepository.IsUserEnrolled(course.CourseId, userId);
-                    if (!isEnrolled)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Bài học này thuộc khóa học mà bạn chưa đăng ký, xin vui lòng đăng ký để xem những bài học mà bạn muốn.";
-                        return response;
-                    }
-                }
-
-                else
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "Không có quyền truy cập";
-                    return response;
-                }
-
 
                 var lessonDto = _mapper.Map<LessonDto>(lesson);
 
@@ -652,22 +629,6 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        public async Task<bool> CheckTeacherLessonPermission(int lessonId, int teacherId)
-        {
-            var lesson = await _lessonRepository.GetLessonById(lessonId);
-            if (lesson == null)
-            {
-                return false;
-            }
-
-            var course = await _courseRepository.GetCourseById(lesson.CourseId);
-            if (course == null || course.Type != CourseType.Teacher || course.TeacherId != teacherId)
-            {
-                return false;
-            }
-
-            return true;
-        }
 
         public async Task<ServiceResponse<bool>> DeleteLesson(DeleteLessonDto dto)
         {
@@ -679,9 +640,9 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<bool>();
             try
             {
-                // Get lesson first to check if it exists
-                var lessonResponse = await GetLessonById(lessonId, userId, userRole);
-                if (!lessonResponse.Success || lessonResponse.Data == null)
+                // Get lesson entity to validate ownership
+                var lesson = await _lessonRepository.GetLessonById(lessonId);
+                if (lesson == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
@@ -690,36 +651,45 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Admin can delete any lesson
-                if (userRole == "Admin")
-                {
-                    _logger.LogInformation("Admin {UserId} is deleting lesson {LessonId}", userId, lessonId);
-                    return await DeleteLesson(lessonId);
-                }
-
-                // Teacher can only delete lessons from their own courses
+                // 🔒 For Teacher: validate ownership via course
                 if (userRole == "Teacher")
                 {
-                    var hasPermission = await CheckTeacherLessonPermission(lessonId, userId);
-                    if (!hasPermission)
+                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                    if (course == null)
                     {
-                        _logger.LogWarning("Teacher {UserId} attempted to delete lesson {LessonId} without permission", userId, lessonId);
                         response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Bạn chỉ có thể xóa bài học từ khóa học của mình";
+                        response.StatusCode = 404;
+                        response.Message = "Không tìm thấy khóa học của bài học này";
                         response.Data = false;
                         return response;
                     }
 
-                    _logger.LogInformation("Teacher {UserId} is deleting lesson {LessonId} from course {CourseId}", userId, lessonId, lessonResponse.Data.CourseId);
-                    return await DeleteLesson(lessonId);
+                    if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Bạn không có quyền xóa bài học này";
+                        response.Data = false;
+                        _logger.LogWarning("Teacher {UserId} attempted to delete lesson {LessonId} in course {CourseId} owned by {OwnerId}",
+                            userId, lessonId, lesson.CourseId, course.TeacherId);
+                        return response;
+                    }
                 }
 
-                response.Success = false;
-                response.StatusCode = 403;
-                response.Message = "Không có quyền truy cập";
-                response.Data = false;
-                return response;
+                // Admin can delete any lesson, Teacher can delete own lessons
+                var lessonResponse = await GetLessonById(lessonId, userId, userRole);
+                if (!lessonResponse.Success || lessonResponse.Data == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài học hoặc bạn không có quyền truy cập";
+                    response.Data = false;
+                    return response;
+                }
+
+                // Admin và Teacher đều có thể delete (RLS đã filter)
+                _logger.LogInformation("{Role} {UserId} is deleting lesson {LessonId}", userRole, userId, lessonId);
+                return await DeleteLesson(lessonId);
             }
             catch (Exception ex)
             {
@@ -737,9 +707,9 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<LessonDto>();
             try
             {
-                // Get lesson first to check if it exists
-                var lessonResponse = await GetLessonById(lessonId, userId, userRole);
-                if (!lessonResponse.Success || lessonResponse.Data == null)
+                // Get lesson entity to validate ownership
+                var lesson = await _lessonRepository.GetLessonById(lessonId);
+                if (lesson == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
@@ -747,34 +717,32 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Admin can update any lesson
-                if (userRole == "Admin")
-                {
-                    _logger.LogInformation("Admin {UserId} is updating lesson {LessonId}", userId, lessonId);
-                    return await UpdateLesson(lessonId, dto);
-                }
-
-                // Teacher can only update lessons from their own courses
+                // 🔒 For Teacher: validate ownership via course
                 if (userRole == "Teacher")
                 {
-                    var hasPermission = await CheckTeacherLessonPermission(lessonId, userId);
-                    if (!hasPermission)
+                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                    if (course == null)
                     {
-                        _logger.LogWarning("Teacher {UserId} attempted to update lesson {LessonId} without permission", userId, lessonId);
                         response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Bạn chỉ có thể cập nhật bài học từ khóa học của mình";
+                        response.StatusCode = 404;
+                        response.Message = "Không tìm thấy khóa học của bài học này";
                         return response;
                     }
 
-                    _logger.LogInformation("Teacher {UserId} is updating lesson {LessonId}", userId, lessonId);
-                    return await UpdateLesson(lessonId, dto);
+                    if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Bạn không có quyền chỉnh sửa bài học này";
+                        _logger.LogWarning("Teacher {UserId} attempted to update lesson {LessonId} in course {CourseId} owned by {OwnerId}",
+                            userId, lessonId, lesson.CourseId, course.TeacherId);
+                        return response;
+                    }
                 }
 
-                response.Success = false;
-                response.StatusCode = 403;
-                response.Message = "Không có quyền truy cập";
-                return response;
+                // Admin can update any lesson, Teacher can update own lessons
+                _logger.LogInformation("{Role} {UserId} is updating lesson {LessonId}", userRole, userId, lessonId);
+                return await UpdateLesson(lessonId, dto);
             }
             catch (Exception ex)
             {

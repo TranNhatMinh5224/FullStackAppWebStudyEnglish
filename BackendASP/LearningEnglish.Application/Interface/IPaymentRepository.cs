@@ -15,6 +15,7 @@ namespace LearningEnglish.Application.Interface
 
         // Transaction History
         Task<IEnumerable<Payment>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize);
+        Task<IEnumerable<Payment>> GetAllTransactionHistoryAsync(int userId);
         Task<int> GetTransactionCountAsync(int userId);
         Task<Payment?> GetTransactionDetailAsync(int paymentId, int userId);
         

@@ -92,6 +92,49 @@ namespace LearningEnglish.Application.Service
                     _logger.LogInformation("Tạo thanh toán {PaymentId} thành công cho User {UserId}, Số tiền: {Amount}",
                         payment.PaymentId, userId, amount);
 
+                    // Nếu amount = 0 (miễn phí), tự động confirm ngay
+                    if (amount == 0)
+                    {
+                        _logger.LogInformation("Payment {PaymentId} có amount = 0, tự động confirm miễn phí", payment.PaymentId);
+
+                        payment.Status = PaymentStatus.Completed;
+                        payment.PaidAt = DateTime.UtcNow;
+                        payment.PaymentMethod = "Free";
+                        await _paymentRepository.UpdatePaymentStatusAsync(payment);
+                        await _paymentRepository.SaveChangesAsync();
+
+                        // Kích hoạt sản phẩm ngay
+                        var processor = _paymentStrategies.FirstOrDefault(s => s.ProductType == payment.ProductType);
+                        if (processor == null)
+                        {
+                            _logger.LogError("No payment strategy found for product type {ProductType}", payment.ProductType);
+                            response.Success = false;
+                            response.StatusCode = 400;
+                            response.Message = "Loại sản phẩm không được hỗ trợ";
+                            await _unitOfWork.RollbackAsync();
+                            return response;
+                        }
+
+                        var postPaymentResult = await processor.ProcessPostPaymentAsync(
+                            payment.UserId,
+                            payment.ProductId,
+                            payment.PaymentId);
+
+                        if (!postPaymentResult.Success)
+                        {
+                            _logger.LogError("Post-payment processing failed for free Payment {PaymentId}: {Message}",
+                                payment.PaymentId, postPaymentResult.Message);
+                            response.Success = false;
+                            response.StatusCode = 500;
+                            response.Message = postPaymentResult.Message;
+                            await _unitOfWork.RollbackAsync();
+                            return response;
+                        }
+
+                        _logger.LogInformation("Sản phẩm miễn phí đã được kích hoạt thành công cho Payment {PaymentId}", payment.PaymentId);
+                        response.Message = "Nhận sản phẩm miễn phí thành công";
+                    }
+
                     response.Data = new CreateInforPayment
                     {
                         PaymentId = payment.PaymentId,
@@ -252,18 +295,17 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // Service laays ra thong tin lich su giao dich
-
-        public async Task<ServiceResponse<PagedResult<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
+        // Service laays ra thong tin lich su giao dich (Phân trang)
+        public async Task<ServiceResponse<PagedResult<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, PageRequest request)
         {
             var response = new ServiceResponse<PagedResult<TransactionHistoryDto>>();
             try
             {
                 _logger.LogInformation("Getting transaction history for User {UserId}, Page {PageNumber}, Size {PageSize}",
-                    userId, pageNumber, pageSize);
+                    userId, request.PageNumber, request.PageSize);
 
                 var totalCount = await _paymentRepository.GetTransactionCountAsync(userId);
-                var payments = await _paymentRepository.GetTransactionHistoryAsync(userId, pageNumber, pageSize);
+                var payments = await _paymentRepository.GetTransactionHistoryAsync(userId, request.PageNumber, request.PageSize);
 
                 var transactionDtos = new List<TransactionHistoryDto>();
                 foreach (var payment in payments)
@@ -289,8 +331,8 @@ namespace LearningEnglish.Application.Service
                 {
                     Items = transactionDtos,
                     TotalCount = totalCount,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize
                 };
 
                 _logger.LogInformation("Retrieved {Count} transactions for User {UserId}", transactionDtos.Count, userId);
@@ -305,6 +347,50 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Service lay toan bo lich su giao dich (Khong phan trang)
+        public async Task<ServiceResponse<List<TransactionHistoryDto>>> GetAllTransactionHistoryAsync(int userId)
+        {
+            var response = new ServiceResponse<List<TransactionHistoryDto>>();
+            try
+            {
+                _logger.LogInformation("Getting all transaction history for User {UserId}", userId);
+
+                var payments = await _paymentRepository.GetAllTransactionHistoryAsync(userId);
+
+                var transactionDtos = new List<TransactionHistoryDto>();
+                foreach (var payment in payments)
+                {
+                    var productName = await GetProductNameAsync(payment.ProductId, payment.ProductType);
+
+                    transactionDtos.Add(new TransactionHistoryDto
+                    {
+                        PaymentId = payment.PaymentId,
+                        PaymentMethod = payment.PaymentMethod ?? "N/A",
+                        ProductType = payment.ProductType,
+                        ProductId = payment.ProductId,
+                        ProductName = productName,
+                        Amount = payment.Amount,
+                        Status = payment.Status,
+                        CreatedAt = payment.PaidAt ?? DateTime.UtcNow,
+                        PaidAt = payment.PaidAt,
+                        ProviderTransactionId = payment.ProviderTransactionId
+                    });
+                }
+
+                response.Data = transactionDtos;
+                _logger.LogInformation("Retrieved {Count} transactions for User {UserId}", transactionDtos.Count, userId);
+                response.StatusCode = 200; // Success
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all transaction history for User {UserId}", userId);
+                response.Success = false;
+                response.StatusCode = 500; // Internal Server Error
+                response.Message = "Đã xảy ra lỗi khi lấy lịch sử giao dịch";
+            }
+            return response;
+        }
+
         // service lay chi tiet giao dich
 
         public async Task<ServiceResponse<TransactionDetailDto>> GetTransactionDetailAsync(int paymentId, int userId)

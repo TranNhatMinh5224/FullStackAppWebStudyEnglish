@@ -2,6 +2,7 @@ using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Application.Common.Helpers;
 using AutoMapper;
 
 
@@ -84,14 +85,13 @@ namespace LearningEnglish.Application.Service
                 await _userRepository.AddUserAsync(user);
                 await _userRepository.SaveChangesAsync();
 
-                // Generate 6-digit OTP code
-                var random = new Random();
-                var otpCode = random.Next(100000, 999999).ToString();
+                // Generate 6-digit OTP code using OtpHelper
+                var otpCode = OtpHelper.GenerateOtpCode();
                 var emailToken = new EmailVerificationToken
                 {
                     User = user,
                     OtpCode = otpCode,
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(5), // token hết hạn sau 5 phút
+                    ExpiresAt = OtpHelper.GetExpirationTime(5), // 5 minutes
                     Email = dto.Email  // Lưu email để query
                 };
                 await _emailVerificationTokenRepository.AddAsync(emailToken);
@@ -130,10 +130,10 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Check token đã hết hạn chưa
-                if (token.ExpiresAt < DateTime.UtcNow)
+                // Check token đã hết hạn chưa using OtpHelper
+                if (OtpHelper.IsExpired(token.ExpiresAt))
                 {
-                    // XÓA OTP hết hạn - không còn khả năng sử dụng
+                    // XÓA OTP hết hạn
                     await _emailVerificationTokenRepository.DeleteAsync(token);
 
                     response.Success = false;
@@ -143,55 +143,27 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Check if already used
-                if (token.IsUsed)
+                // Validate OTP with brute-force protection using OtpHelper
+                var validationResult = OtpHelper.ValidateOtp(dto.OtpCode, token.OtpCode, token.AttemptsCount, maxAttempts: 5);
+
+                if (!validationResult.IsValid)
                 {
-                    // XÓA OTP đã sử dụng - không còn khả năng sử dụng
-                    await _emailVerificationTokenRepository.DeleteAsync(token);
-
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = "Mã OTP đã được sử dụng";
-                    response.Data = false;
-                    return response;
-                }
-
-                //  CHECK: Kiểm tra xem có đang bị block không
-                if (token.BlockedUntil.HasValue && token.BlockedUntil.Value > DateTime.UtcNow)
-                {
-                    var remainingMinutes = Math.Ceiling((token.BlockedUntil.Value - DateTime.UtcNow).TotalMinutes);
-                    response.Success = false;
-                    response.StatusCode = 429;
-                    response.Message = $"Tài khoản tạm khóa đến {token.BlockedUntil.Value.AddHours(7):HH:mm dd/MM/yyyy}. Vui lòng thử lại sau {remainingMinutes} phút";
-                    response.Data = false;
-                    return response;
-                }
-
-                // Verify OTP code
-                if (token.OtpCode != dto.OtpCode)
-                {
-                    // BRUTE-FORCE PROTECTION: Tăng số lần thử sai
-                    token.AttemptsCount++;
-
-                    // Nếu nhập sai >= 5 lần, xóa token
-                    if (token.AttemptsCount >= 5)
+                    // Handle failed validation
+                    if (validationResult.Action == OtpAction.DeleteToken)
                     {
-                        // XÓA OTP sau 5 lần thử sai - không còn khả năng sử dụng
+                        // Max attempts reached - delete token
                         await _emailVerificationTokenRepository.DeleteAsync(token);
-
-                        response.Success = false;
-                        response.StatusCode = 400;
-                        response.Message = "Bạn đã nhập sai OTP quá 5 lần. Vui lòng đăng ký lại";
-                        response.Data = false;
-                        return response;
+                    }
+                    else if (validationResult.Action == OtpAction.UpdateAttempts)
+                    {
+                        // Update attempts count
+                        token.AttemptsCount = validationResult.NewAttemptsCount;
+                        await _emailVerificationTokenRepository.UpdateAsync(token);
                     }
 
-                    await _emailVerificationTokenRepository.UpdateAsync(token);
-
-                    var remainingAttempts = 5 - token.AttemptsCount;
                     response.Success = false;
                     response.StatusCode = 400;
-                    response.Message = $"Mã OTP không chính xác. Còn {remainingAttempts} lần thử";
+                    response.Message = validationResult.Message;
                     response.Data = false;
                     return response;
                 }

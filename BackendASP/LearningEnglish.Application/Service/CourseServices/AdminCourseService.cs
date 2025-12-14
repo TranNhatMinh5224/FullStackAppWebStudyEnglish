@@ -38,61 +38,7 @@ namespace LearningEnglish.Application.Service
 
 
 
-        // Service cho Admin Lấy ra toàn bộ khóa học 
-
-        public async Task<ServiceResponse<IEnumerable<AdminCourseListResponseDto>>> GetAllCoursesAsync()
-        {
-            var response = new ServiceResponse<IEnumerable<AdminCourseListResponseDto>>();
-            // IEnumerable : là  interface đại diện cho một tập hợp các đối tượng có thể được lặp qua. 
-
-
-
-            try
-            {
-                var courses = await _courseRepository.GetAllCourses(); // Lấy tất cả khóa học từ repository
-                var courseDtos = new List<AdminCourseListResponseDto>(); // Tạo danh sách rỗng để lưu trữ các DTO khóa học
-
-                foreach (var course in courses)
-                {
-                    var courseDto = _mapper.Map<AdminCourseListResponseDto>(course); // Ánh xạ entity khóa học sang DTO
-
-                    // Thêm thống kê
-                    courseDto.LessonCount = await _courseRepository.CountLessons(course.CourseId);
-                    courseDto.StudentCount = await _courseRepository.CountEnrolledUsers(course.CourseId);
-                    courseDto.TeacherName = course.Teacher?.FirstName + " " + course.Teacher?.LastName ?? "System Admin";
-
-                    // Generate URL từ key
-                    if (!string.IsNullOrWhiteSpace(course.ImageKey))
-                    {
-                        courseDto.ImageUrl = BuildPublicUrl.BuildURL(
-                            CourseImageBucket,
-                            course.ImageKey
-                        );
-                        courseDto.ImageType = course.ImageType;
-                    }
-
-                    courseDtos.Add(courseDto);
-                }
-
-                response.StatusCode = 200;
-                response.Success = true;
-                response.Data = courseDtos;
-                response.Message = "Lấy danh sách khóa học thành công";
-
-                _logger.LogInformation("Admin retrieved {Count} courses", courseDtos.Count);
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Đã xảy ra lỗi hệ thống";
-                _logger.LogError(ex, "Error in GetAllCoursesAsync");
-            }
-
-
-            return response;
-        }
-
+        // Service cho Admin Lấy ra toàn bộ khóa học với phân trang
         public async Task<ServiceResponse<PagedResult<AdminCourseListResponseDto>>> GetAllCoursesPagedAsync(PageRequest request)
         {
             var response = new ServiceResponse<PagedResult<AdminCourseListResponseDto>>();

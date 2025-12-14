@@ -1,6 +1,7 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Domain.Entities;
 
 namespace LearningEnglish.Application.Service
@@ -132,15 +133,14 @@ namespace LearningEnglish.Application.Service
                 // Cleanup thêm các OTP hết hạn của user này (nếu có)
                 await _passwordResetTokenRepository.DeleteExpiredTokensAsync();
 
-                // Generate 6-digit OTP code
-                var random = new Random();
-                var otpCode = random.Next(100000, 999999).ToString();
+                // Generate 6-digit OTP code using OtpHelper
+                var otpCode = OtpHelper.GenerateOtpCode();
 
                 var passwordResetToken = new PasswordResetToken
                 {
                     Token = otpCode,
                     UserId = user.UserId,
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(5), // OTP expires in 5 minutes
+                    ExpiresAt = OtpHelper.GetExpirationTime(5), // 5 minutes
                     AttemptsCount = 0,
                     BlockedUntil = null
                 };
@@ -189,22 +189,22 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Check if OTP is expired (5 minutes)
-                if (otpToken.ExpiresAt < DateTime.UtcNow)
+                // Check if OTP is expired using OtpHelper
+                if (OtpHelper.IsExpired(otpToken.ExpiresAt))
                 {
-                    // XÓA OTP hết hạn - không còn khả năng sử dụng
+                    // XÓA OTP hết hạn
                     await _passwordResetTokenRepository.DeleteAsync(otpToken);
 
                     response.Success = false;
                     response.StatusCode = 400;
-                    response.Message = "Mã OTP không hợp lệ hoặc đã hết hạn";
+                    response.Message = "Mã OTP đã hết hạn";
                     return response;
                 }
 
                 // Check if OTP is already used
                 if (otpToken.IsUsed)
                 {
-                    // XÓA OTP đã sử dụng - không còn khả năng sử dụng
+                    // XÓA OTP đã sử dụng
                     await _passwordResetTokenRepository.DeleteAsync(otpToken);
 
                     response.Success = false;
@@ -213,60 +213,33 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // ANTI-SPAM CHECK: Kiểm tra xem token có đang bị block không
-                if (otpToken.BlockedUntil.HasValue && otpToken.BlockedUntil.Value > DateTime.UtcNow)
+                // Validate OTP with brute-force protection using OtpHelper
+                var validationResult = OtpHelper.ValidateOtp(dto.OtpCode, otpToken.Token, otpToken.AttemptsCount, maxAttempts: 5);
+
+                if (!validationResult.IsValid)
                 {
-                    // XÓA OTP bị khóa - không còn khả năng sử dụng
-                    await _passwordResetTokenRepository.DeleteAsync(otpToken);
-
-                    var remainingMinutes = Math.Ceiling((otpToken.BlockedUntil.Value - DateTime.UtcNow).TotalMinutes);
-                    response.Success = false;
-                    response.StatusCode = 429;
-                    response.Message = $"Tài khoản tạm khóa đến {otpToken.BlockedUntil.Value.AddHours(7):HH:mm dd/MM/yyyy}. Vui lòng thử lại sau {remainingMinutes} phút";
-                    return response;
-                }
-
-                // Verify OTP code
-                if (otpToken.Token != dto.OtpCode)
-                {
-                    // BRUTE-FORCE PROTECTION: Tăng số lần thử sai
-                    otpToken.AttemptsCount++;
-
-                    // Nếu nhập sai >= 5 lần, khóa 20 phút
-                    if (otpToken.AttemptsCount >= 5)
+                    // Handle failed validation
+                    if (validationResult.Action == OtpAction.DeleteToken)
                     {
-                        // XÓA OTP bị khóa - không còn khả năng sử dụng
+                        // Max attempts reached - delete token
                         await _passwordResetTokenRepository.DeleteAsync(otpToken);
-
-                        response.Success = false;
-                        response.StatusCode = 429;
-                        response.Message = "Bạn đã nhập sai OTP quá 5 lần. Tài khoản bị khóa trong 20 phút";
-                        return response;
+                    }
+                    else if (validationResult.Action == OtpAction.UpdateAttempts)
+                    {
+                        // Update attempts count
+                        otpToken.AttemptsCount = validationResult.NewAttemptsCount;
+                        await _passwordResetTokenRepository.UpdateAsync(otpToken);
                     }
 
-                    // Nếu nhập sai >= 10 lần, xóa token và bắt gửi lại OTP mới
-                    if (otpToken.AttemptsCount >= 10)
-                    {
-                        // XÓA OTP quá nhiều lần thử - không còn khả năng sử dụng
-                        await _passwordResetTokenRepository.DeleteAsync(otpToken);
-
-                        response.Success = false;
-                        response.StatusCode = 400;
-                        response.Message = "Quá nhiều lần thử. Vui lòng yêu cầu mã OTP mới";
-                        return response;
-                    }
-
-                    await _passwordResetTokenRepository.UpdateAsync(otpToken);
-
-                    var remainingAttempts = 5 - otpToken.AttemptsCount;
                     response.Success = false;
                     response.StatusCode = 400;
-                    response.Message = $"Mã OTP không chính xác. Còn {remainingAttempts} lần thử";
+                    response.Message = validationResult.Message;
                     return response;
                 }
 
-                // OTP đúng: Xóa OTP khỏi database (không cần lưu lại)
-                await _passwordResetTokenRepository.DeleteAsync(otpToken);
+                // ✅ OTP đúng: MARK IsUsed = true (KHÔNG XÓA để SetNewPassword có thể verify lại)
+                otpToken.IsUsed = true;
+                await _passwordResetTokenRepository.UpdateAsync(otpToken);
 
                 response.StatusCode = 200;
                 response.Data = true;
@@ -296,53 +269,46 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Find active OTP token for this user
-                var otpToken = await _passwordResetTokenRepository.GetActiveTokenByUserIdAsync(user.UserId);
-                if (otpToken == null)
+                // Find OTP token for this user (không filter IsUsed, để lấy token đã verify)
+                var otpToken = await _passwordResetTokenRepository.GetByTokenAsync(dto.OtpCode);
+                
+                if (otpToken == null || otpToken.UserId != user.UserId)
                 {
                     response.Success = false;
                     response.StatusCode = 400;
-                    response.Message = "Mã OTP không hợp lệ hoặc đã hết hạn";
+                    response.Message = "Mã OTP không hợp lệ";
                     return response;
                 }
 
-                if (otpToken.Token != dto.OtpCode)
+                // Check if OTP is expired using OtpHelper
+                if (OtpHelper.IsExpired(otpToken.ExpiresAt))
+                {
+                    // XÓA OTP hết hạn
+                    await _passwordResetTokenRepository.DeleteAsync(otpToken);
+
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "Mã OTP đã hết hạn";
+                    return response;
+                }
+
+                // ✅ Check if OTP đã được verify (IsUsed = true)
+                if (!otpToken.IsUsed)
                 {
                     response.Success = false;
                     response.StatusCode = 400;
-                    response.Message = "Mã OTP không hợp lệ hoặc đã hết hạn";
+                    response.Message = "Vui lòng xác thực mã OTP trước";
                     return response;
                 }
 
-                // Check if OTP is expired (5 minutes)
-                if (otpToken.ExpiresAt < DateTime.UtcNow)
-                {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = "Mã OTP không hợp lệ hoặc đã hết hạn";
-                    return response;
-                }
-
-                // Check if OTP is already used
-                if (otpToken.IsUsed)
-                {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = "Mã OTP đã được sử dụng";
-                    return response;
-                }
-
-                // Update password
+                // ✅ Set password mới
                 user.SetPassword(dto.NewPassword);
                 user.UpdatedAt = DateTime.UtcNow;
                 await _userRepository.UpdateUserAsync(user);
-
-                // Mark OTP token as used
-                otpToken.IsUsed = true;
-                await _passwordResetTokenRepository.UpdateAsync(otpToken);
-
                 await _userRepository.SaveChangesAsync();
-                await _passwordResetTokenRepository.SaveChangesAsync();
+
+                // ✅ XÓA OTP token sau khi set password thành công
+                await _passwordResetTokenRepository.DeleteAsync(otpToken);
 
                 response.StatusCode = 200;
                 response.Data = true;

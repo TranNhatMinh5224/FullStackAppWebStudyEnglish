@@ -17,6 +17,17 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _quizService = quizService;
         }
 
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+        }
+
+        private string GetCurrentUserRole()
+        {
+            return User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;
+        }
+
         // GET: api/Quiz/ATQuizz/{quizId} - Get quiz by ID (Admin and Teacher)
         [HttpGet("{quizId}")]
         public async Task<IActionResult> GetQuiz(int quizId)
@@ -32,7 +43,10 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _quizService.CreateQuizAsync(quizCreate);
+            var userRole = GetCurrentUserRole();
+            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
+
+            var result = await _quizService.CreateQuizAsync(quizCreate, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -43,7 +57,10 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _quizService.UpdateQuizAsync(quizId, quizUpdate);
+            var userRole = GetCurrentUserRole();
+            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
+
+            var result = await _quizService.UpdateQuizAsync(quizId, quizUpdate, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -51,7 +68,10 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpDelete("delete/{quizId}")]
         public async Task<IActionResult> DeleteQuiz(int quizId)
         {
-            var result = await _quizService.DeleteQuizAsync(quizId);
+            var userRole = GetCurrentUserRole();
+            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
+
+            var result = await _quizService.DeleteQuizAsync(quizId, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 

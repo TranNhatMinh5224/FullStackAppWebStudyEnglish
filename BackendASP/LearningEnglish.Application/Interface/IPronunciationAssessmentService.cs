@@ -22,5 +22,13 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<List<FlashCardWithPronunciationDto>>> GetFlashCardsWithPronunciationProgressAsync(
             int moduleId,
             int userId);
+
+        /// <summary>
+        /// Get a single flashcard with pronunciation progress by index for practice mode
+        /// </summary>
+        Task<ServiceResponse<PaginatedFlashCardWithPronunciationDto>> GetFlashCardWithPronunciationByIndexAsync(
+            int moduleId,
+            int cardIndex,
+            int userId);
     }
 }

@@ -45,7 +45,7 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                     return response;
                 }
 
-                if (package.Price <= 0)
+                if (package.Price < 0)
                 {
                     response.Success = false;
                     response.Message = "Giá gói giáo viên không hợp lệ";

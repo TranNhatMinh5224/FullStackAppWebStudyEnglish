@@ -22,9 +22,16 @@ namespace LearningEnglish.Application.DTOs
         public int MaxStudents { get; set; }
     }
 
-    public class UpdateTeacherPackageDto : CreateTeacherPackageDto
+    // DTO cập nhật gói giáo viên - Hỗ trợ PARTIAL UPDATE
+    public class UpdateTeacherPackageDto
     {
-
+        // Nullable để phân biệt: không gửi vs gửi giá trị
+        public string? PackageName { get; set; }
+        public PackageLevel? Level { get; set; }
+        public decimal? Price { get; set; }
+        public int? MaxCourses { get; set; }
+        public int? MaxLessons { get; set; }
+        public int? MaxStudents { get; set; }
     }
 
 }

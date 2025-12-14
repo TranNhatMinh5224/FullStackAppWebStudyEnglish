@@ -29,7 +29,8 @@ namespace LearningEnglish.Application.Interface
 
         // === KIỂM TRA & ĐĂNG KÝ ===
         Task<bool> IsUserEnrolled(int courseId, int userId);
-        Task EnrollUserInCourse(int courseId, int userId);
+        Task<UserCourse?> GetUserCourseAsync(int userId, int courseId); // Lấy thông tin enrollment
+        Task EnrollUserInCourse(int userId, int courseId);
         Task UnenrollUserFromCourse(int courseId, int userId);
 
         // === THỐNG KÊ ===

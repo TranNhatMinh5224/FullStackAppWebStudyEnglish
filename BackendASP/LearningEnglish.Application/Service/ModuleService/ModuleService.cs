@@ -13,36 +13,23 @@ namespace LearningEnglish.Application.Service
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<ModuleService> _logger;
+        private readonly ILessonRepository _lessonRepository;
+        private readonly ICourseRepository _courseRepository;
 
         public ModuleService(
             IModuleRepository moduleRepository,
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            ILogger<ModuleService> logger)
+            ILogger<ModuleService> logger,
+            ILessonRepository lessonRepository,
+            ICourseRepository courseRepository)
         {
             _moduleRepository = moduleRepository;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
-        }
-
-        // + Kiểm tra quyền teacher với module
-        public async Task<bool> CheckTeacherModulePermission(int moduleId, int teacherId)
-        {
-            var module = await _moduleRepository.GetModuleWithCourseAsync(moduleId);
-            if (module == null || module.Lesson == null || module.Lesson.Course == null)
-            {
-                return false;
-            }
-
-            var course = module.Lesson.Course;
-            // Kiểm tra khóa học thuộc loại Teacher và thuộc về teacher này
-            if (course.Type != Domain.Enums.CourseType.Teacher || course.TeacherId != teacherId)
-            {
-                return false;
-            }
-
-            return true;
+            _lessonRepository = lessonRepository;
+            _courseRepository = courseRepository;
         }
 
         // + Lấy thông tin module theo ID
@@ -103,11 +90,43 @@ namespace LearningEnglish.Application.Service
         }
 
         // + Tạo module mới
-        public async Task<ServiceResponse<ModuleDto>> CreateModuleAsync(CreateModuleDto createModuleDto, int createdByUserId)
+        public async Task<ServiceResponse<ModuleDto>> CreateModuleAsync(CreateModuleDto createModuleDto, int createdByUserId, string userRole = "Admin")
         {
             var response = new ServiceResponse<ModuleDto>();
             try
             {
+                // 🔒 For Teacher: validate ownership of the lesson's course
+                if (userRole == "Teacher")
+                {
+                    var lesson = await _lessonRepository.GetLessonById(createModuleDto.LessonId);
+                    if (lesson == null)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 404;
+                        response.Message = "Không tìm thấy bài học";
+                        return response;
+                    }
+
+                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                    if (course == null)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 404;
+                        response.Message = "Không tìm thấy khóa học";
+                        return response;
+                    }
+
+                    if (!course.TeacherId.HasValue || course.TeacherId.Value != createdByUserId)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Bạn không có quyền tạo module trong bài học này";
+                        _logger.LogWarning("Teacher {UserId} attempted to create module in lesson {LessonId}, course {CourseId} owned by {OwnerId}",
+                            createdByUserId, createModuleDto.LessonId, lesson.CourseId, course.TeacherId);
+                        return response;
+                    }
+                }
+
                 // Tự động đặt thứ tự nếu chưa có (đảm bảo module mới luôn ở cuối)
                 if (createModuleDto.OrderIndex <= 0)
                 {
@@ -229,9 +248,9 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<ModuleDto>();
             try
             {
-                // Kiểm tra module có tồn tại không
-                var moduleResponse = await GetModuleByIdAsync(moduleId);
-                if (!moduleResponse.Success || moduleResponse.Data == null)
+                // Get module entity to validate ownership
+                var module = await _moduleRepository.GetByIdAsync(moduleId);
+                if (module == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
@@ -239,35 +258,41 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Admin có thể cập nhật bất kỳ module nào
-                if (userRole == "Admin")
-                {
-                    _logger.LogInformation("Admin {UserId} đang cập nhật module {ModuleId}", userId, moduleId);
-                    return await UpdateModuleAsync(moduleId, updateModuleDto, userId);
-                }
-
-                // Teacher chỉ có thể cập nhật module từ khóa học của mình
+                // 🔒 For Teacher: validate ownership via lesson's course
                 if (userRole == "Teacher")
                 {
-                    var hasPermission = await CheckTeacherModulePermission(moduleId, userId);
-                    if (!hasPermission)
+                    var lesson = await _lessonRepository.GetLessonById(module.LessonId);
+                    if (lesson == null)
                     {
-                        _logger.LogWarning("Teacher {UserId} cố gắng cập nhật module {ModuleId} không có quyền", userId, moduleId);
                         response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Bạn chỉ có thể cập nhật module từ khóa học của mình";
+                        response.StatusCode = 404;
+                        response.Message = "Không tìm thấy bài học của module này";
                         return response;
                     }
 
-                    _logger.LogInformation("Teacher {UserId} đang cập nhật module {ModuleId}", userId, moduleId);
-                    return await UpdateModuleAsync(moduleId, updateModuleDto, userId);
+                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                    if (course == null)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 404;
+                        response.Message = "Không tìm thấy khóa học";
+                        return response;
+                    }
+
+                    if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Bạn không có quyền chỉnh sửa module này";
+                        _logger.LogWarning("Teacher {UserId} attempted to update module {ModuleId} in lesson {LessonId}, course {CourseId} owned by {OwnerId}",
+                            userId, moduleId, module.LessonId, lesson.CourseId, course.TeacherId);
+                        return response;
+                    }
                 }
 
-                // Các role khác không có quyền
-                response.Success = false;
-                response.StatusCode = 403;
-                response.Message = "Không có quyền truy cập";
-                return response;
+                // Admin can update any module, Teacher can update own modules
+                _logger.LogInformation("{Role} {UserId} đang cập nhật module {ModuleId}", userRole, userId, moduleId);
+                return await UpdateModuleAsync(moduleId, updateModuleDto, userId);
             }
             catch (Exception ex)
             {
@@ -285,9 +310,9 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<bool>();
             try
             {
-                // Kiểm tra module có tồn tại không
-                var moduleResponse = await GetModuleByIdAsync(moduleId);
-                if (!moduleResponse.Success || moduleResponse.Data == null)
+                // Get module entity to validate ownership
+                var module = await _moduleRepository.GetByIdAsync(moduleId);
+                if (module == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
@@ -296,37 +321,44 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Admin có thể xóa bất kỳ module nào
-                if (userRole == "Admin")
-                {
-                    _logger.LogInformation("Admin {UserId} đang xóa module {ModuleId}", userId, moduleId);
-                    return await DeleteModuleAsync(moduleId, userId);
-                }
-
-                // Teacher chỉ có thể xóa module từ khóa học của mình
+                // 🔒 For Teacher: validate ownership via lesson's course
                 if (userRole == "Teacher")
                 {
-                    var hasPermission = await CheckTeacherModulePermission(moduleId, userId);
-                    if (!hasPermission)
+                    var lesson = await _lessonRepository.GetLessonById(module.LessonId);
+                    if (lesson == null)
                     {
-                        _logger.LogWarning("Teacher {UserId} cố gắng xóa module {ModuleId} không có quyền", userId, moduleId);
                         response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Bạn chỉ có thể xóa module từ khóa học của mình";
+                        response.StatusCode = 404;
+                        response.Message = "Không tìm thấy bài học của module này";
                         response.Data = false;
                         return response;
                     }
 
-                    _logger.LogInformation("Teacher {UserId} đang xóa module {ModuleId}", userId, moduleId);
-                    return await DeleteModuleAsync(moduleId, userId);
+                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                    if (course == null)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 404;
+                        response.Message = "Không tìm thấy khóa học";
+                        response.Data = false;
+                        return response;
+                    }
+
+                    if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Bạn không có quyền xóa module này";
+                        response.Data = false;
+                        _logger.LogWarning("Teacher {UserId} attempted to delete module {ModuleId} in lesson {LessonId}, course {CourseId} owned by {OwnerId}",
+                            userId, moduleId, module.LessonId, lesson.CourseId, course.TeacherId);
+                        return response;
+                    }
                 }
 
-                // Các role khác không có quyền
-                response.Success = false;
-                response.StatusCode = 403;
-                response.Message = "Không có quyền truy cập";
-                response.Data = false;
-                return response;
+                // Admin can delete any module, Teacher can delete own modules
+                _logger.LogInformation("{Role} {UserId} đang xóa module {ModuleId}", userRole, userId, moduleId);
+                return await DeleteModuleAsync(moduleId, userId);
             }
             catch (Exception ex)
             {
