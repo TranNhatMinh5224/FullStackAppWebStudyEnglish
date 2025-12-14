@@ -314,6 +314,20 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // 🔒 For Teacher: validate ownership
+                if (userRole == "Teacher")
+                {
+                    if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Bạn không có quyền truy cập các bài học của khóa học này";
+                        _logger.LogWarning("Teacher {UserId} attempted to access lessons in course {CourseId} owned by {OwnerId}",
+                            userId, CourseId, course.TeacherId);
+                        return response;
+                    }
+                }
+
                 // RLS policy lessons_policy_* đã tự động filter lessons theo role
                 // Nếu không có quyền, GetListLessonByCourseId sẽ trả về empty list
                 var lessons = await _lessonRepository.GetListLessonByCourseId(CourseId);
@@ -386,6 +400,29 @@ namespace LearningEnglish.Application.Service
                     response.StatusCode = 404;
                     response.Message = "Không tìm thấy bài học hoặc bạn không có quyền truy cập";
                     return response;
+                }
+
+                // 🔒 For Teacher: validate ownership via course
+                if (userRole == "Teacher")
+                {
+                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                    if (course == null)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 404;
+                        response.Message = "Không tìm thấy khóa học của bài học này";
+                        return response;
+                    }
+
+                    if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Bạn không có quyền truy cập bài học này";
+                        _logger.LogWarning("Teacher {UserId} attempted to access lesson {LessonId} in course {CourseId} owned by {OwnerId}",
+                            userId, lessonId, lesson.CourseId, course.TeacherId);
+                        return response;
+                    }
                 }
 
                 var lessonDto = _mapper.Map<LessonDto>(lesson);
