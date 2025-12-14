@@ -1,7 +1,6 @@
 services:
   api:
-    build: .
-    image: learningenglish-api:dev
+    image: host.docker.internal:5000/learningenglish-api:latest
     container_name: backendasp-api
     ports:
       - "8080:8080"
