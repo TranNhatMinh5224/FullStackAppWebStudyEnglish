@@ -45,6 +45,68 @@ namespace LearningEnglish.Infrastructure.Data
 
 
 
+        // ============================================================================
+        // ROW-LEVEL SECURITY (RLS) - BẢO MẬT CẤP HÀNG (ROW) TRONG DATABASE
+        // ============================================================================
+        
+        // Method này thiết lập context cho RLS trong PostgreSQL
+        // Được gọi TỰ ĐỘNG bởi RlsMiddleware ở đầu mỗi HTTP request
+        //
+        // CÁCH HOẠT ĐỘNG:
+        // 1. RlsMiddleware extract userId + role từ JWT token
+        // 2. Gọi method này để set 2 session variables trong PostgreSQL:
+        //    - app.current_user_id: Lưu ID của user hiện tại (VD: 123)
+        //    - app.current_user_role: Lưu role (Admin, Teacher, hoặc Student)
+        // 3. RLS policies trong database sẽ dùng 2 variables này để filter data tự động
+        //
+        // VÍ DỤ FLOW:
+        // Request 1 (Teacher userId=5):
+        //   → BEGIN TRANSACTION
+        //   → SET LOCAL app.current_user_id = '5'
+        //   → SET LOCAL app.current_user_role = 'Teacher'
+        //   → Query: SELECT * FROM "Courses"
+        //   → RLS tự động filter: WHERE "TeacherId" = 5
+        //   → COMMIT → Variables bị xóa tự động ✓
+        //
+        // Request 2 (Student userId=10) - reuse cùng connection:
+        //   → BEGIN NEW TRANSACTION
+        //   → SET LOCAL app.current_user_id = '10'
+        //   → SET LOCAL app.current_user_role = 'Student'
+        //   → Query: SELECT * FROM "Courses"
+        //   → RLS tự động filter: WHERE EXISTS (SELECT 1 FROM "UserCourses"...)
+        //   → COMMIT → Variables bị xóa tự động ✓
+        //
+        // TẠI SAO AN TOÀN VỚI CONNECTION POOLING:
+        // - Parameter thứ 3 (true) trong set_config() = LOCAL scope
+        // - Variables CHỈ tồn tại trong transaction hiện tại
+        // - Tự động cleared sau COMMIT/ROLLBACK
+        // - Connection có thể reuse an toàn cho user khác
+        public async Task SetUserContextAsync(int userId, string role)
+        {
+            // ExecuteSqlRawAsync: Thực thi raw SQL command trên database
+            //
+            // set_config(name, value, is_local):
+            //   - name: Tên variable cần set
+            //   - value: Giá trị
+            //   - is_local: true = LOCAL (chỉ trong transaction), false = SESSION (toàn bộ session)
+            //
+            // ⚠️ QUAN TRỌNG: PHẢI dùng is_local=true để an toàn với connection pooling!
+            // Nếu dùng false, variable sẽ tồn tại suốt session → nguy hiểm khi reuse connection
+            await Database.ExecuteSqlRawAsync(
+                "SELECT set_config('app.current_user_id', {0}, true), set_config('app.current_user_role', {1}, true)",
+                userId.ToString(),  // {0} - Convert userId sang string
+                role                // {1} - Role name (Admin, Teacher, Student)
+            );
+            
+            // Sau khi execute xong:
+            // PostgreSQL session hiện tại có 2 variables:
+            //   - current_setting('app.current_user_id', true) → trả về "123"
+            //   - current_setting('app.current_user_role', true) → trả về "Teacher"
+            //
+            // RLS policies sẽ dùng current_setting() để lấy giá trị và filter data
+            // VD: WHERE "TeacherId" = current_setting('app.current_user_id', true)::integer
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

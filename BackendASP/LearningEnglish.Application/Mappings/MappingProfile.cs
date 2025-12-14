@@ -283,6 +283,12 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.AttachmentUrl, opt => opt.MapFrom(src => src.AttachmentKey)); // Will be replaced with URL in service
 
+            // EssaySubmission to List DTO (basic info for listing)
+            CreateMap<EssaySubmission, EssaySubmissionListDto>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FullName))
+                .ForMember(dest => dest.UserAvatarUrl, opt => opt.Ignore()) // Will be built in service
+                .ForMember(dest => dest.HasAttachment, opt => opt.MapFrom(src => !string.IsNullOrWhiteSpace(src.AttachmentKey)));
+
             CreateMap<CreateEssaySubmissionDto, EssaySubmission>()
                 .ForMember(dest => dest.SubmissionId, opt => opt.Ignore())
                 .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => DateTime.UtcNow))

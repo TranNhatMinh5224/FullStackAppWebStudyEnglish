@@ -45,11 +45,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddLesson(AdminCreateLessonDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             var result = await _lessonService.AdminAddLesson(dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -59,11 +54,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> AddLessonForTeacher(TeacherCreateLessonDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             var result = await _lessonService.TeacherAddLesson(dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -84,9 +74,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> UpdateLesson(int lessonId, [FromBody] UpdateLessonDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
             var result = await _lessonService.UpdateLessonWithAuthorizationAsync(lessonId, dto, userId, userRole);

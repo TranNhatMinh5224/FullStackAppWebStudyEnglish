@@ -87,6 +87,43 @@ namespace LearningEnglish.Infrastructure.Repositories
             }
         }
 
+        // + Lấy một flashcard theo module với index (phân trang từng card)
+        public async Task<FlashCard?> GetSingleFlashCardByModuleAsync(int moduleId, int cardIndex)
+        {
+            try
+            {
+                return await _context.FlashCards
+                    .Include(fc => fc.Module)
+                    .Include(fc => fc.Reviews)
+                    .Where(fc => fc.ModuleId == moduleId)
+                    .OrderBy(fc => fc.FlashCardId)
+                    .Skip(cardIndex - 1)
+                    .Take(1)
+                    .FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy FlashCard index {CardIndex} theo ModuleId: {ModuleId}", cardIndex, moduleId);
+                throw;
+            }
+        }
+
+        // + Đếm tổng số flashcard trong module
+        public async Task<int> GetFlashCardCountByModuleAsync(int moduleId)
+        {
+            try
+            {
+                return await _context.FlashCards
+                    .Where(fc => fc.ModuleId == moduleId)
+                    .CountAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi đếm FlashCard theo ModuleId: {ModuleId}", moduleId);
+                throw;
+            }
+        }
+
         // + Tạo flashcard mới
         public async Task<FlashCard> CreateAsync(FlashCard flashCard)
         {

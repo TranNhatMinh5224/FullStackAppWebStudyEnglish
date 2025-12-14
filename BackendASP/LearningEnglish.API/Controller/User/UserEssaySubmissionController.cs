@@ -41,18 +41,6 @@ namespace LearningEnglish.API.Controller.User
                 : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/User/EssaySubmission/my-submissions - Get all submissions for current user
-        [HttpGet("my-submissions")]
-        public async Task<IActionResult> GetMySubmissions()
-        {
-            var userId = GetCurrentUserId();
-            if (userId == 0)
-                return BadRequest("Không thể lấy thông tin người dùng từ token");
-
-            var result = await _essaySubmissionService.GetSubmissionsByUserIdAsync(userId);
-            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
-        }
-
         // GET: api/User/EssaySubmission/submission-status/essay/{essayId} - Check if student has submitted for an essay
         [HttpGet("submission-status/essay/{essayId}")]
         public async Task<IActionResult> GetSubmissionStatus(int essayId)

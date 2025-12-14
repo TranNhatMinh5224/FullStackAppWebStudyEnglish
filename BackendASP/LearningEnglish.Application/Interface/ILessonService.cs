@@ -13,7 +13,6 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<LessonDto>> UpdateLesson(int lessonId, UpdateLessonDto dto);
         Task<ServiceResponse<bool>> DeleteLesson(int lessonId);
         Task<ServiceResponse<bool>> DeleteLesson(DeleteLessonDto dto);
-        Task<bool> CheckTeacherLessonPermission(int lessonId, int teacherId);
 
         // Methods with authorization built-in
         Task<ServiceResponse<bool>> DeleteLessonWithAuthorizationAsync(int lessonId, int userId, string userRole);

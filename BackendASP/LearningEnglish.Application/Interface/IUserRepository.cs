@@ -29,5 +29,7 @@ namespace LearningEnglish.Application.Interface
         Task<bool> GetUserRolesAsync(int userId);
 
         Task<List<User>> GetAllTeachersAsync();
+        Task<PagedResult<User>> GetAllTeachersPagedAsync(PageRequest request); // Lấy danh sách giáo viên với phân trang
+        Task<PagedResult<User>> GetListBlockedAccountsPagedAsync(PageRequest request); // Lấy danh sách tài khoản bị khóa với phân trang
     }
 }

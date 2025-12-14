@@ -261,9 +261,6 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int>("AttemptsCount")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("BlockedUntil")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1591,7 +1588,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             IsMale = true,
                             LastName = "System",
                             NormalizedEmail = "MINHXOANDEV@GMAIL.COM",
-                            PasswordHash = "$2a$11$faUkQHMBjqFPM6lNc5c5TOgvTHMONnH2hhotJvxY8mYEVlutiwE9a",
+                            PasswordHash = "$2a$11$Ge2Lbbxru0NdYHBUZM06Fem1ZOfMbhqdayD1DVJVppHbRUll.C0E2",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)

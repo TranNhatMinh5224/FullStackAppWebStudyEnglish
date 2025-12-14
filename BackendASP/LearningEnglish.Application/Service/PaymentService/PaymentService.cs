@@ -252,18 +252,17 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // Service laays ra thong tin lich su giao dich
-
-        public async Task<ServiceResponse<PagedResult<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
+        // Service laays ra thong tin lich su giao dich (Phân trang)
+        public async Task<ServiceResponse<PagedResult<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, PageRequest request)
         {
             var response = new ServiceResponse<PagedResult<TransactionHistoryDto>>();
             try
             {
                 _logger.LogInformation("Getting transaction history for User {UserId}, Page {PageNumber}, Size {PageSize}",
-                    userId, pageNumber, pageSize);
+                    userId, request.PageNumber, request.PageSize);
 
                 var totalCount = await _paymentRepository.GetTransactionCountAsync(userId);
-                var payments = await _paymentRepository.GetTransactionHistoryAsync(userId, pageNumber, pageSize);
+                var payments = await _paymentRepository.GetTransactionHistoryAsync(userId, request.PageNumber, request.PageSize);
 
                 var transactionDtos = new List<TransactionHistoryDto>();
                 foreach (var payment in payments)
@@ -289,8 +288,8 @@ namespace LearningEnglish.Application.Service
                 {
                     Items = transactionDtos,
                     TotalCount = totalCount,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize
                 };
 
                 _logger.LogInformation("Retrieved {Count} transactions for User {UserId}", transactionDtos.Count, userId);
@@ -305,6 +304,50 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Service lay toan bo lich su giao dich (Khong phan trang)
+        public async Task<ServiceResponse<List<TransactionHistoryDto>>> GetAllTransactionHistoryAsync(int userId)
+        {
+            var response = new ServiceResponse<List<TransactionHistoryDto>>();
+            try
+            {
+                _logger.LogInformation("Getting all transaction history for User {UserId}", userId);
+
+                var payments = await _paymentRepository.GetAllTransactionHistoryAsync(userId);
+
+                var transactionDtos = new List<TransactionHistoryDto>();
+                foreach (var payment in payments)
+                {
+                    var productName = await GetProductNameAsync(payment.ProductId, payment.ProductType);
+
+                    transactionDtos.Add(new TransactionHistoryDto
+                    {
+                        PaymentId = payment.PaymentId,
+                        PaymentMethod = payment.PaymentMethod ?? "N/A",
+                        ProductType = payment.ProductType,
+                        ProductId = payment.ProductId,
+                        ProductName = productName,
+                        Amount = payment.Amount,
+                        Status = payment.Status,
+                        CreatedAt = payment.PaidAt ?? DateTime.UtcNow,
+                        PaidAt = payment.PaidAt,
+                        ProviderTransactionId = payment.ProviderTransactionId
+                    });
+                }
+
+                response.Data = transactionDtos;
+                _logger.LogInformation("Retrieved {Count} transactions for User {UserId}", transactionDtos.Count, userId);
+                response.StatusCode = 200; // Success
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all transaction history for User {UserId}", userId);
+                response.Success = false;
+                response.StatusCode = 500; // Internal Server Error
+                response.Message = "Đã xảy ra lỗi khi lấy lịch sử giao dịch";
+            }
+            return response;
+        }
+
         // service lay chi tiet giao dich
 
         public async Task<ServiceResponse<TransactionDetailDto>> GetTransactionDetailAsync(int paymentId, int userId)

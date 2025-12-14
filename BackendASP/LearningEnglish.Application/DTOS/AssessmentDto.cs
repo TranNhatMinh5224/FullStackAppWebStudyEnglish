@@ -9,7 +9,7 @@ namespace LearningEnglish.Application.DTOs
         public DateTime? OpenAt { get; set; }
         public DateTime? DueAt { get; set; }
 
-        // Time limit in format "HH:MM:SS" (e.g., "01:30:00" for 1 hour 30 minutes)
+
         public string? TimeLimit { get; set; }
 
         public bool IsPublished { get; set; } = false;

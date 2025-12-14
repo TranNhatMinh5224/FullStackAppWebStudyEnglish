@@ -336,5 +336,11 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        // Lấy thông tin enrollment của user trong course
+        public async Task<UserCourse?> GetUserCourseAsync(int userId, int courseId)
+        {
+            return await _context.UserCourses
+                .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.CourseId == courseId);
+        }
     }
 }

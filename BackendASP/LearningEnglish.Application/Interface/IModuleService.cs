@@ -15,7 +15,6 @@ namespace LearningEnglish.Application.Interface
         // Authorization methods
         Task<ServiceResponse<ModuleDto>> UpdateModuleWithAuthorizationAsync(int moduleId, UpdateModuleDto updateModuleDto, int userId, string userRole);
         Task<ServiceResponse<bool>> DeleteModuleWithAuthorizationAsync(int moduleId, int userId, string userRole);
-        Task<bool> CheckTeacherModulePermission(int moduleId, int teacherId);
 
         // Module with progress (for students)
         Task<ServiceResponse<List<ModuleWithProgressDto>>> GetModulesWithProgressAsync(int lessonId, int userId);

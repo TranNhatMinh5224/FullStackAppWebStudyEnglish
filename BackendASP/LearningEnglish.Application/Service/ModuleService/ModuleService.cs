@@ -26,25 +26,6 @@ namespace LearningEnglish.Application.Service
             _logger = logger;
         }
 
-        // + Kiểm tra quyền teacher với module
-        public async Task<bool> CheckTeacherModulePermission(int moduleId, int teacherId)
-        {
-            var module = await _moduleRepository.GetModuleWithCourseAsync(moduleId);
-            if (module == null || module.Lesson == null || module.Lesson.Course == null)
-            {
-                return false;
-            }
-
-            var course = module.Lesson.Course;
-            // Kiểm tra khóa học thuộc loại Teacher và thuộc về teacher này
-            if (course.Type != Domain.Enums.CourseType.Teacher || course.TeacherId != teacherId)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
         // + Lấy thông tin module theo ID
         public async Task<ServiceResponse<ModuleDto>> GetModuleByIdAsync(int moduleId, int? userId = null)
         {
@@ -229,45 +210,20 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<ModuleDto>();
             try
             {
-                // Kiểm tra module có tồn tại không
+                // RLS đã tự động filter modules theo role
+                // Nếu GetModuleByIdAsync trả về null → không tồn tại hoặc không có quyền
                 var moduleResponse = await GetModuleByIdAsync(moduleId);
                 if (!moduleResponse.Success || moduleResponse.Data == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy module";
+                    response.Message = "Không tìm thấy module hoặc bạn không có quyền truy cập";
                     return response;
                 }
 
-                // Admin có thể cập nhật bất kỳ module nào
-                if (userRole == "Admin")
-                {
-                    _logger.LogInformation("Admin {UserId} đang cập nhật module {ModuleId}", userId, moduleId);
-                    return await UpdateModuleAsync(moduleId, updateModuleDto, userId);
-                }
-
-                // Teacher chỉ có thể cập nhật module từ khóa học của mình
-                if (userRole == "Teacher")
-                {
-                    var hasPermission = await CheckTeacherModulePermission(moduleId, userId);
-                    if (!hasPermission)
-                    {
-                        _logger.LogWarning("Teacher {UserId} cố gắng cập nhật module {ModuleId} không có quyền", userId, moduleId);
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Bạn chỉ có thể cập nhật module từ khóa học của mình";
-                        return response;
-                    }
-
-                    _logger.LogInformation("Teacher {UserId} đang cập nhật module {ModuleId}", userId, moduleId);
-                    return await UpdateModuleAsync(moduleId, updateModuleDto, userId);
-                }
-
-                // Các role khác không có quyền
-                response.Success = false;
-                response.StatusCode = 403;
-                response.Message = "Không có quyền truy cập";
-                return response;
+                // Admin và Teacher đều có thể update (RLS đã filter)
+                _logger.LogInformation("{Role} {UserId} đang cập nhật module {ModuleId}", userRole, userId, moduleId);
+                return await UpdateModuleAsync(moduleId, updateModuleDto, userId);
             }
             catch (Exception ex)
             {
@@ -285,48 +241,21 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<bool>();
             try
             {
-                // Kiểm tra module có tồn tại không
+                // RLS đã tự động filter modules theo role
+                // Nếu GetModuleByIdAsync trả về null → không tồn tại hoặc không có quyền
                 var moduleResponse = await GetModuleByIdAsync(moduleId);
                 if (!moduleResponse.Success || moduleResponse.Data == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy module";
+                    response.Message = "Không tìm thấy module hoặc bạn không có quyền truy cập";
                     response.Data = false;
                     return response;
                 }
 
-                // Admin có thể xóa bất kỳ module nào
-                if (userRole == "Admin")
-                {
-                    _logger.LogInformation("Admin {UserId} đang xóa module {ModuleId}", userId, moduleId);
-                    return await DeleteModuleAsync(moduleId, userId);
-                }
-
-                // Teacher chỉ có thể xóa module từ khóa học của mình
-                if (userRole == "Teacher")
-                {
-                    var hasPermission = await CheckTeacherModulePermission(moduleId, userId);
-                    if (!hasPermission)
-                    {
-                        _logger.LogWarning("Teacher {UserId} cố gắng xóa module {ModuleId} không có quyền", userId, moduleId);
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Bạn chỉ có thể xóa module từ khóa học của mình";
-                        response.Data = false;
-                        return response;
-                    }
-
-                    _logger.LogInformation("Teacher {UserId} đang xóa module {ModuleId}", userId, moduleId);
-                    return await DeleteModuleAsync(moduleId, userId);
-                }
-
-                // Các role khác không có quyền
-                response.Success = false;
-                response.StatusCode = 403;
-                response.Message = "Không có quyền truy cập";
-                response.Data = false;
-                return response;
+                // Admin và Teacher đều có thể delete (RLS đã filter)
+                _logger.LogInformation("{Role} {UserId} đang xóa module {ModuleId}", userRole, userId, moduleId);
+                return await DeleteModuleAsync(moduleId, userId);
             }
             catch (Exception ex)
             {

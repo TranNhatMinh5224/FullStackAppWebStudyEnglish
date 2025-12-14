@@ -99,4 +99,14 @@ namespace LearningEnglish.Application.DTOs
         public List<CreateFlashCardDto> FlashCards { get; set; } = new();
         public bool ReplaceExisting { get; set; } = false;
     }
+
+    // DTO for paginated single flashcard response (for learning mode)
+    public class PaginatedFlashCardDto
+    {
+        public FlashCardDto? FlashCard { get; set; }
+        public int CurrentIndex { get; set; }
+        public int TotalCards { get; set; }
+        public bool HasPrevious => CurrentIndex > 1;
+        public bool HasNext => CurrentIndex < TotalCards;
+    }
 }

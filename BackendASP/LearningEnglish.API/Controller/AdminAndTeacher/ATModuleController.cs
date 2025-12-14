@@ -53,17 +53,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPost]
         public async Task<IActionResult> CreateModule([FromBody] CreateModuleDto createModuleDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    statusCode = 400,
-                    message = "Dữ liệu đầu vào không hợp lệ",
-                    errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)
-                });
-            }
-
             var userId = GetCurrentUserId();
             var result = await _moduleService.CreateModuleAsync(createModuleDto, userId);
             return result.Success
@@ -75,17 +64,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPut("{moduleId}")]
         public async Task<IActionResult> UpdateModule(int moduleId, [FromBody] UpdateModuleDto updateModuleDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    statusCode = 400,
-                    message = "Dữ liệu đầu vào không hợp lệ",
-                    errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)
-                });
-            }
-
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
             var result = await _moduleService.UpdateModuleWithAuthorizationAsync(moduleId, updateModuleDto, userId, userRole);

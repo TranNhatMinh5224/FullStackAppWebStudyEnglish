@@ -1,6 +1,7 @@
 using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Domain.Enums;
 using LearningEnglish.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -132,6 +133,44 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .Where(u => u.Roles.Any(r => r.RoleId == 2))
                 .ToListAsync();
             return teachers;
+        }
+
+        // Lấy danh sách teacher với phân trang
+        public async Task<PagedResult<User>> GetAllTeachersPagedAsync(PageRequest request)
+        {
+            var query = _context.Users
+                .Include(u => u.Roles)
+                .Where(u => u.Roles.Any(r => r.RoleId == 2));
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                query = query.Where(u => 
+                    u.FirstName.Contains(request.SearchTerm) || 
+                    u.LastName.Contains(request.SearchTerm) ||
+                    u.Email.Contains(request.SearchTerm)
+                );
+            }
+
+            return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
+        }
+
+        // Lấy danh sách tài khoản bị khóa với phân trang
+        public async Task<PagedResult<User>> GetListBlockedAccountsPagedAsync(PageRequest request)
+        {
+            var query = _context.Users
+                .Include(u => u.Roles)
+                .Where(u => u.Status == AccountStatus.Inactive);
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                query = query.Where(u => 
+                    u.FirstName.Contains(request.SearchTerm) || 
+                    u.LastName.Contains(request.SearchTerm) ||
+                    u.Email.Contains(request.SearchTerm)
+                );
+            }
+
+            return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
         }
     }
 }

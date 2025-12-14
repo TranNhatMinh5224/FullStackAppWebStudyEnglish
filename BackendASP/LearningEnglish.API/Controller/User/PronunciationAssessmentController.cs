@@ -62,5 +62,23 @@ namespace LearningEnglish.API.Controller.User
             var result = await _service.GetFlashCardsWithPronunciationProgressAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
+
+        /// <summary>
+        /// GET: api/PronunciationAssessment/module/{moduleId}/card/{cardIndex} - Get a single flashcard by index for pronunciation practice
+        /// </summary>
+        [HttpGet("module/{moduleId}/card/{cardIndex}")]
+        public async Task<IActionResult> GetFlashCardByIndexForPractice(int moduleId, int cardIndex)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return Unauthorized(new ServiceResponse<object>
+                {
+                    Success = false,
+                    Message = "User not authenticated"
+                });
+
+            var result = await _service.GetFlashCardWithPronunciationByIndexAsync(moduleId, cardIndex, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
     }
 }

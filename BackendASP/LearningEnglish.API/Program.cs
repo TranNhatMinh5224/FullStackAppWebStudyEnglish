@@ -25,6 +25,7 @@ using LearningEnglish.Application.Configurations;
 using Microsoft.Extensions.Options;
 using Minio;
 using LearningEnglish.Infrastructure.MinioFileStorage;
+using LearningEnglish.API.Middleware;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -277,7 +278,7 @@ builder.Services.AddHostedService<QuizAutoSubmitService>();
 builder.Services.AddHostedService<TempFileCleanupHostedService>();
 builder.Services.AddHostedService<OtpCleanupService>(); // Tự động xóa OTP hết hạn mỗi 30 phút
 
-// 📚 VOCABULARY REMINDER SYSTEM - CHỈ NHẮC HỌC TỪ VỰNG + EMAIL
+//  VOCABULARY REMINDER SYSTEM -
 builder.Services.AddScoped<SimpleNotificationService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddHostedService<VocabularyReminderService>(); // 12:00 UTC = 19:00 VN
@@ -299,9 +300,12 @@ else
     app.UseHttpsRedirection();
 }
 
-app.UseRouting();
-app.UseCors("AllowFrontend");
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
+app.UseRouting(); // Đặt UseRouting trước UseCors để CORS hoạt động đúng
+app.UseCors("AllowFrontend"); // CORS
+app.UseAuthentication();  // 1. Xác thực JWT token
+app.UseAuthorization();   // 2. Kiểm tra quyền [Authorize]
+
+app.UseRlsMiddleware();   // 3. Thiết lập context cho RLS
+
+app.MapControllers();  // 4. Thực thi controller actions
 app.Run();

@@ -9,6 +9,7 @@ using LearningEnglish.Application.Validators.Payment;
 using System.Text.Json;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Configuration;
+using LearningEnglish.Application.Common.Pagination;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -85,20 +86,19 @@ namespace LearningEnglish.API.Controller.User
 
         // GET: api/payment/history - Get paginated transaction history for authenticated user
         [HttpGet("history")]
-        public async Task<IActionResult> GetTransactionHistory([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetTransactionHistory([FromQuery] PageRequest request)
         {
-            if (pageNumber < 1)
-            {
-                return BadRequest(new { message = "Page number must be greater than 0" });
-            }
-
-            if (pageSize < 1 || pageSize > 100)
-            {
-                return BadRequest(new { message = "Page size must be between 1 and 100" });
-            }
-
             var userId = GetCurrentUserId();
-            var result = await _paymentService.GetTransactionHistoryAsync(userId, pageNumber, pageSize);
+            var result = await _paymentService.GetTransactionHistoryAsync(userId, request);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // GET: api/payment/history/all - Get all transaction history without pagination for authenticated user
+        [HttpGet("history/all")]
+        public async Task<IActionResult> GetAllTransactionHistory()
+        {
+            var userId = GetCurrentUserId();
+            var result = await _paymentService.GetAllTransactionHistoryAsync(userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
