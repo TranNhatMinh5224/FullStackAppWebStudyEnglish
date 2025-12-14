@@ -21,7 +21,10 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
         public async Task<QuizAttempt?> GetByIdAsync(int attemptId)
         {
-            return await _context.QuizAttempts.FindAsync(attemptId);
+            return await _context.QuizAttempts
+                .Include(qa => qa.Quiz)
+                .Include(qa => qa.User)
+                .FirstOrDefaultAsync(qa => qa.AttemptId == attemptId);
         }
         public async Task UpdateQuizAttemptAsync(QuizAttempt attempt)
         {

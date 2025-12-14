@@ -108,15 +108,16 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var attempts = await _quizAttemptRepository.GetByQuizIdAsync(quizId);
+                var submittedAttempts = attempts.Where(a => a.Status == QuizAttemptStatus.Submitted).ToList();
 
                 var stats = new
                 {
                     TotalAttempts = attempts.Count,
-                    CompletedAttempts = attempts.Count(a => a.Status == QuizAttemptStatus.Submitted),
+                    CompletedAttempts = submittedAttempts.Count,
                     InProgressAttempts = attempts.Count(a => a.Status == QuizAttemptStatus.InProgress),
-                    AverageScore = attempts.Where(a => a.Status == QuizAttemptStatus.Submitted).Average(a => a.TotalScore),
-                    HighestScore = attempts.Where(a => a.Status == QuizAttemptStatus.Submitted).Max(a => a.TotalScore),
-                    LowestScore = attempts.Where(a => a.Status == QuizAttemptStatus.Submitted).Min(a => a.TotalScore)
+                    AverageScore = submittedAttempts.Any() ? submittedAttempts.Average(a => a.TotalScore) : 0,
+                    HighestScore = submittedAttempts.Any() ? submittedAttempts.Max(a => a.TotalScore) : 0,
+                    LowestScore = submittedAttempts.Any() ? submittedAttempts.Min(a => a.TotalScore) : 0
                 };
 
                 response.Success = true;
