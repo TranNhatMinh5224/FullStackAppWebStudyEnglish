@@ -1,6 +1,7 @@
 using LearningEnglish.Application.Service;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Common;
 using LearningEnglish.Domain.Entities;
 using AutoMapper;
 using Moq;
@@ -26,7 +27,7 @@ public class UserServiceTests
         {
             UserId = 1,
             FirstName = "Minh",
-            LastName = "Nguyen",
+            LastName = "Tran",
             Email = "minh@example.com"
         };
 
@@ -40,6 +41,10 @@ public class UserServiceTests
 
         mockUserRepo.Setup(x => x.GetByIdAsync(1)).ReturnsAsync(user);
         mockMapper.Setup(x => x.Map<UserDto>(user)).Returns(userDto);
+        mockStreakService.Setup(x => x.GetCurrentStreakAsync(1))
+            .ReturnsAsync(new ServiceResponse<StreakDto> { Success = false });
+        mockTeacherSubRepo.Setup(x => x.GetActiveSubscriptionAsync(1))
+            .ReturnsAsync((TeacherSubscription?)null);
 
         var service = new UserManagementService(
             mockUserRepo.Object,

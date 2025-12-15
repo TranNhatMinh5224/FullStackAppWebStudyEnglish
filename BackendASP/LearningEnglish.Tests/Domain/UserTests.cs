@@ -18,7 +18,7 @@ public class UserTests
         var displayName = user.DisplayName;
 
         // Assert - Kiểm tra kết quả
-        Assert.Equal("Minh Nguyen", displayName);
+        Assert.Equal("Minh Trần", displayName);
     }
 
     [Fact]
