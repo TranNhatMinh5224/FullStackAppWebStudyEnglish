@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    triggers {
+        pollSCM('H/2 * * * *')  // Check Git every 2 minutes for changes
+    }
+
     environment {
         DOTNET_CLI_HOME = '/tmp/.dotnet'
         REGISTRY = "host.docker.internal:5000"
@@ -41,7 +45,15 @@ pipeline {
         stage('Test') {
             steps {
                 dir('BackendASP') {
-                    sh 'dotnet test -c Release --no-build --logger trx --results-directory TestResults || true'
+                    sh '''
+                    echo "Running unit tests..."
+                    dotnet test LearningEnglish.Tests/LearningEnglish.Tests.csproj \
+                      -c Release \
+                      --no-build \
+                      --logger trx \
+                      --results-directory TestResults \
+                      --verbosity normal
+                    '''
                 }
             }
         }
