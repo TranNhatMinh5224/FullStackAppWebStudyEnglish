@@ -1,9 +1,10 @@
 pipeline {
     agent any
 
-    triggers {
-        pollSCM('H/2 * * * *')  
-    }
+    // Uncomment below to enable auto-trigger (checks Git every 2 minutes)
+    // triggers {
+    //     pollSCM('H/2 * * * *')  
+    // }
 
     environment {
         DOTNET_CLI_HOME = '/tmp/.dotnet'
