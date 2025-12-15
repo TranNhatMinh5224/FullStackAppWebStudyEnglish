@@ -8,6 +8,7 @@ COPY LearningEnglish.API/*.csproj ./LearningEnglish.API/
 COPY LearningEnglish.Application/*.csproj ./LearningEnglish.Application/
 COPY LearningEnglish.Domain/*.csproj ./LearningEnglish.Domain/
 COPY LearningEnglish.Infrastructure/*.csproj ./LearningEnglish.Infrastructure/
+COPY LearningEnglish.Tests/*.csproj ./LearningEnglish.Tests/
 RUN dotnet restore
 
 # Copy everything and build
