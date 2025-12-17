@@ -26,7 +26,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _logger = logger;
         }
 
-        // POST: api/shared/files/temp-file - Upload temporary file with size validation
+        // POST: api/shared/files/temp-file - tải lên file tạm thời
         [HttpPost("temp-file")]
         [RequestSizeLimit(52_428_800)]  // Max 50MB
         public async Task<IActionResult> UploadTemplateFile(IFormFile file, [FromQuery] string bucketName, [FromQuery] string tempFolder = "temp")
@@ -59,7 +59,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             string fileType;
             string maxSizeReadable;
 
-            // Determine max size based on content type and bucket
+            // xác định giới hạn kích thước dựa trên loại file
             if (contentType.StartsWith("image/"))
             {
                 maxSize = MAX_IMAGE_SIZE;
@@ -96,7 +96,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return (true, string.Empty, maxSizeReadable);
         }
 
-        // DELETE: api/files/temp-file - Delete temporary file
+        // DELETE: api/files/temp-file -xoá file tạm thời
         [HttpDelete("temp-file")]
         public async Task<IActionResult> DeleteTemp(
             [FromQuery] string bucketName,
@@ -112,7 +112,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/shared/files/cleanup-temp - Manual trigger cleanup temp files (Admin only)
+        // POST: api/shared/files/cleanup-temp - dọn dẹp file tạm thời (Admin only)
         [HttpPost("cleanup-temp")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CleanupTempFiles(

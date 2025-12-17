@@ -17,7 +17,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _quizGroupService = quizGroupService;
         }
 
-        // POST: api/quiz-groups - Create quiz group
+        // POST: api/quiz-groups - tạo mới quiz group
         [HttpPost]
         public async Task<IActionResult> CreateQuizGroup([FromBody] CreateQuizGroupDto createDto)
         {
@@ -28,7 +28,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/quiz-groups/{id} - Get quiz group by ID
+        // GET: api/quiz-groups/{id} - lấy quiz group theo ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetQuizGroup(int id)
         {
@@ -36,7 +36,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/QuizGroup/by-quiz-section/{quizSectionId} - Get quiz groups by quiz section ID
+        // GET: api/QuizGroup/by-quiz-section/{quizSectionId} - lấy danh sách quiz groups theo quiz section ID
         [HttpGet("by-quiz-section/{quizSectionId}")]
         public async Task<IActionResult> GetQuizGroupsByQuizSectionId(int quizSectionId)
         {
@@ -44,7 +44,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/quiz-groups/{id} - Update quiz group
+        // PUT: api/quiz-groups/{id} - sửa quiz group
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateQuizGroup(int id, [FromBody] UpdateQuizGroupDto updateDto)
         {
@@ -55,7 +55,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/quiz-groups/{id} - Delete quiz group
+        // DELETE: api/quiz-groups/{id} - xoá quiz group
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteQuizGroup(int id)
         {

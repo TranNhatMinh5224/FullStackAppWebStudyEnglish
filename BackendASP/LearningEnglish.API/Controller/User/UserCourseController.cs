@@ -19,7 +19,7 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        // GET: api/user/courses/system-courses - Retrieve all available system courses (public access, optionally authenticated)
+        // GET: api/user/courses/system-courses - lấy danh sách tất cả khóa học hệ thống với trạng thái đăng ký của người dùng (nếu đã đăng nhập)
         [HttpGet("system-courses")]
         [AllowAnonymous]
         public async Task<IActionResult> GetSystemCourses()

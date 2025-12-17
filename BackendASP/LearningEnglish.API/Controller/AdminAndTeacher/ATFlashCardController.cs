@@ -33,7 +33,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(ClaimTypes.Role)!.Value;
         }
 
-        // GET: api/flash-card/atflashcard/{id} - Get flashcard details by ID
+        // GET: api/flash-card/atflashcard/{id} - lấy flashcard theo ID
         [HttpGet("{id}")]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> GetFlashCard(int id)
         {
@@ -41,7 +41,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/flash-card/atflashcard/{moduleId} - Get all flashcards in a module
+        // GET: api/flash-card/atflashcard/{moduleId} - lấy tất cả flash card
         [HttpGet("/{moduleId}")]
         public async Task<ActionResult<ServiceResponse<List<ListFlashCardDto>>>> GetFlashCardsByModule(int moduleId)
         {
@@ -49,7 +49,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/flash-card/atflashcard - Create a new flashcard
+        // POST: api/flash-card/atflashcard - tạo mơis flash card
         [HttpPost]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> CreateFlashCard(
             [FromBody] CreateFlashCardDto createFlashCardDto)
@@ -75,7 +75,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/flash-card/atflashcard/{id} - Update flashcard (Admin: any, Teacher: own only)
+        // PUT: api/flash-card/atflashcard/{id} - sửa lại flash card, teacher chỉ sửa của riêng teacher, còn admin sửa tất cả
         [HttpPut("{id}")]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> UpdateFlashCard(
             int id,
@@ -101,7 +101,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/flash-card/atflashcard/{id} - Delete flashcard (Admin: any, Teacher: own only)
+        // DELETE: api/flash-card/atflashcard/{id} - xoá flash card, teacher chỉ xoá của riêng teacher, còn admin xoá tất cả
         [HttpDelete("{id}")]
         public async Task<ActionResult<ServiceResponse<bool>>> DeleteFlashCard(int id)
         {
@@ -111,7 +111,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/flash-card/atflashcard/bulk - Create multiple flashcards at once
+        // POST: api/flash-card/atflashcard/bulk - tạo nhiều flash card từ file excel
         [HttpPost("bulk")]
         public async Task<ActionResult<ServiceResponse<List<FlashCardDto>>>> CreateBulkFlashCards(
             [FromBody] BulkImportFlashCardDto bulkImportDto)

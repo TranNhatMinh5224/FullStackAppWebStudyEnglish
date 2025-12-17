@@ -17,10 +17,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _quizAttemptAdminService = quizAttemptAdminService;
         }
 
-        /// <summary>
-        /// Lấy danh sách attempts của một quiz (CÓ PHÂN TRANG)
-        /// PageRequest có giá trị mặc định, luôn dùng phân trang
-        /// </summary>
+        // GET: api/quiz-attempts/quiz/{quizId}/paged - Lấy danh sách attempts của một quiz (CÓ PHÂN TRANG)
         [HttpGet("quiz/{quizId}/paged")]
         public async Task<IActionResult> GetQuizAttemptsPaged(int quizId, [FromQuery] PageRequest request)
         {
@@ -28,10 +25,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
         }
 
-        /// <summary>
-        /// Lấy danh sách attempts của một quiz (KHÔNG PHÂN TRANG)
-        /// Trả về tất cả attempts
-        /// </summary>
+        // GET: api/quiz-attempts/quiz/{quizId} - Lấy danh sách attempts của một quiz (KHÔNG PHÂN TRANG)
         [HttpGet("quiz/{quizId}")]
         public async Task<IActionResult> GetQuizAttempts(int quizId)
         {
@@ -39,9 +33,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Lấy chi tiết một lần làm bài
-        /// </summary>
+        // GET: api/quiz-attempts/{attemptId} - Lấy chi tiết một attempt theo ID
         [HttpGet("{attemptId}")]
         public async Task<IActionResult> GetAttemptDetails(int attemptId)
         {
@@ -58,9 +50,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Lấy thống kê các lần làm bài của quiz
-        /// </summary>
+        // GET: api/quiz-attempts/stats/{quizId} - Lấy thống kê làm bài cho một quiz
         [HttpGet("stats/{quizId}")]
         public async Task<IActionResult> GetQuizAttemptStats(int quizId)
         {
@@ -68,10 +58,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Lấy điểm của các user đã hoàn thành quiz (CÓ PHÂN TRANG)
-        /// PageRequest có giá trị mặc định, luôn dùng phân trang
-        /// </summary>
+        // GET: api/quiz-attempts/scores/{quizId}/paged - Lấy điểm của các user đã hoàn thành quiz (CÓ PHÂN TRANG)
         [HttpGet("scores/{quizId}/paged")]
         public async Task<IActionResult> GetQuizScoresPaged(int quizId, [FromQuery] PageRequest request)
         {
@@ -79,10 +66,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
         }
 
-        /// <summary>
-        /// Lấy điểm của các user đã hoàn thành quiz (KHÔNG PHÂN TRANG)
-        /// Trả về tất cả điểm
-        /// </summary>
+        // GET: api/quiz-attempts/scores/{quizId} - Lấy điểm của các user đã hoàn thành quiz (KHÔNG PHÂN TRANG)
         [HttpGet("scores/{quizId}")]
         public async Task<IActionResult> GetQuizScores(int quizId)
         {
@@ -90,9 +74,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Lấy lịch sử làm bài của user cho một quiz
-        /// </summary>
+        // GET: api/quiz-attempts/user/{userId}/quiz/{quizId} - Lấy tất cả các attempts của một user cho một quiz
         [HttpGet("user/{userId}/quiz/{quizId}")]
         public async Task<IActionResult> GetUserQuizAttempts(int userId, int quizId)
         {

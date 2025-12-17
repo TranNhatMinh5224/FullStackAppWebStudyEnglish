@@ -22,7 +22,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _bulkCreateValidator = bulkCreateValidator;
         }
 
-        // GET: api/questions/{questionId} - Get question by ID
+        // GET: api/questions/{questionId} - lấy question theo ID
         [HttpGet("{questionId}")]
         public async Task<IActionResult> GetQuestionById(int questionId)
         {
@@ -30,7 +30,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/questions/quiz-group/{quizGroupId} - Get questions by quiz group ID
+        // GET: api/questions/quiz-group/{quizGroupId} - lấy questions by quiz group ID
         [HttpGet("quiz-group/{quizGroupId}")]
         public async Task<IActionResult> GetQuestionsByQuizGroupId(int quizGroupId)
         {
@@ -38,7 +38,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/questions/quiz-section/{quizSectionId} - Get questions by quiz section ID
+        // GET: api/questions/quiz-section/{quizSectionId} - lấy questions by quiz section ID
         [HttpGet("quiz-section/{quizSectionId}")]
         public async Task<IActionResult> GetQuestionsByQuizSectionId(int quizSectionId)
         {
@@ -46,7 +46,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/questions - Create new question with answers
+        // POST: api/questions - tạo mới question
         [HttpPost]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionCreateDto questionCreateDto)
         {
@@ -56,7 +56,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/questions/bulk - Bulk create questions with answers
+        // POST: api/questions/bulk - tạo nhiều question
         [HttpPost("bulk")]
         public async Task<IActionResult> CreateBulkQuestions([FromBody] QuestionBulkCreateDto questionBulkCreateDto)
         {
@@ -66,7 +66,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/questions/{questionId} - Update question
+        // PUT: api/questions/{questionId} - sửa question
         [HttpPut("{questionId}")]
         public async Task<IActionResult> UpdateQuestion(int questionId, [FromBody] QuestionUpdateDto questionUpdateDto)
         {
@@ -74,7 +74,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/questions/{questionId} - Delete question
+        // DELETE: api/questions/{questionId} - xoá question
         [HttpDelete("{questionId}")]
         public async Task<IActionResult> DeleteQuestion(int questionId)
         {

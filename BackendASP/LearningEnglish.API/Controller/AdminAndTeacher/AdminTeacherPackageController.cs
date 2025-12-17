@@ -17,7 +17,7 @@ namespace LearningEnglish.API.Controller.Admin
             _teacherPackageService = teacherPackageService;
         }
 
-        // GET: api/admin/teacher-packages - Get all teacher packages in the system
+        // GET: api/admin/teacher-packages - lấy tat cả teacher package
         [HttpGet]
         public async Task<IActionResult> GetAllTeacherPackages()
         {
@@ -25,7 +25,7 @@ namespace LearningEnglish.API.Controller.Admin
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // GET: api/admin/teacher-packages/{id} - Get teacher package by ID
+        // GET: api/admin/teacher-packages/{id} - lấy teacher package theo ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTeacherPackageById(int id)
         {
@@ -36,7 +36,7 @@ namespace LearningEnglish.API.Controller.Admin
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // POST: api/admin/teacher-packages - Create new teacher package
+        // POST: api/admin/teacher-packages - tạo mới teacher package
         [HttpPost]
         public async Task<IActionResult> CreateTeacherPackage([FromBody] CreateTeacherPackageDto createDto)
         {
@@ -47,7 +47,7 @@ namespace LearningEnglish.API.Controller.Admin
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // PUT: api/admin/teacher-packages/{id} - Update teacher package
+        // PUT: api/admin/teacher-packages/{id} - sửa gói giao viên
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTeacherPackage(int id, [FromBody] UpdateTeacherPackageDto teacherPackageDto)
         {
@@ -60,7 +60,7 @@ namespace LearningEnglish.API.Controller.Admin
                 : StatusCode(result.StatusCode, new { Message = result.Message });
         }
 
-        // DELETE: api/admin/teacher-packages/{id} - Delete teacher package
+        // DELETE: api/admin/teacher-packages/{id} - xoá gói giáo viên
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTeacherPackage(int id)
         {
@@ -68,8 +68,8 @@ namespace LearningEnglish.API.Controller.Admin
                 return BadRequest(new { message = "Invalid ID provided." });
 
             var result = await _teacherPackageService.DeleteTeacherPackageAsync(id);
-            return result.Success 
-                ? Ok(new { message = result.Message, data = result.Data }) 
+            return result.Success
+                ? Ok(new { message = result.Message, data = result.Data })
                 : StatusCode(result.StatusCode, new { message = result.Message });
         }
     }

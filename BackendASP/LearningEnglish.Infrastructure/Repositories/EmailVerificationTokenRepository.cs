@@ -38,7 +38,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task UpdateAsync(EmailVerificationToken token)
         {
             _context.EmailVerificationTokens.Update(token);
-            await Task.CompletedTask;
+            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(EmailVerificationToken token)

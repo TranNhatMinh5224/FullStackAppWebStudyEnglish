@@ -32,7 +32,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
 
-        // POST: api/AdminAndTeacher/Assessment/AdminAssessment/create - Create new assessment (Admin and Teacher)
+        // POST: api/AdminAndTeacher/Assessment/AdminAssessment/create - tạo assessment mới (Admin và Teacher)
         [HttpPost("create")]
         public async Task<IActionResult> CreateAssessment([FromBody] CreateAssessmentDto createAssessmentDto)
         {
@@ -53,7 +53,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/AdminAndTeacher/Assessment/AdminAssessment/module/{moduleId} - Get assessments by module ID (Admin and Teacher)
+        // GET: api/AdminAndTeacher/Assessment/AdminAssessment/module/{moduleId} - lấy danh sách assessment theo module ID (Admin và Teacher)
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetAssessmentsByModuleId(int moduleId)
         {
@@ -70,7 +70,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - Get assessment by ID (Admin and Teacher)
+        // GET: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - lay thông tin assessment theo ID (Admin và Teacher)
         [HttpGet("{assessmentId}")]
         public async Task<IActionResult> GetAssessmentById(int assessmentId)
         {
@@ -83,7 +83,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - Update assessment (Admin and Teacher)
+        // PUT: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - sửa thông tin assessment (Admin và Teacher)
         [HttpPut("{assessmentId}")]
         public async Task<IActionResult> UpdateAssessment(int assessmentId, [FromBody] UpdateAssessmentDto updateAssessmentDto)
         {
@@ -99,7 +99,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - Delete assessment (Admin and Teacher)
+        // DELETE: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - xoá assessment (Admin và Teacher)
         [HttpDelete("{assessmentId}")]
         public async Task<IActionResult> DeleteAssessment(int assessmentId)
         {

@@ -25,7 +25,7 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        // GET: api/userlecture/{lectureId} - Get lecture details by ID
+        // GET: api/userlecture/{lectureId} - lấy lecture theo ID
         [HttpGet("{lectureId}")]
         public async Task<IActionResult> GetLecture(int lectureId)
         {
@@ -34,7 +34,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/userlecture/module/{moduleId} - Get all lectures within a module
+        // GET: api/userlecture/module/{moduleId} - lấy tất cả lecture theo module ID
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetLecturesByModule(int moduleId)
         {
@@ -43,7 +43,7 @@ namespace LearningEnglish.API.Controller.User
             return Ok(result);
         }
 
-        // GET: api/userlecture/module/{moduleId}/tree - Get hierarchical lecture tree structure for a module
+        // GET: api/userlecture/module/{moduleId}/tree - lấy cây lecture theo module ID
         [HttpGet("module/{moduleId}/tree")]
         public async Task<IActionResult> GetLectureTree(int moduleId)
         {

@@ -28,14 +28,7 @@ namespace LearningEnglish.API.Controller.User
             return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         }
 
-        // ============================================================
-        // SECTION 1: BẮT ĐẦU HỌC (Start Learning)
-        // ============================================================
-
-        /// <summary>
-        /// POST: api/user/flashcard-review/start-module/{moduleId}
-        /// Bắt đầu học module mới - Thêm tất cả từ vựng trong module vào "rổ review"
-        /// </summary>
+        // bắt đầu học module mới
         [HttpPost("start-module/{moduleId}")]
         public async Task<ActionResult<ServiceResponse<int>>> StartLearningModule(int moduleId)
         {
@@ -46,15 +39,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // ============================================================
-        // SECTION 2: LẤY TỪ CẦN ÔN HÔM NAY (Get Due Cards)
-        // ============================================================
-
-        /// <summary>
-        /// GET: api/user/flashcard-review/due
-        /// Lấy danh sách TẤT CẢ từ cần ôn hôm nay (từ mọi modules đã học)
-        /// Đây là "rổ review chung" - không phân biệt module
-        /// </summary>
+        // lấy danh sách từ cần ôn tập
         [HttpGet("due")]
         public async Task<ActionResult<ServiceResponse<DueFlashCardsResponseDto>>> GetDueFlashCards()
         {
@@ -65,15 +50,7 @@ namespace LearningEnglish.API.Controller.User
             return Ok(result);
         }
 
-        // ============================================================
-        // SECTION 3: ÔN TẬ/HỌC TỪ (Review Cards)
-        // ============================================================
-
-        /// <summary>
-        /// POST: api/user/flashcard-review/review
-        /// Ôn tập/Học từ - Submit đánh giá quality (0-5)
-        /// Hệ thống tự động tính toán lần ôn tiếp theo theo SM-2 algorithm
-        /// </summary>
+        // review flashcard
         [HttpPost("review")]
         public async Task<ActionResult<ServiceResponse<ReviewFlashCardResponseDto>>> ReviewFlashCard([FromBody] ReviewFlashCardDto reviewDto)
         {
@@ -85,15 +62,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        // ============================================================
-        // SECTION 4: THỐNG KÊ & TIẾN ĐỘ (Statistics & Progress)
-        // ============================================================
-
-        /// <summary>
-        /// GET: api/user/flashcard-review/statistics
-        /// Lấy thống kê tổng quan (dashboard)
-        /// Bao gồm: Tổng số từ, từ đã thuộc, từ cần ôn, success rate, streak...
-        /// </summary>
+        // lấy thống kê review
         [HttpGet("statistics")]
         public async Task<ActionResult<ServiceResponse<ReviewStatisticsDto>>> GetStatistics()
         {
@@ -104,11 +73,7 @@ namespace LearningEnglish.API.Controller.User
             return Ok(result);
         }
 
-        /// <summary>
-        /// GET: api/user/flashcard-review/mastered
-        /// Lấy danh sách từ đã thuộc (mastered)
-        /// Từ không cần ôn nữa (RepetitionCount >= 5, Quality >= 4)
-        /// </summary>
+        // lấy danh sách từ đã thuộc
         [HttpGet("mastered")]
         public async Task<ActionResult<ServiceResponse<DueFlashCardsResponseDto>>> GetMasteredFlashCards()
         {

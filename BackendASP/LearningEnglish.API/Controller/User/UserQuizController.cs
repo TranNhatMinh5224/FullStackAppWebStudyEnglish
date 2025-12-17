@@ -17,7 +17,7 @@ namespace LearningEnglish.API.Controller.User
             _quizService = quizService;
         }
 
-        // GET: api/User/Quizz/{assessmentId} - Get all quizzes by assessment ID (for students)
+        // GET: api/User/Quizz/{assessmentId} - lấy thông tin quiz theo assessment ID
         [HttpGet("Quizz/{assessmentId}")]
         public async Task<IActionResult> GetQuizInformation(int assessmentId)
         {
@@ -25,7 +25,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/User/quiz/{quizId} - Get quiz by ID (for students)
+        // GET: api/User/quiz/{quizId} - lấy quiz theo ID (cho học sinh)
         [HttpGet("quiz/{quizId}")]
         public async Task<IActionResult> GetQuizById(int quizId)
         {

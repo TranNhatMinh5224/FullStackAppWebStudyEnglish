@@ -31,7 +31,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
         }
 
-        // GET: api/modules/{moduleId} - Get module by ID with details
+        // GET: api/modules/{moduleId} - lấy module theo ID
         [HttpGet("{moduleId}")]
         public async Task<IActionResult> GetModule(int moduleId)
         {
@@ -40,7 +40,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/modules/lesson/{lessonId} - Get all modules by lesson ID
+        // GET: api/modules/lesson/{lessonId} - lấy tất cả module theo lesson ID
         [HttpGet("lesson/{lessonId}")]
         public async Task<IActionResult> GetModulesByLesson(int lessonId)
         {
@@ -49,7 +49,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/ATModule - Create new module
+        // POST: api/ATModule - tạo mới module
         [HttpPost]
         public async Task<IActionResult> CreateModule([FromBody] CreateModuleDto createModuleDto)
         {
@@ -61,7 +61,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/ATModule/{moduleId} - Update module (Admin: any module, Teacher: own modules only)
+        // PUT: api/ATModule/{moduleId} - sửa module, admin sửa tất cả, teacher chỉ sửa của riêng teacher
         [HttpPut("{moduleId}")]
         public async Task<IActionResult> UpdateModule(int moduleId, [FromBody] UpdateModuleDto updateModuleDto)
         {
@@ -71,7 +71,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/ATModule/{moduleId} - Delete module (Admin: any module, Teacher: own modules only)
+        // DELETE: api/ATModule/{moduleId} - xoá module, Admin xoá tất cả, Teacher chỉ xoá của riêng teacher
         [HttpDelete("{moduleId}")]
         public async Task<IActionResult> DeleteModule(int moduleId)
         {

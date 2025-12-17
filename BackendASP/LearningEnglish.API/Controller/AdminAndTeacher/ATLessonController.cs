@@ -40,7 +40,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return userRole;
         }
 
-        // POST: api/lesson/admin/add - Admin creates a new lesson
+        // POST: api/lesson/admin/add - admin creates a new lesson
         [HttpPost("admin/add")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddLesson(AdminCreateLessonDto dto)
@@ -49,7 +49,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/lesson/teacher/add - Teacher creates a new lesson for their course
+        // POST: api/lesson/teacher/add - giáo viên tạo mới lesson
         [HttpPost("teacher/add")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> AddLessonForTeacher(TeacherCreateLessonDto dto)
@@ -59,7 +59,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/lesson/delete/{lessonId} - Delete lesson (Admin: any, Teacher: own only)
+        // DELETE: api/lesson/delete/{lessonId} - xoá lesson, Admin xoá tất cả, Teacher chỉ xoá của riêng teacher
         [HttpDelete("delete/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> DeleteLesson(int lessonId)
@@ -70,7 +70,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? NoContent() : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/lesson/update/{lessonId} - Update lesson (Admin: any, Teacher: own only)
+        // PUT: api/lesson/update/{lessonId} - xoá lesson, Admin sửa tất cả, Teacher chỉ sửa của riêng teacher
         [HttpPut("update/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> UpdateLesson(int lessonId, [FromBody] UpdateLessonDto dto)
@@ -81,7 +81,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/lesson/get/{lessonId} - Get lesson details by ID
+        // GET: api/lesson/get/{lessonId} - lấy lesson theo ID
         [HttpGet("get/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> GetLessonById(int lessonId)
@@ -92,7 +92,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/lesson/course/{courseId} - Get all lessons for a course
+        // GET: api/lesson/course/{courseId} - lấy danh sách lesson theo course ID
         [HttpGet("course/{courseId}")]
         public async Task<IActionResult> GetListLessonByCourseId(int courseId)
         {

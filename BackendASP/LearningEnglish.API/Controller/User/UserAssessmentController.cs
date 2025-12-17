@@ -25,7 +25,7 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        // GET: api/user/assessment/module/{moduleId} - Get all assessments for a module
+        // GET: api/user/assessment/module/{moduleId} - get danh sách assessment theo module ID
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetAssessmentsByModuleId(int moduleId)
         {
@@ -33,7 +33,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/assessment/{assessmentId} - Get assessment details by ID
+        // GET: api/user/assessment/{assessmentId} - lay chi tiết assessment theo ID
         [HttpGet("{assessmentId}")]
         public async Task<IActionResult> GetAssessmentById(int assessmentId)
         {

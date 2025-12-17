@@ -31,7 +31,7 @@ namespace LearningEnglish.API.Controller.User
             return userId;
         }
 
-        // GET: api/user/streak - Get current streak (includes current, longest, total active days, status)
+        // GET: api/user/streak - lấy chuoiỗi ngày học hiện tại của user
         [HttpGet]
         public async Task<IActionResult> GetCurrentStreak()
         {

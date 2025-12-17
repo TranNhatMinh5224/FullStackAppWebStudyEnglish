@@ -54,7 +54,7 @@ namespace LearningEnglish.API.Controller.User
             return userId;
         }
 
-        // POST: api/payment/process - Create payment request and generate payment URL
+        // POST: api/payment/process - tạo yêu cầu thanh toán
         [HttpPost("process")]
         public async Task<IActionResult> ProcessPayment([FromBody] requestPayment request)
         {
@@ -69,7 +69,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/payment/confirm - Confirm and complete payment transaction
+        // POST: api/payment/confirm - xác nhận thanh toán
         [HttpPost("confirm")]
         public async Task<IActionResult> ConfirmPayment([FromBody] CompletePayment paymentDto)
         {
@@ -84,7 +84,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/payment/history - Get paginated transaction history for authenticated user
+        // GET: api/payment/history - lấy lịch sử giao dịch với phân trang cho người dùng đã xác thực
         [HttpGet("history")]
         public async Task<IActionResult> GetTransactionHistory([FromQuery] PageRequest request)
         {
@@ -93,7 +93,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/payment/history/all - Get all transaction history without pagination for authenticated user
+        // GET: api/payment/history/all - lấy toàn bộ lịch sử giao dịch không phân trang cho người dùng đã xác thực
         [HttpGet("history/all")]
         public async Task<IActionResult> GetAllTransactionHistory()
         {
@@ -102,7 +102,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/payment/transaction/{paymentId} - Get detailed information about a specific transaction
+        // GET: api/payment/transaction/{paymentId} - lây chi tiết giao dịch theo paymentId
         [HttpGet("transaction/{paymentId}")]
         public async Task<IActionResult> GetTransactionDetail(int paymentId)
         {
@@ -111,7 +111,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/payment/payos/create-link/{paymentId} - Create PayOS payment link
+        // POST: api/payment/payos/create-link/{paymentId} - tạo link thanh toán PayOS
         [HttpPost("payos/create-link/{paymentId}")]
         public async Task<IActionResult> CreatePayOSLink(int paymentId)
         {
@@ -120,7 +120,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        // GET: api/payment/payos/return - Handle PayOS redirect after payment 
+        // GET: api/payment/payos/return - sửa lý PayOS return URL
         [HttpGet("payos/return")]
         [AllowAnonymous]
         public async Task<IActionResult> PayOSReturn(
@@ -184,7 +184,7 @@ namespace LearningEnglish.API.Controller.User
                         else
                         {
                             // Nếu confirm fail (có thể đã được confirm bởi webhook), vẫn redirect success
-                           
+
                             _logger.LogWarning("Payment {PaymentId} confirmation failed or already processed: {Message}",
                                 payment.PaymentId, confirmResult.Message);
                         }
@@ -211,7 +211,7 @@ namespace LearningEnglish.API.Controller.User
             }
         }
 
-        // POST: api/payment/payos/webhook - Handle PayOS webhook notification
+        // POST: api/payment/payos/webhook - xử lý webhook từ PayOS
         [HttpPost("payos/webhook")]
         [AllowAnonymous]
         public async Task<IActionResult> PayOSWebhook([FromBody] PayOSWebhookDto webhookData)
@@ -257,7 +257,7 @@ namespace LearningEnglish.API.Controller.User
                 };
 
                 var result = await _paymentService.ConfirmPaymentAsync(confirmDto, payment.UserId);
-                
+
                 if (result.Success)
                 {
                     _logger.LogInformation("Payment {PaymentId} confirmed via webhook", payment.PaymentId);
@@ -277,19 +277,19 @@ namespace LearningEnglish.API.Controller.User
             }
         }
 
-        // POST: api/payment/payos/confirm/{paymentId} - Confirm PayOS payment from frontend
+        // POST: api/payment/payos/confirm/{paymentId} - xác nhận thanh toán PayOS
         [HttpPost("payos/confirm/{paymentId}")]
         public async Task<IActionResult> ConfirmPayOSPayment(int paymentId)
         {
             var userId = GetCurrentUserId();
-            
+
             var payment = await _paymentRepository.GetPaymentByIdAsync(paymentId);
             if (payment == null || payment.UserId != userId)
             {
                 return NotFound(new { message = "Payment not found" });
             }
 
-            if (!string.IsNullOrEmpty(payment.ProviderTransactionId) && 
+            if (!string.IsNullOrEmpty(payment.ProviderTransactionId) &&
                 long.TryParse(payment.ProviderTransactionId, out var orderCode))
             {
                 var payosInfo = await _payOSService.GetPaymentInformationAsync(orderCode);

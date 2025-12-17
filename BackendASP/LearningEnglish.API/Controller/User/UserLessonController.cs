@@ -42,7 +42,7 @@ namespace LearningEnglish.API.Controller.User
             return userRole;
         }
 
-        // GET: api/user/lessons/course/{courseId} - Get all lessons for a course with progress (for enrolled users)
+        // GET: api/user/lessons/course/{courseId} - lấy danh sách lesson theo course ID
         [HttpGet("course/{courseId}")]
         public async Task<IActionResult> GetLessonsByCourseId(int courseId)
         {
@@ -53,26 +53,26 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/lessons/{lessonId} - Get detailed information about a specific lesson
+        // GET: api/user/lessons/{lessonId} - lấy thông tin chi tiết của một lesson cụ thể
         [HttpGet("{lessonId}")]
         public async Task<IActionResult> GetLessonById(int lessonId)
         {
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
 
-            _logger.LogInformation("🔍 GetLessonById called: LessonId={LessonId}, UserId={UserId}, Role={Role}", 
+            _logger.LogInformation("🔍 GetLessonById called: LessonId={LessonId}, UserId={UserId}, Role={Role}",
                 lessonId, userId, userRole);
 
             var result = await _lessonService.GetLessonById(lessonId, userId, userRole);
-            
+
             if (result.Success && result.Data != null)
             {
-                _logger.LogInformation("✅ Lesson {LessonId} returned for User {UserId} (Role: {Role})", 
+                _logger.LogInformation("Lesson {LessonId} returned for User {UserId} (Role: {Role})",
                     lessonId, userId, userRole);
             }
             else
             {
-                _logger.LogWarning("❌ Lesson {LessonId} NOT returned for User {UserId} (Role: {Role}). Status: {StatusCode}, Message: {Message}", 
+                _logger.LogWarning("Lesson {LessonId} NOT returned for User {UserId} (Role: {Role}). Status: {StatusCode}, Message: {Message}",
                     lessonId, userId, userRole, result.StatusCode, result.Message);
             }
 

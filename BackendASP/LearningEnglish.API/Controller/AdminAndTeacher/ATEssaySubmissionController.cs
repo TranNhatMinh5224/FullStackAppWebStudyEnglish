@@ -6,11 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
-    /// <summary>
-    /// Controller quản lý Essay Submissions cho Admin và Teacher
-    /// Admin: Xem tất cả submissions trong hệ thống
-    /// Teacher: Chỉ xem submissions từ courses mình dạy (filtered by RLS)
-    /// </summary>
+    // quản lý essay submission cho cả Admin và Teacher
     [Route("api/admin-teacher/essay-submissions")]
     [ApiController]
     [Authorize(Roles = "Admin,Teacher")]
@@ -23,17 +19,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _essaySubmissionService = essaySubmissionService;
         }
 
-        /// <summary>
-        /// Lấy danh sách submissions của một essay cụ thể (CÓ PHÂN TRANG)
-        /// Trả về thông tin cơ bản: UserId, UserName, SubmittedAt, Status
-        /// - Teacher: Chỉ thấy submissions từ essays trong courses mình dạy (RLS tự động filter)
-        /// - Admin: Xem tất cả submissions
-        /// </summary>
-        /// <param name="essayId">ID của essay cần xem submissions</param>
-        /// <param name="pageNumber">Số trang (mặc định: 1)</param>
-        /// <param name="pageSize">Số items trên mỗi trang (mặc định: 10)</param>
-        /// <param name="searchTerm">Tìm kiếm theo tên học sinh (optional)</param>
-        /// <returns>Danh sách submissions với phân trang (basic info)</returns>
+        // lấy danh sách submissions của một essay cụ thể với phân trang
         [HttpGet("essay/{essayId}/paged")]
         public async Task<IActionResult> GetSubmissionsByEssayPaged(
             int essayId,
@@ -52,14 +38,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Lấy danh sách submissions của một essay cụ thể (KHÔNG PHÂN TRANG)
-        /// Trả về thông tin cơ bản: UserId, UserName, SubmittedAt, Status
-        /// - Teacher: Chỉ thấy submissions từ essays trong courses mình dạy (RLS tự động filter)
-        /// - Admin: Xem tất cả submissions
-        /// </summary>
-        /// <param name="essayId">ID của essay cần xem submissions</param>
-        /// <returns>Danh sách TẤT CẢ submissions (basic info)</returns>
+        /// lấy danh sách tất cả submissions của một essay cụ thể
         [HttpGet("essay/{essayId}")]
         public async Task<IActionResult> GetSubmissionsByEssay(int essayId)
         {
@@ -67,13 +46,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Xem chi tiết một submission cụ thể
-        /// - Teacher: Chỉ thấy submissions từ courses mình dạy (RLS tự động filter)
-        /// - Admin: Xem tất cả submissions
-        /// </summary>
-        /// <param name="submissionId">ID của submission</param>
-        /// <returns>Chi tiết submission</returns>
+        // lấy chi tiết một submission theo ID
         [HttpGet("{submissionId}")]
         public async Task<IActionResult> GetSubmissionDetail(int submissionId)
         {
@@ -81,25 +54,19 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Download file đính kèm của submission
-        /// - Teacher: Chỉ download được files từ courses mình dạy (RLS tự động filter)
-        /// - Admin: Download tất cả files
-        /// </summary>
-        /// <param name="submissionId">ID của submission</param>
-        /// <returns>File stream để download</returns>
+        // download file nộp bài của một submission
         [HttpGet("{submissionId}/download")]
         public async Task<IActionResult> DownloadSubmissionFile(int submissionId)
         {
             var result = await _essaySubmissionService.DownloadSubmissionFileAsync(submissionId);
-            
+
             if (!result.Success)
             {
                 return StatusCode(result.StatusCode, new { message = result.Message });
             }
 
             var (fileStream, fileName, contentType) = result.Data;
-            
+
             // Trả về file để browser download
             return File(fileStream, contentType, fileName);
         }

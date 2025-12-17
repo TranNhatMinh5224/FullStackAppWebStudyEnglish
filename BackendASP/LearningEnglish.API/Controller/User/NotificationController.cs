@@ -5,10 +5,7 @@ using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
 {
-    /// <summary>
-    /// Controller đơn giản CHỈ cho việc hiển thị notification từ vựng
-    /// 3 API endpoints cơ bản: Get, Get Count, Mark Read
-    /// </summary>
+    // quản lý thông báo cho User
     [ApiController]
     [Route("api/user/notifications")]
     [Authorize]
@@ -27,9 +24,7 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim?.Value, out var userId) ? userId : 0;
         }
 
-        /// <summary>
-        /// GET: api/notifications - Lấy danh sách thông báo (50 cái gần nhất)
-        /// </summary>
+        // GET: api/notifications - lấy danh sách thông báo của user
         [HttpGet]
         public async Task<IActionResult> GetNotifications()
         {
@@ -40,7 +35,8 @@ namespace LearningEnglish.API.Controller.User
             try
             {
                 var notifications = await _notificationRepository.GetUserNotificationsAsync(userId);
-                return Ok(new { 
+                return Ok(new
+                {
                     isSuccess = true,
                     data = notifications,
                     message = "Success"
@@ -48,16 +44,15 @@ namespace LearningEnglish.API.Controller.User
             }
             catch (Exception)
             {
-                return StatusCode(500, new { 
+                return StatusCode(500, new
+                {
                     isSuccess = false,
                     message = "Lỗi khi lấy danh sách thông báo"
                 });
             }
         }
 
-        /// <summary>
-        /// GET: api/notifications/unread-count - Đếm thông báo chưa đọc (cho badge)
-        /// </summary>
+        // GET: api/notifications/unread-count - đếm số thông báo chưa đọc
         [HttpGet("unread-count")]
         public async Task<IActionResult> GetUnreadCount()
         {
@@ -68,7 +63,8 @@ namespace LearningEnglish.API.Controller.User
             try
             {
                 var count = await _notificationRepository.GetUnreadCountAsync(userId);
-                return Ok(new { 
+                return Ok(new
+                {
                     isSuccess = true,
                     data = count,
                     message = "Success"
@@ -76,16 +72,15 @@ namespace LearningEnglish.API.Controller.User
             }
             catch (Exception)
             {
-                return StatusCode(500, new { 
+                return StatusCode(500, new
+                {
                     isSuccess = false,
                     message = "Lỗi khi đếm thông báo chưa đọc"
                 });
             }
         }
 
-        /// <summary>
-        /// PUT: api/notifications/{id}/mark-as-read - Đánh dấu thông báo đã đọc
-        /// </summary>
+        // PUT: api/notifications/{id}/mark-as-read - đánh dấu thông báo đã đọc
         [HttpPut("{id}/mark-as-read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
@@ -96,7 +91,8 @@ namespace LearningEnglish.API.Controller.User
             try
             {
                 await _notificationRepository.MarkAsReadAsync(id, userId);
-                return Ok(new { 
+                return Ok(new
+                {
                     isSuccess = true,
                     data = default(object?),
                     message = "Đã đánh dấu thông báo đã đọc"
@@ -104,7 +100,8 @@ namespace LearningEnglish.API.Controller.User
             }
             catch (Exception)
             {
-                return StatusCode(500, new { 
+                return StatusCode(500, new
+                {
                     isSuccess = false,
                     message = "Lỗi khi đánh dấu đã đọc"
                 });
