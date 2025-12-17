@@ -26,7 +26,6 @@ namespace LearningEnglish.Infrastructure.Services
                 _ => "unknown"
             };
         }
-
         public async Task<byte[]> ConvertToWavAsync(byte[] inputBytes, string inputFormat)
         {
             _logger.LogInformation("Converting {Format} to WAV 16kHz Mono (size: {Size} bytes)", inputFormat, inputBytes.Length);
@@ -159,7 +158,7 @@ namespace LearningEnglish.Infrastructure.Services
                 throw new Exception($"WAV validation failed: {ex.Message}", ex);
             }
         }
-
+        // lấy định dạng file từ định dạng audio
         private static string GetExtension(string format)
         {
             return format.ToLowerInvariant() switch
