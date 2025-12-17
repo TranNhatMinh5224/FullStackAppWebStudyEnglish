@@ -42,7 +42,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return userId;
         }
 
-        // GET: api/courses - Admin retrieves all courses with pagination
+        // GET: api/courses - admin lấy tất cả khoá học với phân trang
         [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllCourses([FromQuery] PageRequest request)
@@ -52,7 +52,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
         }
 
-        // DELETE: api/courses/{courseId} - Admin deletes a course by ID
+        // DELETE: api/courses/{courseId} - admin xoá khoá học
         [HttpDelete("{courseId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCourse(int courseId)
@@ -61,7 +61,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/courses - Admin creates a new course with system-level permissions
+        // POST: api/courses - admin tao khoá học mới
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminCreateCourse([FromBody] AdminCreateCourseRequestDto requestDto)
@@ -73,7 +73,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/courses/teacher - Teacher creates a new course owned by their account
+        // POST: api/courses/teacher - giáo viên tạo khoá học mới
         [HttpPost("teacher")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> CreateCourse([FromBody] TeacherCreateCourseRequestDto requestDto)
@@ -86,19 +86,19 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/courses/teacher - Teacher retrieves their courses with pagination
+        // GET: api/courses/teacher - giáo viên lấy tất cả khoá học của mình với phân trang
         [HttpGet("teacher")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> GetMyCourses([FromQuery] PageRequest request)
         {
             var teacherId = GetCurrentUserId();
-            
+
             // PageRequest có giá trị mặc định, luôn dùng phân trang
             var pagedResult = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, request);
             return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
         }
 
-        // GET: api/courses/teacher/{courseId} - Teacher retrieves detailed information of their own course
+        // GET: api/courses/teacher/{courseId} - giáo viên lấy chi tiết khoá học của mình
         [HttpGet("teacher/{courseId}")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> GetCourseDetail(int courseId)
@@ -108,7 +108,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/courses/{courseId} - Admin updates any course with full permissions
+        // PUT: api/courses/{courseId} - admin sửa khoá học
         [HttpPut("{courseId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminUpdateCourse(int courseId, [FromBody] AdminUpdateCourseRequestDto requestDto)
@@ -118,7 +118,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/courses/teacher/{courseId} - Teacher updates their own course
+        // PUT: api/courses/teacher/{courseId} - giáo viên sửa khoá học của mình
         [HttpPut("teacher/{courseId}")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] TeacherUpdateCourseRequestDto requestDto)
@@ -129,7 +129,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/courses/{courseId}/students - Get students in course with pagination
+        // GET: api/courses/{courseId}/students - lấy danh sách học viên trong khoá học với phân trang
         [HttpGet("{courseId}/students")]
         [Authorize(Roles = "Admin, Teacher")]
         public async Task<IActionResult> GetUsersByCourseId(int courseId, [FromQuery] PageRequest request)
@@ -147,7 +147,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
         }
 
-        // GET: api/courses/{courseId}/students/{studentId} - Get student detail in course
+        // GET: api/courses/{courseId}/students/{studentId} - lấy chi tiết học viên trong khoá học
         // RLS tự động filter: Admin xem tất cả, Teacher chỉ xem students trong own courses
         [HttpGet("{courseId}/students/{studentId}")]
         [Authorize(Roles = "Admin, Teacher")]
@@ -165,7 +165,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/courses/{courseId}/students - Add student to course by email
+        // POST: api/courses/{courseId}/students - Mời học viên vào khoá học qua email
         // Admin: thêm vào bất kỳ course nào, Teacher: chỉ thêm vào own courses (RLS filter)
         [HttpPost("{courseId}/students")]
         [Authorize(Roles = "Admin, Teacher")]
@@ -183,7 +183,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/courses/{courseId}/students/{studentId} - Remove student from course
+        // DELETE: api/courses/{courseId}/students/{studentId} - xoá học viên khỏi khoá học
         // Admin: xóa bất kỳ student nào, Teacher: chỉ xóa students trong own courses (RLS filter)
         [HttpDelete("{courseId}/students/{studentId}")]
         [Authorize(Roles = "Admin, Teacher")]

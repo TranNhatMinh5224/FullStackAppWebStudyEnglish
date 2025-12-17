@@ -159,6 +159,7 @@ namespace LearningEnglish.Application.Service
                         // Update attempts count
                         token.AttemptsCount = validationResult.NewAttemptsCount;
                         await _emailVerificationTokenRepository.UpdateAsync(token);
+                        await _emailVerificationTokenRepository.SaveChangesAsync();
                     }
 
                     response.Success = false;

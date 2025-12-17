@@ -17,7 +17,7 @@ namespace LearningEnglish.API.Controller.Admin
             _userManagementService = userManagementService;
         }
 
-        // GET: api/admin/users/users - Get all users with pagination
+        // GET: api/admin/users/users - lấy tất cả người dùng với phân trang
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers([FromQuery] PageRequest request)
         {
@@ -25,7 +25,7 @@ namespace LearningEnglish.API.Controller.Admin
             return pagedResult.Success ? Ok(pagedResult.Data) : StatusCode(pagedResult.StatusCode, new { message = pagedResult.Message });
         }
 
-        // PUT: api/admin/users/block-account/{userId} - Block user account (Teacher or Student)
+        // PUT: api/admin/users/block-account/{userId} - khoá tài khoản người dùng
         [HttpPut("block-account/{userId}")]
         public async Task<IActionResult> BlockAccount(int userId)
         {
@@ -33,7 +33,7 @@ namespace LearningEnglish.API.Controller.Admin
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // PUT: api/admin/users/unblock-account/{userId} - Unblock user account
+        // PUT: api/admin/users/unblock-account/{userId} - mở khoá tài khoản người dùng
         [HttpPut("unblock-account/{userId}")]
         public async Task<IActionResult> UnblockAccount(int userId)
         {
@@ -41,18 +41,18 @@ namespace LearningEnglish.API.Controller.Admin
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // GET: api/admin/users/list-blocked-accounts - Get all blocked accounts with pagination
+        // GET: api/admin/users/list-blocked-accounts - lấy tất cả tài khoản bị khoá với phân trang
         [HttpGet("list-blocked-accounts")]
         public async Task<IActionResult> GetListBlockedAccounts([FromQuery] PageRequest request)
         {
             var pagedResult = await _userManagementService.GetListBlockedAccountsPagedAsync(request);
             return pagedResult.Success ? Ok(pagedResult.Data) : StatusCode(pagedResult.StatusCode, new { message = pagedResult.Message });
         }
-    
-        // GET: api/admin/users/teachers - Get all teachers in the system with pagination
+
+        // GET: api/admin/users/teachers - lấy tất cả giáo viên với phân trang
         [HttpGet("teachers")]
         public async Task<IActionResult> GetListTeachers([FromQuery] PageRequest request)
-        { 
+        {
             var pagedResult = await _userManagementService.GetListTeachersPagedAsync(request);
             return pagedResult.Success ? Ok(pagedResult.Data) : StatusCode(pagedResult.StatusCode, new { message = pagedResult.Message });
         }
