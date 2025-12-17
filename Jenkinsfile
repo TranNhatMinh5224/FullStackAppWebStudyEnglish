@@ -1,7 +1,7 @@
 pipeline {
     agent any
 
-    // Uncomment below to enable auto-trigger (checks Git every 2 minutes)
+    // trigger sau moi 2 phut de kiem tra thay doi tren SCM 
     // triggers {
     //     pollSCM('H/2 * * * *')  
     // }
@@ -113,11 +113,11 @@ pipeline {
             }
         }
         success {
-            echo '✅ CI/CD pipeline SUCCESS'
+            echo ' CI/CD pipeline SUCCESS'
             echo "Image: ${FULL_IMAGE}"
         }
         failure {
-            echo '❌ CI/CD pipeline FAILED'
+            echo ' CI/CD pipeline FAILED'
         }
         cleanup {
             cleanWs()

@@ -174,8 +174,15 @@ builder.Services.AddScoped<IUserEnrollmentService, UserEnrollmentService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
+
+// OAuth2 Authentication Providers (Infrastructure Layer)
+builder.Services.AddScoped<IGoogleAuthProvider, GoogleAuthProvider>();
+builder.Services.AddScoped<IFacebookAuthProvider, FacebookAuthProvider>();
+
+// OAuth2 Login Services (Application Layer) 
 builder.Services.AddScoped<IGoogleLoginService, GoogleLoginService>();
 builder.Services.AddScoped<IFacebookLoginService, FacebookLoginService>();
+
 builder.Services.AddScoped<ILogoutService, LogoutService>(); // ✅ Logout Service
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();

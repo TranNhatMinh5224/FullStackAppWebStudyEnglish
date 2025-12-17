@@ -139,16 +139,18 @@ namespace LearningEnglish.Application.DTOs
         public string Email { get; set; } = string.Empty;
     }
 
+    // DTO cho đăng nhập Google theo chuẩn OAuth2 Authorization Code Flow
     public class GoogleLoginDto
     {
-        public string IdToken { get; set; } = string.Empty;
-        public string State { get; set; } = string.Empty;  // ✅ CSRF Protection
+        public string Code { get; set; } = string.Empty;  // Authorization code từ Google
+        public string State { get; set; } = string.Empty;  // CSRF Protection
     }
 
+    // DTO cho đăng nhập Facebook theo chuẩn OAuth2 Authorization Code Flow
     public class FacebookLoginDto
     {
-        public string AccessToken { get; set; } = string.Empty;
-        public string State { get; set; } = string.Empty;  // ✅ CSRF Protection
+        public string Code { get; set; } = string.Empty;  // Authorization code từ Facebook
+        public string State { get; set; } = string.Empty;  // CSRF Protection
     }
 
     public class LogoutDto

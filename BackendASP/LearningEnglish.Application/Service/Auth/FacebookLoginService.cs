@@ -1,19 +1,19 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
-using LearningEnglish.Application.Cofigurations;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 
 namespace LearningEnglish.Application.Service.Auth
 {
-    // Service xử lý đăng nhập bằng Facebook OAuth
+    /// <summary>
+    /// Service xử lý đăng nhập bằng Facebook OAuth2 - Application Layer
+    /// Chứa business logic: tạo user, validate, generate JWT
+    /// Delegate HTTP calls cho IFacebookAuthProvider (Infrastructure layer)
+    /// </summary>
     public class FacebookLoginService : IFacebookLoginService
     {
         private readonly IUserRepository _userRepository;
@@ -21,21 +21,18 @@ namespace LearningEnglish.Application.Service.Auth
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
         private readonly ILogger<FacebookLoginService> _logger;
-        private readonly FacebookAuthOptions _facebookAuthOptions;
-        private readonly HttpClient _httpClient;
+        private readonly IFacebookAuthProvider _facebookAuthProvider;
         private readonly IMinioFileStorage _minioService;
         private const string AVATAR_BUCKET_NAME = "avatars";
         private const string FOLDERREAL = "real";
 
-        // Constructor khởi tạo các dependency injection
         public FacebookLoginService(
             IUserRepository userRepository,
             IExternalLoginRepository externalLoginRepository,
             IMapper mapper,
             ITokenService tokenService,
             ILogger<FacebookLoginService> logger,
-            IOptions<FacebookAuthOptions> facebookAuthOptions,
-            IHttpClientFactory httpClientFactory,
+            IFacebookAuthProvider facebookAuthProvider,
             IMinioFileStorage minioService)
         {
             _userRepository = userRepository;
@@ -43,12 +40,11 @@ namespace LearningEnglish.Application.Service.Auth
             _mapper = mapper;
             _tokenService = tokenService;
             _logger = logger;
-            _facebookAuthOptions = facebookAuthOptions.Value;
-            _httpClient = httpClientFactory.CreateClient();
+            _facebookAuthProvider = facebookAuthProvider;
             _minioService = minioService;
         }
 
-        // Xử lý đăng nhập bằng Facebook OAuth với bảo mật CSRF  
+        // Xử lý đăng nhập bằng Facebook OAuth2 (Business Logic Only)
         public async Task<ServiceResponse<AuthResponseDto>> HandleFacebookLoginAsync(FacebookLoginDto facebookLoginDto)
         {
             var response = new ServiceResponse<AuthResponseDto>();
@@ -64,145 +60,37 @@ namespace LearningEnglish.Application.Service.Auth
                     return response;
                 }
 
-                // Verify Facebook Access Token
-                var appId = _facebookAuthOptions.AppId;
-                var appSecret = _facebookAuthOptions.AppSecret;
-
-                var verifyUrl = $"https://graph.facebook.com/debug_token?input_token={facebookLoginDto.AccessToken}&access_token={appId}|{appSecret}";
-                var verifyResponse = await _httpClient.GetAsync(verifyUrl);
-
-                if (!verifyResponse.IsSuccessStatusCode)
+                // Validate authorization code
+                if (string.IsNullOrEmpty(facebookLoginDto.Code))
                 {
-                    response.Success = false;
-                    response.StatusCode = 401;
-                    response.Message = "Token Facebook không hợp lệ";
-                    return response;
-                }
-
-                var verifyJson = await verifyResponse.Content.ReadAsStringAsync();
-                var verifyData = JsonSerializer.Deserialize<FacebookTokenVerification>(verifyJson);
-
-                if (verifyData?.Data?.IsValid != true)
-                {
-                    response.Success = false;
-                    response.StatusCode = 401;
-                    response.Message = "Token Facebook đã hết hạn hoặc không hợp lệ";
-                    return response;
-                }
-
-                // Lấy thông tin user từ Facebook
-                var userInfoUrl = $"https://graph.facebook.com/me?fields=id,email,first_name,last_name,picture&access_token={facebookLoginDto.AccessToken}";
-                var userInfoResponse = await _httpClient.GetAsync(userInfoUrl);
-
-                if (!userInfoResponse.IsSuccessStatusCode)
-                {
+                    _logger.LogWarning("Facebook login attempt without authorization code");
                     response.Success = false;
                     response.StatusCode = 400;
-                    response.Message = "Không thể lấy thông tin từ Facebook";
+                    response.Message = "Authorization code là bắt buộc";
                     return response;
                 }
 
-                var userInfoJson = await userInfoResponse.Content.ReadAsStringAsync();
-                var facebookUser = JsonSerializer.Deserialize<FacebookUserInfo>(userInfoJson);
-
-                // Nếu Facebook không trả về email, tạo email tự động (như TikTok, Instagram)
-                if (string.IsNullOrEmpty(facebookUser?.Email))
+                // Delegate HTTP call to Infrastructure layer
+                var facebookUser = await _facebookAuthProvider.GetUserInfoFromCodeAsync(facebookLoginDto.Code);
+                if (facebookUser == null)
                 {
-                    // Tạo email từ Facebook ID - user có thể update sau
-                    facebookUser.Email = $"facebook_{facebookUser?.Id}@noemail.local";
-                    _logger.LogInformation("Facebook user {UserId} không có email, tạo email tự động: {Email}", facebookUser?.Id, facebookUser.Email);
+                    response.Success = false;
+                    response.StatusCode = 401;
+                    response.Message = "Không thể xác thực với Facebook. Vui lòng thử lại.";
+                    return response;
                 }
 
-                // Kiểm tra Facebook login history
-                var existingExternalLogin = await _externalLoginRepository
-                    .GetByProviderAndUserIdAsync("Facebook", facebookUser.Id);
-
-                User? user;
-
-                if (existingExternalLogin != null)
+                // Business Logic: Get or create user
+                var user = await GetOrCreateUserAsync(facebookUser);
+                if (user == null)
                 {
-                    // Đã có External Login → lấy User
-                    user = await _userRepository.GetByIdAsync(existingExternalLogin.UserId);
-
-                    if (user == null)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 404;
-                        response.Message = "Không tìm thấy người dùng";
-                        return response;
-                    }
-
-                    // Cập nhật LastUsedAt
-                    existingExternalLogin.LastUsedAt = DateTime.UtcNow;
-                    await _externalLoginRepository.SaveChangesAsync();
-                }
-                else
-                {
-                    // Chưa có External Login → kiểm tra email có tồn tại không
-                    user = await _userRepository.GetUserByEmailAsync(facebookUser.Email);
-
-                    if (user == null)
-                    {
-                        // Download và upload avatar lên MinIO
-                        string? avatarKey = null;
-                        var avatarUrl = facebookUser.Picture?.Data?.Url;
-                        if (!string.IsNullOrEmpty(avatarUrl))
-                        {
-                            avatarKey = await DownloadAndUploadAvatarAsync(avatarUrl, facebookUser.Email);
-                        }
-
-                        // Tạo User mới
-                        user = new User
-                        {
-                            Email = facebookUser.Email,
-                            FirstName = facebookUser.FirstName ?? "",
-                            LastName = facebookUser.LastName ?? "",
-                            EmailVerified = true, // Facebook email đã verified
-                            NormalizedEmail = facebookUser.Email.ToUpper(),
-                            AvatarKey = avatarKey,  // Lưu MinIO key thay vì URL
-                            CreatedAt = DateTime.UtcNow,
-                            UpdatedAt = DateTime.UtcNow
-                        };
-
-                        // Lấy role Student mặc định
-                        var studentRole = await _userRepository.GetRoleByNameAsync("Student");
-                        if (studentRole != null)
-                        {
-                            user.Roles.Add(studentRole);
-                        }
-
-                        await _userRepository.AddUserAsync(user);
-                        await _userRepository.SaveChangesAsync();
-                    }
-                    else
-                    {
-                        // Email đã tồn tại với phương thức khác - chặn cross-login
-                        _logger.LogWarning("Attempt to login with Facebook for existing email with different method. Email: {Email}", facebookUser.Email);
-                        
-                        response.Success = false;
-                        response.StatusCode = 409;
-                        response.Message = "Email này đã được đăng ký bằng phương thức khác. Vui lòng sử dụng phương thức đăng nhập ban đầu.";
-                        return response;
-                    }
-
-                    // Tạo External Login mới
-                    var newExternalLogin = new ExternalLogin
-                    {
-                        Provider = "Facebook",
-                        ProviderUserId = facebookUser.Id,
-                        ProviderDisplayName = $"{facebookUser.FirstName} {facebookUser.LastName}",
-                        ProviderEmail = facebookUser.Email,
-                        ProviderPhotoUrl = facebookUser.Picture?.Data?.Url,
-                        UserId = user.UserId,
-                        CreatedAt = DateTime.UtcNow,
-                        LastUsedAt = DateTime.UtcNow
-                    };
-
-                    await _externalLoginRepository.AddAsync(newExternalLogin);
-                    await _externalLoginRepository.SaveChangesAsync();
+                    response.Success = false;
+                    response.StatusCode = 409;
+                    response.Message = "Email này đã được đăng ký bằng phương thức khác. Vui lòng sử dụng phương thức đăng nhập ban đầu.";
+                    return response;
                 }
 
-                // Kiểm tra trạng thái tài khoản
+                // Check account status
                 if (user.Status == Domain.Enums.AccountStatus.Inactive)
                 {
                     response.Success = false;
@@ -211,22 +99,22 @@ namespace LearningEnglish.Application.Service.Auth
                     return response;
                 }
 
-                // Tạo JWT token
+                // Generate JWT tokens
                 var accessToken = _tokenService.GenerateAccessToken(user);
                 var refreshToken = _tokenService.GenerateRefreshToken(user);
 
                 response.Success = true;
                 response.StatusCode = 200;
                 response.Message = "Đăng nhập bằng Facebook thành công";
-                
+
                 var userDto = _mapper.Map<UserDto>(user);
-                
-                // Build URL cho avatar nếu tồn tại
+
+                // Build public URL for avatar
                 if (!string.IsNullOrWhiteSpace(user.AvatarKey))
                 {
                     userDto.AvatarUrl = BuildPublicUrl.BuildURL(AVATAR_BUCKET_NAME, user.AvatarKey);
                 }
-                
+
                 response.Data = new AuthResponseDto
                 {
                     AccessToken = accessToken.Item1,
@@ -246,58 +134,108 @@ namespace LearningEnglish.Application.Service.Auth
             return response;
         }
 
-        // Helper classes for Facebook API responses
-        private class FacebookTokenVerification
+        /// <summary>
+        /// Business Logic: Tạo hoặc lấy user từ thông tin Facebook
+        /// </summary>
+        private async Task<User?> GetOrCreateUserAsync(FacebookUserInfo facebookUser)
         {
-            [JsonPropertyName("data")]
-            public TokenData? Data { get; set; }
+            // Tìm external login đã tồn tại
+            var existingExternalLogin = await _externalLoginRepository
+                .GetByProviderAndUserIdAsync("Facebook", facebookUser.Id);
+
+            if (existingExternalLogin != null)
+            {
+                // Đã có tài khoản Facebook - update last used time
+                var user = await _userRepository.GetByIdAsync(existingExternalLogin.UserId);
+                if (user != null)
+                {
+                    existingExternalLogin.LastUsedAt = DateTime.UtcNow;
+                    await _externalLoginRepository.SaveChangesAsync();
+                }
+                return user;
+            }
+
+            // Chưa có external login - check email exists
+            var email = facebookUser.Email ?? $"facebook_{facebookUser.Id}@noemail.local";
+            var existingUser = await _userRepository.GetUserByEmailAsync(email);
+            
+            if (existingUser != null)
+            {
+                // Email đã tồn tại với phương thức khác
+                _logger.LogWarning("Attempt to login with Facebook for existing email: {Email}", email);
+                return null; // Signal conflict
+            }
+
+            // Tạo user mới
+            var newUser = await CreateNewUserFromFacebookAsync(facebookUser);
+
+            // Tạo external login record
+            var newExternalLogin = new ExternalLogin
+            {
+                Provider = "Facebook",
+                ProviderUserId = facebookUser.Id,
+                ProviderDisplayName = $"{facebookUser.FirstName} {facebookUser.LastName}",
+                ProviderEmail = email,
+                ProviderPhotoUrl = facebookUser.PictureUrl,
+                UserId = newUser.UserId,
+                CreatedAt = DateTime.UtcNow,
+                LastUsedAt = DateTime.UtcNow
+            };
+
+            await _externalLoginRepository.AddAsync(newExternalLogin);
+            await _externalLoginRepository.SaveChangesAsync();
+
+            return newUser;
         }
 
-        private class TokenData
+        /// <summary>
+        /// Tạo user mới từ thông tin Facebook
+        /// </summary>
+        private async Task<User> CreateNewUserFromFacebookAsync(FacebookUserInfo facebookUser)
         {
-            [JsonPropertyName("is_valid")]
-            public bool IsValid { get; set; }
+            var email = facebookUser.Email ?? $"facebook_{facebookUser.Id}@noemail.local";
 
-            [JsonPropertyName("user_id")]
-            public string? UserId { get; set; }
+            // Download và upload avatar nếu có
+            string? avatarKey = null;
+            if (!string.IsNullOrEmpty(facebookUser.PictureUrl))
+            {
+                avatarKey = await DownloadAndUploadAvatarAsync(facebookUser.PictureUrl, email);
+            }
+
+            var user = new User
+            {
+                Email = email,
+                FirstName = facebookUser.FirstName ?? "",
+                LastName = facebookUser.LastName ?? "",
+                EmailVerified = !string.IsNullOrEmpty(facebookUser.Email), // True nếu có email thật
+                NormalizedEmail = email.ToUpper(),
+                AvatarKey = avatarKey,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            // Assign default Student role
+            var studentRole = await _userRepository.GetRoleByNameAsync("Student");
+            if (studentRole != null)
+            {
+                user.Roles.Add(studentRole);
+            }
+
+            await _userRepository.AddUserAsync(user);
+            await _userRepository.SaveChangesAsync();
+
+            return user;
         }
 
-        private class FacebookUserInfo
-        {
-            [JsonPropertyName("id")]
-            public string Id { get; set; } = string.Empty;
-
-            [JsonPropertyName("email")]
-            public string? Email { get; set; }
-
-            [JsonPropertyName("first_name")]
-            public string? FirstName { get; set; }
-
-            [JsonPropertyName("last_name")]
-            public string? LastName { get; set; }
-
-            [JsonPropertyName("picture")]
-            public PictureData? Picture { get; set; }
-        }
-
-        private class PictureData
-        {
-            [JsonPropertyName("data")]
-            public ImageData? Data { get; set; }
-        }
-
-        private class ImageData
-        {
-            [JsonPropertyName("url")]
-            public string? Url { get; set; }
-        }
-
+        /// <summary>
+        /// Download avatar từ Facebook và upload lên MinIO
+        /// </summary>
         private async Task<string?> DownloadAndUploadAvatarAsync(string avatarUrl, string userEmail)
         {
             try
             {
-                // Download ảnh từ URL
-                var imageResponse = await _httpClient.GetAsync(avatarUrl);
+                using var httpClient = new HttpClient();
+                var imageResponse = await httpClient.GetAsync(avatarUrl);
                 if (!imageResponse.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Không thể tải avatar từ URL: {Url}", avatarUrl);
@@ -305,8 +243,6 @@ namespace LearningEnglish.Application.Service.Auth
                 }
 
                 var imageStream = await imageResponse.Content.ReadAsStreamAsync();
-
-                // Convert sang IFormFile để upload lên MinIO
                 var memoryStream = new MemoryStream();
                 await imageStream.CopyToAsync(memoryStream);
                 memoryStream.Position = 0;
@@ -318,13 +254,12 @@ namespace LearningEnglish.Application.Service.Auth
                     ContentType = "image/jpeg"
                 };
 
-                // Upload trực tiếp vào real folder (không qua temp)
                 var uploadResult = await _minioService.UpLoadFileTempAsync(formFile, AVATAR_BUCKET_NAME, FOLDERREAL);
 
                 if (uploadResult.Success && uploadResult.Data != null)
                 {
                     _logger.LogInformation("Upload avatar thành công cho user: {Email}", userEmail);
-                    return uploadResult.Data.TempKey; // Thực tế là real key
+                    return uploadResult.Data.TempKey;
                 }
                 else
                 {
