@@ -24,7 +24,7 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        // POST: api/User/EssaySubmission/submit - Submit essay (for students)
+        // POST: api/User/EssaySubmission/submit - nop bai essay
         [HttpPost("submit")]
         public async Task<IActionResult> SubmitEssay([FromBody] CreateEssaySubmissionDto submissionDto)
         {
@@ -39,7 +39,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/User/EssaySubmission/{submissionId} - Get submission by ID
+        // GET: api/User/EssaySubmission/{submissionId} - lấy bài nộp theo ID
         [HttpGet("{submissionId}")]
         public async Task<IActionResult> GetSubmission(int submissionId)
         {
@@ -51,7 +51,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/User/EssaySubmission/submission-status/essay/{essayId} - Check if student has submitted for an essay
+        // GET: api/User/EssaySubmission/submission-status/essay/{essayId} - kiem tra trang thai nop bai theo essay ID
         [HttpGet("submission-status/essay/{essayId}")]
         public async Task<IActionResult> GetSubmissionStatus(int essayId)
         {
@@ -63,7 +63,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/User/EssaySubmission/update/{submissionId} - Update student's submission
+        // PUT: api/User/EssaySubmission/update/{submissionId} - sua bai nop essay
         [HttpPut("update/{submissionId}")]
         public async Task<IActionResult> UpdateSubmission(int submissionId, [FromBody] UpdateEssaySubmissionDto updateDto)
         {
@@ -78,7 +78,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/User/EssaySubmission/delete/{submissionId} - Delete student's submission
+        // DELETE: api/User/EssaySubmission/delete/{submissionId} - xoa bai nop essay
         [HttpDelete("delete/{submissionId}")]
         public async Task<IActionResult> DeleteSubmission(int submissionId)
         {

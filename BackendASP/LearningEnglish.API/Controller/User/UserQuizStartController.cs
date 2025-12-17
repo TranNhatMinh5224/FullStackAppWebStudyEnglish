@@ -24,7 +24,7 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        // POST: api/User/QuizAttempt/start/{quizId} - Start quiz attempt
+        // POST: api/User/QuizAttempt/start/{quizId} - bắt đầu làm bài quiz
         [HttpPost("start/{quizId}")]
         public async Task<IActionResult> StartQuizAttempt(int quizId)
         {
@@ -36,7 +36,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/User/QuizAttempt/submit/{attemptId} - Submit quiz attempt
+        // POST: api/User/QuizAttempt/submit/{attemptId} - nop bai quiz
         [HttpPost("submit/{attemptId}")]
         public async Task<IActionResult> SubmitQuizAttempt(int attemptId)
         {
@@ -44,7 +44,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/User/QuizAttempt/resume/{attemptId} - Resume quiz attempt after disconnect
+        // GET: api/User/QuizAttempt/resume/{attemptId} - tiep tuc lam bai quiz khi chua nop
         [HttpGet("resume/{attemptId}")]
         public async Task<IActionResult> ResumeQuizAttempt(int attemptId)
         {
@@ -52,13 +52,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/User/QuizAttempt/update-answer/{attemptId} - Update answer and calculate score in real-time
-        // UserAnswer format by question type:
-        // - MultipleChoice/TrueFalse: int (optionId) → {"questionId": 1, "userAnswer": 1}
-        // - MultipleAnswers: List<int> → {"questionId": 1, "userAnswer": [1, 2, 3]}
-        // - FillBlank: string → {"questionId": 1, "userAnswer": "answer text"}
-        // - Matching: Dictionary<int, int> → {"questionId": 1, "userAnswer": {"1": 2, "3": 4}}
-        // - Ordering: List<int> → {"questionId": 1, "userAnswer": [3, 1, 2, 4]}
+        // POST: api/User/QuizAttempt/update-answer/{attemptId} - cập nhật câu trả lời và điểm số cho một câu hỏi trong bài quiz
         [HttpPost("update-answer/{attemptId}")]
         public async Task<IActionResult> UpdateAnswerAndScore(int attemptId, [FromBody] UpdateAnswerRequestDto request)
         {

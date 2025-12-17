@@ -106,7 +106,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/user/auth/profile - Update authenticated user's profile information
+        // PUT: api/user/auth/profile - Cập nhật thông tin profile người dùng đã đăng nhập
         [Authorize]
         [HttpPut("update/profile")]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserDto dto)
@@ -116,7 +116,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/user/auth/profile/avatar - Update authenticated user's avatar
+        // PUT: api/user/auth/profile/avatar - sửa đổi avatar người dùng đã đăng nhập
         [Authorize]
         [HttpPut("profile/avatar")]
         public async Task<IActionResult> UpdateAvatar([FromBody] UpdateAvatarDto dto)
@@ -126,7 +126,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/user/auth/change-password - Change password for authenticated user
+        // PUT: api/user/auth/change-password - thay đổi mật khẩu người dùng đã đăng nhập
         [Authorize]
         [HttpPut("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
@@ -136,7 +136,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/auth/forgot-password - Request password reset OTP via email
+        // POST: api/user/auth/forgot-password - yêu cầu đặt lại mật khẩu
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
         {
@@ -144,7 +144,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/auth/verify-otp - Verify OTP code for password reset
+        // POST: api/user/auth/verify-otp - đặt lại mật khẩu bằng mã OTP
         [HttpPost("verify-otp")]
         public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto dto)
         {
@@ -152,7 +152,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/auth/set-new-password - Set new password after OTP verification
+        // POST: api/user/auth/set-new-password - đặt mật khẩu mới sau khi xác minh OTP
         [HttpPost("set-new-password")]
         public async Task<IActionResult> SetNewPassword([FromBody] SetNewPasswordDto dto)
         {
@@ -160,7 +160,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/auth/refresh-token - Refresh expired JWT access token using refresh token
+        // POST: api/user/auth/refresh-token - làm mới access token bằng refresh token
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] ReceiveRefreshTokenDto request)
         {
@@ -168,7 +168,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/auth/logout - Logout from current device (revoke specific refresh token)
+        // POST: api/user/auth/logout - đăng xuất khỏi thiết bị hiện tại
         [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout([FromBody] LogoutDto dto)
@@ -178,7 +178,7 @@ namespace LearningEnglish.API.Controllers.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/auth/logout-all - Logout from all devices (revoke all refresh tokens)
+        // POST: api/user/auth/logout-all - đăng xuất khỏi tất cả các thiết bị
         [HttpPost("logout-all")]
         [Authorize]
         public async Task<IActionResult> LogoutAll()

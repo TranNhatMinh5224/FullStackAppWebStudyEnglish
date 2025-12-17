@@ -26,10 +26,7 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        /// <summary>
-        /// POST: api/PronunciationAssessment - Assess pronunciation in realtime
-        /// Returns immediate results, updates only progress summary
-        /// </summary>
+        // POST: api/PronunciationAssessment - tạo mới bài đánh giá phát âm
         [HttpPost]
         public async Task<IActionResult> CreateAssessment([FromBody] CreatePronunciationAssessmentDto dto)
         {
@@ -45,9 +42,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// GET: api/PronunciationAssessment/module/{moduleId} - Get flashcards with pronunciation progress
-        /// </summary>
+        // GET: api/PronunciationAssessment/module/{moduleId} - lấy danh sách flashcard kèm tiến độ phát âm theo module ID
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetFlashCardsWithProgress(int moduleId)
         {
@@ -63,9 +58,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// GET: api/PronunciationAssessment/module/{moduleId}/card/{cardIndex} - Get a single flashcard by index for pronunciation practice
-        /// </summary>
+        // GET: api/PronunciationAssessment/module/{moduleId}/card/{cardIndex} - lấy flashcard kèm phát âm theo chỉ số cho luyện tập
         [HttpGet("module/{moduleId}/card/{cardIndex}")]
         public async Task<IActionResult> GetFlashCardByIndexForPractice(int moduleId, int cardIndex)
         {

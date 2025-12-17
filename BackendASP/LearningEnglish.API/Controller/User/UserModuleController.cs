@@ -25,7 +25,7 @@ namespace LearningEnglish.API.Controller.User
             return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
-        // GET: api/user/UserModule/{moduleId} - Get module with user progress
+        // GET: api/user/UserModule/{moduleId} - lấy module với tiến độ của user
         [HttpGet("{moduleId}")]
         public async Task<IActionResult> GetModuleWithProgress(int moduleId)
         {

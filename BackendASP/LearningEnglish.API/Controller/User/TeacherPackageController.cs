@@ -21,7 +21,7 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        // GET: api/user/teacher-packages - Retrieve all available teacher packages for purchase
+        // GET: api/user/teacher-packages - lấy danh sách tất cả gói dành cho giáo viên
         [HttpGet("teacher-packages")]
         public async Task<IActionResult> GetTeacherPackages()
         {
@@ -29,7 +29,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/teacher-packages/{id} - Get detailed information about a specific teacher package
+        // GET: api/user/teacher-packages/{id} - lấy chi tiết gói dành cho giáo viên theo ID
         [HttpGet("teacher-packages/{id}")]
         public async Task<IActionResult> GetTeacherPackageById(int id)
         {

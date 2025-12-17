@@ -5,10 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LearningEnglish.API.Controller.User
 {
-    /// <summary>
-    /// Controller xem Essays cho Student
-    /// Student chỉ có quyền xem essays, không được tạo/sửa/xóa
-    /// </summary>
+    // GET: api/user/essays - quản lý essay cho user role Student
     [Route("api/user/essays")]
     [ApiController]
     [Authorize(Roles = "Student")]
@@ -21,10 +18,7 @@ namespace LearningEnglish.API.Controller.User
             _essayService = essayService;
         }
 
-        /// <summary>
-        /// Xem chi tiết một essay (chỉ đọc)
-        /// Student chỉ xem được essays trong courses đã enroll
-        /// </summary>
+        // GET: api/user/essays/{essayId} - lấy essay theo ID (chỉ đọc)
         [HttpGet("{essayId}")]
         public async Task<IActionResult> GetEssay(int essayId)
         {
@@ -32,10 +26,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Lấy danh sách essays theo assessment ID (chỉ đọc)
-        /// Student chỉ xem được essays từ assessments trong courses đã enroll
-        /// </summary>
+        // GET: api/user/essays/assessment/{assessmentId} - lấy danh sách essay theo assessment ID (chỉ đọc)
         [HttpGet("assessment/{assessmentId}")]
         public async Task<IActionResult> GetEssaysByAssessment(int assessmentId)
         {

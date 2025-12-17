@@ -28,7 +28,7 @@ namespace LearningEnglish.API.Controller.User
             return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         }
 
-        // GET: api/user/flashcard/{id} - Retrieve a specific flashcard by ID
+        // GET: api/user/flashcard/{id} - lấy flashcard theo ID
         [HttpGet("{id}")]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> GetFlashCard(int id)
         {
@@ -37,7 +37,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : NotFound(result);
         }
 
-        // GET: api/user/flashcard/module/{moduleId} - Get all flashcards within a specific module
+        // GET: api/user/flashcard/module/{moduleId} - lấy tất cả flash card theo module ID
         [HttpGet("module/{moduleId}")]
         public async Task<ActionResult<ServiceResponse<List<ListFlashCardDto>>>> GetFlashCardsByModule(int moduleId)
         {
@@ -46,7 +46,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/flashcard/module/{moduleId}/card/{cardIndex} - Get a single flashcard by index for learning mode
+        // GET: api/user/flashcard/module/{moduleId}/card/{cardIndex} - lấy flash card theo chỉ số trong module
         [HttpGet("module/{moduleId}/card/{cardIndex}")]
         public async Task<ActionResult<ServiceResponse<PaginatedFlashCardDto>>> GetFlashCardByIndex(int moduleId, int cardIndex)
         {
