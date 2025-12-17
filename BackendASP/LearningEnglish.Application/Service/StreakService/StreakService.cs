@@ -68,6 +68,8 @@ public class StreakService : IStreakService
 
     public async Task<ServiceResponse<StreakUpdateResultDto>> UpdateStreakAsync(int userId)
     {
+        var response = new ServiceResponse<StreakUpdateResultDto>();
+
         try
         {
             var streak = await _streakRepo.GetByUserIdAsync(userId);
@@ -91,19 +93,18 @@ public class StreakService : IStreakService
             // Nếu đã update hôm nay rồi, không làm gì
             if (lastActivity == today)
             {
-                return new ServiceResponse<StreakUpdateResultDto>
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Streak đã được cập nhật hôm nay";
+                response.Data = new StreakUpdateResultDto
                 {
                     Success = true,
-                    Data = new StreakUpdateResultDto
-                    {
-                        Success = true,
-                        NewCurrentStreak = streak.CurrentStreak,
-                        NewLongestStreak = streak.LongestStreak,
-                        IsNewRecord = false,
-                        Message = "Đã cập nhật streak hôm nay rồi"
-                    },
-                    Message = "Streak đã được cập nhật hôm nay"
+                    NewCurrentStreak = streak.CurrentStreak,
+                    NewLongestStreak = streak.LongestStreak,
+                    IsNewRecord = false,
+                    Message = "Đã cập nhật streak hôm nay rồi"
                 };
+                return response;
             }
 
             bool isNewRecord = false;
@@ -149,7 +150,10 @@ public class StreakService : IStreakService
                 await _streakRepo.UpdateAsync(streak);
             }
 
-            var result = new StreakUpdateResultDto
+            response.Success = true;
+            response.StatusCode = 200;
+            response.Message = "Cập nhật streak thành công";
+            response.Data = new StreakUpdateResultDto
             {
                 Success = true,
                 NewCurrentStreak = streak.CurrentStreak,
@@ -159,23 +163,16 @@ public class StreakService : IStreakService
                     ? $"🎉 Kỷ lục mới! Streak hiện tại: {streak.CurrentStreak} ngày"
                     : $"Streak hiện tại: {streak.CurrentStreak} ngày"
             };
-
-            return new ServiceResponse<StreakUpdateResultDto>
-            {
-                Success = true,
-                Data = result,
-                Message = "Cập nhật streak thành công"
-            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating streak for user {UserId}", userId);
-            return new ServiceResponse<StreakUpdateResultDto>
-            {
-                Success = false,
-                Message = $"Không thể cập nhật streak: {ex.Message}"
-            };
+            response.Success = false;
+            response.StatusCode = 500;
+            response.Message = $"Không thể cập nhật streak: {ex.Message}";
         }
+
+        return response;
     }
 
 }
