@@ -28,7 +28,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;
         }
 
-        // GET: api/Quiz/ATQuizz/{quizId} - Get quiz by ID (Admin and Teacher)
+        // GET: api/Quiz/ATQuizz/{quizId} - lấy quiz theo ID
         [HttpGet("{quizId}")]
         public async Task<IActionResult> GetQuiz(int quizId)
         {
@@ -36,7 +36,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/Quiz/ATQuizz/create - Create new quiz (Admin and Teacher)
+        // POST: api/Quiz/ATQuizz/create - tạo mới quiz (Admin and Teacher)
         [HttpPost("create")]
         public async Task<IActionResult> CreateQuiz([FromBody] QuizCreateDto quizCreate)
         {
@@ -50,7 +50,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/Quiz/ATQuizz/update/{quizId} - Update quiz (Admin and Teacher)
+        // PUT: api/Quiz/ATQuizz/update/{quizId} -sửa quiz (Admin and Teacher)
         [HttpPut("update/{quizId}")]
         public async Task<IActionResult> UpdateQuiz(int quizId, [FromBody] QuizUpdateDto quizUpdate)
         {
@@ -64,7 +64,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/Quiz/ATQuizz/delete/{quizId} - Delete quiz (Admin and Teacher)
+        // DELETE: api/Quiz/ATQuizz/delete/{quizId} - xoá quiz (Admin and Teacher)
         [HttpDelete("delete/{quizId}")]
         public async Task<IActionResult> DeleteQuiz(int quizId)
         {
@@ -75,7 +75,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/Quiz/ATQuizz/all/{assessmentId} - Get all quizzes in assessment (Admin and Teacher)
+        // GET: api/Quiz/ATQuizz/all/{assessmentId} - lấy tat cả quiz theo assessment ID
         [HttpGet("all/{assessmentId}")]
         public async Task<IActionResult> GetAllQuizzInAssessment(int assessmentId)
         {
