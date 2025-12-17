@@ -2,10 +2,7 @@ using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Application.DTOs
 {
-    /// <summary>
-    /// DTO hiển thị thông tin cơ bản của submission trong danh sách
-    /// Dùng cho Teacher xem danh sách học sinh đã nộp bài
-    /// </summary>
+    // DTO danh sách nộp bài luận
     public class EssaySubmissionListDto
     {
         public int SubmissionId { get; set; }

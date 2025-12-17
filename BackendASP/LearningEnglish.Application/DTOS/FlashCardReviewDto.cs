@@ -1,23 +1,23 @@
 namespace LearningEnglish.Application.DTOs
 {
-    // DTO for reviewing a flashcard (Spaced Repetition System - SM2 Algorithm)
+    // DTO ôn tập lại thẻ
     public class ReviewFlashCardDto
     {
         public int FlashCardId { get; set; }
 
-        /// <summary>
+
         /// Quality rating (0-5):
-        /// 0 = Quên hoàn toàn (Complete blackout)
+        /// 0 = Quên hoàn toàn 
         /// 1 = Sai hoàn toàn (Incorrect response)
         /// 2 = Sai nhưng nhớ khi xem đáp án (Incorrect but remembered upon seeing answer)
         /// 3 = Đúng nhưng khó khăn (Correct with difficulty)
         /// 4 = Đúng với chút do dự (Correct with some hesitation)
         /// 5 = Đúng và dễ dàng (Perfect response)
-        /// </summary>
+
         public int Quality { get; set; }
     }
 
-    // Response after reviewing a flashcard
+    // phản hồi sau khi ôn tập thẻ
     public class ReviewFlashCardResponseDto
     {
         public int FlashCardReviewId { get; set; }
@@ -25,16 +25,16 @@ namespace LearningEnglish.Application.DTOs
         public string Word { get; set; } = string.Empty;
         public int Quality { get; set; }
 
-        // Spaced Repetition metrics
+        // khoảng lặp tiếp theo 
         public float EasinessFactor { get; set; }
         public int IntervalDays { get; set; }
         public int RepetitionCount { get; set; }
         public DateTime NextReviewDate { get; set; }
 
-        public string Message { get; set; } = string.Empty; // User-friendly message
+        public string Message { get; set; } = string.Empty;
     }
 
-    // DTO for flashcard that needs review
+    // DTO thẻ cần dược ôn tập
     public class DueFlashCardDto
     {
         public int FlashCardId { get; set; }
@@ -48,20 +48,20 @@ namespace LearningEnglish.Application.DTOs
         public string? Example { get; set; }
         public string? ExampleTranslation { get; set; }
 
-        // Review info
+        // ngày lặp tiếp theo
         public DateTime NextReviewDate { get; set; }
         public int IntervalDays { get; set; }
         public int RepetitionCount { get; set; }
-        public bool IsOverdue { get; set; } // If NextReviewDate < Now
+        public bool IsOverdue { get; set; }
         public int DaysOverdue { get; set; }
     }
 
-    // Response containing all due flashcards
+    // phản hồi ngày đến hạn
     public class DueFlashCardsResponseDto
     {
         public int TotalDue { get; set; }
-        public int NewCards { get; set; } // Cards never reviewed (RepetitionCount = 0)
-        public int ReviewCards { get; set; } // Cards being reviewed (RepetitionCount > 0)
+        public int NewCards { get; set; } // thẻ chua on
+        public int ReviewCards { get; set; } // the da on 1 lan
         public int OverdueCards { get; set; }
         public List<DueFlashCardDto> FlashCards { get; set; } = new();
     }

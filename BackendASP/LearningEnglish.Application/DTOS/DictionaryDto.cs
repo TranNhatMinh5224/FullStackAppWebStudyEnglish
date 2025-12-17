@@ -7,7 +7,7 @@ namespace LearningEnglish.Application.DTOs
         public string? Phonetic { get; set; }
         public List<DictionaryMeaningDto> Meanings { get; set; } = new();
         public string? SourceUrl { get; set; }
-        public string? AudioUrl { get; set; } // Audio pronunciation URL from dictionary API
+        public string? AudioUrl { get; set; } // url audio phát âm 
     }
 
     public class DictionaryMeaningDto
@@ -24,7 +24,7 @@ namespace LearningEnglish.Application.DTOs
         public string? Example { get; set; }
     }
 
-    // Request DTO for auto-generate FlashCard from word
+    // yêu cầu dto để tạo flashcard từ từ được cung cấp
     public class GenerateFlashCardRequestDto
     {
         public string Word { get; set; } = string.Empty;
@@ -32,7 +32,7 @@ namespace LearningEnglish.Application.DTOs
         public bool TranslateToVietnamese { get; set; } = true;
     }
 
-    // Response DTO for generate FlashCard preview
+    // phản hồi dto để xem trước flashcard được tạo
     public class GenerateFlashCardPreviewResponseDto
     {
         public string Word { get; set; } = string.Empty;
@@ -44,11 +44,11 @@ namespace LearningEnglish.Application.DTOs
         public string? Synonyms { get; set; }
         public string? Antonyms { get; set; }
 
-        // URLs for preview
+        // urls cho audio và hình ảnh
         public string? AudioUrl { get; set; }
         public string? ImageUrl { get; set; }
 
-        // Temp keys for create operation
+        // keys tạm thời để truy xuất audio và hình ảnh từ storage service
         public string? AudioTempKey { get; set; }
         public string? ImageTempKey { get; set; }
     }

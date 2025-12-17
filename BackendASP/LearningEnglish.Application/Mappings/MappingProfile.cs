@@ -9,7 +9,7 @@ namespace LearningEnglish.Application.Mappings
     {
         public MappingProfile()
         {
-            // Course mappings - Request DTOs to Entity
+            // Course mappings - DTO sang Entity
             CreateMap<AdminCreateCourseRequestDto, Course>()
                 .ForMember(dest => dest.ImageKey, opt => opt.Ignore())
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
@@ -22,7 +22,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
-            // Course mappings - Entity to Response DTOs
+            // Course mappings - Entity sang DTO
             CreateMap<Course, CourseResponseDto>()
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
@@ -39,13 +39,13 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
 
-            // Mapping cho GET /api/user/courses/system-courses
+            // Mapping cho lấy danh sách khóa học system
             CreateMap<Course, SystemCoursesListResponseDto>()
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.IsEnrolled, opt => opt.Ignore()); // Set trong service
 
-            // Mapping cho GET /api/user/courses/{courseId}
+            // Mapping cho lấy chi tiết khóa học
             CreateMap<Course, CourseDetailWithEnrollmentDto>()
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
@@ -56,7 +56,7 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<Lesson, LessonSummaryDto>()
                 .ForMember(dest => dest.Order, opt => opt.MapFrom(src => src.OrderIndex));
 
-            // Mapping cho Teacher Course Detail
+            // Mapping cho chi tiết khóa học giáo viên
             CreateMap<Course, TeacherCourseDetailDto>()
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
@@ -66,7 +66,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.TotalModules, opt => opt.MapFrom(src => src.Lessons.Sum(l => l.Modules.Count)))
                 .ForMember(dest => dest.Lessons, opt => opt.MapFrom(src => src.Lessons.OrderBy(l => l.OrderIndex).ToList()));
 
-            // Course with Progress mapping (for enrolled courses)
+            // Mapping cho khóa học đã đăng ký
             CreateMap<Course, EnrolledCourseWithProgressDto>()
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
@@ -81,7 +81,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.EnrolledAt, opt => opt.Ignore()) // Set in service
                 .ForMember(dest => dest.CompletedAt, opt => opt.Ignore()); // Set in service
 
-            // Course Update mappings
+            // Mapping cho cập nhật khóa học
             CreateMap<AdminUpdateCourseRequestDto, Course>()
                 .ForMember(dest => dest.ImageKey, opt => opt.Ignore())
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
@@ -94,10 +94,11 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            // Lesson mappings
+            // Mapping cho lesson
             CreateMap<Lesson, LessonDto>()
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey));
 
+            // Mapping cho lesson với tiến độ
             CreateMap<Lesson, LessonWithProgressDto>()
     .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
     .ForMember(dest => dest.CompletionPercentage, opt => opt.Ignore()) // Set in service
@@ -108,18 +109,21 @@ namespace LearningEnglish.Application.Mappings
     .ForMember(dest => dest.StartedAt, opt => opt.Ignore()) // Set in service
     .ForMember(dest => dest.CompletedAt, opt => opt.Ignore()); // Set in service
 
+            // Mapping cho tạo lesson
             CreateMap<AdminCreateLessonDto, Lesson>()
                 .ForMember(dest => dest.LessonId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.ImageKey, opt => opt.Ignore()); // Set manually in service after commit
 
+            // Mapping cho tạo lesson giáo viên
             CreateMap<TeacherCreateLessonDto, Lesson>()
                 .ForMember(dest => dest.LessonId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.ImageKey, opt => opt.Ignore()); // Set manually in service after commit
 
+            // Mapping cho cập nhật lesson
             CreateMap<UpdateLessonDto, Lesson>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.ImageKey, opt => opt.Ignore()) // Set manually in service after commit

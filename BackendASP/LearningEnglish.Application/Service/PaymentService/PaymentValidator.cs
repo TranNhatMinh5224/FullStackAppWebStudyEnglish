@@ -128,7 +128,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // Validate user exists
+                // Kiểm tra user tồn tại
                 var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null)
                 {
@@ -138,7 +138,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Check if user already purchased this product
+                // Kiểm tra user đã mua sản phẩm này chưa
                 var existingPayment = await _paymentRepository.GetSuccessfulPaymentByUserAndProductAsync(userId, productId, productType);
                 if (existingPayment != null)
                 {
