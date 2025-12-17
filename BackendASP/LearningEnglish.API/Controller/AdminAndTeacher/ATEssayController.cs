@@ -6,11 +6,9 @@ using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
-    /// <summary>
-    /// Controller quản lý Essays cho Admin và Teacher
-    /// Admin: CRUD tất cả essays trong hệ thống
-    /// Teacher: CRUD chỉ essays thuộc courses mình dạy (filtered by RLS hoặc teacherId check)
-    /// </summary>
+
+    // quản lý essay cho cả Admin và Teacher
+
     [Route("api/admin-teacher/essays")]
     [ApiController]
     [Authorize(Roles = "Admin,Teacher")]
@@ -34,11 +32,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
         }
 
-        /// <summary>
-        /// Xem chi tiết một essay
-        /// - Teacher: Chỉ xem essays từ courses mình dạy
-        /// - Admin: Xem tất cả
-        /// </summary>
+        // lấy essay theo ID
         [HttpGet("{essayId}")]
         public async Task<IActionResult> GetEssay(int essayId)
         {
@@ -46,11 +40,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Lấy danh sách essays theo assessment ID
-        /// - Teacher: Chỉ thấy essays từ courses mình dạy
-        /// - Admin: Xem tất cả
-        /// </summary>
+        // lấy danh sách essay theo assessment ID
         [HttpGet("assessment/{assessmentId}")]
         public async Task<IActionResult> GetEssaysByAssessment(int assessmentId)
         {
@@ -58,11 +48,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Tạo essay mới
-        /// - Teacher: Chỉ tạo essays trong courses mình dạy (kiểm tra teacherId)
-        /// - Admin: Tạo essays trong bất kỳ course nào
-        /// </summary>
+
+        // tạo mới essay
+
         [HttpPost]
         public async Task<IActionResult> CreateEssay([FromBody] CreateEssayDto createDto)
         {
@@ -78,11 +66,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Cập nhật essay
-        /// - Teacher: Chỉ cập nhật essays trong courses mình dạy (kiểm tra teacherId)
-        /// - Admin: Cập nhật bất kỳ essay nào
-        /// </summary>
+        //sửa essay
         [HttpPut("{essayId}")]
         public async Task<IActionResult> UpdateEssay(int essayId, [FromBody] UpdateEssayDto updateDto)
         {
@@ -96,11 +80,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        /// <summary>
-        /// Xóa essay
-        /// - Teacher: Chỉ xóa essays trong courses mình dạy (kiểm tra teacherId)
-        /// - Admin: Xóa bất kỳ essay nào
-        /// </summary>
+        // xoa essay
         [HttpDelete("{essayId}")]
         public async Task<IActionResult> DeleteEssay(int essayId)
         {

@@ -31,7 +31,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return User.FindFirst(ClaimTypes.Role)?.Value ?? "";
         }
 
-        // GET: api/lectures/{lectureId} - Get lecture details by ID
+        // GET: api/lectures/{lectureId} - lấy lecture theo ID
         [HttpGet("{lectureId}")]
         public async Task<IActionResult> GetLecture(int lectureId)
         {
@@ -40,7 +40,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/lectures/module/{moduleId} - Get all lectures within a module
+        // GET: api/lectures/module/{moduleId} - lấy tất cả lecture theo module ID
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetLecturesByModule(int moduleId)
         {
@@ -49,7 +49,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return Ok(result);
         }
 
-        // GET: api/atlecture/module/{moduleId}/tree - Get hierarchical lecture tree structure
+        // GET: api/atlecture/module/{moduleId}/tree - lấy cây lecture theo module ID
         [HttpGet("module/{moduleId}/tree")]
         public async Task<IActionResult> GetLectureTree(int moduleId)
         {
@@ -58,7 +58,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return Ok(result);
         }
 
-        // POST: api/atlecture - Create new lecture (Admin/Teacher)
+        // POST: api/atlecture - tạo mới lecture (Admin/Teacher)
         [HttpPost]
         public async Task<IActionResult> CreateLecture([FromBody] CreateLectureDto createLectureDto)
         {
@@ -72,7 +72,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/atlecture/bulk - Create multiple lectures with parent-child hierarchy (Admin/Teacher)
+        // POST: api/atlecture/bulk - tạo thêm nhiều lecture cùng lúc (Admin/Teacher)
         [HttpPost("bulk")]
         public async Task<IActionResult> BulkCreateLectures([FromBody] BulkCreateLecturesDto bulkCreateDto)
         {
@@ -81,13 +81,13 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
             var userId = GetCurrentUserId();
             var result = await _lectureService.BulkCreateLecturesAsync(bulkCreateDto, userId);
-            
-            return result.Success 
-                ? Ok(result) 
+
+            return result.Success
+                ? Ok(result)
                 : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/atlecture/{lectureId} - Update lecture (Admin: any, Teacher: own only)
+        // PUT: api/atlecture/{lectureId} - sửa lecture, teacher chỉ sửa của riêng teacher, còn admin sửa tất cả
         [HttpPut("{lectureId}")]
         public async Task<IActionResult> UpdateLecture(int lectureId, [FromBody] UpdateLectureDto updateLectureDto)
         {
@@ -100,7 +100,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/atlecture/{lectureId} - Delete lecture (Admin: any, Teacher: own only)
+        // DELETE: api/atlecture/{lectureId} - xoá lecture, teacher chỉ xoá của riêng teacher, còn admin xoá tất cả
         [HttpDelete("{lectureId}")]
         public async Task<IActionResult> DeleteLecture(int lectureId)
         {
@@ -110,7 +110,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/atlecture/reorder - Reorder lectures within a module
+        // POST: api/atlecture/reorder - sắp xếp lại thứ tự các lecture trong cùng một module
         [HttpPost("reorder")]
         public async Task<IActionResult> ReorderLectures([FromBody] List<ReorderLectureDto> reorderDtos)
         {
