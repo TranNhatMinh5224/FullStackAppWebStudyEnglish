@@ -1,6 +1,6 @@
 namespace LearningEnglish.Application.DTOs
 {
-    // DTO for FlashCard response
+    // DTO cho flashcard
     public class FlashCardDto
     {
         public int FlashCardId { get; set; }
@@ -24,10 +24,10 @@ namespace LearningEnglish.Application.DTOs
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
-        // Navigation info
+        // chuyển hướng module
         public string? ModuleName { get; set; }
 
-        // Review statistics
+        // thống kê SRS
         public int ReviewCount { get; set; }
         public decimal SuccessRate { get; set; }
         public DateTime? LastReviewedAt { get; set; }
@@ -35,7 +35,7 @@ namespace LearningEnglish.Application.DTOs
         public int CurrentLevel { get; set; } // SRS level (0-6)
     }
 
-    // DTO for listing flashcards (lighter version)
+    // dto danh sách flashcard
     public class ListFlashCardDto
     {
         public int FlashCardId { get; set; }
@@ -52,7 +52,7 @@ namespace LearningEnglish.Application.DTOs
         public int CurrentLevel { get; set; }
     }
 
-    // DTO for creating new flashcard
+    // DTO tạo 1 thẻ mới
     public class CreateFlashCardDto
     {
         public int? ModuleId { get; set; }
@@ -72,7 +72,7 @@ namespace LearningEnglish.Application.DTOs
         public string? AudioType { get; set; }
     }
 
-    // DTO for updating existing flashcard
+    // DTO sửa flash card 
     public class UpdateFlashCardDto
     {
         public string? Word { get; set; }
@@ -92,7 +92,7 @@ namespace LearningEnglish.Application.DTOs
         public string? AudioType { get; set; }
     }
 
-    // DTO for bulk flashcard import
+    // DTO toạ nhiều flash card
     public class BulkImportFlashCardDto
     {
         public int ModuleId { get; set; }
@@ -100,7 +100,7 @@ namespace LearningEnglish.Application.DTOs
         public bool ReplaceExisting { get; set; } = false;
     }
 
-    // DTO for paginated single flashcard response (for learning mode)
+    // DTO chuyển hướng flash card với phân trang
     public class PaginatedFlashCardDto
     {
         public FlashCardDto? FlashCard { get; set; }
