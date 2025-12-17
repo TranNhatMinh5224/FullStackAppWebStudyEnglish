@@ -122,10 +122,6 @@ namespace LearningEnglish.Application.Service
                 _logger.LogInformation("User {UserId} reviewed flashcard {FlashCardId} with quality {Quality}. Next review: {NextReview}",
                     userId, reviewDto.FlashCardId, reviewDto.Quality, review.NextReviewDate);
 
-                // ✅ Update streak after flashcard review
-                bool isSuccessful = reviewDto.Quality >= 3; // Quality >= 3 is considered successful
-                await _streakService.UpdateStreakAsync(userId, isSuccessful);
-
                 // ✅ Check if module is completed after this review
                 if (flashCard.ModuleId.HasValue)
                 {

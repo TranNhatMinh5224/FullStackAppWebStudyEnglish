@@ -1,3 +1,4 @@
+using AutoMapper;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
@@ -12,13 +13,16 @@ public class StreakService : IStreakService
 {
     private readonly IStreakRepository _streakRepo;
     private readonly ILogger<StreakService> _logger;
+    private readonly IMapper _mapper;
 
     public StreakService(
         IStreakRepository streakRepo,
-        ILogger<StreakService> logger)
+        ILogger<StreakService> logger,
+        IMapper mapper)
     {
         _streakRepo = streakRepo;
         _logger = logger;
+        _mapper = mapper;
     }
 
     public async Task<ServiceResponse<StreakDto>> GetCurrentStreakAsync(int userId)
@@ -42,7 +46,7 @@ public class StreakService : IStreakService
                 streak = await _streakRepo.CreateAsync(streak);
             }
 
-            var streakDto = MapToDto(streak);
+            var streakDto = _mapper.Map<StreakDto>(streak);
 
             return new ServiceResponse<StreakDto>
             {
@@ -62,7 +66,7 @@ public class StreakService : IStreakService
         }
     }
 
-    public async Task<ServiceResponse<StreakUpdateResultDto>> UpdateStreakAsync(int userId, bool isSuccessful)
+    public async Task<ServiceResponse<StreakUpdateResultDto>> UpdateStreakAsync(int userId)
     {
         try
         {
@@ -81,26 +85,8 @@ public class StreakService : IStreakService
                 };
             }
 
-            var today = DateTime.UtcNow.Date;
+            var today = DateTime.Now.Date; // Use local time for streak calculation
             var lastActivity = streak.LastActivityDate?.Date;
-
-            // Chỉ update nếu review thành công
-            if (!isSuccessful)
-            {
-                return new ServiceResponse<StreakUpdateResultDto>
-                {
-                    Success = true,
-                    Data = new StreakUpdateResultDto
-                    {
-                        Success = false,
-                        NewCurrentStreak = streak.CurrentStreak,
-                        NewLongestStreak = streak.LongestStreak,
-                        IsNewRecord = false,
-                        Message = "Review không thành công, streak không được cập nhật"
-                    },
-                    Message = "Review không thành công"
-                };
-            }
 
             // Nếu đã update hôm nay rồi, không làm gì
             if (lastActivity == today)
@@ -122,7 +108,7 @@ public class StreakService : IStreakService
 
             bool isNewRecord = false;
 
-            // Logic cập nhật streak
+            // Logic cập nhật streak - chỉ cần user online là được
             if (lastActivity == null)
             {
                 // Lần đầu tiên
@@ -132,7 +118,7 @@ public class StreakService : IStreakService
             }
             else if (lastActivity == today.AddDays(-1))
             {
-                // Tiếp tục streak (học liên tục)
+                // Tiếp tục streak (online liên tục)
                 streak.CurrentStreak++;
                 streak.TotalActiveDays++;
             }
@@ -192,18 +178,5 @@ public class StreakService : IStreakService
         }
     }
 
-    private static StreakDto MapToDto(Streak streak)
-    {
-        var today = DateTime.UtcNow.Date;
-        var lastActivity = streak.LastActivityDate?.Date;
-
-        return new StreakDto
-        {
-            UserId = streak.UserId,
-            CurrentStreak = streak.CurrentStreak,
-            LastActivityDate = streak.LastActivityDate,
-            IsActiveToday = lastActivity == today
-        };
-    }
 }
 

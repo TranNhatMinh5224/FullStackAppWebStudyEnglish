@@ -31,12 +31,21 @@ namespace LearningEnglish.API.Controller.User
             return userId;
         }
 
-        // GET: api/user/streak - lấy chuoiỗi ngày học hiện tại của user
+        // GET: api/user/streaks - lấy chuỗi ngày học hiện tại của user
         [HttpGet]
         public async Task<IActionResult> GetCurrentStreak()
         {
             var userId = GetCurrentUserId();
             var result = await _streakService.GetCurrentStreakAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/user/streaks/checkin - cập nhật streak khi user online
+        [HttpPost("checkin")]
+        public async Task<IActionResult> CheckInStreak()
+        {
+            var userId = GetCurrentUserId();
+            var result = await _streakService.UpdateStreakAsync(userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

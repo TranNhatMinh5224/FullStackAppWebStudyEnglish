@@ -132,9 +132,6 @@ namespace LearningEnglish.Application.Service
                         await _moduleProgressService.CompleteModuleAsync(userId, assessment.ModuleId);
                     }
 
-                    // ✅ Update streak after essay submission
-                    await _streakService.UpdateStreakAsync(userId, true); // Essay submission is always successful
-
                     var submissionDto = _mapper.Map<EssaySubmissionDto>(createdSubmission);
 
                     // Build attachment URL if attachment exists

@@ -389,10 +389,6 @@ namespace LearningEnglish.Application.Service
                     await _moduleProgressService.CompleteModuleAsync(attempt.UserId, assessment.ModuleId);
                 }
 
-                // ✅ Update streak after quiz submission
-                bool isPassed = quiz.PassingScore.HasValue ? attempt.TotalScore >= quiz.PassingScore.Value : true;
-                await _streakService.UpdateStreakAsync(attempt.UserId, isPassed);
-
                 // Tạo result object
                 var result = new QuizAttemptResultDto
                 {

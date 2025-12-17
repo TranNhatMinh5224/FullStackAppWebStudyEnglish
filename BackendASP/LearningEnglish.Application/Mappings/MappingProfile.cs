@@ -9,6 +9,10 @@ namespace LearningEnglish.Application.Mappings
     {
         public MappingProfile()
         {
+            // Streak mapping
+            CreateMap<Streak, StreakDto>()
+                .ForMember(dest => dest.IsActiveToday, opt => opt.MapFrom<IsActiveTodayResolver>());
+
             // Course mappings - DTO sang Entity
             CreateMap<AdminCreateCourseRequestDto, Course>()
                 .ForMember(dest => dest.ImageKey, opt => opt.Ignore())
@@ -397,6 +401,17 @@ namespace LearningEnglish.Application.Mappings
                 return timespan;
 
             return null;
+        }
+    }
+
+    // Custom value resolver for IsActiveToday
+    public class IsActiveTodayResolver : IValueResolver<Streak, StreakDto, bool>
+    {
+        public bool Resolve(Streak source, StreakDto destination, bool destMember, ResolutionContext context)
+        {
+            var today = DateTime.Now.Date;
+            var lastActivity = source.LastActivityDate?.Date;
+            return lastActivity == today;
         }
     }
 }
