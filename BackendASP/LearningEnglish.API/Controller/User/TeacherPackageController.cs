@@ -9,7 +9,7 @@ namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
     [Route("api/user/teacher-packages")]
-    [Authorize]
+    
     public class TeacherPackageController : ControllerBase
     {
         private readonly ITeacherPackageService _teacherPackageService;
@@ -23,6 +23,7 @@ namespace LearningEnglish.API.Controller.User
 
         // GET: api/user/teacher-packages - lấy danh sách tất cả gói dành cho giáo viên
         [HttpGet("teacher-packages")]
+        [Authorize(Roles = "Student,Teacher,Admin")]
         public async Task<IActionResult> GetTeacherPackages()
         {
             var result = await _teacherPackageService.GetAllTeacherPackagesAsync();
@@ -31,6 +32,7 @@ namespace LearningEnglish.API.Controller.User
 
         // GET: api/user/teacher-packages/{id} - lấy chi tiết gói dành cho giáo viên theo ID
         [HttpGet("teacher-packages/{id}")]
+        [Authorize(Roles = "Student,Teacher,Admin")]
         public async Task<IActionResult> GetTeacherPackageById(int id)
         {
             if (id <= 0)
