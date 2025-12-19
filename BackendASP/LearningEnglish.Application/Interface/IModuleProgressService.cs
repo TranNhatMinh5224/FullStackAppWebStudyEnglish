@@ -18,6 +18,12 @@ public interface IModuleProgressService
     Task StartModuleAsync(int userId, int moduleId);
 
     /// <summary>
+    /// Start module và tự động complete nếu là FlashCard/Lecture/Video/Reading
+    /// Quiz/Essay chỉ start, không auto-complete (phải submit mới complete)
+    /// </summary>
+    Task StartAndCompleteModuleAsync(int userId, int moduleId);
+
+    /// <summary>
     /// Cập nhật tiến độ video trong lesson
     /// </summary>
     Task UpdateVideoProgressAsync(int userId, int lessonId, int positionSeconds, float videoPercentage);

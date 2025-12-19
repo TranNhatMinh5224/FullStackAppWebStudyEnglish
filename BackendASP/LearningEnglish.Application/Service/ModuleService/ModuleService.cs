@@ -50,6 +50,20 @@ namespace LearningEnglish.Application.Service
 
                 // Chuyển đổi entity sang DTO để trả về client
                 var moduleDto = _mapper.Map<ModuleDto>(module);
+
+                // Add progress info if userId provided
+                if (userId.HasValue)
+                {
+                    var moduleCompletion = await _moduleCompletionRepository.GetByUserAndModuleAsync(userId.Value, moduleId);
+                    if (moduleCompletion != null)
+                    {
+                        moduleDto.IsCompleted = moduleCompletion.IsCompleted;
+                        moduleDto.ProgressPercentage = moduleCompletion.ProgressPercentage;
+                        moduleDto.StartedAt = moduleCompletion.StartedAt;
+                        moduleDto.CompletedAt = moduleCompletion.CompletedAt;
+                    }
+                }
+
                 response.Data = moduleDto;
                 response.Message = "Lấy thông tin module thành công";
                 return response;
@@ -74,6 +88,23 @@ namespace LearningEnglish.Application.Service
                 var modules = await _moduleRepository.GetByLessonIdAsync(lessonId);
                 // Chuyển đổi sang DTO để trả về (ListModuleDto chỉ chứa thông tin cơ bản)
                 var moduleDtos = _mapper.Map<List<ListModuleDto>>(modules);
+
+                // Add progress info if userId provided
+                if (userId.HasValue)
+                {
+                    var moduleIds = modules.Select(m => m.ModuleId).ToList();
+                    var moduleCompletions = await _moduleCompletionRepository.GetByUserAndModuleIdsAsync(userId.Value, moduleIds);
+
+                    foreach (var moduleDto in moduleDtos)
+                    {
+                        var completion = moduleCompletions.FirstOrDefault(mc => mc.ModuleId == moduleDto.ModuleId);
+                        if (completion != null)
+                        {
+                            moduleDto.IsCompleted = completion.IsCompleted;
+                            moduleDto.ProgressPercentage = completion.ProgressPercentage;
+                        }
+                    }
+                }
 
                 response.Data = moduleDtos;
                 response.Message = "Lấy danh sách module thành công";

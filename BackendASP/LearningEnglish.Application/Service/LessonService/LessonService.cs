@@ -436,6 +436,19 @@ namespace LearningEnglish.Application.Service
                     );
                 }
 
+                // Add progress info for Student role
+                if (userRole == "Student")
+                {
+                    var lessonCompletion = await _lessonCompletionRepository.GetByUserAndLessonAsync(userId, lessonId);
+                    if (lessonCompletion != null)
+                    {
+                        lessonDto.CompletionPercentage = lessonCompletion.CompletionPercentage;
+                        lessonDto.IsCompleted = lessonCompletion.IsCompleted;
+                        lessonDto.CompletedModules = lessonCompletion.CompletedModules;
+                        lessonDto.TotalModules = lessonCompletion.TotalModules;
+                    }
+                }
+
                 response.StatusCode = 200;
                 response.Data = lessonDto;
             }

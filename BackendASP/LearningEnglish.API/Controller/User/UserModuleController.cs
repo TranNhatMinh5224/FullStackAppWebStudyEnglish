@@ -11,11 +11,16 @@ namespace LearningEnglish.API.Controller.User
     public class UserModuleController : ControllerBase
     {
         private readonly IModuleService _moduleService;
+        private readonly IModuleProgressService _moduleProgressService;
         private readonly ILogger<UserModuleController> _logger;
 
-        public UserModuleController(IModuleService moduleService, ILogger<UserModuleController> logger)
+        public UserModuleController(
+            IModuleService moduleService, 
+            IModuleProgressService moduleProgressService,
+            ILogger<UserModuleController> logger)
         {
             _moduleService = moduleService;
+            _moduleProgressService = moduleProgressService;
             _logger = logger;
         }
 
@@ -41,6 +46,23 @@ namespace LearningEnglish.API.Controller.User
             var userId = GetCurrentUserId();
             var result = await _moduleService.GetModulesWithProgressAsync(lessonId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/user/modules/{moduleId}/start - Vào module (auto-complete cho FlashCard/Lecture/Video/Reading)
+        [HttpPost("{moduleId}/start")]
+        public async Task<IActionResult> StartModule(int moduleId)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                await _moduleProgressService.StartAndCompleteModuleAsync(userId, moduleId);
+                return Ok(new { message = "Module started successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error starting module {ModuleId}", moduleId);
+                return StatusCode(500, new { message = "Failed to start module" });
+            }
         }
     }
 }

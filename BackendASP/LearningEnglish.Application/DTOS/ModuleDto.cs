@@ -35,6 +35,10 @@ namespace LearningEnglish.Application.DTOs
         public ModuleType ContentType { get; set; }
         public string ContentTypeName => ContentType.ToString();
         public DateTime CreatedAt { get; set; }
+        
+        // ✅ Progress information (populated for students)
+        public bool IsCompleted { get; set; }
+        public decimal ProgressPercentage { get; set; }
     }
 
     // DTO for creating new module
