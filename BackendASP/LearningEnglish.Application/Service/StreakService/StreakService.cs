@@ -87,7 +87,7 @@ public class StreakService : IStreakService
                 };
             }
 
-            var today = DateTime.Now.Date; // Use local time for streak calculation
+            var today = DateTime.UtcNow.Date; // Use UTC time for PostgreSQL compatibility
             var lastActivity = streak.LastActivityDate?.Date;
 
             // Nếu đã update hôm nay rồi, không làm gì
