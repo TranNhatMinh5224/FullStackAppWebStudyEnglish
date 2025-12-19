@@ -97,17 +97,19 @@ namespace LearningEnglish.Infrastructure.Repositories
             // Check if user already has Teacher role
             if (user.Roles.Any(r => r.RoleId == 2))
             {
-                return true;
+                return true; // Already has Teacher role
             }
 
-            // Get Teacher role
+            // Get Teacher role (RoleId = 2)
             var teacherRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == 2);
-            if (teacherRole != null)
+            if (teacherRole == null)
             {
-                user.Roles.Add(teacherRole);
-                await _context.SaveChangesAsync();
+                throw new InvalidOperationException("Teacher role not found in database");
             }
 
+            // Add Teacher role to user (will be saved by caller's SaveChanges)
+            user.Roles.Add(teacherRole);
+            
             return true;
         }
         // Implement cho phương thức lấy role theo userId

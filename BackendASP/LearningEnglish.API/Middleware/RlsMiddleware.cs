@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using LearningEnglish.Infrastructure.Data;
+using LearningEnglish.API.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace LearningEnglish.API.Middleware
@@ -87,9 +88,9 @@ namespace LearningEnglish.API.Middleware
                     // BƯỚC 3: EXTRACT ROLE TỪ JWT TOKEN
                     // ═══════════════════════════════════════════════════════════════
                     
-                    // ClaimTypes.Role: Standard claim type chứa role của user
-                    // Ví dụ: "Admin", "Teacher", "Student"
-                    var roleClaim = context.User.FindFirst(ClaimTypes.Role)?.Value;
+                    // Get primary role (highest priority: Admin > Teacher > Student)
+                    // User may have multiple roles, use extension method to get the primary one
+                    var roleClaim = context.User.GetPrimaryRole();
 
                     // ═══════════════════════════════════════════════════════════════
                     // BƯỚC 4: VALIDATE VÀ PARSE DATA

@@ -1,6 +1,7 @@
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -30,7 +31,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         private string GetCurrentUserRole()
         {
-            return User.FindFirst(ClaimTypes.Role)!.Value;
+            return User.GetPrimaryRole();
         }
 
         // GET: api/flash-card/atflashcard/{id} - lấy flashcard theo ID
