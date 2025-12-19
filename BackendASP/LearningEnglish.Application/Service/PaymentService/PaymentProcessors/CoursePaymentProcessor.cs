@@ -45,7 +45,7 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                     return response;
                 }
 
-                if (course.Price == null || course.Price <= 0)
+                if (course.Price == null || course.Price < 0)
                 {
                     response.Success = false;
                     response.Message = "Giá khóa học không hợp lệ";

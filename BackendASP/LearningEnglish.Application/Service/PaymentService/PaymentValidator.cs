@@ -70,7 +70,7 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
 
-            if (course.Price == null || course.Price <= 0)
+            if (course.Price == null || course.Price < 0)
             {
                 _logger.LogWarning("Khóa học {CourseId} có giá không hợp lệ {Price}", courseId, course.Price);
                 response.Success = false;
@@ -88,8 +88,8 @@ namespace LearningEnglish.Application.Service
             }
 
             response.Data = course.Price.Value;
-            _logger.LogInformation("Xác thực khóa học thành công: {CourseId}, Tiêu đề: {Title}, Giá: {Price}",
-                course.CourseId, course.Title, course.Price);
+            _logger.LogInformation("Xác thực khóa học thành công: {CourseId}, Tiêu đề: {Title}, Giá: {Price}{IsFree}",
+                course.CourseId, course.Title, course.Price, course.Price == 0 ? " (Miễn phí)" : "");
 
             return response;
         }
