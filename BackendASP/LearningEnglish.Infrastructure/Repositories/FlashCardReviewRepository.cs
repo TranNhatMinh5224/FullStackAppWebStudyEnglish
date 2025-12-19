@@ -114,9 +114,10 @@ public class FlashCardReviewRepository : BaseRepository<FlashCardReview>, IFlash
     {
         try
         {
-            // Consider mastered if interval >= 21 days (about 3 weeks)
+            // Mastered cards are marked with NextReviewDate = DateTime.MaxValue by the service
+            // This approach is flexible and doesn't depend on hard-coded interval values
             return await _context.FlashCardReviews
-                .CountAsync(r => r.UserId == userId && r.IntervalDays >= 21);
+                .CountAsync(r => r.UserId == userId && r.NextReviewDate == DateTime.MaxValue);
         }
         catch (Exception ex)
         {

@@ -3,8 +3,10 @@ using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Configurations;
 using LearningEnglish.Domain.Entities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace LearningEnglish.Application.Service
 {
@@ -17,6 +19,7 @@ namespace LearningEnglish.Application.Service
         private readonly IMapper _mapper;
         private readonly ILogger<FlashCardReviewService> _logger;
         private readonly IStreakService _streakService;
+        private readonly SpacedRepetitionOptions _spacedRepetitionOptions;
 
         // MinIO bucket constants
         private const string AUDIO_BUCKET_NAME = "flashcard-audio";
@@ -38,6 +41,7 @@ namespace LearningEnglish.Application.Service
             _mapper = mapper;
             _logger = logger;
             _streakService = streakService;
+            _spacedRepetitionOptions = new SpacedRepetitionOptions(); // Dùng giá trị mặc định thấp để test
         }
 
         public async Task<ServiceResponse<ReviewFlashCardResponseDto>> ReviewFlashCardAsync(int userId, ReviewFlashCardDto reviewDto)
@@ -512,7 +516,7 @@ namespace LearningEnglish.Application.Service
         #region Private Helper Methods
 
         /// <summary>
-        /// SM-2 Spaced Repetition Algorithm
+        /// SM-2 Spaced Repetition Algorithm with configurable mastery criteria
         /// Reference: https://en.wikipedia.org/wiki/SuperMemo#SM-2_algorithm
         /// </summary>
         private void CalculateNextReview(FlashCardReview review)
@@ -526,7 +530,7 @@ namespace LearningEnglish.Application.Service
             // EF should not be less than 1.3
             review.EasinessFactor = Math.Max(1.3f, newEF);
 
-            if (quality < 3)
+            if (quality < _spacedRepetitionOptions.MinimumPassQuality)
             {
                 // Failed review - restart
                 review.RepetitionCount = 0;
@@ -552,9 +556,9 @@ namespace LearningEnglish.Application.Service
                 }
             }
 
-            // Check if mastered: IntervalDays >= 60 (2 months) AND RepetitionCount >= 5
-            // Once mastered, set NextReviewDate to far future (won't appear in /due)
-            if (review.IntervalDays >= 60 && review.RepetitionCount >= 5)
+            // Check if mastered using configurable criteria
+            if (review.IntervalDays >= _spacedRepetitionOptions.MasteryIntervalDays && 
+                review.RepetitionCount >= _spacedRepetitionOptions.MasteryMinimumRepetitions)
             {
                 review.NextReviewDate = DateTime.MaxValue; // Never review again
                 _logger.LogInformation("FlashCard {FlashCardId} mastered! IntervalDays: {IntervalDays}, Repetition: {RepetitionCount}",
