@@ -1,5 +1,6 @@
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service;

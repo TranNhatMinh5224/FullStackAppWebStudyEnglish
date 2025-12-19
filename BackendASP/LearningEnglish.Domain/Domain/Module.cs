@@ -10,6 +10,8 @@ namespace LearningEnglish.Domain.Entities
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int OrderIndex { get; set; }
+        public string? ImageKey { get; set; }
+        public string? ImageType { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public ModuleType ContentType { get; set; }
