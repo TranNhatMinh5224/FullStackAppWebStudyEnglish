@@ -40,7 +40,7 @@ namespace LearningEnglish.API.Controller.User
 
         // Lấy chi tiết khóa học theo ID với trạng thái đăng ký
         [HttpGet("{courseId}")]
-        [AllowAnonymous]
+        [AllowAnonymous] // Cho phép truy cập mà không cần xác thực
         public async Task<IActionResult> GetCourseById(int courseId)
         {
             int? userId = null;

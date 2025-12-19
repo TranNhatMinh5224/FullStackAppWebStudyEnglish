@@ -95,6 +95,7 @@ namespace LearningEnglish.Application.DTOs
         public int EnrollmentCount { get; set; }
         public bool IsFeatured { get; set; }
         public int TotalLessons { get; set; }
+        public int MaxStudent { get; set; }
         public List<LessonSummaryDto> Lessons { get; set; } = new();
         public DateTime CreatedAt { get; set; }
 
