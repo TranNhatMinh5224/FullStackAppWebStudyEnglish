@@ -557,6 +557,10 @@ namespace LearningEnglish.Application.Service
                 var modules = await _moduleRepository.GetByLessonIdWithDetailsAsync(lessonId);
                 var moduleWithProgressDtos = new List<ModuleWithProgressDto>();
 
+                // Lấy tất cả module completions cho user này trong lesson này
+                var moduleIds = modules.Select(m => m.ModuleId).ToList();
+                var moduleCompletions = await _moduleCompletionRepository.GetByUserAndModuleIdsAsync(userId, moduleIds);
+
                 foreach (var module in modules)
                 {
                     var dto = _mapper.Map<ModuleWithProgressDto>(module);
@@ -571,7 +575,7 @@ namespace LearningEnglish.Application.Service
                     }
 
                     // Lấy thông tin tiến độ học tập từ bảng ModuleCompletion
-                    var completion = module.ModuleCompletions?.FirstOrDefault(mc => mc.UserId == userId);
+                    var completion = moduleCompletions.FirstOrDefault(mc => mc.ModuleId == module.ModuleId);
                     if (completion != null)
                     {
                         // User đã có tiến độ học tập cho module này
@@ -633,8 +637,8 @@ namespace LearningEnglish.Application.Service
                     );
                 }
 
-                // Lấy thông tin tiến độ học tập cá nhân của user
-                var completion = module.ModuleCompletions?.FirstOrDefault(mc => mc.UserId == userId);
+                // Lấy thông tin tiến độ học tập cá nhân của user từ repository
+                var completion = await _moduleCompletionRepository.GetByUserAndModuleAsync(userId, moduleId);
                 if (completion != null)
                 {
                     // User đã có tiến độ học tập cho module này
