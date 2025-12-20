@@ -102,5 +102,8 @@ namespace LearningEnglish.Application.DTOs
         // File đính kèm (temp key từ MinIO)
         public string? AttachmentTempKey { get; set; }
         public string? AttachmentType { get; set; }
+
+        // Có xóa attachment cũ không
+        public bool RemoveAttachment { get; set; } = false;
     }
 }
