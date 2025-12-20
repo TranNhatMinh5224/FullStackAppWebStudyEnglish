@@ -46,13 +46,5 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/flashcard/module/{moduleId}/card/{cardIndex} - lấy flash card theo chỉ số trong module
-        [HttpGet("module/{moduleId}/card/{cardIndex}")]
-        public async Task<ActionResult<ServiceResponse<PaginatedFlashCardDto>>> GetFlashCardByIndex(int moduleId, int cardIndex)
-        {
-            var userId = GetCurrentUserId();
-            var result = await _flashCardService.GetFlashCardByIndexAsync(moduleId, cardIndex, userId);
-            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
-        }
     }
 }

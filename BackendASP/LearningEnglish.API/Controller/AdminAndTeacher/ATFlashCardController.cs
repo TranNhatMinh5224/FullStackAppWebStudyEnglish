@@ -1,4 +1,5 @@
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.API.Extensions;
@@ -47,6 +48,16 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<ActionResult<ServiceResponse<List<ListFlashCardDto>>>> GetFlashCardsByModule(int moduleId)
         {
             var result = await _flashCardService.GetFlashCardsByModuleIdAsync(moduleId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // GET: api/flashcards/module/{moduleId}/paginated?pageNumber=1&pageSize=20 - lấy danh sách flash card phân trang
+        [HttpGet("module/{moduleId}/paginated")]
+        public async Task<ActionResult<ServiceResponse<PagedResult<ListFlashCardDto>>>> GetFlashCardsByModulePaginated(
+            int moduleId,
+            [FromQuery] PageRequest request)
+        {
+            var result = await _flashCardService.GetFlashCardsByModuleIdPaginatedAsync(moduleId, request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
