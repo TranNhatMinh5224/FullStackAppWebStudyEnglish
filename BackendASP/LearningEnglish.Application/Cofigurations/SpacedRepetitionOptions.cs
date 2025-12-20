@@ -8,15 +8,15 @@ namespace LearningEnglish.Application.Configurations
     {
         /// <summary>
         /// Khoảng cách ngày tối thiểu để coi như đã thuộc từ
-        /// Mặc định: 3 ngày (CỰC THẤP để test nhanh) - Production nên dùng 60 ngày
+        /// Mặc định: 1 ngày (CỰC THẤP để test nhanh) - Production nên dùng 60 ngày
         /// </summary>
-        public int MasteryIntervalDays { get; set; } = 3;
+        public int MasteryIntervalDays { get; set; } = 1;
 
         /// <summary>
         /// Số lần ôn tối thiểu để coi như đã thuộc
-        /// Mặc định: 2 lần (CỰC THẤP để test nhanh) - Production nên dùng 5 lần
+        /// Mặc định: 1 lần (CỰC THẤP để test nhanh) - Production nên dùng 5 lần
         /// </summary>
-        public int MasteryMinimumRepetitions { get; set; } = 2;
+        public int MasteryMinimumRepetitions { get; set; } = 1;
 
         /// <summary>
         /// Khoảng cách ngày để coi như gần thuộc (dùng cho thống kê)
