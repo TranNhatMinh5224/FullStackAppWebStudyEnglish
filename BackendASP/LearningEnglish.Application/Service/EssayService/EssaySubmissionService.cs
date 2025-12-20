@@ -402,6 +402,25 @@ namespace LearningEnglish.Application.Service
                 string? oldAttachmentKey = submission.AttachmentKey;
                 string? newAttachmentKey = null;
 
+                // Nếu RemoveAttachment = true, xóa file cũ trên MinIO và cập nhật lại submission
+                if (dto.RemoveAttachment)
+                {
+                    if (!string.IsNullOrWhiteSpace(oldAttachmentKey))
+                    {
+                        try
+                        {
+                            await _minioFileStorage.DeleteFileAsync($"{AttachmentFolder}/{oldAttachmentKey}", AttachmentBucket);
+                            _logger.LogInformation("Đã xóa attachment cũ theo yêu cầu RemoveAttachment");
+                        }
+                        catch (Exception deleteEx)
+                        {
+                            _logger.LogError(deleteEx, "Lỗi khi xóa attachment cũ (RemoveAttachment)");
+                        }
+                    }
+                    submission.AttachmentKey = null;
+                    submission.AttachmentType = null;
+                }
+
                 // Xử lý file attachment mới nếu có
                 if (!string.IsNullOrWhiteSpace(dto.AttachmentTempKey))
                 {
