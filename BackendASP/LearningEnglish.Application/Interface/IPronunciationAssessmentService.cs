@@ -1,4 +1,5 @@
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 
 namespace LearningEnglish.Application.Interface
@@ -24,11 +25,18 @@ namespace LearningEnglish.Application.Interface
             int userId);
 
         /// <summary>
-        /// Get a single flashcard with pronunciation progress by index for practice mode
+        /// Get paginated list of flashcards with pronunciation progress for list view
         /// </summary>
-        Task<ServiceResponse<PaginatedFlashCardWithPronunciationDto>> GetFlashCardWithPronunciationByIndexAsync(
+        Task<ServiceResponse<PagedResult<FlashCardWithPronunciationDto>>> GetFlashCardsWithPronunciationProgressPaginatedAsync(
             int moduleId,
-            int cardIndex,
+            int userId,
+            PageRequest request);
+
+        /// <summary>
+        /// Get pronunciation summary/statistics for a module
+        /// </summary>
+        Task<ServiceResponse<ModulePronunciationSummaryDto>> GetModulePronunciationSummaryAsync(
+            int moduleId,
             int userId);
     }
 }

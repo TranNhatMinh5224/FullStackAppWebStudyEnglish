@@ -46,9 +46,9 @@ public class LessonCompletion
         // Auto-calculate completion percentage based on modules
         CompletionPercentage = totalModules > 0 ? (float)completedModules / totalModules * 100 : 0;
 
-        // Mark as completed if >= 90%
+        // Mark as completed if >= 80%
         var wasCompleted = IsCompleted;
-        IsCompleted = CompletionPercentage >= 90f;
+        IsCompleted = CompletionPercentage >= 80f;
 
         // Set completion timestamp when first completed
         if (IsCompleted && !wasCompleted)
@@ -58,7 +58,7 @@ public class LessonCompletion
         }
         else if (!IsCompleted && wasCompleted)
         {
-            CompletedAt = null; // Reset if dropped below 90%
+            CompletedAt = null; // Reset if dropped below 80%
         }
 
         UpdatedAt = DateTime.UtcNow;

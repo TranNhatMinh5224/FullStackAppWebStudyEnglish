@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common.Pagination;
+using LearningEnglish.API.Extensions;
 using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
@@ -135,7 +136,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<IActionResult> GetUsersByCourseId(int courseId, [FromQuery] PageRequest request)
         {
             var userId = GetCurrentUserId();
-            var checkRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            var checkRole = User.GetPrimaryRole();
 
             if (string.IsNullOrEmpty(checkRole))
             {
@@ -154,7 +155,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<IActionResult> GetStudentDetailInCourse(int courseId, int studentId)
         {
             var userId = GetCurrentUserId();
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+            var role = User.GetPrimaryRole();
 
             if (string.IsNullOrEmpty(role))
             {
@@ -172,7 +173,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<IActionResult> AddStudentToCourse(int courseId, [FromBody] AddStudentToCourseDto request)
         {
             var userId = GetCurrentUserId();
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+            var role = User.GetPrimaryRole();
 
             if (string.IsNullOrEmpty(role))
             {
@@ -190,7 +191,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<IActionResult> RemoveStudentFromCourse(int courseId, int studentId)
         {
             var userId = GetCurrentUserId();
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+            var role = User.GetPrimaryRole();
 
             if (string.IsNullOrEmpty(role))
             {

@@ -13,7 +13,9 @@ namespace LearningEnglish.API.Controller.User
         private readonly ILectureService _lectureService;
         private readonly ILogger<UserLectureController> _logger;
 
-        public UserLectureController(ILectureService lectureService, ILogger<UserLectureController> logger)
+        public UserLectureController(
+            ILectureService lectureService,
+            ILogger<UserLectureController> logger)
         {
             _lectureService = lectureService;
             _logger = logger;
@@ -51,5 +53,9 @@ namespace LearningEnglish.API.Controller.User
             var result = await _lectureService.GetLectureTreeByModuleIdAsync(moduleId, userId);
             return Ok(result);
         }
+
+        // ❌ Removed CompleteLecture endpoint
+        // Module completion now handled by POST /api/user/modules/{moduleId}/start
+        // When user enters module, it will auto-complete for Lecture/Video/Reading types
     }
 }

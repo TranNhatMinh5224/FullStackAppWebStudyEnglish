@@ -1,5 +1,6 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Pagination;
 
 namespace LearningEnglish.Application.Interface
 {
@@ -8,7 +9,7 @@ namespace LearningEnglish.Application.Interface
         // Basic CRUD operations
         Task<ServiceResponse<FlashCardDto>> GetFlashCardByIdAsync(int flashCardId, int? userId = null);
         Task<ServiceResponse<List<ListFlashCardDto>>> GetFlashCardsByModuleIdAsync(int moduleId, int? userId = null);
-        Task<ServiceResponse<PaginatedFlashCardDto>> GetFlashCardByIndexAsync(int moduleId, int cardIndex, int? userId = null);
+        Task<ServiceResponse<PagedResult<ListFlashCardDto>>> GetFlashCardsByModuleIdPaginatedAsync(int moduleId, PageRequest request, int? userId = null);
         Task<ServiceResponse<FlashCardDto>> CreateFlashCardAsync(CreateFlashCardDto createFlashCardDto, int createdByUserId);
         Task<ServiceResponse<FlashCardDto>> UpdateFlashCardAsync(int flashCardId, UpdateFlashCardDto updateFlashCardDto, int userId, string userRole);
         Task<ServiceResponse<bool>> DeleteFlashCardAsync(int flashCardId, int userId, string userRole);

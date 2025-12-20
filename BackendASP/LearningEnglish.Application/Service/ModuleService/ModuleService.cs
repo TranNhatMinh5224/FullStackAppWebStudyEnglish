@@ -3,6 +3,7 @@ using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Application.Common.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
@@ -15,6 +16,12 @@ namespace LearningEnglish.Application.Service
         private readonly ILogger<ModuleService> _logger;
         private readonly ILessonRepository _lessonRepository;
         private readonly ICourseRepository _courseRepository;
+        private readonly IModuleCompletionRepository _moduleCompletionRepository;
+        private readonly IMinioFileStorage _minioFileStorage;
+
+        // Đặt bucket + folder cho ảnh module
+        private const string ModuleImageBucket = "modules";
+        private const string ModuleImageFolder = "real";
 
         public ModuleService(
             IModuleRepository moduleRepository,
@@ -22,7 +29,9 @@ namespace LearningEnglish.Application.Service
             IMapper mapper,
             ILogger<ModuleService> logger,
             ILessonRepository lessonRepository,
-            ICourseRepository courseRepository)
+            ICourseRepository courseRepository,
+            IModuleCompletionRepository moduleCompletionRepository,
+            IMinioFileStorage minioFileStorage)
         {
             _moduleRepository = moduleRepository;
             _unitOfWork = unitOfWork;
@@ -30,6 +39,8 @@ namespace LearningEnglish.Application.Service
             _logger = logger;
             _lessonRepository = lessonRepository;
             _courseRepository = courseRepository;
+            _moduleCompletionRepository = moduleCompletionRepository;
+            _minioFileStorage = minioFileStorage;
         }
 
         // + Lấy thông tin module theo ID
@@ -50,6 +61,17 @@ namespace LearningEnglish.Application.Service
 
                 // Chuyển đổi entity sang DTO để trả về client
                 var moduleDto = _mapper.Map<ModuleDto>(module);
+                // Note: Progress info should be retrieved using GetModuleWithProgressAsync method
+                
+                // Generate URL từ key
+                if (!string.IsNullOrWhiteSpace(module.ImageKey))
+                {
+                    moduleDto.ImageUrl = BuildPublicUrl.BuildURL(
+                        ModuleImageBucket,
+                        module.ImageKey
+                    );
+                }
+                
                 response.Data = moduleDto;
                 response.Message = "Lấy thông tin module thành công";
                 return response;
@@ -74,6 +96,23 @@ namespace LearningEnglish.Application.Service
                 var modules = await _moduleRepository.GetByLessonIdAsync(lessonId);
                 // Chuyển đổi sang DTO để trả về (ListModuleDto chỉ chứa thông tin cơ bản)
                 var moduleDtos = _mapper.Map<List<ListModuleDto>>(modules);
+
+                // Add progress info if userId provided
+                if (userId.HasValue)
+                {
+                    var moduleIds = modules.Select(m => m.ModuleId).ToList();
+                    var moduleCompletions = await _moduleCompletionRepository.GetByUserAndModuleIdsAsync(userId.Value, moduleIds);
+
+                    foreach (var moduleDto in moduleDtos)
+                    {
+                        var completion = moduleCompletions.FirstOrDefault(mc => mc.ModuleId == moduleDto.ModuleId);
+                        if (completion != null)
+                        {
+                            moduleDto.IsCompleted = completion.IsCompleted;
+                            moduleDto.ProgressPercentage = completion.ProgressPercentage;
+                        }
+                    }
+                }
 
                 response.Data = moduleDtos;
                 response.Message = "Lấy danh sách module thành công";
@@ -136,11 +175,64 @@ namespace LearningEnglish.Application.Service
 
                 // Chuyển đổi DTO thành entity để lưu vào database
                 var module = _mapper.Map<Module>(createModuleDto);
-                var createdModule = await _moduleRepository.CreateAsync(module);
+
+                string? committedImageKey = null;
+
+                // Convert temp file → real file nếu có ImageTempKey
+                if (!string.IsNullOrWhiteSpace(createModuleDto.ImageTempKey))
+                {
+                    var commitResult = await _minioFileStorage.CommitFileAsync(
+                        createModuleDto.ImageTempKey,
+                        ModuleImageBucket,
+                        ModuleImageFolder
+                    );
+
+                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu ảnh module. Vui lòng thử lại.";
+                        return response;
+                    }
+
+                    committedImageKey = commitResult.Data;
+                    module.ImageKey = committedImageKey;
+                    module.ImageType = createModuleDto.ImageType;
+                }
+
+                Module createdModule;
+                try
+                {
+                    createdModule = await _moduleRepository.CreateAsync(module);
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error while creating module");
+
+                    // Rollback MinIO file
+                    if (committedImageKey != null)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(committedImageKey, ModuleImageBucket);
+                    }
+
+                    response.Success = false;
+                    response.StatusCode = 500;
+                    response.Message = "Lỗi database khi tạo module";
+                    return response;
+                }
 
                 // Lấy lại module đã tạo với đầy đủ thông tin để trả về
                 var moduleWithDetails = await _moduleRepository.GetByIdWithDetailsAsync(createdModule.ModuleId);
                 var moduleDto = _mapper.Map<ModuleDto>(moduleWithDetails);
+
+                // Generate URL từ key
+                if (!string.IsNullOrWhiteSpace(module.ImageKey))
+                {
+                    moduleDto.ImageUrl = BuildPublicUrl.BuildURL(
+                        ModuleImageBucket,
+                        module.ImageKey
+                    );
+                }
 
                 response.Data = moduleDto;
                 response.StatusCode = 201; // Created
@@ -177,13 +269,81 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Áp dụng các thay đổi từ DTO vào entity hiện tại
+                string? newImageKey = null;
+                string? oldImageKey = !string.IsNullOrWhiteSpace(existingModule.ImageKey) ? existingModule.ImageKey : null;
+
+                // Xử lý file ảnh: commit new first
+                if (!string.IsNullOrWhiteSpace(updateModuleDto.ImageTempKey))
+                {
+                    // Commit ảnh mới
+                    var commitResult = await _minioFileStorage.CommitFileAsync(
+                        updateModuleDto.ImageTempKey,
+                        ModuleImageBucket,
+                        ModuleImageFolder
+                    );
+
+                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể cập nhật ảnh module.";
+                        return response;
+                    }
+
+                    newImageKey = commitResult.Data;
+                    existingModule.ImageKey = newImageKey;
+                    existingModule.ImageType = updateModuleDto.ImageType;
+                }
+
+                // Áp dụng các thay đổi từ DTO vào entity hiện tại (trừ ImageKey đã xử lý ở trên)
                 _mapper.Map(updateModuleDto, existingModule);
-                var updatedModule = await _moduleRepository.UpdateAsync(existingModule);
+                
+                Module updatedModule;
+                try
+                {
+                    updatedModule = await _moduleRepository.UpdateAsync(existingModule);
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error while updating module");
+
+                    // Rollback new image
+                    if (newImageKey != null)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(newImageKey, ModuleImageBucket);
+                    }
+
+                    response.Success = false;
+                    response.StatusCode = 500;
+                    response.Message = "Lỗi database khi cập nhật module";
+                    return response;
+                }
+
+                // Delete old image only after successful DB update
+                if (oldImageKey != null && newImageKey != null)
+                {
+                    try
+                    {
+                        await _minioFileStorage.DeleteFileAsync(oldImageKey, ModuleImageBucket);
+                    }
+                    catch
+                    {
+                        _logger.LogWarning("Failed to delete old module image: {ImageKey}", oldImageKey);
+                    }
+                }
 
                 // Lấy lại module đã cập nhật với đầy đủ thông tin để trả về
                 var moduleWithDetails = await _moduleRepository.GetByIdWithDetailsAsync(updatedModule.ModuleId);
                 var moduleDto = _mapper.Map<ModuleDto>(moduleWithDetails);
+
+                // Generate URL từ key
+                if (!string.IsNullOrWhiteSpace(updatedModule.ImageKey))
+                {
+                    moduleDto.ImageUrl = BuildPublicUrl.BuildURL(
+                        ModuleImageBucket,
+                        updatedModule.ImageKey
+                    );
+                }
 
                 response.Data = moduleDto;
                 response.Message = "Cập nhật module thành công";
@@ -217,6 +377,22 @@ namespace LearningEnglish.Application.Service
                     response.StatusCode = 404;
                     response.Message = "Không tìm thấy module";
                     return response;
+                }
+
+                // Xóa ảnh module trên MinIO nếu có
+                if (!string.IsNullOrWhiteSpace(module.ImageKey))
+                {
+                    try
+                    {
+                        await _minioFileStorage.DeleteFileAsync(
+                            module.ImageKey,
+                            ModuleImageBucket
+                        );
+                    }
+                    catch (Exception deleteEx)
+                    {
+                        _logger.LogWarning(deleteEx, "Failed to delete module image: {ImageKey}", module.ImageKey);
+                    }
                 }
 
                 // Thực hiện xóa module
@@ -381,12 +557,25 @@ namespace LearningEnglish.Application.Service
                 var modules = await _moduleRepository.GetByLessonIdWithDetailsAsync(lessonId);
                 var moduleWithProgressDtos = new List<ModuleWithProgressDto>();
 
+                // Lấy tất cả module completions cho user này trong lesson này
+                var moduleIds = modules.Select(m => m.ModuleId).ToList();
+                var moduleCompletions = await _moduleCompletionRepository.GetByUserAndModuleIdsAsync(userId, moduleIds);
+
                 foreach (var module in modules)
                 {
                     var dto = _mapper.Map<ModuleWithProgressDto>(module);
 
+                    // Generate URL từ key
+                    if (!string.IsNullOrWhiteSpace(module.ImageKey))
+                    {
+                        dto.ImageUrl = BuildPublicUrl.BuildURL(
+                            ModuleImageBucket,
+                            module.ImageKey
+                        );
+                    }
+
                     // Lấy thông tin tiến độ học tập từ bảng ModuleCompletion
-                    var completion = module.ModuleCompletions?.FirstOrDefault(mc => mc.UserId == userId);
+                    var completion = moduleCompletions.FirstOrDefault(mc => mc.ModuleId == module.ModuleId);
                     if (completion != null)
                     {
                         // User đã có tiến độ học tập cho module này
@@ -439,8 +628,17 @@ namespace LearningEnglish.Application.Service
 
                 var dto = _mapper.Map<ModuleWithProgressDto>(module);
 
-                // Lấy thông tin tiến độ học tập cá nhân của user
-                var completion = module.ModuleCompletions?.FirstOrDefault(mc => mc.UserId == userId);
+                // Generate URL từ key
+                if (!string.IsNullOrWhiteSpace(module.ImageKey))
+                {
+                    dto.ImageUrl = BuildPublicUrl.BuildURL(
+                        ModuleImageBucket,
+                        module.ImageKey
+                    );
+                }
+
+                // Lấy thông tin tiến độ học tập cá nhân của user từ repository
+                var completion = await _moduleCompletionRepository.GetByUserAndModuleAsync(userId, moduleId);
                 if (completion != null)
                 {
                     // User đã có tiến độ học tập cho module này

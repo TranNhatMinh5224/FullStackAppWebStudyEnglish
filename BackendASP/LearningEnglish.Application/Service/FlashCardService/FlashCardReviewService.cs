@@ -3,8 +3,10 @@ using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Configurations;
 using LearningEnglish.Domain.Entities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace LearningEnglish.Application.Service
 {
@@ -12,11 +14,10 @@ namespace LearningEnglish.Application.Service
     {
         private readonly IFlashCardReviewRepository _reviewRepository;
         private readonly IFlashCardRepository _flashCardRepository;
-        private readonly IModuleProgressService _moduleProgressService;
-        private readonly IModuleCompletionRepository _moduleCompletionRepo;
         private readonly IMapper _mapper;
         private readonly ILogger<FlashCardReviewService> _logger;
         private readonly IStreakService _streakService;
+        private readonly SpacedRepetitionOptions _spacedRepetitionOptions;
 
         // MinIO bucket constants
         private const string AUDIO_BUCKET_NAME = "flashcard-audio";
@@ -25,19 +26,16 @@ namespace LearningEnglish.Application.Service
         public FlashCardReviewService(
             IFlashCardReviewRepository reviewRepository,
             IFlashCardRepository flashCardRepository,
-            IModuleProgressService moduleProgressService,
-            IModuleCompletionRepository moduleCompletionRepo,
             IMapper mapper,
             ILogger<FlashCardReviewService> logger,
             IStreakService streakService)
         {
             _reviewRepository = reviewRepository;
             _flashCardRepository = flashCardRepository;
-            _moduleProgressService = moduleProgressService;
-            _moduleCompletionRepo = moduleCompletionRepo;
             _mapper = mapper;
             _logger = logger;
             _streakService = streakService;
+            _spacedRepetitionOptions = new SpacedRepetitionOptions(); // Dùng giá trị mặc định thấp để test
         }
 
         public async Task<ServiceResponse<ReviewFlashCardResponseDto>> ReviewFlashCardAsync(int userId, ReviewFlashCardDto reviewDto)
@@ -122,11 +120,8 @@ namespace LearningEnglish.Application.Service
                 _logger.LogInformation("User {UserId} reviewed flashcard {FlashCardId} with quality {Quality}. Next review: {NextReview}",
                     userId, reviewDto.FlashCardId, reviewDto.Quality, review.NextReviewDate);
 
-                // ✅ Check if module is completed after this review
-                if (flashCard.ModuleId.HasValue)
-                {
-                    await CheckAndCompleteModuleAsync(userId, flashCard.ModuleId.Value);
-                }
+                // ❌ Removed auto-complete logic - module completion now handled by StartAndCompleteModuleAsync
+                // Frontend should call POST /api/user/modules/{moduleId}/start when entering module
             }
             catch (Exception ex)
             {
@@ -512,7 +507,7 @@ namespace LearningEnglish.Application.Service
         #region Private Helper Methods
 
         /// <summary>
-        /// SM-2 Spaced Repetition Algorithm
+        /// SM-2 Spaced Repetition Algorithm with configurable mastery criteria
         /// Reference: https://en.wikipedia.org/wiki/SuperMemo#SM-2_algorithm
         /// </summary>
         private void CalculateNextReview(FlashCardReview review)
@@ -526,7 +521,7 @@ namespace LearningEnglish.Application.Service
             // EF should not be less than 1.3
             review.EasinessFactor = Math.Max(1.3f, newEF);
 
-            if (quality < 3)
+            if (quality < _spacedRepetitionOptions.MinimumPassQuality)
             {
                 // Failed review - restart
                 review.RepetitionCount = 0;
@@ -552,9 +547,9 @@ namespace LearningEnglish.Application.Service
                 }
             }
 
-            // Check if mastered: IntervalDays >= 60 (2 months) AND RepetitionCount >= 5
-            // Once mastered, set NextReviewDate to far future (won't appear in /due)
-            if (review.IntervalDays >= 60 && review.RepetitionCount >= 5)
+            // Check if mastered using configurable criteria
+            if (review.IntervalDays >= _spacedRepetitionOptions.MasteryIntervalDays && 
+                review.RepetitionCount >= _spacedRepetitionOptions.MasteryMinimumRepetitions)
             {
                 review.NextReviewDate = DateTime.MaxValue; // Never review again
                 _logger.LogInformation("FlashCard {FlashCardId} mastered! IntervalDays: {IntervalDays}, Repetition: {RepetitionCount}",
@@ -644,66 +639,9 @@ namespace LearningEnglish.Application.Service
             return longestStreak;
         }
 
-        /// <summary>
-        /// Check if all flashcards in module are mastered (RepetitionCount >= 5 AND Quality >= 4)
-        /// If yes, mark module as completed
-        /// </summary>
-        private async Task CheckAndCompleteModuleAsync(int userId, int moduleId)
-        {
-            try
-            {
-                // Get all flashcards in the module
-                var flashCards = await _flashCardRepository.GetByModuleIdAsync(moduleId);
-                if (flashCards.Count == 0) return;
-
-                // Get all reviews for this user in this module
-                var moduleFlashCardIds = flashCards.Select(fc => fc.FlashCardId).ToList();
-                var allReviews = await _reviewRepository.GetReviewsByUserAsync(userId);
-                var moduleReviews = allReviews.Where(r => moduleFlashCardIds.Contains(r.FlashCardId)).ToList();
-
-                // ✅ SCENARIO 1: Check if all flashcards have been reviewed at least once
-                // Completion criteria: Just need to review each card once (any quality)
-                bool allReviewed = flashCards.All(fc =>
-                {
-                    var review = moduleReviews.FirstOrDefault(r => r.FlashCardId == fc.FlashCardId);
-                    return review != null; // Just need to have reviewed once (any quality)
-                });
-
-                if (allReviewed)
-                {
-                    // Check if module already marked as completed
-                    var existingCompletion = await _moduleCompletionRepo.GetByUserAndModuleAsync(userId, moduleId);
-                    
-                    if (existingCompletion == null || !existingCompletion.IsCompleted)
-                    {
-                        // Mark module as completed for the first time
-                        await _moduleProgressService.CompleteModuleAsync(userId, moduleId);
-                        _logger.LogInformation(
-                            "🎉 User {UserId} completed FlashCard module {ModuleId} - All {Count} cards reviewed at least once",
-                            userId, moduleId, flashCards.Count);
-                    }
-                }
-
-                // 📊 Track mastery progress separately (for analytics)
-                var masteredCount = flashCards.Count(fc =>
-                {
-                    var review = moduleReviews.FirstOrDefault(r => r.FlashCardId == fc.FlashCardId);
-                    return review != null && review.RepetitionCount >= 5 && review.Quality >= 4;
-                });
-
-                if (masteredCount > 0)
-                {
-                    _logger.LogInformation(
-                        "Module {ModuleId} Mastery Progress: {Mastered}/{Total} cards mastered ({Percentage}%)",
-                        moduleId, masteredCount, flashCards.Count, (masteredCount * 100 / flashCards.Count));
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error checking module completion for user {UserId}, module {ModuleId}", userId, moduleId);
-                // Don't throw - this is a background check, shouldn't fail the main operation
-            }
-        }
+        // ❌ Removed CheckAndCompleteModuleAsync method
+        // Module completion is now handled by StartAndCompleteModuleAsync when user enters module
+        // FlashCard reviews no longer auto-complete modules
 
         /// <summary>
         /// Get count of flashcards due for review today

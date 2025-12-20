@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
+using LearningEnglish.API.Extensions;
 using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
@@ -32,7 +33,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         private string GetCurrentUserRole()
         {
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            var userRole = User.GetPrimaryRole();
             if (string.IsNullOrEmpty(userRole))
             {
                 throw new UnauthorizedAccessException("User role not found");

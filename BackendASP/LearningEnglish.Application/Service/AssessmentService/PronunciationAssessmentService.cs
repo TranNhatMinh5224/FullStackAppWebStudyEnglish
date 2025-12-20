@@ -1,6 +1,7 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using Microsoft.Extensions.Logging;
@@ -243,30 +244,143 @@ namespace LearningEnglish.Application.Service
         }
 
         /// <summary>
-        /// Get a single flashcard with pronunciation progress by index for practice mode
+        /// Get paginated list of flashcards with pronunciation progress for list view
         /// </summary>
-        public async Task<ServiceResponse<PaginatedFlashCardWithPronunciationDto>> GetFlashCardWithPronunciationByIndexAsync(
+        public async Task<ServiceResponse<PagedResult<FlashCardWithPronunciationDto>>> GetFlashCardsWithPronunciationProgressPaginatedAsync(
             int moduleId,
-            int cardIndex,
-            int userId)
+            int userId,
+            PageRequest request)
         {
-            var response = new ServiceResponse<PaginatedFlashCardWithPronunciationDto>();
+            var response = new ServiceResponse<PagedResult<FlashCardWithPronunciationDto>>();
 
             try
             {
-                // Validate cardIndex
-                if (cardIndex < 1)
+                // Get all flashcards in module
+                var allFlashCards = await _flashCardRepository.GetByModuleIdAsync(moduleId);
+                var totalCount = allFlashCards.Count;
+
+                if (totalCount == 0)
                 {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = "Chỉ số thẻ phải lớn hơn 0";
+                    response.Success = true;
+                    response.Data = new PagedResult<FlashCardWithPronunciationDto>
+                    {
+                        Items = new List<FlashCardWithPronunciationDto>(),
+                        TotalCount = 0,
+                        PageNumber = request.PageNumber,
+                        PageSize = request.PageSize
+                    };
+                    response.Message = "Module không có flashcard nào";
                     return response;
                 }
 
-                // Get total count
-                var totalCards = await _flashCardRepository.GetFlashCardCountByModuleAsync(moduleId);
+                // Apply pagination
+                var paginatedFlashCards = allFlashCards
+                    .Skip((request.PageNumber - 1) * request.PageSize)
+                    .Take(request.PageSize)
+                    .ToList();
 
-                if (totalCards == 0)
+                // Get pronunciation progress for these flashcards
+                var flashCardIds = paginatedFlashCards.Select(f => f.FlashCardId).ToList();
+                var allProgresses = await _progressRepository.GetByModuleIdAsync(userId, moduleId);
+                var progressDict = allProgresses
+                    .Where(p => flashCardIds.Contains(p.FlashCardId))
+                    .ToDictionary(p => p.FlashCardId);
+
+                // Map to DTOs
+                var items = paginatedFlashCards.Select(fc =>
+                {
+                    var hasProgress = progressDict.TryGetValue(fc.FlashCardId, out var progress);
+
+                    PronunciationProgressSummary? progressSummary = null;
+                    if (hasProgress && progress != null)
+                    {
+                        string status = "Practicing";
+                        string statusColor = "yellow";
+
+                        if (progress.IsMastered)
+                        {
+                            status = "Mastered";
+                            statusColor = "green";
+                        }
+                        else if (progress.TotalAttempts == 0)
+                        {
+                            status = "Not Started";
+                            statusColor = "gray";
+                        }
+
+                        progressSummary = new PronunciationProgressSummary
+                        {
+                            TotalAttempts = progress.TotalAttempts,
+                            BestScore = progress.BestScore,
+                            BestScoreDate = progress.BestScoreDate,
+                            LastPracticedAt = progress.LastPracticedAt,
+                            AvgPronunciationScore = progress.AvgPronunciationScore,
+                            LastPronunciationScore = progress.LastPronunciationScore,
+                            ConsecutiveDaysStreak = progress.ConsecutiveDaysStreak,
+                            IsMastered = progress.IsMastered,
+                            MasteredAt = progress.MasteredAt,
+                            Status = status,
+                            StatusColor = statusColor
+                        };
+                    }
+
+                    return new FlashCardWithPronunciationDto
+                    {
+                        FlashCardId = fc.FlashCardId,
+                        Word = fc.Word,
+                        Definition = fc.Meaning,
+                        Example = fc.Example,
+                        ImageUrl = !string.IsNullOrWhiteSpace(fc.ImageKey)
+                            ? BuildPublicUrl.BuildURL("flashcards", fc.ImageKey)
+                            : null,
+                        AudioUrl = !string.IsNullOrWhiteSpace(fc.AudioKey)
+                            ? BuildPublicUrl.BuildURL("flashcards", fc.AudioKey)
+                            : null,
+                        Phonetic = fc.Pronunciation,
+                        Progress = progressSummary
+                    };
+                }).ToList();
+
+                response.Success = true;
+                response.Data = new PagedResult<FlashCardWithPronunciationDto>
+                {
+                    Items = items,
+                    TotalCount = totalCount,
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize
+                };
+                response.Message = $"Lấy {items.Count}/{totalCount} flashcards (trang {request.PageNumber}/{response.Data.TotalPages})";
+
+                _logger.LogInformation("Retrieved paginated flashcards for module {ModuleId}, user {UserId}, page {Page}/{TotalPages}",
+                    moduleId, userId, request.PageNumber, response.Data.TotalPages);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting paginated flashcards with pronunciation progress");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = $"Error: {ex.Message}";
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// Get pronunciation summary/statistics for a module
+        /// </summary>
+        public async Task<ServiceResponse<ModulePronunciationSummaryDto>> GetModulePronunciationSummaryAsync(
+            int moduleId,
+            int userId)
+        {
+            var response = new ServiceResponse<ModulePronunciationSummaryDto>();
+
+            try
+            {
+                // Get all flashcards in module
+                var flashCards = await _flashCardRepository.GetByModuleIdAsync(moduleId);
+                var totalFlashCards = flashCards.Count;
+
+                if (totalFlashCards == 0)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
@@ -274,96 +388,122 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Validate cardIndex against total
-                if (cardIndex > totalCards)
+                // Get all pronunciation progress for this module
+                var progresses = await _progressRepository.GetByModuleIdAsync(userId, moduleId);
+                var progressDict = progresses.ToDictionary(p => p.FlashCardId);
+
+                // Calculate basic statistics
+                var totalPracticed = progresses.Count(p => p.TotalAttempts > 0);
+                var masteredCount = progresses.Count(p => p.IsMastered);
+
+                // Score statistics (only for practiced words)
+                var practicedProgresses = progresses.Where(p => p.TotalAttempts > 0).ToList();
+                var averageScore = practicedProgresses.Any() 
+                    ? practicedProgresses.Average(p => p.AvgPronunciationScore) 
+                    : 0;
+
+                // Practice info
+                var lastPracticeDate = practicedProgresses.Any() 
+                    ? practicedProgresses.Max(p => p.LastPracticedAt) 
+                    : null;
+
+                // Overall progress
+                var overallProgress = totalFlashCards > 0 
+                    ? Math.Round((double)totalPracticed / totalFlashCards * 100, 2) 
+                    : 0;
+
+                // Determine status, message and grade
+                string status;
+                string message;
+                string grade;
+
+                if (totalPracticed == 0)
                 {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = $"Chỉ số thẻ vượt quá tổng số thẻ ({totalCards})";
-                    return response;
+                    status = "Not Started";
+                    message = $"Bắt đầu luyện phát âm {totalFlashCards} từ vựng!";
+                    grade = "N/A";
                 }
-
-                // Get the single flashcard at the index
-                var flashCard = await _flashCardRepository.GetSingleFlashCardByModuleAsync(moduleId, cardIndex);
-
-                if (flashCard == null)
+                else
                 {
-                    response.Success = false;
-                    response.StatusCode = 404;
-                    response.Message = "Không tìm thấy flashcard";
-                    return response;
-                }
+                    // Calculate grade based on average score
+                    if (averageScore >= 95)
+                    {
+                        grade = "A+";
+                        message = $"🌟 Xuất sắc! Điểm TB: {averageScore:F1}. Bạn đã thuộc {masteredCount}/{totalFlashCards} từ.";
+                    }
+                    else if (averageScore >= 90)
+                    {
+                        grade = "A";
+                        message = $"🎉 Tuyệt vời! Điểm TB: {averageScore:F1}. Đã thuộc {masteredCount}/{totalFlashCards} từ.";
+                    }
+                    else if (averageScore >= 80)
+                    {
+                        grade = "B";
+                        message = $"👍 Tốt! Điểm TB: {averageScore:F1}. Hãy luyện thêm để đạt điểm A.";
+                    }
+                    else if (averageScore >= 70)
+                    {
+                        grade = "C";
+                        message = $"📚 Khá. Điểm TB: {averageScore:F1}. Cần cải thiện thêm.";
+                    }
+                    else if (averageScore >= 60)
+                    {
+                        grade = "D";
+                        message = $"💪 Điểm TB: {averageScore:F1}. Hãy luyện nhiều hơn để cải thiện.";
+                    }
+                    else
+                    {
+                        grade = "F";
+                        message = $"🔄 Điểm TB: {averageScore:F1}. Cần luyện tập nhiều hơn nữa.";
+                    }
 
-                // Get pronunciation progress for this flashcard
-                var progress = await _progressRepository.GetByUserAndFlashCardAsync(userId, flashCard.FlashCardId);
-
-                PronunciationProgressSummary? progressSummary = null;
-                if (progress != null)
-                {
-                    string status = "Practicing";
-                    string statusColor = "yellow";
-
-                    if (progress.IsMastered)
+                    // Determine status
+                    if (masteredCount == totalFlashCards)
                     {
                         status = "Mastered";
-                        statusColor = "green";
                     }
-                    else if (progress.TotalAttempts == 0)
+                    else if (overallProgress >= 80)
                     {
-                        status = "Not Started";
-                        statusColor = "gray";
+                        status = "Completed";
                     }
-
-                    progressSummary = new PronunciationProgressSummary
+                    else
                     {
-                        TotalAttempts = progress.TotalAttempts,
-                        BestScore = progress.BestScore,
-                        BestScoreDate = progress.BestScoreDate,
-                        LastPracticedAt = progress.LastPracticedAt,
-                        AvgPronunciationScore = progress.AvgPronunciationScore,
-                        LastPronunciationScore = progress.LastPronunciationScore,
-                        ConsecutiveDaysStreak = progress.ConsecutiveDaysStreak,
-                        IsMastered = progress.IsMastered,
-                        MasteredAt = progress.MasteredAt,
-                        Status = status,
-                        StatusColor = statusColor
-                    };
+                        status = "In Progress";
+                    }
                 }
 
-                var flashCardDto = new FlashCardWithPronunciationDto
-                {
-                    FlashCardId = flashCard.FlashCardId,
-                    Word = flashCard.Word,
-                    Definition = flashCard.Meaning,
-                    Example = flashCard.Example,
-                    ImageUrl = !string.IsNullOrWhiteSpace(flashCard.ImageKey)
-                        ? BuildPublicUrl.BuildURL("flashcards", flashCard.ImageKey)
-                        : null,
-                    AudioUrl = !string.IsNullOrWhiteSpace(flashCard.AudioKey)
-                        ? BuildPublicUrl.BuildURL("flashcards", flashCard.AudioKey)
-                        : null,
-                    Phonetic = flashCard.Pronunciation,
-                    Progress = progressSummary
-                };
+                // Get module name (if needed)
+                var module = flashCards.FirstOrDefault()?.Module;
+                var moduleName = module?.Name ?? "Module";
 
-                // Create paginated response
-                response.Data = new PaginatedFlashCardWithPronunciationDto
+                var summary = new ModulePronunciationSummaryDto
                 {
-                    FlashCard = flashCardDto,
-                    CurrentIndex = cardIndex,
-                    TotalCards = totalCards
+                    ModuleId = moduleId,
+                    ModuleName = moduleName,
+                    TotalFlashCards = totalFlashCards,
+                    TotalPracticed = totalPracticed,
+                    MasteredCount = masteredCount,
+                    OverallProgress = overallProgress,
+                    AverageScore = Math.Round(averageScore, 1),
+                    LastPracticeDate = lastPracticeDate,
+                    Status = status,
+                    Message = message,
+                    Grade = grade
                 };
 
                 response.Success = true;
-                response.Message = $"Lấy flashcard {cardIndex}/{totalCards} để luyện phát âm thành công";
+                response.Data = summary;
+                response.Message = "Lấy tổng hợp kết quả thành công";
+
+                _logger.LogInformation("Retrieved module pronunciation summary for module {ModuleId}, user {UserId}",
+                    moduleId, userId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting flashcard with pronunciation by index: {CardIndex}, ModuleId: {ModuleId}", 
-                    cardIndex, moduleId);
+                _logger.LogError(ex, "Error getting module pronunciation summary");
                 response.Success = false;
                 response.StatusCode = 500;
-                response.Message = "Có lỗi xảy ra khi lấy flashcard để luyện phát âm";
+                response.Message = $"Error: {ex.Message}";
             }
 
             return response;

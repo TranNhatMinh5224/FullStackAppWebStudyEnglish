@@ -12,6 +12,8 @@ namespace LearningEnglish.Application.DTOs
         public int OrderIndex { get; set; }
         public ModuleType ContentType { get; set; }
         public string ContentTypeName => ContentType.ToString();
+        public string? ImageUrl { get; set; }
+        public string? ImageType { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
@@ -35,6 +37,10 @@ namespace LearningEnglish.Application.DTOs
         public ModuleType ContentType { get; set; }
         public string ContentTypeName => ContentType.ToString();
         public DateTime CreatedAt { get; set; }
+        
+        // ✅ Progress information (populated for students)
+        public bool IsCompleted { get; set; }
+        public decimal ProgressPercentage { get; set; }
     }
 
     // DTO for creating new module
@@ -45,6 +51,8 @@ namespace LearningEnglish.Application.DTOs
         public string? Description { get; set; }
         public int OrderIndex { get; set; }
         public ModuleType ContentType { get; set; }
+        public string? ImageTempKey { get; set; }
+        public string? ImageType { get; set; }
     }
 
     // DTO for updating existing module
@@ -54,6 +62,8 @@ namespace LearningEnglish.Application.DTOs
         public string? Description { get; set; }
         public int? OrderIndex { get; set; }
         public ModuleType? ContentType { get; set; }
+        public string? ImageTempKey { get; set; }
+        public string? ImageType { get; set; }
     }
 
     // DTO for module with progress info for users

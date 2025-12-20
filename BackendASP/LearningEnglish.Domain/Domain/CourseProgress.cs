@@ -21,7 +21,7 @@ public class CourseProgress
     public Course Course { get; set; } = null!;
 
     // Business Logic
-    public bool IsCompleted => ProgressPercentage >= 90m;
+    public bool IsCompleted => ProgressPercentage >= 80m;
 
     public void UpdateProgress(int totalLessons, int completedLessons)
     {
@@ -35,7 +35,7 @@ public class CourseProgress
         }
         else if (!IsCompleted && CompletedAt != null)
         {
-            CompletedAt = null; // Reset if progress dropped below 90%
+            CompletedAt = null; // Reset if progress dropped below 80%
         }
 
         LastUpdated = DateTime.UtcNow;

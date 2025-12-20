@@ -36,13 +36,4 @@ namespace LearningEnglish.Application.DTOs
         public string StatusColor { get; set; } = "gray"; // gray, yellow, green
     }
 
-    // DTO for paginated single flashcard with pronunciation progress (for practice mode)
-    public class PaginatedFlashCardWithPronunciationDto
-    {
-        public FlashCardWithPronunciationDto? FlashCard { get; set; }
-        public int CurrentIndex { get; set; }
-        public int TotalCards { get; set; }
-        public bool HasPrevious => CurrentIndex > 1;
-        public bool HasNext => CurrentIndex < TotalCards;
-    }
 }

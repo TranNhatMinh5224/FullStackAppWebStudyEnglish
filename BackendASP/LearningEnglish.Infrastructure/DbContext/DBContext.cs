@@ -313,6 +313,12 @@ namespace LearningEnglish.Infrastructure.Data
                 e.Property(m => m.Description)
                  .HasMaxLength(1000);
 
+                e.Property(m => m.ImageKey)
+                 .HasMaxLength(500);
+
+                e.Property(m => m.ImageType)
+                 .HasMaxLength(50);
+
                 e.Property(m => m.ContentType)
                  .IsRequired();
 

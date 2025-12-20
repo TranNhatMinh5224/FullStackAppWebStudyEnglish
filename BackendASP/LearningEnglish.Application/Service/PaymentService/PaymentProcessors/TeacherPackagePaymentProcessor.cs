@@ -78,12 +78,21 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                     return response;
                 }
 
+                // 1. Add Teacher role to user (changes tracked by EF Core)
+                var roleUpdated = await _userRepository.UpdateRoleTeacher(userId);
+                if (!roleUpdated)
+                {
+                    _logger.LogError("Không thể cập nhật role Teacher cho User {UserId}", userId);
+                    response.Success = false;
+                    response.Message = "Không thể nâng cấp tài khoản lên giáo viên";
+                    return response;
+                }
+
+                // 2. Create teacher subscription
                 var subscription = new PurchaseTeacherPackageDto
                 {
                     IdTeacherPackage = productId
                 };
-
-                await _userRepository.UpdateRoleTeacher(userId);
 
                 var subscriptionResult = await _teacherSubscriptionService.AddTeacherSubscriptionAsync(subscription, userId);
                 if (!subscriptionResult.Success)
@@ -95,8 +104,9 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                     return response;
                 }
 
+                // 3. Save all changes (Role + Subscription) in one transaction
                 await _userRepository.SaveChangesAsync();
-                _logger.LogInformation("User {UserId} đã được nâng cấp lên vai trò giáo viên", userId);
+                _logger.LogInformation("User {UserId} đã được nâng cấp lên vai trò Teacher và kích hoạt subscription thành công", userId);
 
                 // Get teacher package details and send notification
                 try

@@ -138,16 +138,22 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.LessonTitle, opt => opt.MapFrom(src => src.Lesson != null ? src.Lesson.Title : string.Empty))
                 .ForMember(dest => dest.LectureCount, opt => opt.MapFrom(src => src.Lectures.Count))
                 .ForMember(dest => dest.FlashCardCount, opt => opt.MapFrom(src => src.FlashCards.Count))
-                .ForMember(dest => dest.AssessmentCount, opt => opt.MapFrom(src => src.Assessments.Count));
+                .ForMember(dest => dest.AssessmentCount, opt => opt.MapFrom(src => src.Assessments.Count))
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
+                .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType));
 
             CreateMap<Module, ListModuleDto>();
 
             CreateMap<CreateModuleDto, Module>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.ImageKey, opt => opt.Ignore())
+                .ForMember(dest => dest.ImageType, opt => opt.Ignore());
 
             CreateMap<UpdateModuleDto, Module>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.ImageKey, opt => opt.Ignore())
+                .ForMember(dest => dest.ImageType, opt => opt.Ignore())
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Module, ModuleWithProgressDto>()
@@ -155,6 +161,8 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.LectureCount, opt => opt.MapFrom(src => src.Lectures.Count))
                 .ForMember(dest => dest.FlashCardCount, opt => opt.MapFrom(src => src.FlashCards.Count))
                 .ForMember(dest => dest.AssessmentCount, opt => opt.MapFrom(src => src.Assessments.Count))
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
+                .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
                 .ForMember(dest => dest.IsCompleted, opt => opt.Ignore())
                 .ForMember(dest => dest.ProgressPercentage, opt => opt.Ignore())
                 .ForMember(dest => dest.StartedAt, opt => opt.Ignore())

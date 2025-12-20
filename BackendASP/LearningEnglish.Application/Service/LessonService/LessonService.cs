@@ -436,6 +436,9 @@ namespace LearningEnglish.Application.Service
                     );
                 }
 
+                // Note: Progress info should be retrieved using GetLessonsWithProgressByCourseIdAsync method
+                // This method returns basic LessonDto without progress information
+
                 response.StatusCode = 200;
                 response.Data = lessonDto;
             }

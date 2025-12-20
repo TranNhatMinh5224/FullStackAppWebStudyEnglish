@@ -1,4 +1,5 @@
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -58,9 +59,11 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/PronunciationAssessment/module/{moduleId}/card/{cardIndex} - lấy flashcard kèm phát âm theo chỉ số cho luyện tập
-        [HttpGet("module/{moduleId}/card/{cardIndex}")]
-        public async Task<IActionResult> GetFlashCardByIndexForPractice(int moduleId, int cardIndex)
+        // GET: api/PronunciationAssessment/module/{moduleId}/paginated?pageNumber=1&pageSize=20 - lấy danh sách flashcard phân trang
+        [HttpGet("module/{moduleId}/paginated")]
+        public async Task<IActionResult> GetFlashCardsWithPronunciationPaginated(
+            int moduleId,
+            [FromQuery] PageRequest request)
         {
             var userId = GetCurrentUserId();
             if (userId == 0)
@@ -70,7 +73,23 @@ namespace LearningEnglish.API.Controller.User
                     Message = "User not authenticated"
                 });
 
-            var result = await _service.GetFlashCardWithPronunciationByIndexAsync(moduleId, cardIndex, userId);
+            var result = await _service.GetFlashCardsWithPronunciationProgressPaginatedAsync(moduleId, userId, request);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // GET: api/PronunciationAssessment/module/{moduleId}/summary - lấy tổng hợp kết quả/thống kê module
+        [HttpGet("module/{moduleId}/summary")]
+        public async Task<IActionResult> GetModulePronunciationSummary(int moduleId)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return Unauthorized(new ServiceResponse<object>
+                {
+                    Success = false,
+                    Message = "User not authenticated"
+                });
+
+            var result = await _service.GetModulePronunciationSummaryAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

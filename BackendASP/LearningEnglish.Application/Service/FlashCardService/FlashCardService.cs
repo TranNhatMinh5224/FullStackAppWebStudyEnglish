@@ -1,6 +1,7 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
@@ -138,107 +139,66 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // + Lấy một flashcard theo chỉ số (phân trang từng card cho chế độ học)
-        public async Task<ServiceResponse<PaginatedFlashCardDto>> GetFlashCardByIndexAsync(int moduleId, int cardIndex, int? userId = null)
+        // + Lấy danh sách flashcard theo module với phân trang
+        public async Task<ServiceResponse<PagedResult<ListFlashCardDto>>> GetFlashCardsByModuleIdPaginatedAsync(int moduleId, PageRequest request, int? userId = null)
         {
-            var response = new ServiceResponse<PaginatedFlashCardDto>();
+            var response = new ServiceResponse<PagedResult<ListFlashCardDto>>();
 
             try
             {
-                // Validate cardIndex
-                if (cardIndex < 1)
-                {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = "Chỉ số thẻ phải lớn hơn 0";
-                    return response;
-                }
+                var allFlashCards = await _flashCardRepository.GetByModuleIdWithDetailsAsync(moduleId);
+                var totalCount = allFlashCards.Count;
 
-                // Get total count
-                var totalCards = await _flashCardRepository.GetFlashCardCountByModuleAsync(moduleId);
-
-                if (totalCards == 0)
+                if (totalCount == 0)
                 {
-                    response.Success = false;
-                    response.StatusCode = 404;
+                    response.Success = true;
+                    response.Data = new PagedResult<ListFlashCardDto>
+                    {
+                        Items = new List<ListFlashCardDto>(),
+                        TotalCount = 0,
+                        PageNumber = request.PageNumber,
+                        PageSize = request.PageSize
+                    };
                     response.Message = "Module không có flashcard nào";
                     return response;
                 }
 
-                // Validate cardIndex against total
-                if (cardIndex > totalCards)
+                // Apply pagination
+                var paginatedFlashCards = allFlashCards
+                    .Skip((request.PageNumber - 1) * request.PageSize)
+                    .Take(request.PageSize)
+                    .ToList();
+
+                var flashCardDtos = _mapper.Map<List<ListFlashCardDto>>(paginatedFlashCards);
+
+                // Generate URLs cho tất cả flashcards
+                foreach (var dto in flashCardDtos)
                 {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = $"Chỉ số thẻ vượt quá tổng số thẻ ({totalCards})";
-                    return response;
-                }
-
-                // Get the single flashcard at the index
-                var flashCard = await _flashCardRepository.GetSingleFlashCardByModuleAsync(moduleId, cardIndex);
-
-                if (flashCard == null)
-                {
-                    response.Success = false;
-                    response.StatusCode = 404;
-                    response.Message = "Không tìm thấy flashcard";
-                    return response;
-                }
-
-                var flashCardDto = _mapper.Map<FlashCardDto>(flashCard);
-
-                // Calculate review statistics from Reviews collection
-                if (flashCard.Reviews != null && flashCard.Reviews.Any())
-                {
-                    var reviews = flashCard.Reviews.ToList();
-                    flashCardDto.ReviewCount = reviews.Count;
-                    
-                    var successfulReviews = reviews.Count(r => r.Quality >= 3); // Quality >= 3 is considered successful
-                    flashCardDto.SuccessRate = reviews.Count > 0 
-                        ? Math.Round((decimal)successfulReviews / reviews.Count * 100, 2) 
-                        : 0;
-                    
-                    var lastReview = reviews.OrderByDescending(r => r.ReviewedAt).FirstOrDefault();
-                    if (lastReview != null)
+                    if (!string.IsNullOrWhiteSpace(dto.ImageUrl))
                     {
-                        flashCardDto.LastReviewedAt = lastReview.ReviewedAt;
-                        flashCardDto.CurrentLevel = lastReview.RepetitionCount; // SRS level (số lần ôn thành công)
-                        flashCardDto.NextReviewAt = lastReview.NextReviewDate;
+                        dto.ImageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, dto.ImageUrl);
+                    }
+                    if (!string.IsNullOrWhiteSpace(dto.AudioUrl))
+                    {
+                        dto.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, dto.AudioUrl);
                     }
                 }
-                else
-                {
-                    flashCardDto.ReviewCount = 0;
-                    flashCardDto.SuccessRate = 0;
-                    flashCardDto.CurrentLevel = 0;
-                }
 
-                // Generate URLs
-                if (!string.IsNullOrWhiteSpace(flashCardDto.ImageUrl))
+                response.Success = true;
+                response.Data = new PagedResult<ListFlashCardDto>
                 {
-                    flashCardDto.ImageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, flashCardDto.ImageUrl);
-                }
-                if (!string.IsNullOrWhiteSpace(flashCardDto.AudioUrl))
-                {
-                    flashCardDto.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, flashCardDto.AudioUrl);
-                }
-
-                // Create paginated response
-                response.Data = new PaginatedFlashCardDto
-                {
-                    FlashCard = flashCardDto,
-                    CurrentIndex = cardIndex,
-                    TotalCards = totalCards
+                    Items = flashCardDtos,
+                    TotalCount = totalCount,
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize
                 };
-
-                response.Message = $"Lấy flashcard {cardIndex}/{totalCards} thành công";
+                response.Message = $"Lấy {flashCardDtos.Count}/{totalCount} FlashCard (trang {request.PageNumber}/{response.Data.TotalPages})";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy flashcard index {CardIndex} theo ModuleId: {ModuleId}", cardIndex, moduleId);
+                _logger.LogError(ex, "Lỗi khi lấy danh sách FlashCard phân trang theo ModuleId: {ModuleId}", moduleId);
                 response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Có lỗi xảy ra khi lấy flashcard";
+                response.Message = "Có lỗi xảy ra khi lấy danh sách FlashCard";
             }
 
             return response;

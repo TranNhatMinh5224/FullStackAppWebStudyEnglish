@@ -1,6 +1,8 @@
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -30,7 +32,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         private string GetCurrentUserRole()
         {
-            return User.FindFirst(ClaimTypes.Role)!.Value;
+            return User.GetPrimaryRole();
         }
 
         // GET: api/flash-card/atflashcard/{id} - lấy flashcard theo ID
@@ -46,6 +48,16 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<ActionResult<ServiceResponse<List<ListFlashCardDto>>>> GetFlashCardsByModule(int moduleId)
         {
             var result = await _flashCardService.GetFlashCardsByModuleIdAsync(moduleId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // GET: api/flashcards/module/{moduleId}/paginated?pageNumber=1&pageSize=20 - lấy danh sách flash card phân trang
+        [HttpGet("module/{moduleId}/paginated")]
+        public async Task<ActionResult<ServiceResponse<PagedResult<ListFlashCardDto>>>> GetFlashCardsByModulePaginated(
+            int moduleId,
+            [FromQuery] PageRequest request)
+        {
+            var result = await _flashCardService.GetFlashCardsByModuleIdPaginatedAsync(moduleId, request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 

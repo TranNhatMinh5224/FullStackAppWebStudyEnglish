@@ -1,7 +1,9 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
@@ -25,7 +27,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         private string GetCurrentUserRole()
         {
-            return User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;
+            return User.GetPrimaryRole();
         }
 
         // GET: api/Quiz/ATQuizz/{quizId} - lấy quiz theo ID

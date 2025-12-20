@@ -1,5 +1,6 @@
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service;
@@ -146,6 +147,51 @@ public class ModuleProgressService : IModuleProgressService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi cập nhật video progress lesson {LessonId} cho user {UserId}", lessonId, userId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Start module và tự động complete nếu là FlashCard/Lecture/Video/Reading
+    /// Quiz/Essay chỉ start, không auto-complete
+    /// </summary>
+    public async Task StartAndCompleteModuleAsync(int userId, int moduleId)
+    {
+        try
+        {
+            // Lấy thông tin module
+            var module = await _moduleRepository.GetByIdAsync(moduleId);
+            if (module == null)
+            {
+                _logger.LogWarning("Module {ModuleId} không tồn tại", moduleId);
+                return;
+            }
+
+            // Start module
+            await StartModuleAsync(userId, moduleId);
+
+            // Auto-complete cho các module types: FlashCard, Lecture, Video, Reading
+            // Quiz và Assignment phải submit mới complete
+            if (module.ContentType == ModuleType.FlashCard || 
+                module.ContentType == ModuleType.Lecture || 
+                module.ContentType == ModuleType.Video || 
+                module.ContentType == ModuleType.Reading)
+            {
+                await CompleteModuleAsync(userId, moduleId);
+                _logger.LogInformation(
+                    "✅ User {UserId} auto-completed {ContentType} module {ModuleId} when entering",
+                    userId, module.ContentType, moduleId);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "📝 User {UserId} started {ContentType} module {ModuleId} - requires submission to complete",
+                    userId, module.ContentType, moduleId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi start module {ModuleId} cho user {UserId}", moduleId, userId);
             throw;
         }
     }
