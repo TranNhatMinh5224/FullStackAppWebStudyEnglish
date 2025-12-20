@@ -42,14 +42,7 @@ namespace LearningEnglish.Application.Validators
                 .MaximumLength(500).WithMessage("Từ trái nghĩa không được vượt quá 500 ký tự")
                 .When(x => !string.IsNullOrEmpty(x.Antonyms));
 
-            RuleFor(x => x.ImageTempKey)
-                .MaximumLength(500).WithMessage("Image temp key không được vượt quá 500 ký tự")
-                .When(x => !string.IsNullOrEmpty(x.ImageTempKey));
-
-            RuleFor(x => x.AudioTempKey)
-                .MaximumLength(500).WithMessage("Audio temp key không được vượt quá 500 ký tự")
-                .When(x => !string.IsNullOrEmpty(x.AudioTempKey));
-
+           
             RuleFor(x => x.ModuleId)
                 .GreaterThan(0).WithMessage("ID Module phải là số dương")
                 .When(x => x.ModuleId.HasValue);

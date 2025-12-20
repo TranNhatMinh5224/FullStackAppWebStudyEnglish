@@ -81,17 +81,7 @@ namespace LearningEnglish.Application.Validators
                 .WithMessage("Nội dung Markdown không được vượt quá 50000 ký tự")
                 .When(x => !string.IsNullOrEmpty(x.MarkdownContent));
 
-            // Validate MediaType - nếu có
-            RuleFor(x => x.MediaType)
-                .MaximumLength(50)
-                .WithMessage("Media type không được vượt quá 50 ký tự")
-                .When(x => !string.IsNullOrEmpty(x.MediaType));
-
-            // Validate MediaSize - nếu có phải > 0
-            RuleFor(x => x.MediaSize)
-                .GreaterThan(0)
-                .WithMessage("Media size phải lớn hơn 0")
-                .When(x => x.MediaSize.HasValue);
+           
 
             // Validate Duration - nếu có phải >= 0
             RuleFor(x => x.Duration)
