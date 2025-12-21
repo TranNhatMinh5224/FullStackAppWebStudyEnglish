@@ -115,7 +115,7 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                     var teacherPackage = await _teacherPackageRepository.GetTeacherPackageByIdAsync(productId);
                     if (teacherPackage != null)
                     {
-                        var endDate = subscriptionResult.Data?.EndDate ?? DateTime.Now.AddYears(1);
+                        var endDate = subscriptionResult.Data?.EndDate ?? DateTime.UtcNow.AddYears(1);
                         var notification = new Notification
                         {
                             UserId = userId,

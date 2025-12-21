@@ -417,7 +417,7 @@ namespace LearningEnglish.Application.Mappings
     {
         public bool Resolve(Streak source, StreakDto destination, bool destMember, ResolutionContext context)
         {
-            var today = DateTime.Now.Date;
+            var today = DateTime.UtcNow.Date;
             var lastActivity = source.LastActivityDate?.Date;
             return lastActivity == today;
         }

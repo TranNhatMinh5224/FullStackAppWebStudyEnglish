@@ -7,5 +7,6 @@ namespace LearningEnglish.Application.Interface
         string GeneratePasswordChangedEmailTemplate(string userName);
         string GenerateNotifyJoinCourseTemplate(string courseName, string userName);
         string GenerateTeacherPackagePurchaseTemplate(string packageName, string userName, decimal price, DateTime validUntil);
+        string GenerateVocabularyReminderTemplate(string studentName, int dueCount);
     }
 }

@@ -14,6 +14,8 @@ namespace LearningEnglish.Application.Service
         private readonly IPaymentRepository _paymentRepository;
         private readonly ITeacherPackageRepository _teacherPackageRepository;
         private readonly INotificationRepository _notificationRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IEmailService _emailService;
         private readonly ILogger<UserEnrollmentService> _logger;
 
         public UserEnrollmentService(
@@ -21,12 +23,16 @@ namespace LearningEnglish.Application.Service
             IPaymentRepository paymentRepository,
             ITeacherPackageRepository teacherPackageRepository,
             INotificationRepository notificationRepository,
+            IUserRepository userRepository,
+            IEmailService emailService,
             ILogger<UserEnrollmentService> logger)
         {
             _courseRepository = courseRepository;
             _paymentRepository = paymentRepository;
             _teacherPackageRepository = teacherPackageRepository;
             _notificationRepository = notificationRepository;
+            _userRepository = userRepository;
+            _emailService = emailService;
             _logger = logger;
         }
 
@@ -34,6 +40,7 @@ namespace LearningEnglish.Application.Service
         {
             try
             {
+                // Tạo thông báo in-app
                 var notification = new Notification
                 {
                     UserId = userId,
@@ -45,6 +52,14 @@ namespace LearningEnglish.Application.Service
                 };
                 await _notificationRepository.AddAsync(notification);
                 _logger.LogInformation("Created enrollment notification for user {UserId}", userId);
+
+                // Gửi email xác nhận đăng ký
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user != null && !string.IsNullOrEmpty(user.Email))
+                {
+                    await _emailService.SendNotifyJoinCourseAsync(user.Email, courseTitle, user.FullName);
+                    _logger.LogInformation("Sent enrollment email to {Email} for course {CourseTitle}", user.Email, courseTitle);
+                }
             }
             catch (Exception ex)
             {

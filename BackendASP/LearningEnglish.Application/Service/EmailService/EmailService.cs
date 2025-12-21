@@ -40,5 +40,12 @@ namespace LearningEnglish.Application.Service
             var body = _templateService.GenerateTeacherPackagePurchaseTemplate(packageName, userName, price, validUntil);
             await _emailSender.SendEmailAsync(toEmail, subject, body);
         }
+
+        public async Task SendVocabularyReminderEmailAsync(string toEmail, string studentName, int dueCount)
+        {
+            var subject = $"📚 {dueCount} từ vựng cần ôn tập hôm nay!";
+            var body = _templateService.GenerateVocabularyReminderTemplate(studentName, dueCount);
+            await _emailSender.SendEmailAsync(toEmail, subject, body);
+        }
     }
 }
