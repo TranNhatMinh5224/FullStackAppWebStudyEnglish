@@ -29,7 +29,7 @@ public class SimpleNotificationService
         int userId, 
         string title, 
         string message, 
-        NotificationType type = NotificationType.General,
+        NotificationType type,
         string? relatedEntityType = null,
         int? relatedEntityId = null)
     {

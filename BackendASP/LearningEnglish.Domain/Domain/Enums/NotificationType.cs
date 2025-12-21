@@ -2,16 +2,10 @@ namespace LearningEnglish.Domain.Enums
 {
     public enum NotificationType
     {
-        CourseEnrollment,
-        CourseCompletion,
-        LessonReminder,
-        VocabularyReminder,
-        QuizDeadline,
-        AssessmentGraded,
-        PaymentSuccess,
-        SystemAnnouncement,
-        StudyStreak,
-        Achievement,
-        General
+        CourseEnrollment,    // Đăng ký khóa học thành công
+        CourseCompletion,    // Hoàn thành khóa học
+        VocabularyReminder,  // Nhắc nhở ôn từ vựng
+        AssessmentGraded,    // Nộp bài essay/quiz thành công
+        PaymentSuccess       // Thanh toán thành công
     }
 }

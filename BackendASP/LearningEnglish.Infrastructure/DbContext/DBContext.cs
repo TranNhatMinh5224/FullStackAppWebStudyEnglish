@@ -42,6 +42,9 @@ namespace LearningEnglish.Infrastructure.Data
         public DbSet<TeacherPackage> TeacherPackages => Set<TeacherPackage>();
         public DbSet<TeacherSubscription> TeacherSubscriptions => Set<TeacherSubscription>();
         public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
+        
+        // Frontend Management
+        public DbSet<AssetFrontend> AssetsFrontend => Set<AssetFrontend>();
 
 
 
