@@ -119,36 +119,5 @@ namespace LearningEnglish.Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return existing;
         }
-
-        // Statistics methods
-        public async Task<int> GetTotalProgressCountAsync(int userId)
-        {
-            return await _context.PronunciationProgresses
-                .Where(p => p.UserId == userId && p.TotalAttempts > 0)
-                .CountAsync();
-        }
-
-        public async Task<int> GetCompletedCountAsync(int userId)
-        {
-            return await _context.PronunciationProgresses
-                .Where(p => p.UserId == userId && p.BestScore >= 80)
-                .CountAsync();
-        }
-
-        public async Task<int> GetNeedsReviewCountAsync(int userId)
-        {
-            return await _context.PronunciationProgresses
-                .Where(p => p.UserId == userId && p.BestScore < 70)
-                .CountAsync();
-        }
-
-        public async Task<double> GetAverageScoreAsync(int userId)
-        {
-            var progresses = await _context.PronunciationProgresses
-                .Where(p => p.UserId == userId && p.TotalAttempts > 0)
-                .ToListAsync();
-
-            return progresses.Count != 0 ? progresses.Average(p => p.BestScore) : 0;
-        }
     }
 }

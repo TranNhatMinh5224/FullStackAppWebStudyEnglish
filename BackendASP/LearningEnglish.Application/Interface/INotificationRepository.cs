@@ -6,12 +6,19 @@ namespace LearningEnglish.Application.Interface
 {
     public interface INotificationRepository
     {
-        // ✅ 3 chức năng CƠ BẢN NHẤT
-        Task AddAsync(Notification notification);                              // Tạo thông báo
-        Task<IEnumerable<Notification>> GetUserNotificationsAsync(int userId); // Lấy danh sách thông báo
-        Task<int> GetUnreadCountAsync(int userId);                             // Đếm thông báo chưa đọc
+        // Tạo thông báo
+        Task AddAsync(Notification notification);
         
-        // ✅ Optional: Đánh dấu đã đọc
+        // Lấy danh sách thông báo (mới nhất đến cũ nhất, giới hạn 30)
+        Task<IEnumerable<Notification>> GetUserNotificationsAsync(int userId);
+        
+        // Đếm thông báo chưa đọc (hiển thị badge)
+        Task<int> GetUnreadCountAsync(int userId);
+        
+        // Đánh dấu đã đọc
         Task MarkAsReadAsync(int notificationId, int userId);
+        
+        // Đánh dấu tất cả đã đọc
+        Task MarkAllAsReadAsync(int userId);
     }
 }

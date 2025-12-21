@@ -14,6 +14,7 @@ public class UserEnrollmentServiceTests
     private readonly Mock<ICourseRepository> _courseRepositoryMock;
     private readonly Mock<IPaymentRepository> _paymentRepositoryMock;
     private readonly Mock<ITeacherPackageRepository> _teacherPackageRepositoryMock;
+    private readonly Mock<INotificationRepository> _notificationRepositoryMock;
     private readonly Mock<ILogger<UserEnrollmentService>> _loggerMock;
     private readonly UserEnrollmentService _enrollmentService;
 
@@ -22,12 +23,14 @@ public class UserEnrollmentServiceTests
         _courseRepositoryMock = new Mock<ICourseRepository>();
         _paymentRepositoryMock = new Mock<IPaymentRepository>();
         _teacherPackageRepositoryMock = new Mock<ITeacherPackageRepository>();
+        _notificationRepositoryMock = new Mock<INotificationRepository>();
         _loggerMock = new Mock<ILogger<UserEnrollmentService>>();
 
         _enrollmentService = new UserEnrollmentService(
             _courseRepositoryMock.Object,
             _paymentRepositoryMock.Object,
             _teacherPackageRepositoryMock.Object,
+            _notificationRepositoryMock.Object,
             _loggerMock.Object
         );
     }

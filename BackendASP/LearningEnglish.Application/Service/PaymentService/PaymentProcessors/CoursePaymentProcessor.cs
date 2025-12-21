@@ -2,6 +2,7 @@ using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Strategies;
+using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
@@ -14,20 +15,20 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
         private readonly ICourseRepository _courseRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUserEnrollmentService _userEnrollmentService;
-        private readonly IPaymentNotificationService _notificationService;
+        private readonly INotificationRepository _notificationRepository;
         private readonly ILogger<CoursePaymentProcessor> _logger;
 
         public CoursePaymentProcessor(
             ICourseRepository courseRepository,
             IUserRepository userRepository,
             IUserEnrollmentService userEnrollmentService,
-            IPaymentNotificationService notificationService,
+            INotificationRepository notificationRepository,
             ILogger<CoursePaymentProcessor> logger)
         {
             _courseRepository = courseRepository;
             _userRepository = userRepository;
             _userEnrollmentService = userEnrollmentService;
-            _notificationService = notificationService;
+            _notificationRepository = notificationRepository;
             _logger = logger;
         }
 
@@ -97,17 +98,29 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                 _logger.LogInformation("User {UserId} đã được tự động đăng ký vào khóa học {CourseId} sau thanh toán {PaymentId}",
                     userId, productId, paymentId);
 
-                // Send notification email
+                // Tạo notification thanh toán thành công
                 try
                 {
-                    await _notificationService.SendCoursePaymentNotificationAsync(userId, productId);
-                    _logger.LogInformation("Email thông báo đã được gửi đến User {UserId} cho việc tham gia khóa học {CourseId}",
-                        userId, productId);
+                    var course = await _courseRepository.GetByIdAsync(productId);
+                    if (course != null)
+                    {
+                        var notification = new Notification
+                        {
+                            UserId = userId,
+                            Title = "💳 Thanh toán thành công",
+                            Message = $"Bạn đã thanh toán thành công khóa học '{course.Title}'. Chúc bạn học tốt!",
+                            Type = NotificationType.PaymentSuccess,
+                            RelatedEntityType = "Course",
+                            RelatedEntityId = productId,
+                            IsRead = false,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await _notificationRepository.AddAsync(notification);
+                    }
                 }
-                catch (Exception emailEx)
+                catch (Exception notifEx)
                 {
-                    _logger.LogWarning(emailEx, "Gửi email thông báo khóa học thất bại cho thanh toán {PaymentId}", paymentId);
-                    // Email failure should not affect payment success
+                    _logger.LogWarning(notifEx, "Tạo notification thất bại cho thanh toán {PaymentId}", paymentId);
                 }
 
                 response.Data = true;

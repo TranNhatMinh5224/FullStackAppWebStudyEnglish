@@ -10,8 +10,8 @@ namespace LearningEnglish.Domain.Entities
         public DateTime CompletedAt { get; set; } = DateTime.UtcNow;
 
         // ===== NEW SIMPLE ADDITIONS =====
-        public bool IsCompleted { get; set; } = true; // Default true when record created
-        public decimal ProgressPercentage { get; set; } = 100; // Always 100% when completed
+        public bool IsCompleted { get; set; } = false; // Default false when record created
+        public decimal ProgressPercentage { get; set; } = 0; // Always 0% when not completed
         public DateTime? StartedAt { get; set; }
 
         // Navigation Properties

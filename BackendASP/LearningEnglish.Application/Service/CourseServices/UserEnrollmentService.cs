@@ -13,18 +13,43 @@ namespace LearningEnglish.Application.Service
         private readonly ICourseRepository _courseRepository;
         private readonly IPaymentRepository _paymentRepository;
         private readonly ITeacherPackageRepository _teacherPackageRepository;
+        private readonly INotificationRepository _notificationRepository;
         private readonly ILogger<UserEnrollmentService> _logger;
 
         public UserEnrollmentService(
             ICourseRepository courseRepository,
             IPaymentRepository paymentRepository,
             ITeacherPackageRepository teacherPackageRepository,
+            INotificationRepository notificationRepository,
             ILogger<UserEnrollmentService> logger)
         {
             _courseRepository = courseRepository;
             _paymentRepository = paymentRepository;
             _teacherPackageRepository = teacherPackageRepository;
+            _notificationRepository = notificationRepository;
             _logger = logger;
+        }
+
+        private async Task CreateEnrollmentNotificationAsync(int userId, string courseTitle)
+        {
+            try
+            {
+                var notification = new Notification
+                {
+                    UserId = userId,
+                    Title = "🎉 Đăng ký khóa học thành công",
+                    Message = $"Bạn đã đăng ký thành công khóa học '{courseTitle}'. Hãy bắt đầu học ngay!",
+                    Type = NotificationType.CourseEnrollment,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _notificationRepository.AddAsync(notification);
+                _logger.LogInformation("Created enrollment notification for user {UserId}", userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create enrollment notification for user {UserId}", userId);
+            }
         }
 
         // User đăng ký khóa học (hỗ trợ cả course hệ thống và course teacher tạo)
@@ -98,6 +123,9 @@ namespace LearningEnglish.Application.Service
 
                 // Đăng ký user vào course 
                 await _courseRepository.EnrollUserInCourse(userId, enrollDto.CourseId);
+
+                // Tạo notification cho user
+                await CreateEnrollmentNotificationAsync(userId, course.Title);
 
                 response.Success = true;
                 response.StatusCode = 200;

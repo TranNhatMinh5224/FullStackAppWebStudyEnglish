@@ -20,6 +20,7 @@ namespace LearningEnglish.Application.Service
         private readonly IModuleProgressService _moduleProgressService;
         private readonly IAssessmentRepository _assessmentRepository;
         private readonly IStreakService _streakService;
+        private readonly INotificationRepository _notificationRepository;
 
         // MinIO configuration for essay attachments
         private const string AttachmentBucket = "essay-attachments";
@@ -29,6 +30,27 @@ namespace LearningEnglish.Application.Service
         private const string AvatarBucket = "avatars";
         private const string AvatarFolder = "real";
 
+        private async Task CreateEssaySubmissionNotificationAsync(int userId, string essayTitle)
+        {
+            try
+            {
+                var notification = new Notification
+                {
+                    UserId = userId,
+                    Title = "✅ Nộp bài essay thành công",
+                    Message = $"Bạn đã nộp bài essay '{essayTitle}' thành công. Giáo viên sẽ chấm điểm sớm nhất có thể.",
+                    Type = NotificationType.AssessmentGraded,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _notificationRepository.AddAsync(notification);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create essay submission notification");
+            }
+        }
+
         public EssaySubmissionService(
             IEssaySubmissionRepository essaySubmissionRepository,
             IEssayRepository essayRepository,
@@ -37,7 +59,8 @@ namespace LearningEnglish.Application.Service
             ILogger<EssaySubmissionService> logger,
             IModuleProgressService moduleProgressService,
             IAssessmentRepository assessmentRepository,
-            IStreakService streakService)
+            IStreakService streakService,
+            INotificationRepository notificationRepository)
         {
             _essaySubmissionRepository = essaySubmissionRepository;
             _essayRepository = essayRepository;
@@ -47,6 +70,7 @@ namespace LearningEnglish.Application.Service
             _moduleProgressService = moduleProgressService;
             _assessmentRepository = assessmentRepository;
             _streakService = streakService;
+            _notificationRepository = notificationRepository;
         }
         // Implement cho phương thức Nộp bài kiểm tra tự luận (Essay Submission)
         public async Task<ServiceResponse<EssaySubmissionDto>> CreateSubmissionAsync(CreateEssaySubmissionDto dto, int userId)
@@ -87,6 +111,9 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Bạn đã nộp bài cho Essay này rồi";
                     return response;
                 }
+
+                // Tạo notification
+                await CreateEssaySubmissionNotificationAsync(userId, essay.Title);
 
                 // Xử lý file attachment nếu có
                 string? attachmentKey = null;

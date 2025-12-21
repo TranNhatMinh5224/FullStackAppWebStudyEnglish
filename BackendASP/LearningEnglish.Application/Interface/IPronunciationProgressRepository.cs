@@ -25,11 +25,5 @@ namespace LearningEnglish.Application.Interface
             List<string> problemPhonemes,
             List<string> strongPhonemes,
             DateTime attemptTime);
-
-        // Statistics
-        Task<int> GetTotalProgressCountAsync(int userId);
-        Task<int> GetCompletedCountAsync(int userId);
-        Task<int> GetNeedsReviewCountAsync(int userId);
-        Task<double> GetAverageScoreAsync(int userId);
     }
 }

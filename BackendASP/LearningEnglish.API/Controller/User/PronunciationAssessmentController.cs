@@ -59,24 +59,6 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/PronunciationAssessment/module/{moduleId}/paginated?pageNumber=1&pageSize=20 - lấy danh sách flashcard phân trang
-        [HttpGet("module/{moduleId}/paginated")]
-        public async Task<IActionResult> GetFlashCardsWithPronunciationPaginated(
-            int moduleId,
-            [FromQuery] PageRequest request)
-        {
-            var userId = GetCurrentUserId();
-            if (userId == 0)
-                return Unauthorized(new ServiceResponse<object>
-                {
-                    Success = false,
-                    Message = "User not authenticated"
-                });
-
-            var result = await _service.GetFlashCardsWithPronunciationProgressPaginatedAsync(moduleId, userId, request);
-            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
-        }
-
         // GET: api/PronunciationAssessment/module/{moduleId}/summary - lấy tổng hợp kết quả/thống kê module
         [HttpGet("module/{moduleId}/summary")]
         public async Task<IActionResult> GetModulePronunciationSummary(int moduleId)

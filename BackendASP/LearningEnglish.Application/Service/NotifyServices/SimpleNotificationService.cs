@@ -1,13 +1,13 @@
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service;
 
 /// <summary>
-/// Service đơn giản CHỈ để VocabularyReminderService tạo notification
-/// Chỉ có 1 method duy nhất: CreateNotificationAsync
+/// Service tạo notification cho tất cả các loại thông báo hệ thống
 /// </summary>
 public class SimpleNotificationService
 {
@@ -23,9 +23,15 @@ public class SimpleNotificationService
     }
 
     /// <summary>
-    /// Tạo notification đơn giản - CHỈ DÀNH CHO NHẮC HỌC TỪ VỰNG
+    /// Tạo notification - Dùng cho tất cả các loại thông báo
     /// </summary>
-    public async Task<ServiceResponse<bool>> CreateNotificationAsync(int userId, string title, string message)
+    public async Task<ServiceResponse<bool>> CreateNotificationAsync(
+        int userId, 
+        string title, 
+        string message, 
+        NotificationType type = NotificationType.General,
+        string? relatedEntityType = null,
+        int? relatedEntityId = null)
     {
         var response = new ServiceResponse<bool>();
 
@@ -36,6 +42,9 @@ public class SimpleNotificationService
                 UserId = userId,
                 Title = title,
                 Message = message,
+                Type = type,
+                RelatedEntityType = relatedEntityType,
+                RelatedEntityId = relatedEntityId,
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
             };

@@ -5,6 +5,7 @@ namespace LearningEnglish.Domain.Enums
         CourseEnrollment,
         CourseCompletion,
         LessonReminder,
+        VocabularyReminder,
         QuizDeadline,
         AssessmentGraded,
         PaymentSuccess,

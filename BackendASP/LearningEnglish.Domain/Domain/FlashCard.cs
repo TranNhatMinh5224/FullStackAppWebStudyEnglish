@@ -1,6 +1,6 @@
 using LearningEnglish.Domain.Enums;
 
-namespace LearningEnglish.Domain.Entities;
+namespace LearningEnglish.Domain.Entities{ 
 
 public class FlashCard
 {
@@ -34,4 +34,4 @@ public class FlashCard
     public List<FlashCardReview> Reviews { get; set; } = new();
     public List<PronunciationProgress> PronunciationProgresses { get; set; } = new();
 }
-
+}

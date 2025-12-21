@@ -21,6 +21,7 @@ namespace LearningEnglish.Application.Service
         private readonly IQuestionRepository _questionRepository;
         private readonly IModuleProgressService _moduleProgressService;
         private readonly IStreakService _streakService;
+        private readonly INotificationRepository _notificationRepository;
 
         // MinIO bucket constant
         private const string QuestionBucket = "questions";
@@ -36,7 +37,8 @@ namespace LearningEnglish.Application.Service
             IEnumerable<IScoringStrategy> scoringStrategies,
             IQuestionRepository questionRepository,
             IModuleProgressService moduleProgressService,
-            IStreakService streakService)
+            IStreakService streakService,
+            INotificationRepository notificationRepository)
         {
             _quizRepository = quizRepository;
             _quizAttemptRepository = quizAttemptRepository;
@@ -47,6 +49,7 @@ namespace LearningEnglish.Application.Service
             _questionRepository = questionRepository;
             _moduleProgressService = moduleProgressService;
             _streakService = streakService;
+            _notificationRepository = notificationRepository;
 
             // Debug: kiểm tra strategies được inject
 
@@ -429,6 +432,30 @@ namespace LearningEnglish.Application.Service
                 if (quiz.ShowAnswersAfterSubmit == true)
                 {
                     result.CorrectAnswers = await GetCorrectAnswersAsync(attempt.QuizId);
+                }
+
+                // Tạo notification nộp quiz thành công
+                try
+                {
+                    var notification = new Notification
+                    {
+                        UserId = attempt.UserId,
+                        Title = "✅ Nộp bài quiz thành công",
+                        Message = quiz.ShowScoreImmediately == true 
+                            ? $"Bạn đã nộp bài quiz '{quiz.Title}' thành công. Điểm: {attempt.TotalScore}/{quiz.TotalQuestions * 10}" 
+                            : $"Bạn đã nộp bài quiz '{quiz.Title}' thành công. Giáo viên sẽ công bố kết quả sau.",
+                        Type = NotificationType.AssessmentGraded,
+                        RelatedEntityType = "Quiz",
+                        RelatedEntityId = quiz.QuizId,
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _notificationRepository.AddAsync(notification);
+                }
+                catch (Exception notifEx)
+                {
+                    // Không làm ảnh hưởng đến việc submit quiz
+                    Console.WriteLine($"Failed to create quiz notification: {notifEx.Message}");
                 }
 
                 response.Success = true;

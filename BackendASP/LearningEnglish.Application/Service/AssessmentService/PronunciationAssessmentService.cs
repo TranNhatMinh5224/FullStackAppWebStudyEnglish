@@ -22,6 +22,8 @@ namespace LearningEnglish.Application.Service
         private readonly IPronunciationProgressRepository _progressRepository;
         private readonly ILogger<PronunciationAssessmentService> _logger;
         private const string BUCKET_NAME = "pronunciations";
+        private const string AUDIO_BUCKET_NAME = "flashcard-audio";
+        private const string IMAGE_BUCKET_NAME = "flashcards";
 
         public PronunciationAssessmentService(
             IFlashCardRepository flashCardRepository,
@@ -219,10 +221,10 @@ namespace LearningEnglish.Application.Service
                         Definition = fc.Meaning,
                         Example = fc.Example,
                         ImageUrl = !string.IsNullOrWhiteSpace(fc.ImageKey)
-                            ? BuildPublicUrl.BuildURL("flashcards", fc.ImageKey)
+                            ? BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, fc.ImageKey)
                             : null,
                         AudioUrl = !string.IsNullOrWhiteSpace(fc.AudioKey)
-                            ? BuildPublicUrl.BuildURL("flashcards", fc.AudioKey)
+                            ? BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, fc.AudioKey)
                             : null,
                         Phonetic = fc.Pronunciation,
                         Progress = progressSummary
@@ -237,128 +239,6 @@ namespace LearningEnglish.Application.Service
             {
                 _logger.LogError(ex, "Error getting flashcards with pronunciation progress");
                 response.Success = false;
-                response.Message = $"Error: {ex.Message}";
-            }
-
-            return response;
-        }
-
-        /// <summary>
-        /// Get paginated list of flashcards with pronunciation progress for list view
-        /// </summary>
-        public async Task<ServiceResponse<PagedResult<FlashCardWithPronunciationDto>>> GetFlashCardsWithPronunciationProgressPaginatedAsync(
-            int moduleId,
-            int userId,
-            PageRequest request)
-        {
-            var response = new ServiceResponse<PagedResult<FlashCardWithPronunciationDto>>();
-
-            try
-            {
-                // Get all flashcards in module
-                var allFlashCards = await _flashCardRepository.GetByModuleIdAsync(moduleId);
-                var totalCount = allFlashCards.Count;
-
-                if (totalCount == 0)
-                {
-                    response.Success = true;
-                    response.Data = new PagedResult<FlashCardWithPronunciationDto>
-                    {
-                        Items = new List<FlashCardWithPronunciationDto>(),
-                        TotalCount = 0,
-                        PageNumber = request.PageNumber,
-                        PageSize = request.PageSize
-                    };
-                    response.Message = "Module không có flashcard nào";
-                    return response;
-                }
-
-                // Apply pagination
-                var paginatedFlashCards = allFlashCards
-                    .Skip((request.PageNumber - 1) * request.PageSize)
-                    .Take(request.PageSize)
-                    .ToList();
-
-                // Get pronunciation progress for these flashcards
-                var flashCardIds = paginatedFlashCards.Select(f => f.FlashCardId).ToList();
-                var allProgresses = await _progressRepository.GetByModuleIdAsync(userId, moduleId);
-                var progressDict = allProgresses
-                    .Where(p => flashCardIds.Contains(p.FlashCardId))
-                    .ToDictionary(p => p.FlashCardId);
-
-                // Map to DTOs
-                var items = paginatedFlashCards.Select(fc =>
-                {
-                    var hasProgress = progressDict.TryGetValue(fc.FlashCardId, out var progress);
-
-                    PronunciationProgressSummary? progressSummary = null;
-                    if (hasProgress && progress != null)
-                    {
-                        string status = "Practicing";
-                        string statusColor = "yellow";
-
-                        if (progress.IsMastered)
-                        {
-                            status = "Mastered";
-                            statusColor = "green";
-                        }
-                        else if (progress.TotalAttempts == 0)
-                        {
-                            status = "Not Started";
-                            statusColor = "gray";
-                        }
-
-                        progressSummary = new PronunciationProgressSummary
-                        {
-                            TotalAttempts = progress.TotalAttempts,
-                            BestScore = progress.BestScore,
-                            BestScoreDate = progress.BestScoreDate,
-                            LastPracticedAt = progress.LastPracticedAt,
-                            AvgPronunciationScore = progress.AvgPronunciationScore,
-                            LastPronunciationScore = progress.LastPronunciationScore,
-                            ConsecutiveDaysStreak = progress.ConsecutiveDaysStreak,
-                            IsMastered = progress.IsMastered,
-                            MasteredAt = progress.MasteredAt,
-                            Status = status,
-                            StatusColor = statusColor
-                        };
-                    }
-
-                    return new FlashCardWithPronunciationDto
-                    {
-                        FlashCardId = fc.FlashCardId,
-                        Word = fc.Word,
-                        Definition = fc.Meaning,
-                        Example = fc.Example,
-                        ImageUrl = !string.IsNullOrWhiteSpace(fc.ImageKey)
-                            ? BuildPublicUrl.BuildURL("flashcards", fc.ImageKey)
-                            : null,
-                        AudioUrl = !string.IsNullOrWhiteSpace(fc.AudioKey)
-                            ? BuildPublicUrl.BuildURL("flashcards", fc.AudioKey)
-                            : null,
-                        Phonetic = fc.Pronunciation,
-                        Progress = progressSummary
-                    };
-                }).ToList();
-
-                response.Success = true;
-                response.Data = new PagedResult<FlashCardWithPronunciationDto>
-                {
-                    Items = items,
-                    TotalCount = totalCount,
-                    PageNumber = request.PageNumber,
-                    PageSize = request.PageSize
-                };
-                response.Message = $"Lấy {items.Count}/{totalCount} flashcards (trang {request.PageNumber}/{response.Data.TotalPages})";
-
-                _logger.LogInformation("Retrieved paginated flashcards for module {ModuleId}, user {UserId}, page {Page}/{TotalPages}",
-                    moduleId, userId, request.PageNumber, response.Data.TotalPages);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting paginated flashcards with pronunciation progress");
-                response.Success = false;
-                response.StatusCode = 500;
                 response.Message = $"Error: {ex.Message}";
             }
 

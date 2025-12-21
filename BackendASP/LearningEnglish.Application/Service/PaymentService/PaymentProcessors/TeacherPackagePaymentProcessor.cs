@@ -2,6 +2,7 @@ using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Strategies;
+using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
@@ -14,20 +15,20 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
         private readonly ITeacherPackageRepository _teacherPackageRepository;
         private readonly IUserRepository _userRepository;
         private readonly ITeacherSubscriptionService _teacherSubscriptionService;
-        private readonly IPaymentNotificationService _notificationService;
+        private readonly INotificationRepository _notificationRepository;
         private readonly ILogger<TeacherPackagePaymentProcessor> _logger;
 
         public TeacherPackagePaymentProcessor(
             ITeacherPackageRepository teacherPackageRepository,
             IUserRepository userRepository,
             ITeacherSubscriptionService teacherSubscriptionService,
-            IPaymentNotificationService notificationService,
+            INotificationRepository notificationRepository,
             ILogger<TeacherPackagePaymentProcessor> logger)
         {
             _teacherPackageRepository = teacherPackageRepository;
             _userRepository = userRepository;
             _teacherSubscriptionService = teacherSubscriptionService;
-            _notificationService = notificationService;
+            _notificationRepository = notificationRepository;
             _logger = logger;
         }
 
@@ -108,28 +109,30 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                 await _userRepository.SaveChangesAsync();
                 _logger.LogInformation("User {UserId} đã được nâng cấp lên vai trò Teacher và kích hoạt subscription thành công", userId);
 
-                // Get teacher package details and send notification
+                // Tạo notification nâng cấp thành giáo viên
                 try
                 {
                     var teacherPackage = await _teacherPackageRepository.GetTeacherPackageByIdAsync(productId);
-                    if (teacherPackage == null)
+                    if (teacherPackage != null)
                     {
-                        _logger.LogError("Không tìm thấy gói giáo viên cho thanh toán {PaymentId}", paymentId);
-                        response.Success = false;
-                        response.Message = "Không tìm thấy gói giáo viên";
-                        return response;
+                        var endDate = subscriptionResult.Data?.EndDate ?? DateTime.Now.AddYears(1);
+                        var notification = new Notification
+                        {
+                            UserId = userId,
+                            Title = "🎓 Chúc mừng! Bạn đã trở thành giáo viên",
+                            Message = $"Bạn đã đăng ký thành công gói '{teacherPackage.PackageName}'. Giá trị {teacherPackage.Price:N0} VNĐ, hết hạn {endDate:dd/MM/yyyy}.",
+                            Type = NotificationType.PaymentSuccess,
+                            RelatedEntityType = "TeacherPackage",
+                            RelatedEntityId = productId,
+                            IsRead = false,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await _notificationRepository.AddAsync(notification);
                     }
-
-                    var endDate = subscriptionResult.Data?.EndDate ?? DateTime.Now.AddYears(1);
-                    await _notificationService.SendTeacherPackagePaymentNotificationAsync(userId, productId, endDate);
-
-                    _logger.LogInformation("Email thông báo đã được gửi đến User {UserId} cho việc mua gói giáo viên {PackageId}",
-                        userId, productId);
                 }
-                catch (Exception emailEx)
+                catch (Exception notifEx)
                 {
-                    _logger.LogWarning(emailEx, "Gửi email thông báo gói giáo viên thất bại cho thanh toán {PaymentId}", paymentId);
-                    // Email failure should not affect payment success
+                    _logger.LogWarning(notifEx, "Tạo notification thất bại cho thanh toán {PaymentId}", paymentId);
                 }
 
                 response.Data = true;

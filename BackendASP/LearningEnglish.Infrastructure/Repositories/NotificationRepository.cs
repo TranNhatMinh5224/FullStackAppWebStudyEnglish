@@ -27,11 +27,10 @@ namespace LearningEnglish.Infrastructure.Repositories
             return await _context.Notifications
                 .Where(n => n.UserId == userId)
                 .OrderByDescending(n => n.CreatedAt)
-                .Take(50) // Giới hạn 50 thông báo gần nhất
+                .Take(30) // Giới hạn 30 thông báo gần nhất cho dropdown
                 .ToListAsync();
         }
 
-        // ✅ ĐẾM THÔNG BÁO CHƯA ĐỌC - Hiển thị badge
         public async Task<int> GetUnreadCountAsync(int userId)
         {
             return await _context.Notifications
@@ -39,7 +38,6 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .CountAsync();
         }
 
-        // ✅ ĐÁNH DẤU ĐÃ ĐỌC - Optional
         public async Task MarkAsReadAsync(int notificationId, int userId)
         {
             var notification = await _context.Notifications
@@ -51,6 +49,21 @@ namespace LearningEnglish.Infrastructure.Repositories
                 notification.ReadAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task MarkAllAsReadAsync(int userId)
+        {
+            var unreadNotifications = await _context.Notifications
+                .Where(n => n.UserId == userId && !n.IsRead)
+                .ToListAsync();
+
+            foreach (var notification in unreadNotifications)
+            {
+                notification.IsRead = true;
+                notification.ReadAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

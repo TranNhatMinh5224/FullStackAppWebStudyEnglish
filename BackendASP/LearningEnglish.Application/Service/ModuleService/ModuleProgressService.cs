@@ -15,6 +15,8 @@ public class ModuleProgressService : IModuleProgressService
     private readonly ICourseProgressRepository _courseProgressRepo;
     private readonly IModuleRepository _moduleRepository;
     private readonly ILessonRepository _lessonRepository;
+    private readonly INotificationRepository _notificationRepository;
+    private readonly ICourseRepository _courseRepository;
     private readonly ILogger<ModuleProgressService> _logger;
 
     public ModuleProgressService(
@@ -23,6 +25,8 @@ public class ModuleProgressService : IModuleProgressService
         ICourseProgressRepository courseProgressRepo,
         IModuleRepository moduleRepository,
         ILessonRepository lessonRepository,
+        INotificationRepository notificationRepository,
+        ICourseRepository courseRepository,
         ILogger<ModuleProgressService> logger)
     {
         _moduleCompletionRepo = moduleCompletionRepo;
@@ -30,6 +34,8 @@ public class ModuleProgressService : IModuleProgressService
         _courseProgressRepo = courseProgressRepo;
         _moduleRepository = moduleRepository;
         _lessonRepository = lessonRepository;
+        _notificationRepository = notificationRepository;
+        _courseRepository = courseRepository;
         _logger = logger;
     }
 
@@ -284,11 +290,45 @@ public class ModuleProgressService : IModuleProgressService
             _logger.LogInformation(
                 "Course {CourseId} progress updated: {Completed}/{Total} lessons",
                 courseId, completedCount, totalLessons);
+
+            // Gửi notification nếu hoàn thành 100% khóa học
+            if (courseProgress.IsCompleted)
+            {
+                await CreateCourseCompletionNotificationAsync(userId, courseId);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi cập nhật course progress {CourseId} cho user {UserId}", courseId, userId);
             throw;
+        }
+    }
+
+    private async Task CreateCourseCompletionNotificationAsync(int userId, int courseId)
+    {
+        try
+        {
+            var course = await _courseRepository.GetByIdAsync(courseId);
+            if (course != null)
+            {
+                var notification = new Notification
+                {
+                    UserId = userId,
+                    Title = "🎓 Chúc mừng! Bạn đã hoàn thành khóa học",
+                    Message = $"Bạn đã hoàn thành 100% khóa học '{course.Title}'. Thật tuyệt vời!",
+                    Type = NotificationType.CourseCompletion,
+                    RelatedEntityType = "Course",
+                    RelatedEntityId = courseId,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _notificationRepository.AddAsync(notification);
+                _logger.LogInformation("Created course completion notification for user {UserId}, course {CourseId}", userId, courseId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create course completion notification");
         }
     }
 

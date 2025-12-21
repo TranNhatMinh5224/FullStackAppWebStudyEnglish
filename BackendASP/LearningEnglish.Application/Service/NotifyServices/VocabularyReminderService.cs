@@ -1,4 +1,5 @@
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -119,7 +120,8 @@ public class VocabularyReminderService : BackgroundService
                     await notificationService.CreateNotificationAsync(
                         userId: student.UserId,
                         title: reminderData.AppTitle,
-                        message: reminderData.AppContent
+                        message: reminderData.AppContent,
+                        type: NotificationType.VocabularyReminder
                     );
                     sentAppNotifications++;
 

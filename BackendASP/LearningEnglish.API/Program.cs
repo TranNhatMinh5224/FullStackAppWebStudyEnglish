@@ -262,7 +262,6 @@ builder.Services.AddScoped<TempFileCleanupJob>();
 
 // Payment related services
 builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
-builder.Services.AddScoped<IPaymentNotificationService, PaymentNotificationService>();
 builder.Services.AddScoped<IPaymentStrategy, CoursePaymentProcessor>();
 builder.Services.AddScoped<IPaymentStrategy, TeacherPackagePaymentProcessor>();
 
