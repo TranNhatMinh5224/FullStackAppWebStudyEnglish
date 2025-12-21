@@ -310,6 +310,30 @@ namespace LearningEnglish.Infrastructure.Repositories
             return await GetEnrolledCoursesByUserId(userId);
         }
 
+        // Lấy khóa học user đã đăng ký với phân trang
+        public async Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(int userId, PageRequest request)
+        {
+            var query = _context.UserCourses
+                .Where(uc => uc.UserId == userId)
+                .Include(uc => uc.Course)
+                    .ThenInclude(c => c!.Teacher)
+                .Include(uc => uc.Course)
+                    .ThenInclude(c => c!.Lessons)
+                .Select(uc => uc.Course!)
+                .OrderBy(c => c.Title)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                var term = request.SearchTerm.ToLower();
+                query = query.Where(c =>
+                    c.Title.ToLower().Contains(term) ||
+                    (c.ClassCode != null && c.ClassCode.ToLower().Contains(term)));
+            }
+
+            return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
+        }
+
 
         // Kiểm tra user đã đăng ký khóa học chưa 
 

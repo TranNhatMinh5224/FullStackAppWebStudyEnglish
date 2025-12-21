@@ -26,6 +26,9 @@ namespace LearningEnglish.Application.Interface
         Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, PageRequest request);
 
         Task<IEnumerable<Course>> GetEnrolledCoursesByUser(int userId);
+        
+        // Lấy khóa học đã đăng ký của user với phân trang
+        Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(int userId, PageRequest request);
 
         // === KIỂM TRA & ĐĂNG KÝ ===
         Task<bool> IsUserEnrolled(int courseId, int userId);

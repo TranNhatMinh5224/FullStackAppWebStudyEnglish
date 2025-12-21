@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
+using LearningEnglish.Application.Common.Pagination;
 using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
@@ -61,15 +62,15 @@ namespace LearningEnglish.API.Controller.User
                 : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/enroll/my-courses - Lấy danh sách khóa học đã đăng ký
+        // GET: api/user/enroll/my-courses - Lấy danh sách khóa học đã đăng ký với phân trang
         [HttpGet("my-courses")]
-        public async Task<IActionResult> GetMyEnrolledCourses()
+        public async Task<IActionResult> GetMyEnrolledCourses([FromQuery] PageRequest request)
         {
             var userId = GetCurrentUserId();
             if (userId == 0)
                 return Unauthorized(new { message = "Invalid user credentials" });
 
-            var result = await _enrollmentQueryService.GetMyEnrolledCoursesAsync(userId);
+            var result = await _enrollmentQueryService.GetMyEnrolledCoursesPagedAsync(userId, request);
 
             return result.Success
                 ? Ok(result)
