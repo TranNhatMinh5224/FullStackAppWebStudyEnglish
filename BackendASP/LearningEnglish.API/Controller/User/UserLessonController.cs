@@ -28,7 +28,7 @@ namespace LearningEnglish.API.Controller.User
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out int userId))
             {
-                throw new UnauthorizedAccessException("Invalid user credentials");
+                return 0;
             }
             return userId;
         }
@@ -38,7 +38,7 @@ namespace LearningEnglish.API.Controller.User
             var userRole = User.GetPrimaryRole();
             if (string.IsNullOrEmpty(userRole))
             {
-                throw new UnauthorizedAccessException("User role not found");
+                return string.Empty;
             }
             return userRole;
         }

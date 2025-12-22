@@ -52,17 +52,9 @@ namespace LearningEnglish.API.Controller.User
         [HttpPost("{moduleId}/start")]
         public async Task<IActionResult> StartModule(int moduleId)
         {
-            try
-            {
-                var userId = GetCurrentUserId();
-                await _moduleProgressService.StartAndCompleteModuleAsync(userId, moduleId);
-                return Ok(new { message = "Module started successfully" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error starting module {ModuleId}", moduleId);
-                return StatusCode(500, new { message = "Failed to start module" });
-            }
+            var userId = GetCurrentUserId();
+            var result = await _moduleProgressService.StartAndCompleteModuleAsync(userId, moduleId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

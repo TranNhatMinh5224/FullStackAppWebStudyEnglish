@@ -47,7 +47,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         {
             var userId = GetCurrentUserId();
             var result = await _lectureService.GetLecturesByModuleIdAsync(moduleId, userId);
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // GET: api/atlecture/module/{moduleId}/tree - lấy cây lecture theo module ID
@@ -56,16 +56,13 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         {
             var userId = GetCurrentUserId();
             var result = await _lectureService.GetLectureTreeByModuleIdAsync(moduleId, userId);
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // POST: api/atlecture - tạo mới lecture (Admin/Teacher)
         [HttpPost]
         public async Task<IActionResult> CreateLecture([FromBody] CreateLectureDto createLectureDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userId = GetCurrentUserId();
             var result = await _lectureService.CreateLectureAsync(createLectureDto, userId);
             return result.Success
@@ -77,9 +74,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPost("bulk")]
         public async Task<IActionResult> BulkCreateLectures([FromBody] BulkCreateLecturesDto bulkCreateDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userId = GetCurrentUserId();
             var result = await _lectureService.BulkCreateLecturesAsync(bulkCreateDto, userId);
 
@@ -92,9 +86,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPut("{lectureId}")]
         public async Task<IActionResult> UpdateLecture(int lectureId, [FromBody] UpdateLectureDto updateLectureDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
             var result = await _lectureService.UpdateLectureWithAuthorizationAsync(lectureId, updateLectureDto, userId, userRole);
@@ -115,9 +106,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPost("reorder")]
         public async Task<IActionResult> ReorderLectures([FromBody] List<ReorderLectureDto> reorderDtos)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
             var result = await _lectureService.ReorderLecturesAsync(reorderDtos, userId, userRole);

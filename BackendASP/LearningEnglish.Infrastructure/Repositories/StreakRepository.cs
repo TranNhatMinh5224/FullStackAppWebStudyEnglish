@@ -38,5 +38,17 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             return await _context.Streaks.AnyAsync(s => s.UserId == userId);
         }
+
+        public async Task<List<Streak>> GetUsersAtRiskOfLosingStreakAsync(int minStreak = 3)
+        {
+            var yesterday = DateTime.UtcNow.Date.AddDays(-1);
+            
+            return await _context.Streaks
+                .Include(s => s.User)
+                .Where(s => s.CurrentStreak >= minStreak 
+                    && s.LastActivityDate.HasValue 
+                    && s.LastActivityDate.Value.Date == yesterday)
+                .ToListAsync();
+        }
     }
 }

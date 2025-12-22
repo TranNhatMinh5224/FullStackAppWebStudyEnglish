@@ -21,9 +21,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPost]
         public async Task<IActionResult> CreateQuizSection([FromBody] CreateQuizSectionDto createDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _quizSectionService.CreateQuizSectionAsync(createDto);
             return result.Success
                 ? CreatedAtAction(nameof(GetQuizSectionById), new { id = result.Data?.QuizSectionId }, result)
@@ -50,9 +47,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateQuizSection(int id, [FromBody] UpdateQuizSectionDto updateDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _quizSectionService.UpdateQuizSectionAsync(id, updateDto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

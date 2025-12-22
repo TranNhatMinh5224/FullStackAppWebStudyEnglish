@@ -42,9 +42,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPost("create")]
         public async Task<IActionResult> CreateQuiz([FromBody] QuizCreateDto quizCreate)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userRole = GetCurrentUserRole();
             int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
 
@@ -56,9 +53,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPut("update/{quizId}")]
         public async Task<IActionResult> UpdateQuiz(int quizId, [FromBody] QuizUpdateDto quizUpdate)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userRole = GetCurrentUserRole();
             int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
 

@@ -47,5 +47,12 @@ namespace LearningEnglish.Application.Service
             var body = _templateService.GenerateVocabularyReminderTemplate(studentName, dueCount);
             await _emailSender.SendEmailAsync(toEmail, subject, body);
         }
+
+        public async Task SendStreakReminderEmailAsync(string toEmail, string userName, int currentStreak, int longestStreak)
+        {
+            var subject = $"🔥 Đừng để mất streak {currentStreak} ngày của bạn!";
+            var body = _templateService.GenerateStreakReminderTemplate(userName, currentStreak, longestStreak);
+            await _emailSender.SendEmailAsync(toEmail, subject, body);
+        }
     }
 }

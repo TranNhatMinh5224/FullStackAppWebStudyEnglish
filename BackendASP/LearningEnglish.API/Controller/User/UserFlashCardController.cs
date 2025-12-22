@@ -25,7 +25,8 @@ namespace LearningEnglish.API.Controller.User
 
         private int GetCurrentUserId()
         {
-            return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
         // GET: api/user/flashcard/{id} - lấy flashcard theo ID
@@ -34,7 +35,7 @@ namespace LearningEnglish.API.Controller.User
         {
             var userId = GetCurrentUserId();
             var result = await _flashCardService.GetFlashCardByIdAsync(id, userId);
-            return result.Success ? Ok(result) : NotFound(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // GET: api/user/flashcard/module/{moduleId} - lấy tất cả flash card theo module ID

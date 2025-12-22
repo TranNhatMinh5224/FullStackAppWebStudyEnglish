@@ -20,10 +20,10 @@ namespace LearningEnglish.Domain.Entities
         public string? AssetType { get; set; }
         
         // Thứ tự hiển thị
-        public int Order { get; set; } = 0;
+        public int? Order { get; set; } = 0;
         
         // Bật/tắt hiển thị
-        public bool IsActive { get; set; } = true;
+        public bool? IsActive { get; set; } = true;
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

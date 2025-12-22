@@ -47,23 +47,13 @@ namespace LearningEnglish.API.Controller.User
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
-                throw new UnauthorizedAccessException("Invalid user credentials");
-            }
-            return userId;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
         // POST: api/payment/process - tạo yêu cầu thanh toán
         [HttpPost("process")]
         public async Task<IActionResult> ProcessPayment([FromBody] requestPayment request)
         {
-            var validationResult = await _requestValidator.ValidateAsync(request);
-            if (!validationResult.IsValid)
-            {
-                return BadRequest(new { Errors = validationResult.Errors.Select(e => e.ErrorMessage) });
-            }
-
             var userId = GetCurrentUserId();
             var result = await _paymentService.ProcessPaymentAsync(userId, request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
@@ -73,12 +63,6 @@ namespace LearningEnglish.API.Controller.User
         [HttpPost("confirm")]
         public async Task<IActionResult> ConfirmPayment([FromBody] CompletePayment paymentDto)
         {
-            var validationResult = await _completeValidator.ValidateAsync(paymentDto);
-            if (!validationResult.IsValid)
-            {
-                return BadRequest(new { Errors = validationResult.Errors.Select(e => e.ErrorMessage) });
-            }
-
             var userId = GetCurrentUserId();
             var result = await _paymentService.ConfirmPaymentAsync(paymentDto, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);

@@ -50,7 +50,7 @@ namespace LearningEnglish.API.Controllers.User
 
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             {
-                throw new UnauthorizedAccessException("Token không hợp lệ");
+                return 0;
             }
 
             return userId;

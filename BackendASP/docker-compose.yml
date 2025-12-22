@@ -6,7 +6,6 @@ services:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=Db_Test_Elearning;Username=postgres;Password=05022004
     depends_on:
       - db
 
@@ -16,7 +15,7 @@ services:
     environment:
       POSTGRES_DB: Db_Test_Elearning
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 05022004
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
       - "5433:5432"
     volumes:

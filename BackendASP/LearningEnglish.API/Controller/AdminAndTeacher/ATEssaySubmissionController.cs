@@ -23,17 +23,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpGet("essay/{essayId}/paged")]
         public async Task<IActionResult> GetSubmissionsByEssayPaged(
             int essayId,
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? searchTerm = null)
+            [FromQuery] PageRequest request)
         {
-            var request = new PageRequest
-            {
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                SearchTerm = searchTerm
-            };
-
             var result = await _essaySubmissionService.GetSubmissionsByEssayIdPagedAsync(essayId, request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

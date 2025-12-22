@@ -40,9 +40,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             var userRole = GetCurrentUserRole();
             _logger.LogInformation("{UserRole} {UserId} đang tạo Assessment mới: {Title}", userRole, GetCurrentUserId(), createAssessmentDto.Title);
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
             var result = await _assessmentService.CreateAssessment(createAssessmentDto, teacherId);
 
@@ -90,9 +87,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         {
             var userRole = GetCurrentUserRole();
             _logger.LogInformation("{UserRole} {UserId} đang cập nhật Assessment {AssessmentId}", userRole, GetCurrentUserId(), assessmentId);
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
             var result = await _assessmentService.UpdateAssessment(assessmentId, updateAssessmentDto);
 

@@ -40,9 +40,6 @@ namespace LearningEnglish.API.Controller.Admin
         [HttpPost]
         public async Task<IActionResult> CreateTeacherPackage([FromBody] CreateTeacherPackageDto createDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _teacherPackageService.CreateTeacherPackageAsync(createDto);
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
@@ -51,8 +48,6 @@ namespace LearningEnglish.API.Controller.Admin
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTeacherPackage(int id, [FromBody] UpdateTeacherPackageDto teacherPackageDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
             var result = await _teacherPackageService.UpdateTeacherPackageAsync(id, teacherPackageDto);
             return result.Success

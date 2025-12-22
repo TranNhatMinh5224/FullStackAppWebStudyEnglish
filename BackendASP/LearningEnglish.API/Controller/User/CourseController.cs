@@ -33,9 +33,6 @@ namespace LearningEnglish.API.Controller.User
         [HttpPost("course")]
         public async Task<IActionResult> EnrollInCourse([FromBody] EnrollCourseDto enrollDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userId = GetCurrentUserId();
             if (userId == 0)
                 return Unauthorized(new { message = "Invalid user credentials" });
@@ -81,9 +78,6 @@ namespace LearningEnglish.API.Controller.User
         [HttpPost("join-by-class-code")]
         public async Task<IActionResult> JoincourseByClassCode([FromBody] EnrollCourseByClassCodeDto joinDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userId = GetCurrentUserId();
             if (userId == 0)
                 return Unauthorized(new { message = "Invalid user credentials" });

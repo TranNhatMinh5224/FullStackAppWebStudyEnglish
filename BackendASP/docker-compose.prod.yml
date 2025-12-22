@@ -1,0 +1,163 @@
+version: '3.8'
+
+# ============================================================================
+# PRODUCTION ENVIRONMENT - Docker Compose
+# ============================================================================
+# For production deployment
+# Usage: docker-compose -f docker-compose.prod.yml up -d
+# IMPORTANT: Use with external secret management (Azure Key Vault, etc.)
+# ============================================================================
+
+services:
+  # PostgreSQL Database (Consider using managed service like Azure Database)
+  db:
+    image: postgres:15
+    container_name: learningenglish-db-prod
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    networks:
+      - learningenglish-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 2G
+
+  # ASP.NET Core API - Primary Instance
+  api:
+    image: learningenglish-api:${IMAGE_TAG:-latest}
+    container_name: learningenglish-api-prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      # Database
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD};Ssl Mode=Require;Trust Server Certificate=false;Maximum Pool Size=100;Minimum Pool Size=10
+      # JWT
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      # SMTP
+      - Smtp__Host=${SMTP_HOST}
+      - Smtp__Port=${SMTP_PORT}
+      - Smtp__User=${SMTP_USER}
+      - Smtp__Password=${SMTP_PASSWORD}
+      - Smtp__EnableSsl=${SMTP_ENABLE_SSL}
+      - Smtp__FromName=${SMTP_FROM_NAME}
+      # MinIO (use managed service in production)
+      - MinIO__Endpoint=${MINIO_ENDPOINT}
+      - MinIO__AccessKey=${MINIO_ACCESS_KEY}
+      - MinIO__SecretKey=${MINIO_SECRET_KEY}
+      - MinIO__UseSSL=${MINIO_USE_SSL}
+      - Minio__BaseUrl=${MINIO_BASE_URL}
+      # Azure Speech
+      - AzureSpeech__SubscriptionKey=${AZURE_SPEECH_KEY}
+      - AzureSpeech__Region=${AZURE_SPEECH_REGION}
+      # External APIs
+      - Cloudinary__CloudName=${CLOUDINARY_CLOUD_NAME}
+      - Cloudinary__ApiKey=${CLOUDINARY_API_KEY}
+      - Cloudinary__ApiSecret=${CLOUDINARY_API_SECRET}
+      - OxfordDictionary__BaseUrl=${OXFORD_BASE_URL}
+      - OxfordDictionary__AppId=${OXFORD_APP_ID}
+      - OxfordDictionary__AppKey=${OXFORD_APP_KEY}
+      - Unsplash__ApplicationId=${UNSPLASH_APPLICATION_ID}
+      - Unsplash__AccessKey=${UNSPLASH_ACCESS_KEY}
+      - Unsplash__SecretKey=${UNSPLASH_SECRET_KEY}
+      - Unsplash__BaseUrl=${UNSPLASH_BASE_URL}
+      # OAuth
+      - GoogleAuth__ClientId=${GOOGLE_CLIENT_ID}
+      - GoogleAuth__ClientSecret=${GOOGLE_CLIENT_SECRET}
+      - GoogleAuth__RedirectUri=${GOOGLE_REDIRECT_URI}
+      - FacebookAuth__AppId=${FACEBOOK_APP_ID}
+      - FacebookAuth__AppSecret=${FACEBOOK_APP_SECRET}
+      - FacebookAuth__RedirectUri=${FACEBOOK_REDIRECT_URI}
+      # Payment
+      - PayOS__ClientId=${PAYOS_CLIENT_ID}
+      - PayOS__ApiKey=${PAYOS_API_KEY}
+      - PayOS__ChecksumKey=${PAYOS_CHECKSUM_KEY}
+      - PayOS__ApiUrl=${PAYOS_API_URL}
+      - PayOS__ReturnUrl=${PAYOS_RETURN_URL}
+      - PayOS__CancelUrl=${PAYOS_CANCEL_URL}
+      # Frontend
+      - Frontend__BaseUrl=${FRONTEND_BASE_URL}
+      # Logging
+      - Logging__LogLevel__Default=${LOG_LEVEL_DEFAULT:-Warning}
+      - Logging__LogLevel__Microsoft=${LOG_LEVEL_MICROSOFT:-Error}
+      # Monitoring
+      - ApplicationInsights__InstrumentationKey=${APP_INSIGHTS_KEY}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - learningenglish-network
+    volumes:
+      - ./logs:/app/logs
+    restart: always
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 2G
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Database Backup Service (runs daily backups)
+  db-backup:
+    image: postgres:15
+    container_name: learningenglish-db-backup
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    networks:
+      - learningenglish-network
+    command: sh -c "chmod +x /backup.sh && crond -f -l 2"
+    restart: always
+
+networks:
+  learningenglish-network:
+    driver: bridge
+
+volumes:
+  postgres_prod_data:
+    driver: local
+  redis_prod_data:
+    driver: local

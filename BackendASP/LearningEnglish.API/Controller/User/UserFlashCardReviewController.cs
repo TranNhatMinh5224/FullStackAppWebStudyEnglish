@@ -25,7 +25,8 @@ namespace LearningEnglish.API.Controller.User
 
         private int GetCurrentUserId()
         {
-            return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
         // bắt đầu học module mới
@@ -47,7 +48,7 @@ namespace LearningEnglish.API.Controller.User
             _logger.LogInformation("User {UserId} đang lấy danh sách từ cần ôn tập", userId);
 
             var result = await _reviewService.GetDueFlashCardsAsync(userId);
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // review flashcard
@@ -59,7 +60,7 @@ namespace LearningEnglish.API.Controller.User
                 userId, reviewDto.FlashCardId, reviewDto.Quality);
 
             var result = await _reviewService.ReviewFlashCardAsync(userId, reviewDto);
-            return result.Success ? Ok(result) : BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // lấy thống kê review
@@ -70,7 +71,7 @@ namespace LearningEnglish.API.Controller.User
             _logger.LogInformation("User {UserId} đang lấy thống kê review", userId);
 
             var result = await _reviewService.GetReviewStatisticsAsync(userId);
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // lấy danh sách từ đã thuộc
@@ -81,7 +82,7 @@ namespace LearningEnglish.API.Controller.User
             _logger.LogInformation("User {UserId} đang lấy danh sách từ đã thuộc", userId);
 
             var result = await _reviewService.GetMasteredFlashCardsAsync(userId);
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

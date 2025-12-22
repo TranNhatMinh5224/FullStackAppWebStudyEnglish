@@ -1,4 +1,5 @@
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Common;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -42,7 +43,7 @@ public class ModuleProgressService : IModuleProgressService
     /// <summary>
     /// Đánh dấu module hoàn thành và tự động cập nhật Lesson + Course progress
     /// </summary>
-    public async Task CompleteModuleAsync(int userId, int moduleId)
+    public async Task<ServiceResponse<object>> CompleteModuleAsync(int userId, int moduleId)
     {
         try
         {
@@ -51,7 +52,12 @@ public class ModuleProgressService : IModuleProgressService
             if (module == null)
             {
                 _logger.LogWarning("Module {ModuleId} không tồn tại", moduleId);
-                return;
+                return new ServiceResponse<object>
+                {
+                    Success = false,
+                    StatusCode = 404,
+                    Message = "Module không tồn tại"
+                };
             }
 
             // 2. Đánh dấu module hoàn thành
@@ -88,18 +94,30 @@ public class ModuleProgressService : IModuleProgressService
 
             _logger.LogInformation("✅ User {UserId} hoàn thành module {ModuleId} - CẦN GỬI NOTIFICATION", 
                 userId, moduleId);
+                
+            return new ServiceResponse<object>
+            {
+                Success = true,
+                StatusCode = 200,
+                Message = "Module completed successfully"
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi hoàn thành module {ModuleId} cho user {UserId}", moduleId, userId);
-            throw;
+            return new ServiceResponse<object>
+            {
+                Success = false,
+                StatusCode = 500,
+                Message = "Lỗi khi hoàn thành module"
+            };
         }
     }
 
     /// <summary>
     /// Đánh dấu module bắt đầu (khi user vào module lần đầu)
     /// </summary>
-    public async Task StartModuleAsync(int userId, int moduleId)
+    public async Task<ServiceResponse<object>> StartModuleAsync(int userId, int moduleId)
     {
         try
         {
@@ -116,18 +134,30 @@ public class ModuleProgressService : IModuleProgressService
                 await _moduleCompletionRepo.AddAsync(moduleCompletion);
                 _logger.LogInformation("User {UserId} bắt đầu module {ModuleId}", userId, moduleId);
             }
+            
+            return new ServiceResponse<object>
+            {
+                Success = true,
+                StatusCode = 200,
+                Message = "Module started successfully"
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi bắt đầu module {ModuleId} cho user {UserId}", moduleId, userId);
-            throw;
+            return new ServiceResponse<object>
+            {
+                Success = false,
+                StatusCode = 500,
+                Message = "Lỗi khi bắt đầu module"
+            };
         }
     }
 
     /// <summary>
     /// Cập nhật tiến độ video trong lesson
     /// </summary>
-    public async Task UpdateVideoProgressAsync(int userId, int lessonId, int positionSeconds, float videoPercentage)
+    public async Task<ServiceResponse<object>> UpdateVideoProgressAsync(int userId, int lessonId, int positionSeconds, float videoPercentage)
     {
         try
         {
@@ -149,11 +179,23 @@ public class ModuleProgressService : IModuleProgressService
                 lessonCompletion.MarkVideoProgress(positionSeconds, videoPercentage);
                 await _lessonCompletionRepo.UpdateAsync(lessonCompletion);
             }
+            
+            return new ServiceResponse<object>
+            {
+                Success = true,
+                StatusCode = 200,
+                Message = "Video progress updated successfully"
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi cập nhật video progress lesson {LessonId} cho user {UserId}", lessonId, userId);
-            throw;
+            return new ServiceResponse<object>
+            {
+                Success = false,
+                StatusCode = 500,
+                Message = "Lỗi khi cập nhật tiến độ video"
+            };
         }
     }
 
@@ -161,7 +203,7 @@ public class ModuleProgressService : IModuleProgressService
     /// Start module và tự động complete nếu là FlashCard/Lecture/Video/Reading
     /// Quiz/Essay chỉ start, không auto-complete
     /// </summary>
-    public async Task StartAndCompleteModuleAsync(int userId, int moduleId)
+    public async Task<ServiceResponse<object>> StartAndCompleteModuleAsync(int userId, int moduleId)
     {
         try
         {
@@ -170,7 +212,12 @@ public class ModuleProgressService : IModuleProgressService
             if (module == null)
             {
                 _logger.LogWarning("Module {ModuleId} không tồn tại", moduleId);
-                return;
+                return new ServiceResponse<object>
+                {
+                    Success = false,
+                    StatusCode = 404,
+                    Message = "Module không tồn tại"
+                };
             }
 
             // Start module
@@ -194,11 +241,23 @@ public class ModuleProgressService : IModuleProgressService
                     "📝 User {UserId} started {ContentType} module {ModuleId} - requires submission to complete",
                     userId, module.ContentType, moduleId);
             }
+            
+            return new ServiceResponse<object>
+            {
+                Success = true,
+                StatusCode = 200,
+                Message = "Module started successfully"
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi start module {ModuleId} cho user {UserId}", moduleId, userId);
-            throw;
+            return new ServiceResponse<object>
+            {
+                Success = false,
+                StatusCode = 500,
+                Message = "Lỗi khi bắt đầu module"
+            };
         }
     }
 
@@ -247,7 +306,7 @@ public class ModuleProgressService : IModuleProgressService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi cập nhật lesson progress {LessonId} cho user {UserId}", lessonId, userId);
-            throw;
+            // Don't throw - lesson progress update is non-critical, module is already completed
         }
     }
 
@@ -300,7 +359,7 @@ public class ModuleProgressService : IModuleProgressService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi cập nhật course progress {CourseId} cho user {UserId}", courseId, userId);
-            throw;
+            // Don't throw - course progress update is non-critical, module is already completed
         }
     }
 

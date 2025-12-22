@@ -23,7 +23,7 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // GET: api/user/teacher-packages - lấy danh sách tất cả gói dành cho giáo viên
-        [HttpGet("teacher-packages")]
+        [HttpGet]
         
         public async Task<IActionResult> GetTeacherPackages()
         {
@@ -32,15 +32,10 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // GET: api/user/teacher-packages/{id} - lấy chi tiết gói dành cho giáo viên theo ID
-        [HttpGet("teacher-packages/{id}")]
+        [HttpGet("{id}")]
         
         public async Task<IActionResult> GetTeacherPackageById(int id)
         {
-            if (id <= 0)
-            {
-                return BadRequest(new { message = "Invalid package ID" });
-            }
-
             var result = await _teacherPackageService.GetTeacherPackageByIdAsync(id);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

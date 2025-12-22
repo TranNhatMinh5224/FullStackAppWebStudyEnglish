@@ -1,0 +1,130 @@
+version: '3.8'
+
+# ============================================================================
+# DEVELOPMENT ENVIRONMENT - Docker Compose
+# ============================================================================
+# For local development with Docker
+# Usage: docker-compose -f docker-compose.dev.yml up -d
+# ============================================================================
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    container_name: learningenglish-db-dev
+    environment:
+      POSTGRES_DB: ${DB_NAME:-LearningEnglish_Dev}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dev123456}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    networks:
+      - learningenglish-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO (Local S3-compatible storage)
+  minio:
+    image: minio/minio:latest
+    container_name: learningenglish-minio-dev
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_dev_data:/data
+    networks:
+      - learningenglish-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ASP.NET Core API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: learningenglish-api-dev
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Database
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${DB_NAME:-LearningEnglish_Dev};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-dev123456};Ssl Mode=Disable;Trust Server Certificate=true
+      # JWT
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=${JWT_ISSUER:-ELearningEnglish}
+      - Jwt__Audience=${JWT_AUDIENCE:-ELearningEnglishAudience}
+      # SMTP
+      - Smtp__Host=${SMTP_HOST}
+      - Smtp__Port=${SMTP_PORT}
+      - Smtp__User=${SMTP_USER}
+      - Smtp__Password=${SMTP_PASSWORD}
+      - Smtp__EnableSsl=${SMTP_ENABLE_SSL:-true}
+      - Smtp__FromName=${SMTP_FROM_NAME}
+      # MinIO
+      - MinIO__Endpoint=minio:9000
+      - MinIO__AccessKey=${MINIO_ACCESS_KEY:-minioadmin}
+      - MinIO__SecretKey=${MINIO_SECRET_KEY:-minioadmin}
+      - MinIO__UseSSL=false
+      - Minio__BaseUrl=http://localhost:9000
+      # Azure Speech
+      - AzureSpeech__SubscriptionKey=${AZURE_SPEECH_KEY}
+      - AzureSpeech__Region=${AZURE_SPEECH_REGION}
+      # External APIs
+      - Cloudinary__CloudName=${CLOUDINARY_CLOUD_NAME}
+      - Cloudinary__ApiKey=${CLOUDINARY_API_KEY}
+      - Cloudinary__ApiSecret=${CLOUDINARY_API_SECRET}
+      - OxfordDictionary__BaseUrl=${OXFORD_BASE_URL}
+      - OxfordDictionary__AppId=${OXFORD_APP_ID}
+      - OxfordDictionary__AppKey=${OXFORD_APP_KEY}
+      - Unsplash__ApplicationId=${UNSPLASH_APPLICATION_ID}
+      - Unsplash__AccessKey=${UNSPLASH_ACCESS_KEY}
+      - Unsplash__SecretKey=${UNSPLASH_SECRET_KEY}
+      - Unsplash__BaseUrl=${UNSPLASH_BASE_URL}
+      # OAuth
+      - GoogleAuth__ClientId=${GOOGLE_CLIENT_ID}
+      - GoogleAuth__ClientSecret=${GOOGLE_CLIENT_SECRET}
+      - GoogleAuth__RedirectUri=${GOOGLE_REDIRECT_URI}
+      - FacebookAuth__AppId=${FACEBOOK_APP_ID}
+      - FacebookAuth__AppSecret=${FACEBOOK_APP_SECRET}
+      - FacebookAuth__RedirectUri=${FACEBOOK_REDIRECT_URI}
+      # Payment
+      - PayOS__ClientId=${PAYOS_CLIENT_ID}
+      - PayOS__ApiKey=${PAYOS_API_KEY}
+      - PayOS__ChecksumKey=${PAYOS_CHECKSUM_KEY}
+      - PayOS__ApiUrl=${PAYOS_API_URL}
+      - PayOS__ReturnUrl=${PAYOS_RETURN_URL}
+      - PayOS__CancelUrl=${PAYOS_CANCEL_URL}
+      # Frontend
+      - Frontend__BaseUrl=${FRONTEND_BASE_URL:-http://localhost:3000}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - learningenglish-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+networks:
+  learningenglish-network:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+  minio_dev_data:

@@ -55,9 +55,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPost]
         public async Task<IActionResult> CreateEssay([FromBody] CreateEssayDto createDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userRole = GetCurrentUserRole();
             int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
 
@@ -71,9 +68,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPut("{essayId}")]
         public async Task<IActionResult> UpdateEssay(int essayId, [FromBody] UpdateEssayDto updateDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userRole = GetCurrentUserRole();
             int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
 

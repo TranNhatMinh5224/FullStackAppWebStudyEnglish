@@ -28,12 +28,7 @@ namespace LearningEnglish.API.Controller.User
         [HttpPost("submit")]
         public async Task<IActionResult> SubmitEssay([FromBody] CreateEssaySubmissionDto submissionDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userId = GetCurrentUserId();
-            if (userId == 0)
-                return BadRequest("Không thể lấy thông tin người dùng từ token");
 
             var result = await _essaySubmissionService.CreateSubmissionAsync(submissionDto, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
@@ -44,8 +39,6 @@ namespace LearningEnglish.API.Controller.User
         public async Task<IActionResult> GetSubmission(int submissionId)
         {
             var userId = GetCurrentUserId();
-            if (userId == 0)
-                return BadRequest("Không thể lấy thông tin người dùng từ token");
 
             var result = await _essaySubmissionService.GetSubmissionByIdAsync(submissionId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
@@ -56,8 +49,6 @@ namespace LearningEnglish.API.Controller.User
         public async Task<IActionResult> GetSubmissionStatus(int essayId)
         {
             var userId = GetCurrentUserId();
-            if (userId == 0)
-                return BadRequest("Không thể lấy thông tin người dùng từ token");
 
             var result = await _essaySubmissionService.GetUserSubmissionForEssayAsync(userId, essayId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
@@ -67,12 +58,7 @@ namespace LearningEnglish.API.Controller.User
         [HttpPut("update/{submissionId}")]
         public async Task<IActionResult> UpdateSubmission(int submissionId, [FromBody] UpdateEssaySubmissionDto updateDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var userId = GetCurrentUserId();
-            if (userId == 0)
-                return BadRequest("Không thể lấy thông tin người dùng từ token");
 
             var result = await _essaySubmissionService.UpdateSubmissionAsync(submissionId, updateDto, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
@@ -83,8 +69,6 @@ namespace LearningEnglish.API.Controller.User
         public async Task<IActionResult> DeleteSubmission(int submissionId)
         {
             var userId = GetCurrentUserId();
-            if (userId == 0)
-                return BadRequest("Không thể lấy thông tin người dùng từ token");
 
             var result = await _essaySubmissionService.DeleteSubmissionAsync(submissionId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);

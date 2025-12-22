@@ -6,6 +6,7 @@ namespace LearningEnglish.Domain.Enums
         CourseCompletion,    // Hoàn thành khóa học
         VocabularyReminder,  // Nhắc nhở ôn từ vựng
         AssessmentGraded,    // Nộp bài essay/quiz thành công
-        PaymentSuccess       // Thanh toán thành công
+        PaymentSuccess,      // Thanh toán thành công
+        StreakReminder       // Nhắc nhở streak sắp đứt
     }
 }

@@ -66,20 +66,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> CreateFlashCard(
             [FromBody] CreateFlashCardDto createFlashCardDto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage)
-                    .ToList();
-
-                return BadRequest(new ServiceResponse<FlashCardDto>
-                {
-                    Success = false,
-                    Message = $"Dữ liệu không hợp lệ: {string.Join(", ", errors)}"
-                });
-            }
-
             var userId = GetCurrentUserId();
             var result = await _flashCardService.CreateFlashCardAsync(createFlashCardDto, userId);
             return result.Success
@@ -93,20 +79,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             int id,
             [FromBody] UpdateFlashCardDto updateFlashCardDto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage)
-                    .ToList();
-
-                return BadRequest(new ServiceResponse<FlashCardDto>
-                {
-                    Success = false,
-                    Message = $"Dữ liệu không hợp lệ: {string.Join(", ", errors)}"
-                });
-            }
-
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
             var result = await _flashCardService.UpdateFlashCardAsync(id, updateFlashCardDto, userId, userRole);
@@ -128,20 +100,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<ActionResult<ServiceResponse<List<FlashCardDto>>>> CreateBulkFlashCards(
             [FromBody] BulkImportFlashCardDto bulkImportDto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage)
-                    .ToList();
-
-                return BadRequest(new ServiceResponse<List<FlashCardDto>>
-                {
-                    Success = false,
-                    Message = $"Dữ liệu không hợp lệ: {string.Join(", ", errors)}"
-                });
-            }
-
             var userId = GetCurrentUserId();
             var userRole = GetCurrentUserRole();
             var result = await _flashCardService.CreateBulkFlashCardsAsync(bulkImportDto, userId, userRole);

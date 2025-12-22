@@ -42,7 +42,7 @@ namespace LearningEnglish.API.Controller.User
         {
             var userId = GetCurrentUserId();
             var result = await _lectureService.GetLecturesByModuleIdAsync(moduleId, userId);
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // GET: api/userlecture/module/{moduleId}/tree - lấy cây lecture theo module ID
@@ -51,7 +51,7 @@ namespace LearningEnglish.API.Controller.User
         {
             var userId = GetCurrentUserId();
             var result = await _lectureService.GetLectureTreeByModuleIdAsync(moduleId, userId);
-            return Ok(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // ❌ Removed CompleteLecture endpoint

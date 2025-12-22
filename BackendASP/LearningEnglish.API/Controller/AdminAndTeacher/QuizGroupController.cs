@@ -21,9 +21,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPost]
         public async Task<IActionResult> CreateQuizGroup([FromBody] CreateQuizGroupDto createDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _quizGroupService.CreateQuizGroupAsync(createDto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -48,9 +45,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateQuizGroup(int id, [FromBody] UpdateQuizGroupDto updateDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _quizGroupService.UpdateQuizGroupAsync(id, updateDto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

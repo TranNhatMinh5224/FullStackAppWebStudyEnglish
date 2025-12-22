@@ -26,7 +26,7 @@ namespace LearningEnglish.API.Controller.User
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
-                throw new UnauthorizedAccessException("User not authenticated");
+                return 0;
             }
             return userId;
         }
@@ -46,6 +46,15 @@ namespace LearningEnglish.API.Controller.User
         {
             var userId = GetCurrentUserId();
             var result = await _streakService.UpdateStreakAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/user/streaks/send-reminders - gửi reminder cho users sắp đứt streak (Admin/Cron job)
+        [HttpPost("send-reminders")]
+        [AllowAnonymous] // Cho phép cron job/admin tool gọi
+        public async Task<IActionResult> SendStreakReminders()
+        {
+            var result = await _streakService.SendStreakRemindersAsync();
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
