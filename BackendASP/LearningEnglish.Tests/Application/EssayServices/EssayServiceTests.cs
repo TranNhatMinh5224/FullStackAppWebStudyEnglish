@@ -104,7 +104,7 @@ public class EssayServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal(404, result.StatusCode);
-        Assert.Contains("Không tìm thấy Essay", result.Message);
+        Assert.Contains("Essay không tồn tại", result.Message);
         Assert.Null(result.Data);
     }
 
@@ -380,7 +380,7 @@ public class EssayServiceTests
             });
 
         _essayRepositoryMock
-            .Setup(x => x.CreateEssayAsync(It.Is<Essay>(e => 
+            .Setup(x => x.CreateEssayAsync(It.Is<Essay>(e =>
                 e.AudioKey == "essays/audios/audio-123" &&
                 e.ImageKey == "essays/images/image-123")))
             .ReturnsAsync(essay);
@@ -539,7 +539,7 @@ public class EssayServiceTests
 
         _essayRepositoryMock
             .Setup(x => x.UpdateEssayAsync(It.IsAny<Essay>()))
-            .ReturnsAsync(It.IsAny<Essay>());
+            .ReturnsAsync(updatedEssay);
 
         _mapperMock
             .Setup(x => x.Map<EssayDto>(It.IsAny<Essay>()))
@@ -578,7 +578,7 @@ public class EssayServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal(404, result.StatusCode);
-        Assert.Contains("Không tìm thấy Essay", result.Message);
+        Assert.Contains("Essay không tồn tại", result.Message);
 
         _essayRepositoryMock.Verify(x => x.UpdateEssayAsync(It.IsAny<Essay>()), Times.Never);
     }
@@ -628,7 +628,7 @@ public class EssayServiceTests
 
         _essayRepositoryMock
             .Setup(x => x.UpdateEssayAsync(It.IsAny<Essay>()))
-            .ReturnsAsync(It.IsAny<Essay>());
+            .ReturnsAsync(updatedEssay);
 
         _mapperMock
             .Setup(x => x.Map<EssayDto>(It.IsAny<Essay>()))
@@ -742,7 +742,7 @@ public class EssayServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal(404, result.StatusCode);
-        Assert.Contains("Không tìm thấy Essay", result.Message);
+        Assert.Contains("Essay không tồn tại", result.Message);
 
         _essayRepositoryMock.Verify(x => x.DeleteEssayAsync(It.IsAny<int>()), Times.Never);
     }

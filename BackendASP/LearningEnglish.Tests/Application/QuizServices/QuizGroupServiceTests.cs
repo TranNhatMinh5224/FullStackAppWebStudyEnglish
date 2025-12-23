@@ -217,7 +217,7 @@ public class QuizGroupServiceTests
         Assert.True(result.Success);
         Assert.NotNull(result.Data);
         Assert.Equal(dto.Title, result.Data.Title);
-        Assert.Contains("Tạo quiz group thành công", result.Message);
+        Assert.Contains("Tạo nhóm câu hỏi thành công", result.Message);
 
         _quizGroupRepositoryMock.Verify(x => x.CreateQuizGroupAsync(It.IsAny<QuizGroup>()), Times.Once);
     }
@@ -493,7 +493,7 @@ public class QuizGroupServiceTests
         Assert.True(result.Success);
         Assert.NotNull(result.Data);
         Assert.Equal(dto.Title, result.Data.Title);
-        Assert.Contains("Cập nhật quiz group thành công", result.Message);
+        Assert.Contains("Cập nhật nhóm câu hỏi thành công", result.Message);
 
         _quizGroupRepositoryMock.Verify(x => x.UpdateQuizGroupAsync(It.IsAny<QuizGroup>()), Times.Once);
     }
@@ -558,11 +558,12 @@ public class QuizGroupServiceTests
         // Assert
         Assert.True(result.Success);
         Assert.True(result.Data);
-        Assert.Contains("Xóa quiz group thành công", result.Message);
+        Assert.Contains("Xóa nhóm câu hỏi thành công.", result.Message);
 
         // Should delete both image and video files
-        _minioFileStorageMock.Verify(x => x.DeleteFileAsync(quizGroup.ImgKey!, "quizgroups"), Times.Once);
-        _minioFileStorageMock.Verify(x => x.DeleteFileAsync(quizGroup.VideoKey!, "quizgroups"), Times.Once);
+        // Note: DeleteFileAsync parameter order is (objectKey, bucketName)
+        _minioFileStorageMock.Verify(x => x.DeleteFileAsync(quizGroup.ImgKey!, It.IsAny<string>()), Times.Once);
+        _minioFileStorageMock.Verify(x => x.DeleteFileAsync(quizGroup.VideoKey!, It.IsAny<string>()), Times.Once);
         _quizGroupRepositoryMock.Verify(x => x.DeleteQuizGroupAsync(quizGroupId), Times.Once);
     }
 

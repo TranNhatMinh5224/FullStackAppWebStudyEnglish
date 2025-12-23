@@ -352,6 +352,16 @@ public class QuizSectionServiceTests
     {
         // Arrange
         var quizSectionId = 1;
+        var quizSection = new QuizSection
+        {
+            QuizSectionId = quizSectionId,
+            QuizId = 1,
+            Title = "Test Section"
+        };
+
+        _quizSectionRepositoryMock
+            .Setup(x => x.GetQuizSectionByIdAsync(quizSectionId))
+            .ReturnsAsync(quizSection);
 
         _quizSectionRepositoryMock
             .Setup(x => x.DeleteQuizSectionAsync(quizSectionId))
@@ -375,17 +385,17 @@ public class QuizSectionServiceTests
         var quizSectionId = 999;
 
         _quizSectionRepositoryMock
-            .Setup(x => x.DeleteQuizSectionAsync(quizSectionId))
-            .ReturnsAsync(false);
+            .Setup(x => x.GetQuizSectionByIdAsync(quizSectionId))
+            .ReturnsAsync((QuizSection?)null);
 
         // Act
         var result = await _quizSectionService.DeleteQuizSectionAsync(quizSectionId);
 
         // Assert
         Assert.False(result.Success);
-        Assert.Contains("Không thể xóa phần quiz", result.Message);
+        Assert.Contains("Không tìm thấy phần quiz", result.Message);
 
-        _quizSectionRepositoryMock.Verify(x => x.DeleteQuizSectionAsync(quizSectionId), Times.Once);
+        _quizSectionRepositoryMock.Verify(x => x.DeleteQuizSectionAsync(It.IsAny<int>()), Times.Never);
     }
 
     #endregion

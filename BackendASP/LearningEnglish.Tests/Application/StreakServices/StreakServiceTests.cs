@@ -163,9 +163,7 @@ public class StreakServiceTests
             .Setup(x => x.UpdateAsync(It.IsAny<Streak>()))
             .Returns(Task.CompletedTask);
 
-        _mapperMock
-            .Setup(x => x.Map<StreakUpdateResultDto>(It.IsAny<Streak>()))
-            .Returns(resultDto);
+        // StreakService builds DTO directly, no mapper needed
 
         // Act
         var result = await _streakService.UpdateStreakAsync(userId);
@@ -250,9 +248,7 @@ public class StreakServiceTests
             .Setup(x => x.UpdateAsync(It.IsAny<Streak>()))
             .Returns(Task.CompletedTask);
 
-        _mapperMock
-            .Setup(x => x.Map<StreakUpdateResultDto>(It.IsAny<Streak>()))
-            .Returns(resultDto);
+        // StreakService builds DTO directly, no mapper needed
 
         // Act
         var result = await _streakService.UpdateStreakAsync(userId);
@@ -306,9 +302,7 @@ public class StreakServiceTests
             .Setup(x => x.UpdateAsync(It.IsAny<Streak>()))
             .Returns(Task.CompletedTask);
 
-        _mapperMock
-            .Setup(x => x.Map<StreakUpdateResultDto>(It.IsAny<Streak>()))
-            .Returns(resultDto);
+        // StreakService builds DTO directly, no mapper needed
 
         // Act
         var result = await _streakService.UpdateStreakAsync(userId);
@@ -351,9 +345,7 @@ public class StreakServiceTests
             .Setup(x => x.CreateAsync(It.IsAny<Streak>()))
             .ReturnsAsync(newStreak);
 
-        _mapperMock
-            .Setup(x => x.Map<StreakUpdateResultDto>(It.IsAny<Streak>()))
-            .Returns(resultDto);
+        // StreakService builds DTO directly, no mapper needed
 
         // Act
         var result = await _streakService.UpdateStreakAsync(userId);

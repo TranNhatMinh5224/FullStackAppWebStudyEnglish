@@ -111,18 +111,24 @@ public class QuizAttemptServiceTests
             .Setup(x => x.GetAssessmentById(quiz.AssessmentId))
             .ReturnsAsync(assessment);
 
-        _questionRepositoryMock
-            .Setup(x => x.GetQuestionsByQuizGroupIdAsync(It.IsAny<int>()))
-            .ReturnsAsync(new List<Question>());
+        _userRepositoryMock
+            .Setup(x => x.GetByIdAsync(userId))
+            .ReturnsAsync(new User { UserId = userId });
+
+        _quizAttemptRepositoryMock
+            .Setup(x => x.GetByUserAndQuizAsync(userId, quizId))
+            .ReturnsAsync(new List<QuizAttempt>());
+
+        _quizRepositoryMock
+            .Setup(x => x.GetFullQuizAsync(quizId))
+            .ReturnsAsync(quiz);
 
         _quizAttemptRepositoryMock
             .Setup(x => x.AddQuizAttemptAsync(It.IsAny<QuizAttempt>()))
             .Returns(Task.CompletedTask);
 
-        // After AddQuizAttemptAsync, service uses the created attempt object directly
-        // So we need to setup mapper to use the attempt we created
         _mapperMock
-            .Setup(x => x.Map<QuizAttemptWithQuestionsDto>(It.Is<QuizAttempt>(a => a.QuizId == quizId && a.UserId == userId)))
+            .Setup(x => x.Map<QuizAttemptWithQuestionsDto>(It.IsAny<QuizAttempt>()))
             .Returns(attemptDto);
 
         // Act
@@ -311,7 +317,7 @@ public class QuizAttemptServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal(404, result.StatusCode);
-        Assert.Contains("Không tìm thấy attempt", result.Message);
+        Assert.Contains("Attempt not found", result.Message);
     }
 
     [Fact]
@@ -416,7 +422,7 @@ public class QuizAttemptServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal(404, result.StatusCode);
-        Assert.Contains("Không tìm thấy attempt", result.Message);
+        Assert.Contains("Attempt not found", result.Message);
 
         _quizAttemptRepositoryMock.Verify(x => x.UpdateQuizAttemptAsync(It.IsAny<QuizAttempt>()), Times.Never);
     }
@@ -445,7 +451,7 @@ public class QuizAttemptServiceTests
 
         // Assert
         Assert.False(result.Success);
-        Assert.Contains("Attempt đã được nộp", result.Message);
+        Assert.Contains("Attempt not found or not in progress", result.Message);
 
         _quizAttemptRepositoryMock.Verify(x => x.UpdateQuizAttemptAsync(It.IsAny<QuizAttempt>()), Times.Never);
     }

@@ -451,7 +451,7 @@ public class TeacherPackageServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal(500, result.StatusCode);
-        Assert.Contains("Không thể xóa gói giáo viên", result.Message);
+        Assert.Contains("Đã xảy ra lỗi khi xóa gói giáo viên", result.Message);
     }
 
     #endregion

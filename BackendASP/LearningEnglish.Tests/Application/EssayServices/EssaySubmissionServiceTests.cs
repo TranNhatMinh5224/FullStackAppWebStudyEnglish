@@ -112,7 +112,7 @@ public class EssaySubmissionServiceTests
         // Assert
         Assert.False(result.Success);
         Assert.Equal(404, result.StatusCode);
-        Assert.Contains("Không tìm thấy submission", result.Message);
+        Assert.Contains("Submission không tồn tại", result.Message);
     }
 
     #endregion
@@ -140,15 +140,15 @@ public class EssaySubmissionServiceTests
             }
         };
 
-        var submissionDtos = new List<EssaySubmissionDto>
+        var submissionListDtos = new List<EssaySubmissionListDto>
         {
-            new EssaySubmissionDto
+            new EssaySubmissionListDto
             {
                 SubmissionId = 1,
                 EssayId = essayId,
                 UserId = 1
             },
-            new EssaySubmissionDto
+            new EssaySubmissionListDto
             {
                 SubmissionId = 2,
                 EssayId = essayId,
@@ -161,8 +161,8 @@ public class EssaySubmissionServiceTests
             .ReturnsAsync(submissions);
 
         _mapperMock
-            .Setup(x => x.Map<List<EssaySubmissionDto>>(submissions))
-            .Returns(submissionDtos);
+            .Setup(x => x.Map<List<EssaySubmissionListDto>>(submissions))
+            .Returns(submissionListDtos);
 
         // Act
         var result = await _essaySubmissionService.GetSubmissionsByEssayIdAsync(essayId);
