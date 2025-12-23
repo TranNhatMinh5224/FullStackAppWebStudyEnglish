@@ -71,7 +71,7 @@ namespace LearningEnglish.Application.Service
                         module.ImageKey
                     );
                 }
-                
+
                 response.Data = moduleDto;
                 response.Message = "Lấy thông tin module thành công";
                 return response;
