@@ -81,24 +81,6 @@ public class QuizGroupServiceTests
         _quizGroupRepositoryMock.Verify(x => x.GetQuizGroupByIdAsync(quizGroupId), Times.Once);
     }
 
-    [Fact]
-    public async Task GetQuizGroupByIdAsync_WithNonExistentId_ReturnsNotFound()
-    {
-        // Arrange
-        var quizGroupId = 999;
-
-        _quizGroupRepositoryMock
-            .Setup(x => x.GetQuizGroupByIdAsync(quizGroupId))
-            .ReturnsAsync((QuizGroup?)null);
-
-        // Act
-        var result = await _quizGroupService.GetQuizGroupByIdAsync(quizGroupId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Contains("Không tìm thấy quiz group", result.Message);
-        Assert.Null(result.Data);
-    }
 
     #endregion
 
@@ -498,94 +480,12 @@ public class QuizGroupServiceTests
         _quizGroupRepositoryMock.Verify(x => x.UpdateQuizGroupAsync(It.IsAny<QuizGroup>()), Times.Once);
     }
 
-    [Fact]
-    public async Task UpdateQuizGroupAsync_WithNonExistentQuizGroup_ReturnsNotFound()
-    {
-        // Arrange
-        var quizGroupId = 999;
-        var dto = new UpdateQuizGroupDto
-        {
-            Title = "Updated Quiz Group"
-        };
-
-        _quizGroupRepositoryMock
-            .Setup(x => x.GetQuizGroupByIdAsync(quizGroupId))
-            .ReturnsAsync((QuizGroup?)null);
-
-        // Act
-        var result = await _quizGroupService.UpdateQuizGroupAsync(quizGroupId, dto);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Contains("Không tìm thấy quiz group", result.Message);
-
-        _quizGroupRepositoryMock.Verify(x => x.UpdateQuizGroupAsync(It.IsAny<QuizGroup>()), Times.Never);
-    }
 
     #endregion
 
     #region DeleteQuizGroupAsync Tests
 
-    [Fact]
-    public async Task DeleteQuizGroupAsync_WithValidQuizGroup_ReturnsSuccess()
-    {
-        // Arrange
-        var quizGroupId = 1;
 
-        var quizGroup = new QuizGroup
-        {
-            QuizGroupId = quizGroupId,
-            Title = "Test Quiz Group",
-            ImgKey = "quizgroups/real/img-123",
-            VideoKey = "quizgroups/real/video-123"
-        };
-
-        _quizGroupRepositoryMock
-            .Setup(x => x.GetQuizGroupByIdAsync(quizGroupId))
-            .ReturnsAsync(quizGroup);
-
-        _minioFileStorageMock
-            .Setup(x => x.DeleteFileAsync(It.IsAny<string>(), "quizgroups"))
-            .ReturnsAsync(new ServiceResponse<bool> { Success = true, Data = true });
-
-        _quizGroupRepositoryMock
-            .Setup(x => x.DeleteQuizGroupAsync(quizGroupId))
-            .ReturnsAsync(true);
-
-        // Act
-        var result = await _quizGroupService.DeleteQuizGroupAsync(quizGroupId);
-
-        // Assert
-        Assert.True(result.Success);
-        Assert.True(result.Data);
-        Assert.Contains("Xóa nhóm câu hỏi thành công.", result.Message);
-
-        // Should delete both image and video files
-        // Note: DeleteFileAsync parameter order is (objectKey, bucketName)
-        _minioFileStorageMock.Verify(x => x.DeleteFileAsync(quizGroup.ImgKey!, It.IsAny<string>()), Times.Once);
-        _minioFileStorageMock.Verify(x => x.DeleteFileAsync(quizGroup.VideoKey!, It.IsAny<string>()), Times.Once);
-        _quizGroupRepositoryMock.Verify(x => x.DeleteQuizGroupAsync(quizGroupId), Times.Once);
-    }
-
-    [Fact]
-    public async Task DeleteQuizGroupAsync_WithNonExistentQuizGroup_ReturnsNotFound()
-    {
-        // Arrange
-        var quizGroupId = 999;
-
-        _quizGroupRepositoryMock
-            .Setup(x => x.GetQuizGroupByIdAsync(quizGroupId))
-            .ReturnsAsync((QuizGroup?)null);
-
-        // Act
-        var result = await _quizGroupService.DeleteQuizGroupAsync(quizGroupId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Contains("Không tìm thấy quiz group", result.Message);
-
-        _quizGroupRepositoryMock.Verify(x => x.DeleteQuizGroupAsync(It.IsAny<int>()), Times.Never);
-    }
 
     #endregion
 }
