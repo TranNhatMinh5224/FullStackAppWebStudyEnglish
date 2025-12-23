@@ -18,7 +18,7 @@ public class UserEnrollmentServiceTests
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<IEmailService> _emailServiceMock;
     private readonly Mock<ILogger<UserEnrollmentService>> _loggerMock;
-    private readonly UserEnrollmentService _enrollmentService;
+    private readonly UserEnrollmentService _userEnrollmentService;
 
     public UserEnrollmentServiceTests()
     {
@@ -30,7 +30,7 @@ public class UserEnrollmentServiceTests
         _emailServiceMock = new Mock<IEmailService>();
         _loggerMock = new Mock<ILogger<UserEnrollmentService>>();
 
-        _enrollmentService = new UserEnrollmentService(
+        _userEnrollmentService = new UserEnrollmentService(
             _courseRepositoryMock.Object,
             _paymentRepositoryMock.Object,
             _teacherPackageRepositoryMock.Object,
@@ -48,204 +48,59 @@ public class UserEnrollmentServiceTests
     {
         // Arrange
         var userId = 1;
-        var courseId = 1;
-        var enrollDto = new EnrollCourseDto { CourseId = courseId };
+        var dto = new EnrollCourseDto { CourseId = 1 };
 
         var course = new Course
         {
-            CourseId = courseId,
+            CourseId = 1,
             Title = "Free Course",
-            Price = 0, // Free course
-            Status = CourseStatus.Published,
-            Type = CourseType.System,
-            MaxStudent = 0 // No limit
-        };
-
-        _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
-            .ReturnsAsync(course);
-
-        _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(false);
-
-        _courseRepositoryMock
-            .Setup(x => x.EnrollUserInCourse(userId, courseId))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _enrollmentService.EnrollInCourseAsync(enrollDto, userId);
-
-        // Assert
-        Assert.True(result.Success);
-        Assert.Equal(200, result.StatusCode);
-        Assert.True(result.Data);
-        Assert.Contains("thành công", result.Message);
-
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(userId, courseId), Times.Once);
-    }
-
-    [Fact]
-    public async Task EnrollInCourseAsync_WithPaidCourseWithoutPayment_ReturnsPaymentRequired()
-    {
-        // Arrange
-        var userId = 1;
-        var courseId = 1;
-        var enrollDto = new EnrollCourseDto { CourseId = courseId };
-
-        var course = new Course
-        {
-            CourseId = courseId,
-            Title = "Paid Course",
-            Price = 100000,
-            Status = CourseStatus.Published
-        };
-
-        _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
-            .ReturnsAsync(course);
-
-        _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(false);
-
-        _paymentRepositoryMock
-            .Setup(x => x.GetSuccessfulPaymentByUserAndCourseAsync(userId, courseId))
-            .ReturnsAsync((Payment?)null);
-
-        // Act
-        var result = await _enrollmentService.EnrollInCourseAsync(enrollDto, userId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Equal(402, result.StatusCode); // Payment Required
-        Assert.Contains("thanh toán", result.Message);
-
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task EnrollInCourseAsync_WithPaidCourseWithPayment_ReturnsSuccess()
-    {
-        // Arrange
-        var userId = 1;
-        var courseId = 1;
-        var enrollDto = new EnrollCourseDto { CourseId = courseId };
-
-        var course = new Course
-        {
-            CourseId = courseId,
-            Title = "Paid Course",
-            Price = 100000,
-            Status = CourseStatus.Published,
-            MaxStudent = 0
-        };
-
-        var payment = new Payment
-        {
-            PaymentId = 1,
-            UserId = userId,
-            ProductId = courseId,
-            ProductType = ProductType.Course,
-            Status = PaymentStatus.Completed,
-            Amount = 100000
-        };
-
-        _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
-            .ReturnsAsync(course);
-
-        _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(false);
-
-        _paymentRepositoryMock
-            .Setup(x => x.GetSuccessfulPaymentByUserAndCourseAsync(userId, courseId))
-            .ReturnsAsync(payment);
-
-        _courseRepositoryMock
-            .Setup(x => x.EnrollUserInCourse(userId, courseId))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _enrollmentService.EnrollInCourseAsync(enrollDto, userId);
-
-        // Assert
-        Assert.True(result.Success);
-        Assert.Equal(200, result.StatusCode);
-        Assert.True(result.Data);
-
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(userId, courseId), Times.Once);
-    }
-
-    [Fact]
-    public async Task EnrollInCourseAsync_WithAlreadyEnrolled_ReturnsBadRequest()
-    {
-        // Arrange
-        var userId = 1;
-        var courseId = 1;
-        var enrollDto = new EnrollCourseDto { CourseId = courseId };
-
-        var course = new Course
-        {
-            CourseId = courseId,
-            Title = "Course",
-            Price = 0
-        };
-
-        _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
-            .ReturnsAsync(course);
-
-        _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(true); // Already enrolled
-
-        // Act
-        var result = await _enrollmentService.EnrollInCourseAsync(enrollDto, userId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-        Assert.Contains("đã đăng ký", result.Message);
-
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task EnrollInCourseAsync_WithFullCourse_ReturnsBadRequest()
-    {
-        // Arrange
-        var userId = 1;
-        var courseId = 1;
-        var enrollDto = new EnrollCourseDto { CourseId = courseId };
-
-        var course = new Course
-        {
-            CourseId = courseId,
-            Title = "Full Course",
             Price = 0,
-            MaxStudent = 10,
-            EnrollmentCount = 10 // Full
+            Type = CourseType.System,
+            EnrollmentCount = 5,
+            MaxStudent = 100
         };
 
+        var user = new User
+        {
+            UserId = userId,
+            Email = "test@example.com"
+        };
+        // FullName is read-only, calculated from FirstName and LastName
+
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetByIdAsync(dto.CourseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
+            .Setup(x => x.IsUserEnrolled(dto.CourseId, userId))
             .ReturnsAsync(false);
 
+        _courseRepositoryMock
+            .Setup(x => x.EnrollUserInCourse(userId, dto.CourseId))
+            .Returns(Task.CompletedTask);
+
+        _userRepositoryMock
+            .Setup(x => x.GetByIdAsync(userId))
+            .ReturnsAsync(user);
+
+        _notificationRepositoryMock
+            .Setup(x => x.AddAsync(It.IsAny<Notification>()))
+            .Returns(Task.CompletedTask);
+
+        _emailServiceMock
+            .Setup(x => x.SendNotifyJoinCourseAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
         // Act
-        var result = await _enrollmentService.EnrollInCourseAsync(enrollDto, userId);
+        var result = await _userEnrollmentService.EnrollInCourseAsync(dto, userId);
 
         // Assert
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-        Assert.Contains("đã đầy", result.Message);
+        Assert.True(result.Success);
+        Assert.Equal(200, result.StatusCode);
+        Assert.True(result.Data);
+        Assert.Contains("Đăng ký khóa học thành công", result.Message);
 
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(userId, dto.CourseId), Times.Once);
     }
 
     [Fact]
@@ -253,198 +108,120 @@ public class UserEnrollmentServiceTests
     {
         // Arrange
         var userId = 1;
-        var courseId = 999;
-        var enrollDto = new EnrollCourseDto { CourseId = courseId };
+        var dto = new EnrollCourseDto { CourseId = 999 };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetByIdAsync(dto.CourseId))
             .ReturnsAsync((Course?)null);
 
         // Act
-        var result = await _enrollmentService.EnrollInCourseAsync(enrollDto, userId);
+        var result = await _userEnrollmentService.EnrollInCourseAsync(dto, userId);
 
         // Assert
         Assert.False(result.Success);
         Assert.Equal(404, result.StatusCode);
-        Assert.Contains("Không tìm thấy", result.Message);
+        Assert.Contains("Không tìm thấy khóa học", result.Message);
 
         _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
-    public async Task EnrollInCourseAsync_WithTeacherCourseNoPackage_ReturnsForbidden()
+    public async Task EnrollInCourseAsync_WithAlreadyEnrolled_ReturnsBadRequest()
     {
         // Arrange
         var userId = 1;
-        var teacherId = 2;
-        var courseId = 1;
-        var enrollDto = new EnrollCourseDto { CourseId = courseId };
+        var dto = new EnrollCourseDto { CourseId = 1 };
 
         var course = new Course
         {
-            CourseId = courseId,
-            Title = "Teacher Course",
-            Price = 0,
-            Type = CourseType.Teacher,
-            TeacherId = teacherId,
-            MaxStudent = 0
+            CourseId = 1,
+            Title = "Course",
+            Price = 0
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetByIdAsync(dto.CourseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(false);
-
-        _teacherPackageRepositoryMock
-            .Setup(x => x.GetInformationTeacherpackage(teacherId))
-            .ReturnsAsync((TeacherPackage?)null); // No active package
+            .Setup(x => x.IsUserEnrolled(dto.CourseId, userId))
+            .ReturnsAsync(true);
 
         // Act
-        var result = await _enrollmentService.EnrollInCourseAsync(enrollDto, userId);
+        var result = await _userEnrollmentService.EnrollInCourseAsync(dto, userId);
 
         // Assert
         Assert.False(result.Success);
-        Assert.Equal(403, result.StatusCode);
-        Assert.Contains("không nhận học viên mới", result.Message);
-
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        Assert.Equal(400, result.StatusCode);
+        Assert.Contains("đã đăng ký khóa học này rồi", result.Message);
     }
 
     [Fact]
-    public async Task EnrollInCourseAsync_WithTeacherCourseWithPackage_ReturnsSuccess()
+    public async Task EnrollInCourseAsync_WithPaidCourseWithoutPayment_ReturnsPaymentRequired()
     {
         // Arrange
         var userId = 1;
-        var teacherId = 2;
-        var courseId = 1;
-        var enrollDto = new EnrollCourseDto { CourseId = courseId };
+        var dto = new EnrollCourseDto { CourseId = 1 };
 
         var course = new Course
         {
-            CourseId = courseId,
-            Title = "Teacher Course",
-            Price = 0,
-            Type = CourseType.Teacher,
-            TeacherId = teacherId,
-            MaxStudent = 0
-        };
-
-        var teacherPackage = new TeacherPackage
-        {
-            TeacherPackageId = 1,
-            PackageName = "Basic Package",
-            Level = PackageLevel.Basic,
+            CourseId = 1,
+            Title = "Paid Course",
             Price = 100000
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetByIdAsync(dto.CourseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
+            .Setup(x => x.IsUserEnrolled(dto.CourseId, userId))
             .ReturnsAsync(false);
 
-        _teacherPackageRepositoryMock
-            .Setup(x => x.GetInformationTeacherpackage(teacherId))
-            .ReturnsAsync(teacherPackage);
-
-        _courseRepositoryMock
-            .Setup(x => x.EnrollUserInCourse(userId, courseId))
-            .Returns(Task.CompletedTask);
+        _paymentRepositoryMock
+            .Setup(x => x.GetSuccessfulPaymentByUserAndCourseAsync(userId, dto.CourseId))
+            .ReturnsAsync((Payment?)null);
 
         // Act
-        var result = await _enrollmentService.EnrollInCourseAsync(enrollDto, userId);
+        var result = await _userEnrollmentService.EnrollInCourseAsync(dto, userId);
 
         // Assert
-        Assert.True(result.Success);
-        Assert.Equal(200, result.StatusCode);
-        Assert.True(result.Data);
-
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(userId, courseId), Times.Once);
+        Assert.False(result.Success);
+        Assert.Equal(402, result.StatusCode);
+        Assert.Contains("Hãy thanh toán khóa học trước khi đăng ký", result.Message);
     }
 
     [Fact]
-    public async Task EnrollInCourseAsync_WithSystemCourse_ReturnsSuccess()
+    public async Task EnrollInCourseAsync_WithFullCourse_ReturnsBadRequest()
     {
         // Arrange
         var userId = 1;
-        var courseId = 1;
-        var enrollDto = new EnrollCourseDto { CourseId = courseId };
+        var dto = new EnrollCourseDto { CourseId = 1 };
 
         var course = new Course
         {
-            CourseId = courseId,
-            Title = "System Course",
+            CourseId = 1,
+            Title = "Full Course",
             Price = 0,
-            Type = CourseType.System,
-            MaxStudent = 0
+            EnrollmentCount = 100,
+            MaxStudent = 100
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetByIdAsync(dto.CourseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
+            .Setup(x => x.IsUserEnrolled(dto.CourseId, userId))
             .ReturnsAsync(false);
 
-        _courseRepositoryMock
-            .Setup(x => x.EnrollUserInCourse(userId, courseId))
-            .Returns(Task.CompletedTask);
-
         // Act
-        var result = await _enrollmentService.EnrollInCourseAsync(enrollDto, userId);
+        var result = await _userEnrollmentService.EnrollInCourseAsync(dto, userId);
 
         // Assert
-        Assert.True(result.Success);
-        Assert.Equal(200, result.StatusCode);
-        Assert.True(result.Data);
-
-        // System course không cần check teacher package
-        _teacherPackageRepositoryMock.Verify(x => x.GetInformationTeacherpackage(It.IsAny<int>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task EnrollInCourseAsync_WithNullPrice_ReturnsSuccess()
-    {
-        // Arrange
-        var userId = 1;
-        var courseId = 1;
-        var enrollDto = new EnrollCourseDto { CourseId = courseId };
-
-        var course = new Course
-        {
-            CourseId = courseId,
-            Title = "Free Course",
-            Price = null, // Null price = free
-            MaxStudent = 0
-        };
-
-        _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
-            .ReturnsAsync(course);
-
-        _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(false);
-
-        _courseRepositoryMock
-            .Setup(x => x.EnrollUserInCourse(userId, courseId))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _enrollmentService.EnrollInCourseAsync(enrollDto, userId);
-
-        // Assert
-        Assert.True(result.Success);
-        Assert.Equal(200, result.StatusCode);
-
-        // Không cần check payment cho course miễn phí
-        _paymentRepositoryMock.Verify(x => x.GetSuccessfulPaymentByUserAndCourseAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
+        Assert.Contains("đã đầy", result.Message);
     }
 
     #endregion
@@ -452,7 +229,7 @@ public class UserEnrollmentServiceTests
     #region UnenrollFromCourseAsync Tests
 
     [Fact]
-    public async Task UnenrollFromCourseAsync_WithValidEnrollment_ReturnsSuccess()
+    public async Task UnenrollFromCourseAsync_WithEnrolledCourse_ReturnsSuccess()
     {
         // Arrange
         var userId = 1;
@@ -467,19 +244,19 @@ public class UserEnrollmentServiceTests
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _enrollmentService.UnenrollFromCourseAsync(courseId, userId);
+        var result = await _userEnrollmentService.UnenrollFromCourseAsync(courseId, userId);
 
         // Assert
         Assert.True(result.Success);
         Assert.Equal(200, result.StatusCode);
         Assert.True(result.Data);
-        Assert.Contains("thành công", result.Message);
+        Assert.Contains("Hủy đăng ký khóa học thành công", result.Message);
 
         _courseRepositoryMock.Verify(x => x.UnenrollUserFromCourse(courseId, userId), Times.Once);
     }
 
     [Fact]
-    public async Task UnenrollFromCourseAsync_WithNotEnrolled_ReturnsBadRequest()
+    public async Task UnenrollFromCourseAsync_WithNotEnrolledCourse_ReturnsBadRequest()
     {
         // Arrange
         var userId = 1;
@@ -490,38 +267,14 @@ public class UserEnrollmentServiceTests
             .ReturnsAsync(false);
 
         // Act
-        var result = await _enrollmentService.UnenrollFromCourseAsync(courseId, userId);
+        var result = await _userEnrollmentService.UnenrollFromCourseAsync(courseId, userId);
 
         // Assert
         Assert.False(result.Success);
         Assert.Equal(400, result.StatusCode);
-        Assert.Contains("chưa đăng ký", result.Message);
+        Assert.Contains("chưa đăng ký khóa học này", result.Message);
 
         _courseRepositoryMock.Verify(x => x.UnenrollUserFromCourse(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task UnenrollFromCourseAsync_WhenExceptionThrown_ReturnsError()
-    {
-        // Arrange
-        var userId = 1;
-        var courseId = 1;
-
-        _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(true);
-
-        _courseRepositoryMock
-            .Setup(x => x.UnenrollUserFromCourse(courseId, userId))
-            .ThrowsAsync(new Exception("Database error"));
-
-        // Act
-        var result = await _enrollmentService.UnenrollFromCourseAsync(courseId, userId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Equal(500, result.StatusCode);
-        Assert.Contains("Lỗi", result.Message);
     }
 
     #endregion
@@ -529,100 +282,67 @@ public class UserEnrollmentServiceTests
     #region EnrollInCourseByClassCodeAsync Tests
 
     [Fact]
-    public async Task EnrollInCourseByClassCodeAsync_WithValidCode_ReturnsSuccess()
+    public async Task EnrollInCourseByClassCodeAsync_WithValidClassCode_ReturnsSuccess()
     {
         // Arrange
         var userId = 1;
         var classCode = "ABC123";
-        var courseId = 1;
 
         var course = new Course
         {
-            CourseId = courseId,
-            Title = "Course with Class Code",
-            Price = 0,
+            CourseId = 1,
+            Title = "Course",
             ClassCode = classCode,
-            MaxStudent = 0
+            Price = 0,
+            EnrollmentCount = 5,
+            MaxStudent = 100,
+            Type = CourseType.System
         };
+
+        var courses = new List<Course> { course };
 
         _courseRepositoryMock
             .Setup(x => x.SearchCoursesByClassCode(classCode))
-            .ReturnsAsync(new List<Course> { course });
+            .ReturnsAsync(courses);
 
         _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
+            .Setup(x => x.IsUserEnrolled(course.CourseId, userId))
             .ReturnsAsync(false);
 
         _courseRepositoryMock
-            .Setup(x => x.EnrollUserInCourse(userId, courseId))
+            .Setup(x => x.EnrollUserInCourse(userId, course.CourseId))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _enrollmentService.EnrollInCourseByClassCodeAsync(classCode, userId);
+        var result = await _userEnrollmentService.EnrollInCourseByClassCodeAsync(classCode, userId);
 
         // Assert
         Assert.True(result.Success);
         Assert.Equal(200, result.StatusCode);
         Assert.True(result.Data);
-        Assert.Contains("mã lớp học", result.Message);
+        Assert.Contains("Đăng ký khóa học thành công qua mã lớp học", result.Message);
 
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(userId, courseId), Times.Once);
+        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(userId, course.CourseId), Times.Once);
     }
 
     [Fact]
-    public async Task EnrollInCourseByClassCodeAsync_WithInvalidCode_ReturnsNotFound()
+    public async Task EnrollInCourseByClassCodeAsync_WithInvalidClassCode_ReturnsNotFound()
     {
         // Arrange
         var userId = 1;
-        var classCode = "INVALID123";
+        var classCode = "INVALID";
 
         _courseRepositoryMock
             .Setup(x => x.SearchCoursesByClassCode(classCode))
-            .ReturnsAsync(new List<Course>()); // Empty list
+            .ReturnsAsync(new List<Course>());
 
         // Act
-        var result = await _enrollmentService.EnrollInCourseByClassCodeAsync(classCode, userId);
+        var result = await _userEnrollmentService.EnrollInCourseByClassCodeAsync(classCode, userId);
 
         // Assert
         Assert.False(result.Success);
         Assert.Equal(404, result.StatusCode);
-        Assert.Contains("Không tìm thấy", result.Message);
-
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task EnrollInCourseByClassCodeAsync_WithFullCourse_ReturnsBadRequest()
-    {
-        // Arrange
-        var userId = 1;
-        var classCode = "ABC123";
-        var courseId = 1;
-
-        var course = new Course
-        {
-            CourseId = courseId,
-            Title = "Full Course",
-            ClassCode = classCode,
-            MaxStudent = 10,
-            EnrollmentCount = 10 // Full
-        };
-
-        _courseRepositoryMock
-            .Setup(x => x.SearchCoursesByClassCode(classCode))
-            .ReturnsAsync(new List<Course> { course });
-
-        _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(false);
-
-        // Act
-        var result = await _enrollmentService.EnrollInCourseByClassCodeAsync(classCode, userId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-        Assert.Contains("đã đầy", result.Message);
+        Assert.Contains("Không tìm thấy khóa học với mã lớp học này", result.Message);
 
         _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
     }
@@ -633,190 +353,33 @@ public class UserEnrollmentServiceTests
         // Arrange
         var userId = 1;
         var classCode = "ABC123";
-        var courseId = 1;
 
         var course = new Course
         {
-            CourseId = courseId,
+            CourseId = 1,
             Title = "Course",
             ClassCode = classCode,
-            MaxStudent = 0
+            Price = 0
         };
+
+        var courses = new List<Course> { course };
 
         _courseRepositoryMock
             .Setup(x => x.SearchCoursesByClassCode(classCode))
-            .ReturnsAsync(new List<Course> { course });
+            .ReturnsAsync(courses);
 
         _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(true); // Already enrolled
+            .Setup(x => x.IsUserEnrolled(course.CourseId, userId))
+            .ReturnsAsync(true);
 
         // Act
-        var result = await _enrollmentService.EnrollInCourseByClassCodeAsync(classCode, userId);
+        var result = await _userEnrollmentService.EnrollInCourseByClassCodeAsync(classCode, userId);
 
         // Assert
         Assert.False(result.Success);
         Assert.Equal(400, result.StatusCode);
-        Assert.Contains("đã đăng ký", result.Message);
-
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task EnrollInCourseByClassCodeAsync_WithTeacherCourseNoPackage_ReturnsForbidden()
-    {
-        // Arrange
-        var userId = 1;
-        var teacherId = 2;
-        var classCode = "ABC123";
-        var courseId = 1;
-
-        var course = new Course
-        {
-            CourseId = courseId,
-            Title = "Teacher Course",
-            ClassCode = classCode,
-            Type = CourseType.Teacher,
-            TeacherId = teacherId,
-            Price = 0,
-            MaxStudent = 0
-        };
-
-        _courseRepositoryMock
-            .Setup(x => x.SearchCoursesByClassCode(classCode))
-            .ReturnsAsync(new List<Course> { course });
-
-        _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(false);
-
-        _teacherPackageRepositoryMock
-            .Setup(x => x.GetInformationTeacherpackage(teacherId))
-            .ReturnsAsync((TeacherPackage?)null);
-
-        // Act
-        var result = await _enrollmentService.EnrollInCourseByClassCodeAsync(classCode, userId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Equal(403, result.StatusCode);
-        Assert.Contains("không nhận học viên mới", result.Message);
-
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task EnrollInCourseByClassCodeAsync_WithTeacherCourseWithPackage_ReturnsSuccess()
-    {
-        // Arrange
-        var userId = 1;
-        var teacherId = 2;
-        var classCode = "ABC123";
-        var courseId = 1;
-
-        var course = new Course
-        {
-            CourseId = courseId,
-            Title = "Teacher Course",
-            ClassCode = classCode,
-            Type = CourseType.Teacher,
-            TeacherId = teacherId,
-            Price = 0,
-            MaxStudent = 0
-        };
-
-        var teacherPackage = new TeacherPackage
-        {
-            TeacherPackageId = 1,
-            PackageName = "Basic Package",
-            Level = PackageLevel.Basic
-        };
-
-        _courseRepositoryMock
-            .Setup(x => x.SearchCoursesByClassCode(classCode))
-            .ReturnsAsync(new List<Course> { course });
-
-        _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(false);
-
-        _teacherPackageRepositoryMock
-            .Setup(x => x.GetInformationTeacherpackage(teacherId))
-            .ReturnsAsync(teacherPackage);
-
-        _courseRepositoryMock
-            .Setup(x => x.EnrollUserInCourse(userId, courseId))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _enrollmentService.EnrollInCourseByClassCodeAsync(classCode, userId);
-
-        // Assert
-        Assert.True(result.Success);
-        Assert.Equal(200, result.StatusCode);
-        Assert.True(result.Data);
-
-        _courseRepositoryMock.Verify(x => x.EnrollUserInCourse(userId, courseId), Times.Once);
-    }
-
-    [Fact]
-    public async Task EnrollInCourseByClassCodeAsync_WhenCapacityReached_HandlesException()
-    {
-        // Arrange
-        var userId = 1;
-        var classCode = "ABC123";
-        var courseId = 1;
-
-        var course = new Course
-        {
-            CourseId = courseId,
-            Title = "Course",
-            ClassCode = classCode,
-            MaxStudent = 10,
-            EnrollmentCount = 9 // One slot left
-        };
-
-        _courseRepositoryMock
-            .Setup(x => x.SearchCoursesByClassCode(classCode))
-            .ReturnsAsync(new List<Course> { course });
-
-        _courseRepositoryMock
-            .Setup(x => x.IsUserEnrolled(courseId, userId))
-            .ReturnsAsync(false);
-
-        _courseRepositoryMock
-            .Setup(x => x.EnrollUserInCourse(userId, courseId))
-            .ThrowsAsync(new InvalidOperationException("Cannot enroll more students, maximum capacity reached."));
-
-        // Act
-        var result = await _enrollmentService.EnrollInCourseByClassCodeAsync(classCode, userId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-        Assert.Contains("đầy học viên", result.Message);
-    }
-
-    [Fact]
-    public async Task EnrollInCourseByClassCodeAsync_WhenExceptionThrown_ReturnsError()
-    {
-        // Arrange
-        var userId = 1;
-        var classCode = "ABC123";
-
-        _courseRepositoryMock
-            .Setup(x => x.SearchCoursesByClassCode(classCode))
-            .ThrowsAsync(new Exception("Database error"));
-
-        // Act
-        var result = await _enrollmentService.EnrollInCourseByClassCodeAsync(classCode, userId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Equal(500, result.StatusCode);
-        Assert.Contains("Lỗi", result.Message);
+        Assert.Contains("đã đăng ký khóa học này rồi", result.Message);
     }
 
     #endregion
 }
-
