@@ -10,8 +10,8 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/courses")]
-    [Authorize(Roles = "Admin, Teacher")]
-    public class CourseController : ControllerBase
+    [Authorize(Roles = "SuperAdmin,Admin,Teacher")]
+    public class CourseController : BaseController
     {
         private readonly IAdminCourseService _adminCourseService;
         private readonly ITeacherCourseService _teacherCourseService;
@@ -33,19 +33,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _userManagementService = userManagementService;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
-                throw new UnauthorizedAccessException("Invalid user credentials");
-            }
-            return userId;
-        }
-
         // GET: api/courses/course-types - lấy danh sách loại khoá học (System, Teacher)
         [HttpGet("course-types")]
-        [Authorize(Roles = "Admin, Teacher")]
+        [Authorize(Roles = "SuperAdmin,Admin,Teacher")]
         public IActionResult GetCourseTypes()
         {
             var courseTypes = _adminCourseService.GetCourseTypes();
@@ -60,7 +50,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         // - sortOrder: 1=A-Z (Ascending), 2=Z-A (Descending)
         // - searchTerm: tìm kiếm theo tên khóa học, mã khóa học, tên giáo viên
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> GetAllCourses([FromQuery] CourseQueryParameters parameters)
         {
             var pagedResult = await _adminCourseService.GetAllCoursesPagedAsync(parameters);
@@ -69,7 +59,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // DELETE: api/courses/{courseId} - admin xoá khoá học
         [HttpDelete("{courseId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> DeleteCourse(int courseId)
         {
             var result = await _adminCourseService.DeleteCourseAsync(courseId);
@@ -78,7 +68,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // POST: api/courses - admin tao khoá học mới
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> AdminCreateCourse([FromBody] AdminCreateCourseRequestDto requestDto)
         {
 
@@ -90,7 +80,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // POST: api/courses/teacher - giáo viên tạo khoá học mới
         [HttpPost("teacher")]
-        [Authorize(Roles = "Teacher")]
+        [Authorize(Roles = "SuperAdmin,Teacher")]
         public async Task<IActionResult> CreateCourse([FromBody] TeacherCreateCourseRequestDto requestDto)
         {
 
@@ -108,7 +98,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         // - sortOrder: 1=A-Z (Ascending), 2=Z-A (Descending)
         // - searchTerm: tìm kiếm theo tên khóa học, mã khóa học
         [HttpGet("teacher")]
-        [Authorize(Roles = "Teacher")]
+        [Authorize(Roles = "SuperAdmin,Teacher")]
         public async Task<IActionResult> GetMyCourses([FromQuery] CourseQueryParameters parameters)
         {
             var teacherId = GetCurrentUserId();
@@ -118,7 +108,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // GET: api/courses/teacher/{courseId} - giáo viên lấy chi tiết khoá học của mình
         [HttpGet("teacher/{courseId}")]
-        [Authorize(Roles = "Teacher")]
+        [Authorize(Roles = "SuperAdmin,Teacher")]
         public async Task<IActionResult> GetCourseDetail(int courseId)
         {
             var teacherId = GetCurrentUserId();
@@ -128,7 +118,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // PUT: api/courses/{courseId} - admin sửa khoá học
         [HttpPut("{courseId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> AdminUpdateCourse(int courseId, [FromBody] AdminUpdateCourseRequestDto requestDto)
         {
 
@@ -138,7 +128,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // PUT: api/courses/teacher/{courseId} - giáo viên sửa khoá học của mình
         [HttpPut("teacher/{courseId}")]
-        [Authorize(Roles = "Teacher")]
+        [Authorize(Roles = "SuperAdmin,Teacher")]
         public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] TeacherUpdateCourseRequestDto requestDto)
         {
 

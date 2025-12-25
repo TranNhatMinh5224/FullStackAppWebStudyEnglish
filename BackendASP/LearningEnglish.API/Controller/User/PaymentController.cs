@@ -16,7 +16,7 @@ namespace LearningEnglish.API.Controller.User
     [ApiController]
     [Route("api/user/payments")]
     [Authorize(Roles = "Student")]
-    public class PaymentController : ControllerBase
+    public class PaymentController : BaseController
     {
         private readonly IPaymentService _paymentService;
         private readonly IPaymentRepository _paymentRepository;
@@ -45,12 +45,6 @@ namespace LearningEnglish.API.Controller.User
             _requestValidator = requestValidator;
             _completeValidator = completeValidator;
             _configuration = configuration;
-        }
-
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
         // POST: api/payment/process - tạo yêu cầu thanh toán
@@ -98,7 +92,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        // GET: api/payment/payos/return - sửa lý PayOS return URL
+        // GET: api/payment/payos/return - xử lý PayOS return URL
         [HttpGet("payos/return")]
         [AllowAnonymous]
         public async Task<IActionResult> PayOSReturn(
@@ -106,86 +100,15 @@ namespace LearningEnglish.API.Controller.User
             [FromQuery] string? desc,
             [FromQuery] string? data)
         {
-            try
+            var result = await _paymentService.ProcessPayOSReturnAsync(code ?? "", desc ?? "", data ?? "");
+
+            if (result.Success && result.Data != null)
             {
-                _logger.LogInformation("PayOS return: code={Code}", code);
-
-                var frontendUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
-
-                if (code != "00")
-                {
-                    _logger.LogWarning("PayOS payment failed: {Desc}", desc);
-                    return Redirect($"{frontendUrl}/payment-failed?reason={Uri.EscapeDataString(desc ?? "Payment failed")}");
-                }
-
-                if (string.IsNullOrEmpty(data))
-                {
-                    _logger.LogWarning("PayOS return data is empty");
-                    return Redirect($"{frontendUrl}/payment-failed?reason=Invalid data");
-                }
-
-                try
-                {
-                    var webhookData = JsonSerializer.Deserialize<JsonElement>(data);
-                    var orderCode = webhookData.GetProperty("orderCode").GetInt64().ToString();
-
-                    var payment = await _paymentRepository.GetPaymentByTransactionIdAsync(orderCode);
-                    if (payment == null)
-                    {
-                        _logger.LogWarning("Payment not found for orderCode {OrderCode}", orderCode);
-                        return Redirect($"{frontendUrl}/payment-failed?reason=Payment not found");
-                    }
-
-                    _logger.LogInformation("PayOS return successful for Payment {PaymentId}, OrderCode {OrderCode}",
-                        payment.PaymentId, orderCode);
-
-                    // Tự động confirm payment nếu chưa được confirm
-                    if (payment.Status == PaymentStatus.Pending)
-                    {
-                        _logger.LogInformation("Auto-confirming Payment {PaymentId} via Return URL", payment.PaymentId);
-
-                        var confirmDto = new CompletePayment
-                        {
-                            PaymentId = payment.PaymentId,
-                            ProductId = payment.ProductId,
-                            ProductType = payment.ProductType,
-                            Amount = payment.Amount,
-                            PaymentMethod = PaymentGateway.PayOs.ToString()
-                        };
-
-                        var confirmResult = await _paymentService.ConfirmPaymentAsync(confirmDto, payment.UserId);
-
-                        if (confirmResult.Success)
-                        {
-                            _logger.LogInformation("Payment {PaymentId} auto-confirmed successfully via Return URL", payment.PaymentId);
-                        }
-                        else
-                        {
-                            // Nếu confirm fail (có thể đã được confirm bởi webhook), vẫn redirect success
-
-                            _logger.LogWarning("Payment {PaymentId} confirmation failed or already processed: {Message}",
-                                payment.PaymentId, confirmResult.Message);
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Payment {PaymentId} already processed with status {Status}",
-                            payment.PaymentId, payment.Status);
-                    }
-
-                    return Redirect($"{frontendUrl}/payment-success?paymentId={payment.PaymentId}&orderCode={orderCode}");
-                }
-                catch (JsonException ex)
-                {
-                    _logger.LogError(ex, "Error parsing PayOS return data");
-                    return Redirect($"{frontendUrl}/payment-failed?reason=Invalid data format");
-                }
+                return Redirect(result.Data.RedirectUrl ?? "http://localhost:3000/payment-failed");
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error processing PayOS return");
-                var frontendUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
-                return Redirect($"{frontendUrl}/payment-failed?reason=Server error");
+                return Redirect("http://localhost:3000/payment-failed?reason=Server error");
             }
         }
 

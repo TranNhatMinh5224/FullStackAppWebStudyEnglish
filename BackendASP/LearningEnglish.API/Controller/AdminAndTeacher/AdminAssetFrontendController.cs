@@ -49,7 +49,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         }
         [HttpPost("Add-asset-frontend")]
-         [Authorize(Roles = "Admin")]
+         [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> AddAssetFrontend([FromBody] CreateAssetFrontendDto newAssetFrontend)
         {
             var result = await _assetFrontendService.AddAssetFrontend(newAssetFrontend);
@@ -58,7 +58,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         }
         [HttpPut("Update-asset-frontend")]
-         [Authorize(Roles = "Admin")]
+         [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> UpdateAssetFrontend([FromBody] UpdateAssetFrontendDto updatedAssetFrontend)
         {
             var result = await _assetFrontendService.UpdateAssetFrontend(updatedAssetFrontend);
@@ -67,7 +67,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         }
         [HttpDelete("Delete-asset-frontend/{id}")]
-         [Authorize(Roles = "Admin")]
+         [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> DeleteAssetFrontend(int id)
         {
             var result = await _assetFrontendService.DeleteAssetFrontend(id);

@@ -1,6 +1,7 @@
 using AutoMapper;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.DTOs;
+using LearningEnglish.Application.DTOs.Admin;
 using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Application.Mappings
@@ -39,6 +40,15 @@ namespace LearningEnglish.Application.Mappings
             // Streak mapping
             CreateMap<Streak, StreakDto>()
                 .ForMember(dest => dest.IsActiveToday, opt => opt.MapFrom<IsActiveTodayResolver>());
+
+            // ===== ADMIN PERMISSION SYSTEM MAPPINGS =====
+            // Permission mappings
+            CreateMap<Permission, PermissionDto>();
+            
+            // Admin mappings
+            CreateMap<User, AdminDto>()
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}".Trim()))
+                .ForMember(dest => dest.Permissions, opt => opt.Ignore()); // Set in service
 
             // Payment mappings
             CreateMap<Payment, TransactionHistoryDto>()

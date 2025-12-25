@@ -59,7 +59,7 @@ public class ATEssayGradingController : ControllerBase
     {
         var teacherId = User.GetUserId();
         
-        _logger.LogInformation("👨‍🏫 Teacher {TeacherId} grading submission {SubmissionId}", teacherId, submissionId);
+        _logger.LogInformation("Teacher {TeacherId} grading submission {SubmissionId}", teacherId, submissionId);
 
         var result = await _gradingService.GradeByTeacherAsync(submissionId, dto, teacherId, cancellationToken);
 

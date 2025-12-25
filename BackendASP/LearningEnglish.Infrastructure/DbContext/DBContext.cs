@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
+using LearningEnglish.Infrastructure.Data;
 
 namespace LearningEnglish.Infrastructure.Data
 {
@@ -1250,6 +1251,15 @@ namespace LearningEnglish.Infrastructure.Data
             // Gán role Admin cho user 1 (sử dụng junction table)
             modelBuilder.Entity("UserRoles").HasData(
                 new { UserId = 1, RoleId = 1 }
+            );
+
+            // ===== PERMISSIONS & ROLE PERMISSIONS =====
+            modelBuilder.Entity<Permission>().HasData(
+                AdminPermissionSeeder.GetAdminPermissions()
+            );
+
+            modelBuilder.Entity<RolePermission>().HasData(
+                AdminPermissionSeeder.GetDefaultRolePermissions()
             );
         }
     }

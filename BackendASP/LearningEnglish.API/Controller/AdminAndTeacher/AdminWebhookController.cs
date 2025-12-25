@@ -7,7 +7,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher;
 
 [ApiController]
 [Route("api/admin/webhooks")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "SuperAdmin,Admin")]
 public class AdminWebhookController : ControllerBase
 {
     private readonly IPaymentWebhookQueueRepository _webhookRepository;

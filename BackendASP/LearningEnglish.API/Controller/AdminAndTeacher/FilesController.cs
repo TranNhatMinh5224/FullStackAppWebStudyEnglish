@@ -8,7 +8,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/shared/files")]
-    [Authorize(Roles = "Admin, Teacher, Student")]
+    [Authorize(Roles = "Admin, Teacher, Student , SuperAdmin")]
     public class FilesController : ControllerBase
     {
         private readonly IMinioFileStorage _minioFileStorage;
@@ -114,7 +114,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // POST: api/shared/files/cleanup-temp - dọn dẹp file tạm thời (Admin only)
         [HttpPost("cleanup-temp")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> CleanupTempFiles(
             [FromServices] LearningEnglish.Application.Service.BackgroundJobs.TempFileCleanupJob cleanupJob)
         {

@@ -7,6 +7,7 @@ using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Pagination;
+using System.Text.Json;
 
 namespace LearningEnglish.Application.Service
 {
@@ -605,6 +606,140 @@ namespace LearningEnglish.Application.Service
                 response.Message = $"Error: {ex.Message}";
                 return response;
             }
+        }
+
+        // Xử lý PayOS return URL
+        public async Task<ServiceResponse<PayOSReturnResult>> ProcessPayOSReturnAsync(string code, string desc, string data)
+        {
+            var response = new ServiceResponse<PayOSReturnResult>();
+            var result = new PayOSReturnResult();
+
+            try
+            {
+                _logger.LogInformation("Processing PayOS return: code={Code}", code);
+
+                // Validate return parameters
+                if (code != "00")
+                {
+                    _logger.LogWarning("PayOS payment failed: {Desc}", desc);
+                    result.Success = false;
+                    result.RedirectUrl = $"{GetFrontendUrl()}/payment-failed?reason={Uri.EscapeDataString(desc ?? "Payment failed")}";
+                    result.Message = desc ?? "Payment failed";
+                    response.Data = result;
+                    return response;
+                }
+
+                if (string.IsNullOrEmpty(data))
+                {
+                    _logger.LogWarning("PayOS return data is empty");
+                    result.Success = false;
+                    result.RedirectUrl = $"{GetFrontendUrl()}/payment-failed?reason=Invalid data";
+                    result.Message = "Invalid data";
+                    response.Data = result;
+                    return response;
+                }
+
+                // Parse return data
+                JsonElement webhookData;
+                try
+                {
+                    webhookData = JsonSerializer.Deserialize<JsonElement>(data);
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "Error parsing PayOS return data");
+                    result.Success = false;
+                    result.RedirectUrl = $"{GetFrontendUrl()}/payment-failed?reason=Invalid data format";
+                    result.Message = "Invalid data format";
+                    response.Data = result;
+                    return response;
+                }
+
+                var orderCode = webhookData.GetProperty("orderCode").GetInt64().ToString();
+
+                // Find payment by order code
+                var payment = await _paymentRepository.GetPaymentByTransactionIdAsync(orderCode);
+                if (payment == null)
+                {
+                    _logger.LogWarning("Payment not found for orderCode {OrderCode}", orderCode);
+                    result.Success = false;
+                    result.RedirectUrl = $"{GetFrontendUrl()}/payment-failed?reason=Payment not found";
+                    result.Message = "Payment not found";
+                    response.Data = result;
+                    return response;
+                }
+
+                _logger.LogInformation("PayOS return successful for Payment {PaymentId}, OrderCode {OrderCode}",
+                    payment.PaymentId, orderCode);
+
+                result.PaymentId = payment.PaymentId;
+                result.OrderCode = orderCode;
+
+                // Auto-confirm payment if still pending
+                if (payment.Status == PaymentStatus.Pending)
+                {
+                    _logger.LogInformation("Auto-confirming Payment {PaymentId} via Return URL", payment.PaymentId);
+
+                    var confirmDto = new CompletePayment
+                    {
+                        PaymentId = payment.PaymentId,
+                        ProductId = payment.ProductId,
+                        ProductType = payment.ProductType,
+                        Amount = payment.Amount,
+                        PaymentMethod = PaymentGateway.PayOs.ToString()
+                    };
+
+                    var confirmResult = await ConfirmPaymentAsync(confirmDto, payment.UserId);
+
+                    if (confirmResult.Success)
+                    {
+                        _logger.LogInformation("Payment {PaymentId} auto-confirmed successfully via Return URL", payment.PaymentId);
+                        result.Success = true;
+                        result.RedirectUrl = $"{GetFrontendUrl()}/payment-success?paymentId={payment.PaymentId}&orderCode={orderCode}";
+                        result.Message = "Payment confirmed successfully";
+                    }
+                    else
+                    {
+                        // If confirm fails, still redirect to success (might already be processed by webhook)
+                        _logger.LogWarning("Payment {PaymentId} confirmation failed or already processed: {Message}",
+                            payment.PaymentId, confirmResult.Message);
+                        result.Success = true;
+                        result.RedirectUrl = $"{GetFrontendUrl()}/payment-success?paymentId={payment.PaymentId}&orderCode={orderCode}";
+                        result.Message = "Payment already processed";
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("Payment {PaymentId} already processed with status {Status}",
+                        payment.PaymentId, payment.Status);
+                    result.Success = true;
+                    result.RedirectUrl = $"{GetFrontendUrl()}/payment-success?paymentId={payment.PaymentId}&orderCode={orderCode}";
+                    result.Message = "Payment already processed";
+                }
+
+                response.Success = true;
+                response.Data = result;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing PayOS return");
+                result.Success = false;
+                result.RedirectUrl = $"{GetFrontendUrl()}/payment-failed?reason=Server error";
+                result.Message = "Server error";
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = $"Error: {ex.Message}";
+                response.Data = result;
+                return response;
+            }
+        }
+
+        private string GetFrontendUrl()
+        {
+            // This should be injected via IConfiguration, but for now using hardcoded
+            // In real implementation, inject IConfiguration and get from appsettings
+            return "http://localhost:3000";
         }
     }
 }

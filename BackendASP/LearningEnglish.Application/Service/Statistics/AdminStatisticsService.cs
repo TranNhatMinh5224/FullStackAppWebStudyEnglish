@@ -436,6 +436,15 @@ namespace LearningEnglish.Application.Service
             {
                 _logger.LogInformation("📊 Fetching revenue chart data for last {Days} days", days);
 
+                // Validation: days phải trong khoảng 1-365
+                if (days < 1 || days > 365)
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "Days must be between 1 and 365";
+                    return response;
+                }
+
                 var now = DateTime.UtcNow;
                 var fromDate = now.AddDays(-days).Date;
                 var toDate = now.Date;

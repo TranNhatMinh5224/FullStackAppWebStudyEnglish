@@ -23,5 +23,8 @@ namespace LearningEnglish.Application.Interface
         
         // Process webhook from queue (for retry mechanism)
         Task<ServiceResponse<bool>> ProcessWebhookFromQueueAsync(PayOSWebhookDto webhookData);
+        
+        // Xử lý PayOS return URL
+        Task<ServiceResponse<PayOSReturnResult>> ProcessPayOSReturnAsync(string code, string desc, string data);
     }
 }

@@ -7,7 +7,7 @@ namespace LearningEnglish.API.Controller.Admin
 {
     [ApiController]
     [Route("api/admin/users")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public class AdminAuthController : ControllerBase
     {
         private readonly IUserManagementService _userManagementService;

@@ -7,7 +7,7 @@ namespace LearningEnglish.API.Controller.Admin
 {
     [ApiController]
     [Route("api/admin/teacher-packages")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public class AdminTeacherPackageController : ControllerBase
     {
         private readonly ITeacherPackageService _teacherPackageService;

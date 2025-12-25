@@ -155,6 +155,8 @@ builder.Services.AddScoped<ICourseProgressRepository, CourseProgressRepository>(
 builder.Services.AddScoped<ILessonCompletionRepository, LessonCompletionRepository>();
 builder.Services.AddScoped<IModuleCompletionRepository, ModuleCompletionRepository>();
 builder.Services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>();
+builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
+builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Sorting Services
@@ -209,6 +211,8 @@ builder.Services.AddScoped<IQuizAttemptService, QuizAttemptService>();
 builder.Services.AddScoped<IQuizAttemptAdminService, QuizAttemptAdminService>();
 builder.Services.AddScoped<IPronunciationAssessmentService, PronunciationAssessmentService>();
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IAdminManagementService, AdminManagementService>();
 
 // 🎤 Azure Speech Service for Pronunciation Assessment
 builder.Services.Configure<AzureSpeechOptions>(builder.Configuration.GetSection("AzureSpeech"));

@@ -6,7 +6,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/admin/statistics")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public class AdminStatisticsController : ControllerBase
     {
         private readonly IAdminStatisticsService _statisticsService;
@@ -93,11 +93,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         public async Task<IActionResult> GetRevenueChartData([FromQuery] int days = 30)
         {
             _logger.LogInformation("Admin đang lấy dữ liệu biểu đồ doanh thu (last {Days} days)", days);
-            
-            if (days < 1 || days > 365)
-            {
-                return BadRequest(new { message = "Days must be between 1 and 365" });
-            }
             
             var result = await _statisticsService.GetRevenueChartDataAsync(days);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);

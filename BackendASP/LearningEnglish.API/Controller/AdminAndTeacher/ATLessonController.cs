@@ -10,7 +10,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
     [ApiController]
     [Route("api/lessons")]
     [Authorize]
-    public class ATLessonController : ControllerBase
+    public class ATLessonController : BaseController
     {
         private readonly ILessonService _lessonService;
         private readonly ILogger<ATLessonController> _logger;
@@ -21,29 +21,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _logger = logger;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
-                throw new UnauthorizedAccessException("Invalid user credentials");
-            }
-            return userId;
-        }
-
-        private string GetCurrentUserRole()
-        {
-            var userRole = User.GetPrimaryRole();
-            if (string.IsNullOrEmpty(userRole))
-            {
-                throw new UnauthorizedAccessException("User role not found");
-            }
-            return userRole;
-        }
-
         // POST: api/lesson/admin/add - admin creates a new lesson
         [HttpPost("admin/add")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> AddLesson(AdminCreateLessonDto dto)
         {
             var result = await _lessonService.AdminAddLesson(dto);
@@ -52,7 +32,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // POST: api/lesson/teacher/add - giáo viên tạo mới lesson
         [HttpPost("teacher/add")]
-        [Authorize(Roles = "Teacher")]
+        [Authorize(Roles = "SuperAdmin,Teacher")]
         public async Task<IActionResult> AddLessonForTeacher(TeacherCreateLessonDto dto)
         {
             var userId = GetCurrentUserId();
@@ -62,7 +42,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // DELETE: api/lesson/delete/{lessonId} - xoá lesson, Admin xoá tất cả, Teacher chỉ xoá của riêng teacher
         [HttpDelete("delete/{lessonId}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "SuperAdmin,Admin,Teacher")]
         public async Task<IActionResult> DeleteLesson(int lessonId)
         {
             var userId = GetCurrentUserId();
@@ -73,7 +53,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // PUT: api/lesson/update/{lessonId} - xoá lesson, Admin sửa tất cả, Teacher chỉ sửa của riêng teacher
         [HttpPut("update/{lessonId}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "SuperAdmin,Admin,Teacher")]
         public async Task<IActionResult> UpdateLesson(int lessonId, [FromBody] UpdateLessonDto dto)
         {
             var userId = GetCurrentUserId();
