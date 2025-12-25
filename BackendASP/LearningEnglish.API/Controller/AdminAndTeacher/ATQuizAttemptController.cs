@@ -7,7 +7,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/quiz-attempts")]
-    [Authorize(Roles = "SuperAdmin,Admin,Teacher")]
+    [Authorize(Roles = "Admin,Teacher")]
     public class ATQuizAttemptController : ControllerBase
     {
         private readonly IQuizAttemptAdminService _quizAttemptAdminService;
@@ -42,7 +42,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         // POST: api/AdminTeacher/QuizAttempt/force-submit/{attemptId} - Bắt buộc nộp bài (chỉ Admin)
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPost("force-submit/{attemptId}")]
         public async Task<IActionResult> ForceSubmitAttempt(int attemptId)
         {

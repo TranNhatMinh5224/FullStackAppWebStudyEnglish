@@ -59,18 +59,15 @@ namespace LearningEnglish.API.Controller.User
                 : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/enroll/my-courses - Lấy danh sách khóa học đã đăng ký với phân trang và lọc theo loại
-        // Query parameters:
-        // - PageNumber, PageSize: Phân trang
-        // - Type: Lọc theo loại khóa học (1 = System, 2 = Teacher)
+        // GET: api/user/enroll/my-courses - Lấy danh sách khóa học đã đăng ký với phân trang
         [HttpGet("my-courses")]
-        public async Task<IActionResult> GetMyEnrolledCourses([FromQuery] EnrolledCourseQueryParameters parameters)
+        public async Task<IActionResult> GetMyEnrolledCourses([FromQuery] EnrolledCourseQueryParameters request)
         {
             var userId = GetCurrentUserId();
             if (userId == 0)
                 return Unauthorized(new { message = "Invalid user credentials" });
 
-            var result = await _enrollmentQueryService.GetMyEnrolledCoursesPagedAsync(userId, parameters);
+            var result = await _enrollmentQueryService.GetMyEnrolledCoursesPagedAsync(userId, request);
 
             return result.Success
                 ? Ok(result)

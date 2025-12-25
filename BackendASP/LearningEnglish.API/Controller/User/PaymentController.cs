@@ -16,11 +16,10 @@ namespace LearningEnglish.API.Controller.User
     [ApiController]
     [Route("api/user/payments")]
     [Authorize(Roles = "Student")]
-    public class PaymentController : BaseController
+    public class PaymentController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
         private readonly IPaymentRepository _paymentRepository;
-        private readonly IPaymentWebhookQueueRepository _webhookQueueRepository;
         private readonly IPayOSService _payOSService;
         private readonly ILogger<PaymentController> _logger;
         private readonly RequestPaymentValidator _requestValidator;
@@ -30,7 +29,6 @@ namespace LearningEnglish.API.Controller.User
         public PaymentController(
             IPaymentService paymentService,
             IPaymentRepository paymentRepository,
-            IPaymentWebhookQueueRepository webhookQueueRepository,
             IPayOSService payOSService,
             ILogger<PaymentController> logger,
             RequestPaymentValidator requestValidator,
@@ -39,12 +37,17 @@ namespace LearningEnglish.API.Controller.User
         {
             _paymentService = paymentService;
             _paymentRepository = paymentRepository;
-            _webhookQueueRepository = webhookQueueRepository;
             _payOSService = payOSService;
             _logger = logger;
             _requestValidator = requestValidator;
             _completeValidator = completeValidator;
             _configuration = configuration;
+        }
+
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
         }
 
         // POST: api/payment/process - tạo yêu cầu thanh toán
@@ -74,6 +77,15 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
+        // GET: api/payment/history/all - lấy toàn bộ lịch sử giao dịch với phân trang cho người dùng đã xác thực
+        [HttpGet("history/all")]
+        public async Task<IActionResult> GetAllTransactionHistory([FromQuery] PageRequest request)
+        {
+            var userId = GetCurrentUserId();
+            var result = await _paymentService.GetTransactionHistoryAsync(userId, request);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
         // GET: api/payment/transaction/{paymentId} - lây chi tiết giao dịch theo paymentId
         [HttpGet("transaction/{paymentId}")]
         public async Task<IActionResult> GetTransactionDetail(int paymentId)
@@ -92,7 +104,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        // GET: api/payment/payos/return - xử lý PayOS return URL
+        // GET: api/payment/payos/return - sửa lý PayOS return URL
         [HttpGet("payos/return")]
         [AllowAnonymous]
         public async Task<IActionResult> PayOSReturn(
@@ -100,15 +112,86 @@ namespace LearningEnglish.API.Controller.User
             [FromQuery] string? desc,
             [FromQuery] string? data)
         {
-            var result = await _paymentService.ProcessPayOSReturnAsync(code ?? "", desc ?? "", data ?? "");
+            try
+            {
+                _logger.LogInformation("PayOS return: code={Code}", code);
 
-            if (result.Success && result.Data != null)
-            {
-                return Redirect(result.Data.RedirectUrl ?? "http://localhost:3000/payment-failed");
+                var frontendUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+
+                if (code != "00")
+                {
+                    _logger.LogWarning("PayOS payment failed: {Desc}", desc);
+                    return Redirect($"{frontendUrl}/payment-failed?reason={Uri.EscapeDataString(desc ?? "Payment failed")}");
+                }
+
+                if (string.IsNullOrEmpty(data))
+                {
+                    _logger.LogWarning("PayOS return data is empty");
+                    return Redirect($"{frontendUrl}/payment-failed?reason=Invalid data");
+                }
+
+                try
+                {
+                    var webhookData = JsonSerializer.Deserialize<JsonElement>(data);
+                    var orderCode = webhookData.GetProperty("orderCode").GetInt64().ToString();
+
+                    var payment = await _paymentRepository.GetPaymentByTransactionIdAsync(orderCode);
+                    if (payment == null)
+                    {
+                        _logger.LogWarning("Payment not found for orderCode {OrderCode}", orderCode);
+                        return Redirect($"{frontendUrl}/payment-failed?reason=Payment not found");
+                    }
+
+                    _logger.LogInformation("PayOS return successful for Payment {PaymentId}, OrderCode {OrderCode}",
+                        payment.PaymentId, orderCode);
+
+                    // Tự động confirm payment nếu chưa được confirm
+                    if (payment.Status == PaymentStatus.Pending)
+                    {
+                        _logger.LogInformation("Auto-confirming Payment {PaymentId} via Return URL", payment.PaymentId);
+
+                        var confirmDto = new CompletePayment
+                        {
+                            PaymentId = payment.PaymentId,
+                            ProductId = payment.ProductId,
+                            ProductType = payment.ProductType,
+                            Amount = payment.Amount,
+                            PaymentMethod = PaymentGateway.PayOs.ToString()
+                        };
+
+                        var confirmResult = await _paymentService.ConfirmPaymentAsync(confirmDto, payment.UserId);
+
+                        if (confirmResult.Success)
+                        {
+                            _logger.LogInformation("Payment {PaymentId} auto-confirmed successfully via Return URL", payment.PaymentId);
+                        }
+                        else
+                        {
+                            // Nếu confirm fail (có thể đã được confirm bởi webhook), vẫn redirect success
+
+                            _logger.LogWarning("Payment {PaymentId} confirmation failed or already processed: {Message}",
+                                payment.PaymentId, confirmResult.Message);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Payment {PaymentId} already processed with status {Status}",
+                            payment.PaymentId, payment.Status);
+                    }
+
+                    return Redirect($"{frontendUrl}/payment-success?paymentId={payment.PaymentId}&orderCode={orderCode}");
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "Error parsing PayOS return data");
+                    return Redirect($"{frontendUrl}/payment-failed?reason=Invalid data format");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return Redirect("http://localhost:3000/payment-failed?reason=Server error");
+                _logger.LogError(ex, "Error processing PayOS return");
+                var frontendUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+                return Redirect($"{frontendUrl}/payment-failed?reason=Server error");
             }
         }
 
@@ -119,112 +202,61 @@ namespace LearningEnglish.API.Controller.User
         {
             try
             {
-                _logger.LogInformation("📨 PayOS webhook received: code={Code}, orderCode={OrderCode}",
+                _logger.LogInformation("PayOS webhook received: code={Code}, orderCode={OrderCode}",
                     webhookData.Code, webhookData.OrderCode);
 
-                // Verify signature
                 var isValid = await _payOSService.VerifyWebhookSignature(webhookData.Data, webhookData.Signature);
                 if (!isValid)
                 {
-                    _logger.LogWarning("❌ Invalid PayOS webhook signature");
+                    _logger.LogWarning("Invalid PayOS webhook signature");
                     return BadRequest(new { message = "Invalid signature" });
                 }
 
-                // Find payment
+                if (webhookData.Code != "00")
+                {
+                    _logger.LogWarning("PayOS payment failed: {Desc}", webhookData.Desc);
+                    return Ok(new { message = "Payment failed" });
+                }
+
                 var payment = await _paymentRepository.GetPaymentByTransactionIdAsync(webhookData.OrderCode.ToString());
                 if (payment == null)
                 {
-                    _logger.LogWarning("⚠️ Payment not found for orderCode {OrderCode}", webhookData.OrderCode);
+                    _logger.LogWarning("Payment not found for orderCode {OrderCode}", webhookData.OrderCode);
                     return NotFound(new { message = "Payment not found" });
                 }
 
-                // Save webhook to queue for retry mechanism
-                var webhookQueue = new LearningEnglish.Domain.Entities.PaymentWebhookQueue
+                if (payment.Status == PaymentStatus.Completed)
+                {
+                    _logger.LogInformation("Payment {PaymentId} already completed", payment.PaymentId);
+                    return Ok(new { message = "Already processed", paymentId = payment.PaymentId });
+                }
+
+                var confirmDto = new CompletePayment
                 {
                     PaymentId = payment.PaymentId,
-                    OrderCode = webhookData.OrderCode,
-                    WebhookData = JsonSerializer.Serialize(webhookData),
-                    Signature = webhookData.Signature,
-                    Status = LearningEnglish.Domain.Enums.WebhookStatus.Pending,
-                    CreatedAt = DateTime.UtcNow,
-                    RetryCount = 0,
-                    MaxRetries = 5
+                    ProductId = payment.ProductId,
+                    ProductType = payment.ProductType,
+                    Amount = payment.Amount,
+                    PaymentMethod = PaymentGateway.PayOs.ToString()
                 };
 
-                await _webhookQueueRepository.AddWebhookAsync(webhookQueue);
-                await _webhookQueueRepository.SaveChangesAsync();
+                var result = await _paymentService.ConfirmPaymentAsync(confirmDto, payment.UserId);
 
-                _logger.LogInformation("💾 Webhook saved to queue: WebhookId={WebhookId}, PaymentId={PaymentId}",
-                    webhookQueue.WebhookId, payment.PaymentId);
-
-                // Try to process immediately
-                try
+                if (result.Success)
                 {
-                    // Check if already processed
-                    if (payment.Status == PaymentStatus.Completed)
-                    {
-                        _logger.LogInformation("✅ Payment {PaymentId} already completed", payment.PaymentId);
-                        
-                        webhookQueue.Status = LearningEnglish.Domain.Enums.WebhookStatus.Processed;
-                        webhookQueue.ProcessedAt = DateTime.UtcNow;
-                        await _webhookQueueRepository.UpdateWebhookStatusAsync(webhookQueue);
-                        await _webhookQueueRepository.SaveChangesAsync();
-                        
-                        return Ok(new { message = "Already processed", paymentId = payment.PaymentId });
-                    }
-
-                    if (webhookData.Code != "00")
-                    {
-                        _logger.LogWarning("⚠️ PayOS payment failed: {Desc}", webhookData.Desc);
-                        
-                        webhookQueue.Status = LearningEnglish.Domain.Enums.WebhookStatus.Failed;
-                        webhookQueue.LastError = $"Payment failed: {webhookData.Desc}";
-                        await _webhookQueueRepository.UpdateWebhookStatusAsync(webhookQueue);
-                        await _webhookQueueRepository.SaveChangesAsync();
-                        
-                        return Ok(new { message = "Payment failed" });
-                    }
-
-                    // Process webhook
-                    var result = await _paymentService.ProcessWebhookFromQueueAsync(webhookData);
-
-                    if (result.Success)
-                    {
-                        webhookQueue.Status = LearningEnglish.Domain.Enums.WebhookStatus.Processed;
-                        webhookQueue.ProcessedAt = DateTime.UtcNow;
-                        await _webhookQueueRepository.UpdateWebhookStatusAsync(webhookQueue);
-                        await _webhookQueueRepository.SaveChangesAsync();
-
-                        _logger.LogInformation("✅ Payment {PaymentId} confirmed via webhook", payment.PaymentId);
-                        return Ok(new { message = "Success", paymentId = payment.PaymentId });
-                    }
-                    else
-                    {
-                        throw new Exception(result.Message ?? "Processing failed");
-                    }
+                    _logger.LogInformation("Payment {PaymentId} confirmed via webhook", payment.PaymentId);
+                    return Ok(new { message = "Success", paymentId = payment.PaymentId });
                 }
-                catch (Exception processEx)
+                else
                 {
-                    _logger.LogError(processEx, "❌ Failed to process webhook immediately, will retry later");
-
-                    // Mark for retry
-                    webhookQueue.Status = LearningEnglish.Domain.Enums.WebhookStatus.Failed;
-                    webhookQueue.RetryCount = 0;
-                    webhookQueue.NextRetryAt = DateTime.UtcNow.AddMinutes(1); // Retry trong 1 phút
-                    webhookQueue.LastError = processEx.Message;
-                    webhookQueue.ErrorStackTrace = processEx.StackTrace;
-                    await _webhookQueueRepository.UpdateWebhookStatusAsync(webhookQueue);
-                    await _webhookQueueRepository.SaveChangesAsync();
-
-                    _logger.LogInformation("⏰ Webhook scheduled for retry at {NextRetryAt}", webhookQueue.NextRetryAt);
-
-                    // Return success to PayOS để không bị spam retry từ phía PayOS
-                    return Ok(new { message = "Webhook queued for processing", paymentId = payment.PaymentId });
+                    _logger.LogError("Failed to confirm payment {PaymentId}: {Message}",
+                        payment.PaymentId, result.Message);
+                    return StatusCode(500, new { message = result.Message });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Critical error processing PayOS webhook");
+                _logger.LogError(ex, "Error processing PayOS webhook");
                 return StatusCode(500, new { message = "Internal server error" });
             }
         }

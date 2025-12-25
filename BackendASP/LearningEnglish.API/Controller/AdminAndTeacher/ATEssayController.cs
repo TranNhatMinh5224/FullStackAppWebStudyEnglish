@@ -12,7 +12,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
     [Route("api/admin-teacher/essays")]
     [ApiController]
-    [Authorize(Roles = "Admin,Teacher,SuperAdmin")]
+    [Authorize(Roles = "Admin,Teacher")]
     public class ATEssayController : ControllerBase
     {
         private readonly IEssayService _essayService;

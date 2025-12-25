@@ -28,6 +28,8 @@ using LearningEnglish.Application.Service.EssayGrading;
 using Microsoft.Extensions.Options;
 using Minio;
 using LearningEnglish.Infrastructure.MinioFileStorage;
+using LearningEnglish.API.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.API.Middleware;
 using LearningEnglish.Domain.Domain;
 using LearningEnglish.Domain.Entities;
@@ -126,6 +128,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+// ═══════════════════════════════════════════════════════════════
+// PERMISSION AUTHORIZATION - Đăng ký hệ thống permission
+// ═══════════════════════════════════════════════════════════════
+builder.Services.AddHttpContextAccessor(); // Cần cho AuthorizationHandler
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
 // Repository layer
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
