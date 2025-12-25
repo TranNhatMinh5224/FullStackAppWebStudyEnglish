@@ -3,14 +3,10 @@ using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Application.Common.Helpers
 {
-    /// <summary>
-    /// Helper class để chuẩn hóa câu trả lời của user theo từng loại câu hỏi
-    /// </summary>
+    // Helper class để chuẩn hóa câu trả lời của user theo từng loại câu hỏi
     public static class AnswerNormalizer
     {
-        /// <summary>
-        /// Chuẩn hóa userAnswer theo QuestionType
-        /// </summary>
+        // Chuẩn hóa userAnswer theo QuestionType
         public static object? NormalizeUserAnswer(object? userAnswer, QuestionType questionType)
         {
             if (userAnswer == null)
@@ -46,9 +42,7 @@ namespace LearningEnglish.Application.Common.Helpers
             }
         }
 
-        /// <summary>
-        /// Chuẩn hóa về int (cho MultipleChoice, TrueFalse)
-        /// </summary>
+        // Chuẩn hóa về int (cho MultipleChoice, TrueFalse)
         public static int? NormalizeToInt(object? userAnswer)
         {
             if (userAnswer == null) return null;
@@ -67,9 +61,7 @@ namespace LearningEnglish.Application.Common.Helpers
             return null;
         }
 
-        /// <summary>
-        /// Chuẩn hóa về List<int> (cho MultipleAnswers, Ordering)
-        /// </summary>
+        // Chuẩn hóa về List<int> (cho MultipleAnswers, Ordering)
         public static List<int>? NormalizeToListInt(object? userAnswer)
         {
             if (userAnswer == null) return null;
@@ -107,9 +99,7 @@ namespace LearningEnglish.Application.Common.Helpers
             return null;
         }
 
-        /// <summary>
-        /// Chuẩn hóa về string (cho FillBlank)
-        /// </summary>
+        // Chuẩn hóa về string (cho FillBlank)
         public static string NormalizeToString(object? userAnswer)
         {
             if (userAnswer == null) return string.Empty;
@@ -118,9 +108,7 @@ namespace LearningEnglish.Application.Common.Helpers
             return userAnswer.ToString() ?? string.Empty;
         }
 
-        /// <summary>
-        /// Chuẩn hóa về Dictionary<int, int> (cho Matching)
-        /// </summary>
+        // Chuẩn hóa về Dictionary<int, int> (cho Matching)
         public static Dictionary<int, int>? NormalizeToDictionaryIntInt(object? userAnswer)
         {
             if (userAnswer == null) return null;
@@ -163,9 +151,7 @@ namespace LearningEnglish.Application.Common.Helpers
             return null;
         }
 
-        /// <summary>
-        /// Convert JsonElement về object thực sự (public để dùng ở nơi khác)
-        /// </summary>
+        // Convert JsonElement về object thực sự (public để dùng ở nơi khác)
         public static object ConvertJsonElementToObject(JsonElement element)
         {
             switch (element.ValueKind)
@@ -229,9 +215,7 @@ namespace LearningEnglish.Application.Common.Helpers
             }
         }
 
-        /// <summary>
-        /// Deserialize Dictionary<int, decimal> từ JSON string (cho ScoresJson)
-        /// </summary>
+        // Deserialize Dictionary<int, decimal> từ JSON string (cho ScoresJson)
         public static Dictionary<int, decimal> DeserializeScoresJson(string? json)
         {
             if (string.IsNullOrEmpty(json))
@@ -256,9 +240,7 @@ namespace LearningEnglish.Application.Common.Helpers
             }
         }
 
-        /// <summary>
-        /// Deserialize Dictionary<int, object> từ JSON string (cho AnswersJson)
-        /// </summary>
+        // Deserialize Dictionary<int, object> từ JSON string (cho AnswersJson)
         public static Dictionary<int, object> DeserializeAnswersJson(string? json)
         {
             if (string.IsNullOrEmpty(json))

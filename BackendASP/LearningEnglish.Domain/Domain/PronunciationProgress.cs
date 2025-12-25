@@ -1,9 +1,7 @@
 namespace LearningEnglish.Domain.Entities
 {
-    /// <summary>
-    /// Aggregated pronunciation progress - NO individual assessments stored
-    /// Only summary metrics are persisted to minimize DB size
-    /// </summary>
+    // Aggregated pronunciation progress - NO individual assessments stored
+    // Only summary metrics are persisted to minimize DB size
     public class PronunciationProgress
     {
         public int PronunciationProgressId { get; set; }
@@ -47,9 +45,7 @@ namespace LearningEnglish.Domain.Entities
         public User User { get; set; } = null!;
         public FlashCard FlashCard { get; set; } = null!;
 
-        /// <summary>
-        /// Update progress after new realtime assessment (no persistence of assessment)
-        /// </summary>
+        // Update progress after new realtime assessment (no persistence of assessment)
         public void UpdateAfterAssessment(
             double accuracyScore,
             double fluencyScore,

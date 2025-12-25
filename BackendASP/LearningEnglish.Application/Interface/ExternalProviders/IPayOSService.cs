@@ -10,7 +10,8 @@ namespace LearningEnglish.Application.Interface
             CreatePayOSLinkRequest request, 
             decimal amount, 
             string productName, 
-            string description);
+            string description,
+            long orderCode);
         
         // Lấy thông tin thanh toán
         Task<ServiceResponse<PayOSWebhookDto>> GetPaymentInformationAsync(long orderCode);

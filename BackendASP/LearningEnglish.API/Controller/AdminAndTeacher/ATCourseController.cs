@@ -43,13 +43,27 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return userId;
         }
 
-        // GET: api/courses - admin lấy tất cả khoá học với phân trang
+        // GET: api/courses/course-types - lấy danh sách loại khoá học (System, Teacher)
+        [HttpGet("course-types")]
+        [Authorize(Roles = "Admin, Teacher")]
+        public IActionResult GetCourseTypes()
+        {
+            var courseTypes = _adminCourseService.GetCourseTypes();
+            return Ok(new { success = true, data = courseTypes });
+        }
+
+        // GET: api/courses - admin lấy tất cả khoá học với phân trang, filter, sort, search
+        // Query params: 
+        // - pageNumber, pageSize: phân trang
+        // - type: lọc theo loại (1=System, 2=Teacher)
+        // - sortBy: title (mặc định), createdat, price, enrollmentcount, updatedat
+        // - sortOrder: 1=A-Z (Ascending), 2=Z-A (Descending)
+        // - searchTerm: tìm kiếm theo tên khóa học, mã khóa học, tên giáo viên
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAllCourses([FromQuery] PageRequest request)
+        public async Task<IActionResult> GetAllCourses([FromQuery] CourseQueryParameters parameters)
         {
-            // PageRequest có giá trị mặc định (PageNumber=1, PageSize=20), luôn dùng phân trang
-            var pagedResult = await _adminCourseService.GetAllCoursesPagedAsync(request);
+            var pagedResult = await _adminCourseService.GetAllCoursesPagedAsync(parameters);
             return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
         }
 
@@ -87,15 +101,18 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/courses/teacher - giáo viên lấy tất cả khoá học của mình với phân trang
+        // GET: api/courses/teacher - giáo viên lấy khoá học của mình với phân trang, sort, search
+        // Query params:
+        // - pageNumber, pageSize: phân trang
+        // - sortBy: title (mặc định), createdat, updatedat
+        // - sortOrder: 1=A-Z (Ascending), 2=Z-A (Descending)
+        // - searchTerm: tìm kiếm theo tên khóa học, mã khóa học
         [HttpGet("teacher")]
         [Authorize(Roles = "Teacher")]
-        public async Task<IActionResult> GetMyCourses([FromQuery] PageRequest request)
+        public async Task<IActionResult> GetMyCourses([FromQuery] CourseQueryParameters parameters)
         {
             var teacherId = GetCurrentUserId();
-
-            // PageRequest có giá trị mặc định, luôn dùng phân trang
-            var pagedResult = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, request);
+            var pagedResult = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, parameters);
             return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
         }
 
@@ -130,7 +147,10 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/courses/{courseId}/students - lấy danh sách học viên trong khoá học với phân trang
+        // GET: api/courses/{courseId}/students - lấy danh sách học viên trong khoá học với phân trang và tìm kiếm
+        // Query parameters:
+        // - PageNumber, PageSize: Phân trang
+        // - SearchTerm: Tìm kiếm theo DisplayName (FirstName + LastName) và Email
         [HttpGet("{courseId}/students")]
         [Authorize(Roles = "Admin, Teacher")]
         public async Task<IActionResult> GetUsersByCourseId(int courseId, [FromQuery] PageRequest request)

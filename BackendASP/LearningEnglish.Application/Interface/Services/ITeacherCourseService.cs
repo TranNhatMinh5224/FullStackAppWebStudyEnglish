@@ -13,7 +13,7 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<CourseResponseDto>> UpdateCourseAsync(int courseId, TeacherUpdateCourseRequestDto requestDto, int teacherId);
         
         // Lấy danh sách khóa học (phân trang)
-        Task<ServiceResponse<PagedResult<CourseResponseDto>>> GetMyCoursesPagedAsync(int teacherId, PageRequest request);
+        Task<ServiceResponse<PagedResult<CourseResponseDto>>> GetMyCoursesPagedAsync(int teacherId, CourseQueryParameters parameters);
         
         // Xóa khóa học
         Task<ServiceResponse<CourseResponseDto>> DeleteCourseAsync(int courseId, int teacherId);

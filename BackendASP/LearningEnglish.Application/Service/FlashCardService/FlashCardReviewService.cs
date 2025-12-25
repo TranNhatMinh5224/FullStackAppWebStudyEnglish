@@ -506,10 +506,8 @@ namespace LearningEnglish.Application.Service
 
         #region Private Helper Methods
 
-        /// <summary>
-        /// SM-2 Spaced Repetition Algorithm with configurable mastery criteria
-        /// Reference: https://en.wikipedia.org/wiki/SuperMemo#SM-2_algorithm
-        /// </summary>
+        // SM-2 Spaced Repetition Algorithm with configurable mastery criteria
+        // Reference: https://en.wikipedia.org/wiki/SuperMemo#SM-2_algorithm
         private void CalculateNextReview(FlashCardReview review)
         {
             var quality = review.Quality;
@@ -643,10 +641,8 @@ namespace LearningEnglish.Application.Service
         // Module completion is now handled by StartAndCompleteModuleAsync when user enters module
         // FlashCard reviews no longer auto-complete modules
 
-        /// <summary>
-        /// Get count of flashcards due for review today
-        /// Used by background services and notifications
-        /// </summary>
+        // Get count of flashcards due for review today
+        // Used by background services and notifications
         public async Task<int> GetDueCountAsync(int userId)
         {
             var currentDate = DateTime.UtcNow.Date;

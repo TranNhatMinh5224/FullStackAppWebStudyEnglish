@@ -47,6 +47,18 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.UserId == userId && p.ProductId == productId && p.ProductType == productType && p.Status == PaymentStatus.Completed);
         }
 
+        public async Task<Payment?> GetPaymentByIdempotencyKeyAsync(int userId, string idempotencyKey)
+        {
+            return await _context.Payments
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.IdempotencyKey == idempotencyKey);
+        }
+
+        public async Task<Payment?> GetPaymentByOrderCodeAsync(long orderCode)
+        {
+            return await _context.Payments
+                .FirstOrDefaultAsync(p => p.OrderCode == orderCode);
+        }
+
         public async Task UpdatePaymentStatusAsync(Payment payment)
 
         {
@@ -59,22 +71,15 @@ namespace LearningEnglish.Infrastructure.Repositories
             return await _context.SaveChangesAsync();
         }
 
-        // Transaction History
+        // Transaction History - Giao dịch mới nhất lên đầu
         public async Task<IEnumerable<Payment>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
         {
             return await _context.Payments
                 .Where(p => p.UserId == userId)
-                .OrderByDescending(p => p.PaymentId)
+                .OrderByDescending(p => p.PaidAt ?? DateTime.MinValue)  // Sort by PaidAt DESC (mới nhất lên đầu)
+                .ThenByDescending(p => p.PaymentId)  // Nếu PaidAt null thì sort theo PaymentId
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Payment>> GetAllTransactionHistoryAsync(int userId)
-        {
-            return await _context.Payments
-                .Where(p => p.UserId == userId)
-                .OrderByDescending(p => p.PaymentId)
                 .ToListAsync();
         }
 
@@ -99,6 +104,119 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.ProviderTransactionId == transactionId);
         }
 
+        public async Task<IEnumerable<Payment>> GetExpiredPendingPaymentsAsync(DateTime cutoffTime)
+        {
+            return await _context.Payments
+                .Where(p => p.Status == PaymentStatus.Pending && 
+                           p.ExpiredAt.HasValue && 
+                           p.ExpiredAt.Value < cutoffTime)
+                .ToListAsync();
+        }
+
+        // Revenue statistics methods
+        public async Task<decimal> GetTotalRevenueAsync()
+        {
+            return await _context.Payments
+                .Where(p => p.Status == PaymentStatus.Completed)
+                .SumAsync(p => p.Amount);
+        }
+
+        public async Task<decimal> GetRevenueByStatusAsync(PaymentStatus status)
+        {
+            return await _context.Payments
+                .Where(p => p.Status == status)
+                .SumAsync(p => p.Amount);
+        }
+
+        public async Task<decimal> GetRevenueByDateRangeAsync(DateTime fromDate, DateTime? toDate = null)
+        {
+            var query = _context.Payments
+                .Where(p => p.Status == PaymentStatus.Completed && p.PaidAt >= fromDate);
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(p => p.PaidAt <= toDate.Value);
+            }
+
+            return await query.SumAsync(p => p.Amount);
+        }
+
+        public async Task<int> GetTransactionsCountByStatusAsync(PaymentStatus status)
+        {
+            return await _context.Payments
+                .Where(p => p.Status == status)
+                .CountAsync();
+        }
+
+        public async Task<int> GetTransactionsCountByDateRangeAsync(DateTime fromDate, DateTime? toDate = null)
+        {
+            var query = _context.Payments
+                .Where(p => p.Status == PaymentStatus.Completed && p.PaidAt >= fromDate);
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(p => p.PaidAt <= toDate.Value);
+            }
+
+            return await query.CountAsync();
+        }
+
+        // Revenue by ProductType
+        public async Task<decimal> GetRevenueByProductTypeAsync(ProductType productType)
+        {
+            return await _context.Payments
+                .Where(p => p.Status == PaymentStatus.Completed && p.ProductType == productType)
+                .SumAsync(p => p.Amount);
+        }
+
+        public async Task<decimal> GetRevenueByProductTypeAndDateRangeAsync(ProductType productType, DateTime fromDate, DateTime? toDate = null)
+        {
+            var query = _context.Payments
+                .Where(p => p.Status == PaymentStatus.Completed && p.ProductType == productType && p.PaidAt >= fromDate);
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(p => p.PaidAt <= toDate.Value);
+            }
+
+            return await query.SumAsync(p => p.Amount);
+        }
+
+        // Revenue timeline for chart
+        public async Task<Dictionary<DateTime, decimal>> GetDailyRevenueAsync(DateTime fromDate, DateTime toDate)
+        {
+            var payments = await _context.Payments
+                .Where(p => p.Status == PaymentStatus.Completed && 
+                           p.PaidAt >= fromDate && 
+                           p.PaidAt <= toDate)
+                .Select(p => new { Date = p.PaidAt!.Value.Date, p.Amount })
+                .ToListAsync();
+
+            return payments
+                .GroupBy(p => p.Date)
+                .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
+        }
+
+        public async Task<Dictionary<DateTime, decimal>> GetMonthlyRevenueAsync(int year)
+        {
+            var startDate = new DateTime(year, 1, 1);
+            var endDate = new DateTime(year, 12, 31, 23, 59, 59);
+
+            var payments = await _context.Payments
+                .Where(p => p.Status == PaymentStatus.Completed && 
+                           p.PaidAt >= startDate && 
+                           p.PaidAt <= endDate)
+                .Select(p => new { 
+                    Year = p.PaidAt!.Value.Year, 
+                    Month = p.PaidAt!.Value.Month, 
+                    p.Amount 
+                })
+                .ToListAsync();
+
+            return payments
+                .GroupBy(p => new DateTime(p.Year, p.Month, 1))
+                .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
+        }
     }
 }
 

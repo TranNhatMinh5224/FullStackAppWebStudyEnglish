@@ -6,9 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service;
 
-/// <summary>
-/// Service xử lý tự động cập nhật tiến độ Module → Lesson → Course
-/// </summary>
+// Service xử lý tự động cập nhật tiến độ Module → Lesson → Course
 public class ModuleProgressService : IModuleProgressService
 {
     private readonly IModuleCompletionRepository _moduleCompletionRepo;
@@ -40,9 +38,7 @@ public class ModuleProgressService : IModuleProgressService
         _logger = logger;
     }
 
-    /// <summary>
-    /// Đánh dấu module hoàn thành và tự động cập nhật Lesson + Course progress
-    /// </summary>
+    // Đánh dấu module hoàn thành và tự động cập nhật Lesson + Course progress
     public async Task<ServiceResponse<object>> CompleteModuleAsync(int userId, int moduleId)
     {
         try
@@ -114,9 +110,7 @@ public class ModuleProgressService : IModuleProgressService
         }
     }
 
-    /// <summary>
-    /// Đánh dấu module bắt đầu (khi user vào module lần đầu)
-    /// </summary>
+    // Đánh dấu module bắt đầu (khi user vào module lần đầu)
     public async Task<ServiceResponse<object>> StartModuleAsync(int userId, int moduleId)
     {
         try
@@ -154,9 +148,7 @@ public class ModuleProgressService : IModuleProgressService
         }
     }
 
-    /// <summary>
-    /// Cập nhật tiến độ video trong lesson
-    /// </summary>
+    // Cập nhật tiến độ video trong lesson
     public async Task<ServiceResponse<object>> UpdateVideoProgressAsync(int userId, int lessonId, int positionSeconds, float videoPercentage)
     {
         try
@@ -199,10 +191,8 @@ public class ModuleProgressService : IModuleProgressService
         }
     }
 
-    /// <summary>
-    /// Start module và tự động complete nếu là FlashCard/Lecture/Video/Reading
-    /// Quiz/Essay chỉ start, không auto-complete
-    /// </summary>
+    // Start module và tự động complete nếu là FlashCard/Lecture/Video/Reading
+    // Quiz/Essay chỉ start, không auto-complete
     public async Task<ServiceResponse<object>> StartAndCompleteModuleAsync(int userId, int moduleId)
     {
         try
@@ -263,9 +253,7 @@ public class ModuleProgressService : IModuleProgressService
 
     #region Private Helper Methods
 
-    /// <summary>
-    /// Cập nhật LessonCompletion dựa trên số lượng modules hoàn thành
-    /// </summary>
+    // Cập nhật LessonCompletion dựa trên số lượng modules hoàn thành
     private async Task UpdateLessonProgressAsync(int userId, int lessonId)
     {
         try
@@ -310,9 +298,7 @@ public class ModuleProgressService : IModuleProgressService
         }
     }
 
-    /// <summary>
-    /// Cập nhật CourseProgress dựa trên số lượng lessons hoàn thành
-    /// </summary>
+    // Cập nhật CourseProgress dựa trên số lượng lessons hoàn thành
     private async Task UpdateCourseProgressAsync(int userId, int courseId)
     {
         try

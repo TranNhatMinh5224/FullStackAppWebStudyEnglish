@@ -339,12 +339,12 @@ namespace LearningEnglish.Application.Service
         }
 
         // Lấy danh sách khóa học của teacher với phân trang
-        public async Task<ServiceResponse<PagedResult<CourseResponseDto>>> GetMyCoursesPagedAsync(int teacherId, PageRequest request)
+        public async Task<ServiceResponse<PagedResult<CourseResponseDto>>> GetMyCoursesPagedAsync(int teacherId, CourseQueryParameters parameters)
         {
             var response = new ServiceResponse<PagedResult<CourseResponseDto>>();
             try
             {
-                var pagedData = await _courseRepository.GetCoursesByTeacherPagedAsync(teacherId, request);
+                var pagedData = await _courseRepository.GetCoursesByTeacherPagedAsync(teacherId, parameters);
 
                 var items = new List<CourseResponseDto>();
                 foreach (var course in pagedData.Items)

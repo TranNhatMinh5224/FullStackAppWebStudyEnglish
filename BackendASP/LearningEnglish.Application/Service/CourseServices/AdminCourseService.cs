@@ -1,6 +1,8 @@
 using LearningEnglish.Application.DTOs;
+
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
@@ -33,18 +35,38 @@ namespace LearningEnglish.Application.Service
             _minioFileStorage = minioFileStorage;
         }
 
+        // Lấy danh sách loại khóa học
+        // Tuân thủ SRP: Service chịu trách nhiệm business logic
+        public List<CourseTypeDto> GetCourseTypes()
+        {
+            return Enum.GetValues(typeof(CourseType))
+                .Cast<CourseType>()
+                .Select(ct => new CourseTypeDto
+                {
+                    Value = (int)ct,
+                    Name = ct.ToString(),
+                    DisplayName = ct switch
+                    {
+                        CourseType.System => "Khóa học hệ thống",
+                        CourseType.Teacher => "Khóa học giáo viên",
+                        _ => ct.ToString()
+                    }
+                })
+                .ToList();
+        }
+
 
 
 
 
 
         // Service cho Admin Lấy ra toàn bộ khóa học với phân trang
-        public async Task<ServiceResponse<PagedResult<AdminCourseListResponseDto>>> GetAllCoursesPagedAsync(PageRequest request)
+        public async Task<ServiceResponse<PagedResult<AdminCourseListResponseDto>>> GetAllCoursesPagedAsync(CourseQueryParameters parameters)
         {
             var response = new ServiceResponse<PagedResult<AdminCourseListResponseDto>>();
             try
             {
-                var pagedData = await _courseRepository.GetAllCoursesPagedAsync(request);
+                var pagedData = await _courseRepository.GetAllCoursesPagedAsync(parameters);
 
                 var items = new List<AdminCourseListResponseDto>();
                 foreach (var course in pagedData.Items)

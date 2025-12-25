@@ -75,6 +75,23 @@ namespace LearningEnglish.Application.DTOs
         public DateTime SubmittedAt { get; set; }
         public string Status { get; set; } = string.Empty;
 
+        // 🆕 Grading Information - AI Score
+        public decimal? AiScore { get; set; }
+        public string? AiFeedback { get; set; }
+        public DateTime? AiGradedAt { get; set; }
+
+        // 🆕 Grading Information - Teacher Score (Override)
+        public decimal? TeacherScore { get; set; }
+        public string? TeacherFeedback { get; set; }
+        public DateTime? TeacherGradedAt { get; set; }
+        public string? GradedByTeacherName { get; set; }
+
+        // 🆕 Final Score - prioritizes teacher score
+        public decimal? FinalScore { get; set; }
+        
+        // 🆕 Max score from assessment
+        public decimal? MaxScore { get; set; }
+
         // User info (không include full UserDto để tránh circular reference)
         public string? UserName { get; set; }
         public string? UserEmail { get; set; }

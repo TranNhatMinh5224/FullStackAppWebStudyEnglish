@@ -1,6 +1,7 @@
 namespace LearningEnglish.Application.Common.Pagination
 {
-    // Pagination request DTO with validation
+    // Base class cho pagination requests
+    // Tuân thủ Single Responsibility Principle: chỉ lo pagination logic
     public class PageRequest
     {
         private int _pageNumber = 1;
@@ -24,7 +25,6 @@ namespace LearningEnglish.Application.Common.Pagination
                 _ => value
             };
         }
-        
-        public string? SearchTerm { get; set; } // từ khóa tìm kiếm
     }
 }
+

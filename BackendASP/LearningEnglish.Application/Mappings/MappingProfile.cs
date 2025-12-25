@@ -9,9 +9,47 @@ namespace LearningEnglish.Application.Mappings
     {
         public MappingProfile()
         {
+            // Essay Grading mappings
+            CreateMap<EssaySubmission, EssayGradingResultDto>()
+                .ForMember(dest => dest.SubmissionId, opt => opt.MapFrom(src => src.SubmissionId))
+                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.TeacherScore ?? src.Score ?? 0))
+                .ForMember(dest => dest.MaxScore, opt => opt.MapFrom(src => src.Essay != null && src.Essay.Assessment != null ? src.Essay.Assessment.TotalPoints : 0))
+                .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.TeacherFeedback ?? src.Feedback ?? string.Empty))
+                .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt ?? src.GradedAt ?? DateTime.UtcNow))
+                .ForMember(dest => dest.GradedByTeacher, opt => opt.MapFrom(src => src.TeacherScore.HasValue))
+                .ForMember(dest => dest.FinalScore, opt => opt.MapFrom(src => src.FinalScore))
+                .ForMember(dest => dest.Breakdown, opt => opt.Ignore()) // Only from AI
+                .ForMember(dest => dest.Strengths, opt => opt.Ignore()) // Only from AI
+                .ForMember(dest => dest.Improvements, opt => opt.Ignore()); // Only from AI
+
+            // Pronunciation mappings
+            CreateMap<FlashCard, FlashCardWithPronunciationDto>()
+                .ForMember(dest => dest.Word, opt => opt.MapFrom(src => src.Word))
+                .ForMember(dest => dest.Definition, opt => opt.MapFrom(src => src.Meaning))
+                .ForMember(dest => dest.Example, opt => opt.MapFrom(src => src.Example))
+                .ForMember(dest => dest.Phonetic, opt => opt.MapFrom(src => src.Pronunciation))
+                .ForMember(dest => dest.ImageUrl, opt => opt.Ignore()) // Set in service with BuildPublicUrl
+                .ForMember(dest => dest.AudioUrl, opt => opt.Ignore()) // Set in service with BuildPublicUrl
+                .ForMember(dest => dest.Progress, opt => opt.Ignore()); // Set in service from PronunciationProgress
+
+            CreateMap<PronunciationProgress, PronunciationProgressSummary>()
+                .ForMember(dest => dest.Status, opt => opt.Ignore()) // Calculated in service
+                .ForMember(dest => dest.StatusColor, opt => opt.Ignore()); // Calculated in service
+
             // Streak mapping
             CreateMap<Streak, StreakDto>()
                 .ForMember(dest => dest.IsActiveToday, opt => opt.MapFrom<IsActiveTodayResolver>());
+
+            // Payment mappings
+            CreateMap<Payment, TransactionHistoryDto>()
+                .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.Gateway.ToString()))
+                .ForMember(dest => dest.ProductName, opt => opt.Ignore()); // Set in service after mapping
+
+            CreateMap<Payment, TransactionDetailDto>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? $"{src.User.FirstName} {src.User.LastName}" : "N/A"))
+                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : "N/A"))
+                .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.Gateway.ToString()))
+                .ForMember(dest => dest.ProductName, opt => opt.Ignore()); // Set in service after mapping
 
             // Course mappings - DTO sang Entity
             CreateMap<AdminCreateCourseRequestDto, Course>()
@@ -296,7 +334,17 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.AttachmentUrl, opt => opt.MapFrom(src => src.AttachmentKey)) // Will be replaced with URL in service
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : null))
-                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
+                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+                // Grading fields
+                .ForMember(dest => dest.AiScore, opt => opt.MapFrom(src => src.Score))
+                .ForMember(dest => dest.AiFeedback, opt => opt.MapFrom(src => src.Feedback))
+                .ForMember(dest => dest.AiGradedAt, opt => opt.MapFrom(src => src.GradedAt))
+                .ForMember(dest => dest.TeacherScore, opt => opt.MapFrom(src => src.TeacherScore))
+                .ForMember(dest => dest.TeacherFeedback, opt => opt.MapFrom(src => src.TeacherFeedback))
+                .ForMember(dest => dest.TeacherGradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt))
+                .ForMember(dest => dest.GradedByTeacherName, opt => opt.MapFrom(src => src.GradedByTeacher != null ? src.GradedByTeacher.FullName : null))
+                .ForMember(dest => dest.FinalScore, opt => opt.MapFrom(src => src.FinalScore))
+                .ForMember(dest => dest.MaxScore, opt => opt.MapFrom(src => src.Essay != null && src.Essay.Assessment != null ? src.Essay.Assessment.TotalPoints : (decimal?)null));
 
             // EssaySubmission to List DTO (basic info for listing)
             CreateMap<EssaySubmission, EssaySubmissionListDto>()
@@ -394,6 +442,13 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.IsPassed, opt => opt.Ignore())
                 .ForMember(dest => dest.ScoresByQuestion, opt => opt.Ignore())
                 .ForMember(dest => dest.CorrectAnswers, opt => opt.Ignore());
+
+            CreateMap<QuizAttempt, QuizScoreDto>()
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.User.FirstName))
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.User.LastName))
+                .ForMember(dest => dest.Percentage, opt => opt.Ignore())
+                .ForMember(dest => dest.IsPassed, opt => opt.Ignore());
 
 
 

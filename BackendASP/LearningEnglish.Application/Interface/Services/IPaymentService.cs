@@ -15,13 +15,13 @@ namespace LearningEnglish.Application.Interface
         // Lấy lịch sử giao dịch phân trang
         Task<ServiceResponse<PagedResult<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, PageRequest request);
         
-        // Lấy tất cả lịch sử giao dịch
-        Task<ServiceResponse<List<TransactionHistoryDto>>> GetAllTransactionHistoryAsync(int userId);
-        
         // Lấy chi tiết giao dịch
         Task<ServiceResponse<TransactionDetailDto>> GetTransactionDetailAsync(int paymentId, int userId);
         
         // Tạo link thanh toán PayOS
         Task<ServiceResponse<PayOSLinkResponse>> CreatePayOSPaymentLinkAsync(int paymentId, int userId);
+        
+        // Process webhook from queue (for retry mechanism)
+        Task<ServiceResponse<bool>> ProcessWebhookFromQueueAsync(PayOSWebhookDto webhookData);
     }
 }

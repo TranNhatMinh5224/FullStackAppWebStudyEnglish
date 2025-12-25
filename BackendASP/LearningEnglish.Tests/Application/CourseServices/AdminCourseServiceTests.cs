@@ -85,7 +85,7 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetAllCoursesPagedAsync(request))
+            .Setup(x => x.GetAllCoursesPagedAsync(It.IsAny<CourseQueryParameters>()))
             .ReturnsAsync(pagedData);
 
         _mapperMock
@@ -101,7 +101,7 @@ public class AdminCourseServiceTests
             .ReturnsAsync(10);
 
         // Act
-        var result = await _adminCourseService.GetAllCoursesPagedAsync(request);
+        var result = await _adminCourseService.GetAllCoursesPagedAsync(new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.True(result.Success);
@@ -126,11 +126,11 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetAllCoursesPagedAsync(request))
+            .Setup(x => x.GetAllCoursesPagedAsync(It.IsAny<CourseQueryParameters>()))
             .ReturnsAsync(pagedData);
 
         // Act
-        var result = await _adminCourseService.GetAllCoursesPagedAsync(request);
+        var result = await _adminCourseService.GetAllCoursesPagedAsync(new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.True(result.Success);
@@ -172,7 +172,7 @@ public class AdminCourseServiceTests
         var courseDto = new AdminCourseListResponseDto { CourseId = 1, Title = "Course 1" };
 
         _courseRepositoryMock
-            .Setup(x => x.GetAllCoursesPagedAsync(request))
+            .Setup(x => x.GetAllCoursesPagedAsync(It.IsAny<CourseQueryParameters>()))
             .ReturnsAsync(pagedData);
 
         _mapperMock
@@ -188,7 +188,7 @@ public class AdminCourseServiceTests
             .ReturnsAsync(0);
 
         // Act
-        var result = await _adminCourseService.GetAllCoursesPagedAsync(request);
+        var result = await _adminCourseService.GetAllCoursesPagedAsync(new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.True(result.Success);
@@ -203,11 +203,11 @@ public class AdminCourseServiceTests
         var request = new PageRequest { PageNumber = 1, PageSize = 10 };
 
         _courseRepositoryMock
-            .Setup(x => x.GetAllCoursesPagedAsync(request))
+            .Setup(x => x.GetAllCoursesPagedAsync(It.IsAny<CourseQueryParameters>()))
             .ThrowsAsync(new Exception("Database error"));
 
         // Act
-        var result = await _adminCourseService.GetAllCoursesPagedAsync(request);
+        var result = await _adminCourseService.GetAllCoursesPagedAsync(new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.False(result.Success);

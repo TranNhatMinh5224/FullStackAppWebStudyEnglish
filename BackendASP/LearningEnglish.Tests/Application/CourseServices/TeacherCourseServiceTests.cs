@@ -1051,7 +1051,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacherPagedAsync(teacherId, request))
+            .Setup(x => x.GetCoursesByTeacherPagedAsync(teacherId, It.IsAny<CourseQueryParameters>()))
             .ReturnsAsync(pagedData);
 
         _mapperMock
@@ -1067,7 +1067,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync(10);
 
         // Act
-        var result = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, request);
+        var result = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.True(result.Success);
@@ -1092,11 +1092,11 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacherPagedAsync(teacherId, request))
+            .Setup(x => x.GetCoursesByTeacherPagedAsync(teacherId, It.IsAny<CourseQueryParameters>()))
             .ReturnsAsync(pagedData);
 
         // Act
-        var result = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, request);
+        var result = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.True(result.Success);
@@ -1113,11 +1113,11 @@ public class TeacherCourseServiceTests
         var request = new PageRequest { PageNumber = 1, PageSize = 10 };
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacherPagedAsync(teacherId, request))
+            .Setup(x => x.GetCoursesByTeacherPagedAsync(teacherId, It.IsAny<CourseQueryParameters>()))
             .ThrowsAsync(new Exception("Database error"));
 
         // Act
-        var result = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, request);
+        var result = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.False(result.Success);

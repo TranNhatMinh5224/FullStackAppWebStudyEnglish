@@ -10,8 +10,13 @@ namespace LearningEnglish.Infrastructure.Repositories
     public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _context;
+        private readonly ISortingService<User> _sortingService;
 
-        public UserRepository(AppDbContext context) => _context = context;
+        public UserRepository(AppDbContext context, ISortingService<User> sortingService)
+        {
+            _context = context;
+            _sortingService = sortingService;
+        }
 
         public async Task<User?> GetByIdAsync(int id) =>
             await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.UserId == id);
@@ -25,28 +30,34 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<List<User>> GetAllUsersAsync() =>
             await _context.Users.Include(u => u.Roles).ToListAsync();
 
-        // Lấy tất cả người dùng với phân trang
-        public async Task<PagedResult<User>> GetAllUsersPagedAsync(PageRequest request)
+        public async Task<List<User>> GetUsersByRoleAsync(string roleName) =>
+            await _context.Users
+                .Include(u => u.Roles)
+                .Where(u => u.Roles.Any(r => r.Name == roleName))
+                .ToListAsync();
+
+        // Lấy tất cả người dùng với phân trang, search và sort
+        public async Task<PagedResult<User>> GetAllUsersPagedAsync(UserQueryParameters request)
         {
             var query = _context.Users
                 .Include(u => u.Roles)
-                .OrderBy(u => u.FirstName)
                 .AsQueryable();
 
+            // Apply search filter (case-insensitive, chỉ search theo Email)
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
             {
                 var term = request.SearchTerm.ToLower();
-                query = query.Where(u =>
-                    u.Email.ToLower().Contains(term) ||
-                    u.FirstName.ToLower().Contains(term) ||
-                    u.LastName.ToLower().Contains(term));
+                query = query.Where(u => u.Email.ToLower().Contains(term));
             }
+
+            // Apply sorting
+            query = _sortingService.ApplySort(query, request.SortBy, request.SortOrder);
 
             return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
         }
 
         // Lấy danh sách người dùng theo khóa học với phân trang
-        public async Task<PagedResult<User>> GetUsersByCourseIdPagedAsync(int courseId, PageRequest request)
+        public async Task<PagedResult<User>> GetUsersByCourseIdPagedAsync(int courseId, UserQueryParameters request)
         {
             var query = _context.UserCourses
                 .Where(uc => uc.CourseId == courseId && uc.User != null)
@@ -58,9 +69,10 @@ namespace LearningEnglish.Infrastructure.Repositories
 
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
             {
+                var term = request.SearchTerm.ToLower();
                 query = query.Where(u =>
-                    (u.FirstName + " " + u.LastName).Contains(request.SearchTerm) ||
-                    u.Email.Contains(request.SearchTerm));
+                    (u.FirstName + " " + u.LastName).ToLower().Contains(term) ||
+                    u.Email.ToLower().Contains(term));
             }
 
             return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
@@ -138,42 +150,87 @@ namespace LearningEnglish.Infrastructure.Repositories
             return teachers;
         }
 
-        // Lấy danh sách teacher với phân trang
-        public async Task<PagedResult<User>> GetAllTeachersPagedAsync(PageRequest request)
+        // Lấy danh sách teacher với phân trang, search và sort
+        public async Task<PagedResult<User>> GetAllTeachersPagedAsync(UserQueryParameters request)
         {
             var query = _context.Users
                 .Include(u => u.Roles)
                 .Where(u => u.Roles.Any(r => r.RoleId == 2));
 
+            // Apply search filter (case-insensitive)
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
             {
+                var term = request.SearchTerm.ToLower();
                 query = query.Where(u => 
-                    u.FirstName.Contains(request.SearchTerm) || 
-                    u.LastName.Contains(request.SearchTerm) ||
-                    u.Email.Contains(request.SearchTerm)
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(term)) || 
+                    (u.LastName != null && u.LastName.ToLower().Contains(term)) ||
+                    u.Email.ToLower().Contains(term)
                 );
             }
+
+            // Apply sorting
+            query = _sortingService.ApplySort(query, request.SortBy, request.SortOrder);
 
             return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
         }
 
-        // Lấy danh sách tài khoản bị khóa với phân trang
-        public async Task<PagedResult<User>> GetListBlockedAccountsPagedAsync(PageRequest request)
+        // Lấy danh sách tài khoản bị khóa với phân trang, search và sort
+        public async Task<PagedResult<User>> GetListBlockedAccountsPagedAsync(UserQueryParameters request)
         {
             var query = _context.Users
                 .Include(u => u.Roles)
                 .Where(u => u.Status == AccountStatus.Inactive);
 
+            // Apply search filter (case-insensitive)
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
             {
+                var term = request.SearchTerm.ToLower();
                 query = query.Where(u => 
-                    u.FirstName.Contains(request.SearchTerm) || 
-                    u.LastName.Contains(request.SearchTerm) ||
-                    u.Email.Contains(request.SearchTerm)
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(term)) || 
+                    (u.LastName != null && u.LastName.ToLower().Contains(term)) ||
+                    u.Email.ToLower().Contains(term)
                 );
             }
 
+            // Apply sorting
+            query = _sortingService.ApplySort(query, request.SortBy, request.SortOrder);
+
             return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
+        }
+
+        // Statistics methods cho Admin Dashboard
+        public async Task<int> GetTotalUsersCountAsync()
+        {
+            return await _context.Users.CountAsync();
+        }
+
+        public async Task<int> GetUserCountByRoleAsync(string roleName)
+        {
+            return await _context.Users
+                .Include(u => u.Roles)
+                .Where(u => u.Roles.Any(r => r.Name == roleName))
+                .CountAsync();
+        }
+
+        public async Task<int> GetActiveUsersCountAsync()
+        {
+            return await _context.Users
+                .Where(u => u.Status == AccountStatus.Active)
+                .CountAsync();
+        }
+
+        public async Task<int> GetBlockedUsersCountAsync()
+        {
+            return await _context.Users
+                .Where(u => u.Status == AccountStatus.Suspended || u.Status == AccountStatus.Inactive)
+                .CountAsync();
+        }
+
+        public async Task<int> GetNewUsersCountAsync(DateTime fromDate)
+        {
+            return await _context.Users
+                .Where(u => u.CreatedAt >= fromDate)
+                .CountAsync();
         }
     }
 }

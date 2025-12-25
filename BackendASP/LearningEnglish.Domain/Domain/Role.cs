@@ -7,6 +7,8 @@ public class Role
     public string Name { get; set; } = string.Empty;
 
     // Many-to-many
-
     public List<User> Users { get; set; } = new List<User>();
+    
+    // Role-Permission relationship
+    public List<RolePermission> RolePermissions { get; set; } = new();
 }

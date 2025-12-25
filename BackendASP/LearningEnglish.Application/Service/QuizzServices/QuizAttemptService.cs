@@ -480,37 +480,78 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // Lấy tất cả attempts đang InProgress
-                var inProgressAttempts = await _quizAttemptRepository.GetInProgressAttemptsAsync();
+                // BATCH PROCESSING: Load attempts từng batch để tránh memory overflow
+                const int BATCH_SIZE = 200; // 200 attempts/batch
+                int totalSubmitted = 0;
+                int skip = 0;
+                bool hasMore = true;
 
-                int submittedCount = 0;
-
-                foreach (var attempt in inProgressAttempts)
+                while (hasMore)
                 {
-                    // Lấy thông tin quiz để kiểm tra duration
-                    var quiz = await _quizRepository.GetQuizByIdAsync(attempt.QuizId);
-                    if (quiz == null || !quiz.Duration.HasValue) continue;
+                    // Lấy batch InProgress attempts với Quiz included (tránh N+1 query)
+                    var inProgressAttempts = await _quizAttemptRepository.GetInProgressAttemptsAsync();
+                    var batch = inProgressAttempts.Skip(skip).Take(BATCH_SIZE).ToList();
 
-                    // Tính thời gian kết thúc
-                    var endTime = attempt.StartedAt.AddMinutes(quiz.Duration.Value);
-                    var now = DateTime.UtcNow;
-
-                    // Nếu đã hết thời gian
-                    if (now >= endTime)
+                    if (batch.Count == 0)
                     {
-                        // Auto-submit
-                        attempt.Status = QuizAttemptStatus.Submitted;
-                        attempt.SubmittedAt = endTime; // Thời gian hết hạn
-                        attempt.TimeSpentSeconds = quiz.Duration.Value * 60; // Thời gian tối đa
-
-                        await _quizAttemptRepository.UpdateQuizAttemptAsync(attempt);
-                        submittedCount++;
+                        hasMore = false;
+                        break;
                     }
+
+                    try
+                    {
+                        var now = DateTime.UtcNow;
+                        int batchSubmitted = 0;
+
+                        foreach (var attempt in batch)
+                        {
+                            // Quiz đã được Include trong GetInProgressAttemptsAsync → không cần query lại
+                            var quiz = attempt.Quiz;
+                            if (quiz == null || !quiz.Duration.HasValue) continue;
+
+                            // Tính thời gian kết thúc
+                            var endTime = attempt.StartedAt.AddMinutes(quiz.Duration.Value);
+
+                            // Nếu đã hết thời gian
+                            if (now >= endTime)
+                            {
+                                // Auto-submit
+                                attempt.Status = QuizAttemptStatus.Submitted;
+                                attempt.SubmittedAt = endTime; // Thời gian hết hạn
+                                attempt.TimeSpentSeconds = quiz.Duration.Value * 60; // Thời gian tối đa
+
+                                await _quizAttemptRepository.UpdateQuizAttemptAsync(attempt);
+                                batchSubmitted++;
+                            }
+                        }
+
+                        totalSubmitted += batchSubmitted;
+
+                        if (batchSubmitted > 0)
+                        {
+                            Console.WriteLine($"✅ Auto-submitted batch: {batchSubmitted} attempts");
+                        }
+                    }
+                    catch (Exception batchEx)
+                    {
+                        Console.WriteLine($"❌ Error in batch processing: {batchEx.Message}. Continuing...");
+                    }
+
+                    skip += BATCH_SIZE;
+
+                    // Nếu batch nhỏ hơn BATCH_SIZE → đây là batch cuối
+                    if (batch.Count < BATCH_SIZE)
+                    {
+                        hasMore = false;
+                    }
+
+                    // Throttle để tránh quá tải DB
+                    await Task.Delay(100);
                 }
 
                 response.Success = true;
                 response.Data = true;
-                response.Message = $"Auto-submitted {submittedCount} expired attempts";
+                response.Message = $"Auto-submitted {totalSubmitted} expired attempts";
 
                 return response;
             }

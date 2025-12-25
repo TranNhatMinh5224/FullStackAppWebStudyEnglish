@@ -17,11 +17,14 @@ namespace LearningEnglish.Application.Interface
         // Lấy tất cả user
         Task<List<User>> GetAllUsersAsync();
 
+        // Lấy users theo role
+        Task<List<User>> GetUsersByRoleAsync(string roleName);
+
         // Lấy tất cả user với phân trang
-        Task<PagedResult<User>> GetAllUsersPagedAsync(PageRequest request);
+        Task<PagedResult<User>> GetAllUsersPagedAsync(UserQueryParameters request);
 
         // Lấy user theo khóa học với phân trang
-        Task<PagedResult<User>> GetUsersByCourseIdPagedAsync(int courseId, PageRequest request);
+        Task<PagedResult<User>> GetUsersByCourseIdPagedAsync(int courseId, UserQueryParameters request);
 
         // Cập nhật quyền giáo viên
         Task<bool> UpdateRoleTeacher(int userId);
@@ -48,9 +51,16 @@ namespace LearningEnglish.Application.Interface
         Task<List<User>> GetAllTeachersAsync();
         
         // Lấy giáo viên với phân trang
-        Task<PagedResult<User>> GetAllTeachersPagedAsync(PageRequest request);
+        Task<PagedResult<User>> GetAllTeachersPagedAsync(UserQueryParameters request);
         
         // Lấy tài khoản bị khóa với phân trang
-        Task<PagedResult<User>> GetListBlockedAccountsPagedAsync(PageRequest request);
+        Task<PagedResult<User>> GetListBlockedAccountsPagedAsync(UserQueryParameters request);
+        
+        // Statistics methods cho Admin Dashboard
+        Task<int> GetTotalUsersCountAsync();
+        Task<int> GetUserCountByRoleAsync(string roleName);
+        Task<int> GetActiveUsersCountAsync(); // Users không bị block
+        Task<int> GetBlockedUsersCountAsync();
+        Task<int> GetNewUsersCountAsync(DateTime fromDate);
     }
 }

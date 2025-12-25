@@ -223,12 +223,13 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // Lấy tất cả người dùng với phân trang
-        public async Task<ServiceResponse<PagedResult<UserDto>>> GetAllUsersPagedAsync(PageRequest request)
+        // Lấy tất cả người dùng với phân trang, search và sort
+        public async Task<ServiceResponse<PagedResult<UserDto>>> GetAllUsersPagedAsync(UserQueryParameters request)
         {
             var response = new ServiceResponse<PagedResult<UserDto>>();
             try
             {
+                // Directly pass UserQueryParameters to repository
                 var pagedData = await _userRepository.GetAllUsersPagedAsync(request);
 
                 var result = new PagedResult<UserDto>
@@ -343,11 +344,12 @@ namespace LearningEnglish.Application.Service
         }
 
         // Danh sách tài khoản bị khóa với phân trang
-        public async Task<ServiceResponse<PagedResult<UserDto>>> GetListBlockedAccountsPagedAsync(PageRequest request)
+        public async Task<ServiceResponse<PagedResult<UserDto>>> GetListBlockedAccountsPagedAsync(UserQueryParameters request)
         {
             var response = new ServiceResponse<PagedResult<UserDto>>();
             try
             {
+                // Directly pass UserQueryParameters to repository
                 var pagedData = await _userRepository.GetListBlockedAccountsPagedAsync(request);
 
                 var result = new PagedResult<UserDto>
@@ -388,7 +390,12 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // RLS policy đã tự động filter UserCourses
-                var pagedUsers = await _userRepository.GetUsersByCourseIdPagedAsync(courseId, request);
+                var userParams = new UserQueryParameters
+                {
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize
+                };
+                var pagedUsers = await _userRepository.GetUsersByCourseIdPagedAsync(courseId, userParams);
 
                 var userDtos = _mapper.Map<List<UserDto>>(pagedUsers.Items);
 
@@ -416,11 +423,12 @@ namespace LearningEnglish.Application.Service
         }
 
         // Lấy danh sách giáo viên theo phân trang
-        public async Task<ServiceResponse<PagedResult<UserDto>>> GetListTeachersPagedAsync(PageRequest request)
+        public async Task<ServiceResponse<PagedResult<UserDto>>> GetListTeachersPagedAsync(UserQueryParameters request)
         {
             var response = new ServiceResponse<PagedResult<UserDto>>();
             try
             {
+                // Directly pass UserQueryParameters to repository
                 var pagedData = await _userRepository.GetAllTeachersPagedAsync(request);
 
                 var result = new PagedResult<UserDto>

@@ -29,11 +29,17 @@ namespace LearningEnglish.Application.Interface
         // Lấy tất cả bài làm của quiz
         Task<List<QuizAttempt>> GetByQuizIdAsync(int quizId);
 
+        // Lấy các bài làm đã submit của quiz
+        Task<List<QuizAttempt>> GetSubmittedAttemptsByQuizIdAsync(int quizId);
+
         // Lấy bài làm với phân trang
-        Task<PagedResult<QuizAttempt>> GetQuizAttemptsPagedAsync(int quizId, PageRequest request);
+        Task<PagedResult<QuizAttempt>> GetQuizAttemptsPagedAsync(int quizId, QuizAttemptQueryParameters request);
 
         // Lấy điểm với phân trang
-        Task<PagedResult<QuizAttempt>> GetQuizScoresPagedAsync(int quizId, PageRequest request);
+        Task<PagedResult<QuizAttempt>> GetQuizScoresPagedAsync(int quizId, QuizAttemptQueryParameters request);
+
+        // Lấy điểm (không phân trang)
+        Task<List<QuizAttempt>> GetQuizScoresAsync(int quizId);
 
         // Lưu thay đổi
         Task SaveChangesAsync();

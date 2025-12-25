@@ -9,11 +9,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace LearningEnglish.Application.Service
 {
-    /// <summary>
-    /// Service xử lý đăng nhập bằng Google OAuth2 - Application Layer
-    /// Chứa business logic: tạo user, validate, generate JWT
-    /// Delegate HTTP calls cho IGoogleAuthProvider (Infrastructure layer)
-    /// </summary>
+    // Service xử lý đăng nhập bằng Google OAuth2
+    // Chứa business logic: tạo user, validate, generate JWT
+    // Delegate HTTP calls cho IGoogleAuthProvider (Infrastructure layer)
     public class GoogleLoginService : IGoogleLoginService
     {
         private readonly IUserRepository _userRepository;
@@ -143,9 +141,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        /// <summary>
-        /// Business Logic: Tạo hoặc lấy user từ thông tin Google
-        /// </summary>
+        // Business Logic: Tạo hoặc lấy user từ thông tin Google
         private async Task<User?> GetOrCreateUserAsync(GoogleUserInfo googleUser)
         {
             // Tìm external login đã tồn tại
@@ -195,9 +191,7 @@ namespace LearningEnglish.Application.Service
             return newUser;
         }
 
-        /// <summary>
-        /// Tạo user mới từ thông tin Google
-        /// </summary>
+        // Tạo user mới từ thông tin Google
         private async Task<User> CreateNewUserFromGoogleAsync(GoogleUserInfo googleUser)
         {
             // Download và upload avatar nếu có
@@ -232,9 +226,7 @@ namespace LearningEnglish.Application.Service
             return user;
         }
 
-        /// <summary>
-        /// Download avatar từ Google và upload lên MinIO
-        /// </summary>
+        // Download avatar từ Google và upload lên MinIO
         private async Task<string?> DownloadAndUploadAvatarAsync(string avatarUrl, string userEmail)
         {
             try

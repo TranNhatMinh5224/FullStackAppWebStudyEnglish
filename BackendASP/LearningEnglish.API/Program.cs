@@ -20,12 +20,17 @@ using LearningEnglish.Application.Service.BackgroundJobs;
 using LearningEnglish.Application.Validators;
 using LearningEnglish.Infrastructure.Repositories;
 using LearningEnglish.Infrastructure.Services;
+using LearningEnglish.Infrastructure.Services.ExternalProviders;
 using LearningEnglish.Application.Cofigurations;
 using LearningEnglish.Application.Configurations;
+using LearningEnglish.Application.Interface.Services;
+using LearningEnglish.Application.Service.EssayGrading;
 using Microsoft.Extensions.Options;
 using Minio;
 using LearningEnglish.Infrastructure.MinioFileStorage;
 using LearningEnglish.API.Middleware;
+using LearningEnglish.Domain.Domain;
+using LearningEnglish.Domain.Entities;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -136,6 +141,7 @@ builder.Services.AddScoped<IEssaySubmissionRepository, EssaySubmissionRepository
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 builder.Services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentWebhookQueueRepository, PaymentWebhookQueueRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ITeacherPackageRepository, TeacherPackageRepository>();
 builder.Services.AddScoped<ITeacherSubscriptionRepository, TeacherSubscriptionRepository>();
@@ -151,9 +157,13 @@ builder.Services.AddScoped<IModuleCompletionRepository, ModuleCompletionReposito
 builder.Services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// Sorting Services
+builder.Services.AddScoped<ISortingService<Course>, CourseSortingService>();
+builder.Services.AddScoped<ISortingService<User>, UserSortingService>();
 
 // Service layer
 builder.Services.AddScoped<IAdminCourseService, AdminCourseService>();
+builder.Services.AddScoped<IAdminStatisticsService, AdminStatisticsService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<IModuleService, ModuleService>();
 builder.Services.AddScoped<IModuleProgressService, ModuleProgressService>();
@@ -230,6 +240,9 @@ builder.Services.Configure<FacebookAuthOptions>(builder.Configuration.GetSection
 // PayOS Configuration
 builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
 
+// Gemini AI Configuration for Essay Grading
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
+
 // PayOS HttpClient
 builder.Services.AddHttpClient("PayOS", client =>
 {
@@ -239,6 +252,12 @@ builder.Services.AddHttpClient("PayOS", client =>
 
 // PayOS Service
 builder.Services.AddScoped<IPayOSService, PayOSService>();
+
+// Gemini AI Service for Essay Grading
+builder.Services.AddHttpClient<IGeminiService, GeminiService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+
+builder.Services.AddScoped<IEssayGradingService, EssayGradingService>();
 
 // MinIO Client (Singleton - dùng chung cho toàn bộ app)
 builder.Services.AddSingleton<IMinioClient>(sp =>
@@ -278,11 +297,13 @@ builder.Services.AddScoped<IScoringStrategy, MultipleAnswersScoringStrategy>();
 builder.Services.AddScoped<IScoringStrategy, MatchingScoringStrategy>();
 builder.Services.AddScoped<IScoringStrategy, OrderingScoringStrategy>();
 
-// Background services
-builder.Services.AddHostedService<QuizAutoSubmitService>();
-// Background Services - CHỈ CẦN CÁC SERVICE THIẾT YẾU
-builder.Services.AddHostedService<TempFileCleanupHostedService>();
-builder.Services.AddHostedService<OtpCleanupService>(); // Tự động xóa OTP hết hạn mỗi 30 phút
+// Background services - All cleanup and scheduled jobs
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.QuizAutoSubmitService>();
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.TempFileCleanupHostedService>();
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.OtpCleanupService>(); // Tự động xóa OTP hết hạn mỗi 30 phút
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.PaymentCleanupService>(); // Tự động cleanup payment expired mỗi giờ
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.WebhookRetryService>(); // Webhook retry với exponential backoff
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.WebhookRetryService>(); // Webhook retry với exponential backoff
 
 //  VOCABULARY REMINDER SYSTEM -
 builder.Services.AddScoped<SimpleNotificationService>();

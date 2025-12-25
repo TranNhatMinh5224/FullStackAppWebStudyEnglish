@@ -20,6 +20,7 @@ namespace LearningEnglish.API.Controller.User
     {
         private readonly IPaymentService _paymentService;
         private readonly IPaymentRepository _paymentRepository;
+        private readonly IPaymentWebhookQueueRepository _webhookQueueRepository;
         private readonly IPayOSService _payOSService;
         private readonly ILogger<PaymentController> _logger;
         private readonly RequestPaymentValidator _requestValidator;
@@ -29,6 +30,7 @@ namespace LearningEnglish.API.Controller.User
         public PaymentController(
             IPaymentService paymentService,
             IPaymentRepository paymentRepository,
+            IPaymentWebhookQueueRepository webhookQueueRepository,
             IPayOSService payOSService,
             ILogger<PaymentController> logger,
             RequestPaymentValidator requestValidator,
@@ -37,6 +39,7 @@ namespace LearningEnglish.API.Controller.User
         {
             _paymentService = paymentService;
             _paymentRepository = paymentRepository;
+            _webhookQueueRepository = webhookQueueRepository;
             _payOSService = payOSService;
             _logger = logger;
             _requestValidator = requestValidator;
@@ -74,15 +77,6 @@ namespace LearningEnglish.API.Controller.User
         {
             var userId = GetCurrentUserId();
             var result = await _paymentService.GetTransactionHistoryAsync(userId, request);
-            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
-        }
-
-        // GET: api/payment/history/all - lấy toàn bộ lịch sử giao dịch không phân trang cho người dùng đã xác thực
-        [HttpGet("history/all")]
-        public async Task<IActionResult> GetAllTransactionHistory()
-        {
-            var userId = GetCurrentUserId();
-            var result = await _paymentService.GetAllTransactionHistoryAsync(userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -202,61 +196,112 @@ namespace LearningEnglish.API.Controller.User
         {
             try
             {
-                _logger.LogInformation("PayOS webhook received: code={Code}, orderCode={OrderCode}",
+                _logger.LogInformation("📨 PayOS webhook received: code={Code}, orderCode={OrderCode}",
                     webhookData.Code, webhookData.OrderCode);
 
+                // Verify signature
                 var isValid = await _payOSService.VerifyWebhookSignature(webhookData.Data, webhookData.Signature);
                 if (!isValid)
                 {
-                    _logger.LogWarning("Invalid PayOS webhook signature");
+                    _logger.LogWarning("❌ Invalid PayOS webhook signature");
                     return BadRequest(new { message = "Invalid signature" });
                 }
 
-                if (webhookData.Code != "00")
-                {
-                    _logger.LogWarning("PayOS payment failed: {Desc}", webhookData.Desc);
-                    return Ok(new { message = "Payment failed" });
-                }
-
+                // Find payment
                 var payment = await _paymentRepository.GetPaymentByTransactionIdAsync(webhookData.OrderCode.ToString());
                 if (payment == null)
                 {
-                    _logger.LogWarning("Payment not found for orderCode {OrderCode}", webhookData.OrderCode);
+                    _logger.LogWarning("⚠️ Payment not found for orderCode {OrderCode}", webhookData.OrderCode);
                     return NotFound(new { message = "Payment not found" });
                 }
 
-                if (payment.Status == PaymentStatus.Completed)
-                {
-                    _logger.LogInformation("Payment {PaymentId} already completed", payment.PaymentId);
-                    return Ok(new { message = "Already processed", paymentId = payment.PaymentId });
-                }
-
-                var confirmDto = new CompletePayment
+                // Save webhook to queue for retry mechanism
+                var webhookQueue = new LearningEnglish.Domain.Entities.PaymentWebhookQueue
                 {
                     PaymentId = payment.PaymentId,
-                    ProductId = payment.ProductId,
-                    ProductType = payment.ProductType,
-                    Amount = payment.Amount,
-                    PaymentMethod = PaymentGateway.PayOs.ToString()
+                    OrderCode = webhookData.OrderCode,
+                    WebhookData = JsonSerializer.Serialize(webhookData),
+                    Signature = webhookData.Signature,
+                    Status = LearningEnglish.Domain.Enums.WebhookStatus.Pending,
+                    CreatedAt = DateTime.UtcNow,
+                    RetryCount = 0,
+                    MaxRetries = 5
                 };
 
-                var result = await _paymentService.ConfirmPaymentAsync(confirmDto, payment.UserId);
+                await _webhookQueueRepository.AddWebhookAsync(webhookQueue);
+                await _webhookQueueRepository.SaveChangesAsync();
 
-                if (result.Success)
+                _logger.LogInformation("💾 Webhook saved to queue: WebhookId={WebhookId}, PaymentId={PaymentId}",
+                    webhookQueue.WebhookId, payment.PaymentId);
+
+                // Try to process immediately
+                try
                 {
-                    _logger.LogInformation("Payment {PaymentId} confirmed via webhook", payment.PaymentId);
-                    return Ok(new { message = "Success", paymentId = payment.PaymentId });
+                    // Check if already processed
+                    if (payment.Status == PaymentStatus.Completed)
+                    {
+                        _logger.LogInformation("✅ Payment {PaymentId} already completed", payment.PaymentId);
+                        
+                        webhookQueue.Status = LearningEnglish.Domain.Enums.WebhookStatus.Processed;
+                        webhookQueue.ProcessedAt = DateTime.UtcNow;
+                        await _webhookQueueRepository.UpdateWebhookStatusAsync(webhookQueue);
+                        await _webhookQueueRepository.SaveChangesAsync();
+                        
+                        return Ok(new { message = "Already processed", paymentId = payment.PaymentId });
+                    }
+
+                    if (webhookData.Code != "00")
+                    {
+                        _logger.LogWarning("⚠️ PayOS payment failed: {Desc}", webhookData.Desc);
+                        
+                        webhookQueue.Status = LearningEnglish.Domain.Enums.WebhookStatus.Failed;
+                        webhookQueue.LastError = $"Payment failed: {webhookData.Desc}";
+                        await _webhookQueueRepository.UpdateWebhookStatusAsync(webhookQueue);
+                        await _webhookQueueRepository.SaveChangesAsync();
+                        
+                        return Ok(new { message = "Payment failed" });
+                    }
+
+                    // Process webhook
+                    var result = await _paymentService.ProcessWebhookFromQueueAsync(webhookData);
+
+                    if (result.Success)
+                    {
+                        webhookQueue.Status = LearningEnglish.Domain.Enums.WebhookStatus.Processed;
+                        webhookQueue.ProcessedAt = DateTime.UtcNow;
+                        await _webhookQueueRepository.UpdateWebhookStatusAsync(webhookQueue);
+                        await _webhookQueueRepository.SaveChangesAsync();
+
+                        _logger.LogInformation("✅ Payment {PaymentId} confirmed via webhook", payment.PaymentId);
+                        return Ok(new { message = "Success", paymentId = payment.PaymentId });
+                    }
+                    else
+                    {
+                        throw new Exception(result.Message ?? "Processing failed");
+                    }
                 }
-                else
+                catch (Exception processEx)
                 {
-                    _logger.LogError("Failed to confirm payment {PaymentId}: {Message}",
-                        payment.PaymentId, result.Message);
-                    return StatusCode(500, new { message = result.Message });
+                    _logger.LogError(processEx, "❌ Failed to process webhook immediately, will retry later");
+
+                    // Mark for retry
+                    webhookQueue.Status = LearningEnglish.Domain.Enums.WebhookStatus.Failed;
+                    webhookQueue.RetryCount = 0;
+                    webhookQueue.NextRetryAt = DateTime.UtcNow.AddMinutes(1); // Retry trong 1 phút
+                    webhookQueue.LastError = processEx.Message;
+                    webhookQueue.ErrorStackTrace = processEx.StackTrace;
+                    await _webhookQueueRepository.UpdateWebhookStatusAsync(webhookQueue);
+                    await _webhookQueueRepository.SaveChangesAsync();
+
+                    _logger.LogInformation("⏰ Webhook scheduled for retry at {NextRetryAt}", webhookQueue.NextRetryAt);
+
+                    // Return success to PayOS để không bị spam retry từ phía PayOS
+                    return Ok(new { message = "Webhook queued for processing", paymentId = payment.PaymentId });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing PayOS webhook");
+                _logger.LogError(ex, "❌ Critical error processing PayOS webhook");
                 return StatusCode(500, new { message = "Internal server error" });
             }
         }

@@ -4,12 +4,8 @@ namespace LearningEnglish.API.Extensions
 {
     public static class ClaimsPrincipalExtensions
     {
-        /// <summary>
-        /// Gets the highest priority role for the user.
-        /// Priority: Admin > Teacher > Student
-        /// </summary>
-        /// <param name="principal">The ClaimsPrincipal</param>
-        /// <returns>The highest priority role name, or empty string if no role found</returns>
+        // Lấy role có độ ưu tiên cao nhất của user
+        // Độ ưu tiên: Admin > Teacher > Student
         public static string GetPrimaryRole(this ClaimsPrincipal principal)
         {
             var roles = principal.FindAll(ClaimTypes.Role)
@@ -33,11 +29,7 @@ namespace LearningEnglish.API.Extensions
             return roles.First();
         }
 
-        /// <summary>
-        /// Gets all roles for the user
-        /// </summary>
-        /// <param name="principal">The ClaimsPrincipal</param>
-        /// <returns>List of role names</returns>
+        // Lấy tất cả các role của user
         public static List<string> GetAllRoles(this ClaimsPrincipal principal)
         {
             return principal.FindAll(ClaimTypes.Role)
@@ -45,40 +37,41 @@ namespace LearningEnglish.API.Extensions
                 .ToList();
         }
 
-        /// <summary>
-        /// Checks if user has a specific role
-        /// </summary>
-        /// <param name="principal">The ClaimsPrincipal</param>
-        /// <param name="roleName">Role name to check</param>
-        /// <returns>True if user has the role, false otherwise</returns>
+        // Kiểm tra xem user có role cụ thể hay không
         public static bool HasRole(this ClaimsPrincipal principal, string roleName)
         {
             return principal.FindAll(ClaimTypes.Role)
                 .Any(c => c.Value.Equals(roleName, StringComparison.OrdinalIgnoreCase));
         }
 
-        /// <summary>
-        /// Checks if user is an Admin
-        /// </summary>
+        // Kiểm tra xem user có phải là Admin không
         public static bool IsAdmin(this ClaimsPrincipal principal)
         {
             return principal.HasRole("Admin");
         }
 
-        /// <summary>
-        /// Checks if user is a Teacher (may also be Student)
-        /// </summary>
+        // Kiểm tra xem user có phải là Teacher không (có thể đồng thời là Student)
         public static bool IsTeacher(this ClaimsPrincipal principal)
         {
             return principal.HasRole("Teacher");
         }
 
-        /// <summary>
-        /// Checks if user is a Student
-        /// </summary>
+        // Kiểm tra xem user có phải là Student không
         public static bool IsStudent(this ClaimsPrincipal principal)
         {
             return principal.HasRole("Student");
+        }
+
+        // Lấy UserId từ claims
+        public static int GetUserId(this ClaimsPrincipal principal)
+        {
+            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return userId;
+            }
+            
+            throw new InvalidOperationException("User ID not found in claims");
         }
     }
 }

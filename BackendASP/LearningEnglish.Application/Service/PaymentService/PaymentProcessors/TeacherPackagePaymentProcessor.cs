@@ -65,6 +65,20 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
             }
         }
 
+        public async Task<string> GetProductNameAsync(int productId)
+        {
+            try
+            {
+                var package = await _teacherPackageRepository.GetTeacherPackageByIdAsync(productId);
+                return package?.PackageName ?? $"Gói giáo viên #{productId}";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy tên teacher package {PackageId}", productId);
+                return $"Gói giáo viên #{productId}";
+            }
+        }
+
         public async Task<ServiceResponse<bool>> ProcessPostPaymentAsync(int userId, int productId, int paymentId)
         {
             var response = new ServiceResponse<bool>();

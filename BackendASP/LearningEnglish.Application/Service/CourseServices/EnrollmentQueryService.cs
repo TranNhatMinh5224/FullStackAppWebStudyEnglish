@@ -105,14 +105,14 @@ namespace LearningEnglish.Application.Service
         }
 
         // Lấy danh sách khóa học đã đăng ký của user với tiến độ - CÓ PHÂN TRANG
-        public async Task<ServiceResponse<PagedResult<EnrolledCourseWithProgressDto>>> GetMyEnrolledCoursesPagedAsync(int userId, PageRequest request)
+        public async Task<ServiceResponse<PagedResult<EnrolledCourseWithProgressDto>>> GetMyEnrolledCoursesPagedAsync(int userId, EnrolledCourseQueryParameters parameters)
         {
             var response = new ServiceResponse<PagedResult<EnrolledCourseWithProgressDto>>();
 
             try
             {
-                // Lấy PagedResult từ repository
-                var pagedCourses = await _courseRepository.GetEnrolledCoursesByUserPagedAsync(userId, request);
+                // Lấy PagedResult từ repository với Type filter nếu có
+                var pagedCourses = await _courseRepository.GetEnrolledCoursesByUserPagedAsync(userId, parameters);
 
                 if (pagedCourses.Items == null || !pagedCourses.Items.Any())
                 {
@@ -120,8 +120,8 @@ namespace LearningEnglish.Application.Service
                     {
                         Items = new List<EnrolledCourseWithProgressDto>(),
                         TotalCount = 0,
-                        PageNumber = request.PageNumber,
-                        PageSize = request.PageSize
+                        PageNumber = parameters.PageNumber,
+                        PageSize = parameters.PageSize
                     };
                     response.Message = "No enrolled courses found";
                     return response;
@@ -180,7 +180,7 @@ namespace LearningEnglish.Application.Service
                 response.Message = $"Retrieved {courseDtos.Count} of {pagedCourses.TotalCount} enrolled courses";
 
                 _logger.LogInformation("User {UserId} has {Count}/{Total} enrolled courses on page {Page}", 
-                    userId, courseDtos.Count, pagedCourses.TotalCount, request.PageNumber);
+                    userId, courseDtos.Count, pagedCourses.TotalCount, parameters.PageNumber);
             }
             catch (Exception ex)
             {

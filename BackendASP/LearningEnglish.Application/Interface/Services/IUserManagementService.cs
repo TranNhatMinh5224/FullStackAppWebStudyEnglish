@@ -16,7 +16,7 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<bool>> UpdateAvatarAsync(int userId, UpdateAvatarDto dto);
 
         // Lấy danh sách người dùng phân trang
-        Task<ServiceResponse<PagedResult<UserDto>>> GetAllUsersPagedAsync(PageRequest request);
+        Task<ServiceResponse<PagedResult<UserDto>>> GetAllUsersPagedAsync(UserQueryParameters request);
 
         // Khóa tài khoản
         Task<ServiceResponse<BlockAccountResponseDto>> BlockAccountAsync(int userId);
@@ -25,7 +25,7 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<UnblockAccountResponseDto>> UnblockAccountAsync(int userId);
         
         // Lấy danh sách tài khoản bị khóa
-        Task<ServiceResponse<PagedResult<UserDto>>> GetListBlockedAccountsPagedAsync(PageRequest request);
+        Task<ServiceResponse<PagedResult<UserDto>>> GetListBlockedAccountsPagedAsync(UserQueryParameters request);
 
         // Lấy người dùng theo course
         Task<ServiceResponse<PagedResult<UserDto>>> GetUsersByCourseIdPagedAsync(int courseId, int userId, string checkRole, PageRequest request);
@@ -40,6 +40,6 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<bool>> RemoveStudentFromCourseAsync(int courseId, int studentId, int currentUserId, string currentUserRole);
 
         // Lấy danh sách giáo viên
-        Task<ServiceResponse<PagedResult<UserDto>>> GetListTeachersPagedAsync(PageRequest request);
+        Task<ServiceResponse<PagedResult<UserDto>>> GetListTeachersPagedAsync(UserQueryParameters request);
     }
 }

@@ -6,8 +6,11 @@ namespace LearningEnglish.Application.Interface
 {
     public interface IAdminCourseService
     {
-        // Lấy danh sách khóa học (phân trang)
-        Task<ServiceResponse<PagedResult<AdminCourseListResponseDto>>> GetAllCoursesPagedAsync(PageRequest request);
+        // Lấy danh sách loại khóa học
+        List<CourseTypeDto> GetCourseTypes();
+        
+        // Lấy danh sách khóa học (phân trang và filter)
+        Task<ServiceResponse<PagedResult<AdminCourseListResponseDto>>> GetAllCoursesPagedAsync(CourseQueryParameters parameters);
         
         // Tạo khóa học
         Task<ServiceResponse<CourseResponseDto>> AdminCreateCourseAsync(AdminCreateCourseRequestDto requestDto);

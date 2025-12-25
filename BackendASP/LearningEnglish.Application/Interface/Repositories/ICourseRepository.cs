@@ -1,5 +1,6 @@
 using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Application.Interface
 {
@@ -24,8 +25,8 @@ namespace LearningEnglish.Application.Interface
         // Lấy tất cả khóa học
         Task<IEnumerable<Course>> GetAllCourses();
         
-        // Lấy tất cả khóa học với phân trang
-        Task<PagedResult<Course>> GetAllCoursesPagedAsync(PageRequest request);
+        // Lấy tất cả khóa học với phân trang (sử dụng CourseQueryParameters)
+        Task<PagedResult<Course>> GetAllCoursesPagedAsync(CourseQueryParameters parameters);
         
         // Lấy khóa học hệ thống
         Task<IEnumerable<Course>> GetSystemCourses();
@@ -34,13 +35,13 @@ namespace LearningEnglish.Application.Interface
         Task<IEnumerable<Course>> GetCoursesByTeacher(int teacherId);
 
         // Lấy khóa học của giáo viên với phân trang
-        Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, PageRequest request);
+        Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, CourseQueryParameters parameters);
 
         // Lấy khóa học đã đăng ký của user
         Task<IEnumerable<Course>> GetEnrolledCoursesByUser(int userId);
         
         // Lấy khóa học đã đăng ký của user với phân trang
-        Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(int userId, PageRequest request);
+        Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(int userId, EnrolledCourseQueryParameters parameters);
 
         // Kiểm tra user đã đăng ký khóa học
         Task<bool> IsUserEnrolled(int courseId, int userId);
@@ -71,5 +72,21 @@ namespace LearningEnglish.Application.Interface
         
         // Tìm kiếm khóa học
         Task<IEnumerable<Course>> SearchCourses(string keyword);
+        
+        // Statistics methods cho Admin Dashboard
+        Task<int> GetTotalCoursesCountAsync();
+        Task<int> GetCourseCountByTypeAsync(CourseType type);
+        Task<int> GetCourseCountByStatusAsync(CourseStatus status);
+        Task<int> GetTotalEnrollmentsCountAsync();
+        Task<int> GetNewCoursesCountAsync(DateTime fromDate);
+        
+        // Teacher statistics methods
+        Task<int> GetCoursesCountByTeachersAsync();
+        Task<int> GetPublishedCoursesCountByTeachersAsync();
+        Task<int> GetEnrollmentsCountForTeacherCoursesAsync();
+        
+        // Student statistics methods
+        Task<int> GetStudentsWithEnrollmentsCountAsync();
+        Task<int> GetActiveStudentsInCoursesCountAsync();
     }
 }

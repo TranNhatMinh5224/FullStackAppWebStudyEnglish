@@ -6,9 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service;
 
-/// <summary>
-/// Service tạo notification cho tất cả các loại thông báo hệ thống
-/// </summary>
+// Service tạo notification cho tất cả các loại thông báo hệ thống
 public class SimpleNotificationService
 {
     private readonly INotificationRepository _repository;
@@ -22,9 +20,7 @@ public class SimpleNotificationService
         _logger = logger;
     }
 
-    /// <summary>
-    /// Tạo notification - Dùng cho tất cả các loại thông báo
-    /// </summary>
+    // Tạo notification - Dùng cho tất cả các loại thông báo
     public async Task<ServiceResponse<bool>> CreateNotificationAsync(
         int userId, 
         string title, 

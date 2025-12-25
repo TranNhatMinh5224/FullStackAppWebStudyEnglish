@@ -11,6 +11,8 @@ namespace LearningEnglish.Infrastructure.Data
         // DbSets
         public DbSet<User> Users => Set<User>();
         public DbSet<Role> Roles => Set<Role>();
+        public DbSet<Permission> Permissions => Set<Permission>();
+        public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
 
         public DbSet<Course> Courses => Set<Course>();
         public DbSet<Lesson> Lessons => Set<Lesson>();
@@ -29,6 +31,7 @@ namespace LearningEnglish.Infrastructure.Data
         public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
         public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
         public DbSet<Payment> Payments => Set<Payment>();
+        public DbSet<PaymentWebhookQueue> PaymentWebhookQueues => Set<PaymentWebhookQueue>();
         public DbSet<ModuleCompletion> ModuleCompletions => Set<ModuleCompletion>();
         public DbSet<LessonCompletion> LessonCompletions => Set<LessonCompletion>();
         public DbSet<CourseProgress> CourseProgresses => Set<CourseProgress>();
@@ -199,6 +202,53 @@ namespace LearningEnglish.Infrastructure.Data
                  .HasMaxLength(50);
 
                 e.HasIndex(r => r.Name).IsUnique();
+            });
+
+            // ===== Permission =====
+            modelBuilder.Entity<Permission>(e =>
+            {
+                e.ToTable("Permissions");
+
+                e.HasKey(p => p.PermissionId);
+
+                e.Property(p => p.Name)
+                 .IsRequired()
+                 .HasMaxLength(100);
+
+                e.Property(p => p.DisplayName)
+                 .IsRequired()
+                 .HasMaxLength(200);
+
+                e.Property(p => p.Description)
+                 .HasMaxLength(500);
+
+                e.Property(p => p.Module)
+                 .IsRequired()
+                 .HasMaxLength(50);
+
+                e.HasIndex(p => p.Name).IsUnique();
+                e.HasIndex(p => p.Module);
+            });
+
+            // ===== RolePermission (Many-to-Many between Role and Permission) =====
+            modelBuilder.Entity<RolePermission>(e =>
+            {
+                e.ToTable("RolePermissions");
+
+                e.HasKey(rp => new { rp.RoleId, rp.PermissionId });
+
+                e.HasOne(rp => rp.Role)
+                 .WithMany(r => r.RolePermissions)
+                 .HasForeignKey(rp => rp.RoleId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(rp => rp.Permission)
+                 .WithMany(p => p.RolePermissions)
+                 .HasForeignKey(rp => rp.PermissionId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(rp => rp.RoleId);
+                e.HasIndex(rp => rp.PermissionId);
             });
 
             // ===== User-Role Many-to-Many =====
@@ -870,14 +920,28 @@ namespace LearningEnglish.Infrastructure.Data
                 e.Property(es => es.AttachmentType)
                  .HasMaxLength(100);
 
+                e.Property(es => es.Feedback)
+                 .HasMaxLength(5000);
+
+                e.Property(es => es.TeacherFeedback)
+                 .HasMaxLength(5000);
+
                 e.HasOne(es => es.Essay)
                  .WithMany(e => e.EssaySubmissions)
                  .HasForeignKey(es => es.EssayId)
                  .OnDelete(DeleteBehavior.Cascade);
+                
                 e.HasOne(es => es.User)
                  .WithMany(u => u.EssaySubmissions)
                  .HasForeignKey(es => es.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(es => es.GradedByTeacher)
+                 .WithMany()
+                 .HasForeignKey(es => es.GradedByTeacherId)
+                 .OnDelete(DeleteBehavior.SetNull);
+
+                e.Ignore(es => es.FinalScore);
             });
 
             // ModuleCompletion
@@ -1034,23 +1098,112 @@ namespace LearningEnglish.Infrastructure.Data
                 e.ToTable("Payments");
 
                 // Column constraints
-                e.Property(p => p.PaymentMethod)
-                 .HasMaxLength(50);
+                e.Property(p => p.OrderCode)
+                 .IsRequired();
+
+                e.Property(p => p.IdempotencyKey)
+                 .HasMaxLength(100);
+
+                e.Property(p => p.Gateway)
+                 .IsRequired();
 
                 e.Property(p => p.Amount)
                  .HasPrecision(18, 2);
 
+                e.Property(p => p.Description)
+                 .HasMaxLength(500);
+
                 e.Property(p => p.ProviderTransactionId)
                  .HasMaxLength(255);
+
+                e.Property(p => p.CheckoutUrl)
+                 .HasMaxLength(1000);
+
+                e.Property(p => p.QrCode)
+                 .HasMaxLength(1000);
+
+                e.Property(p => p.AccountNumber)
+                 .HasMaxLength(50);
+
+                e.Property(p => p.AccountName)
+                 .HasMaxLength(200);
+
+                e.Property(p => p.ErrorCode)
+                 .HasMaxLength(50);
+
+                e.Property(p => p.ErrorMessage)
+                 .HasMaxLength(500);
+
+                e.Property(p => p.CreatedAt)
+                 .IsRequired();
 
                 e.HasOne(p => p.User)
                  .WithMany(u => u.Payments)
                  .HasForeignKey(p => p.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
 
-                // Indexes - Essential for filtering
+                // Indexes - Essential for filtering and queries
+                e.HasIndex(p => p.OrderCode).IsUnique();
                 e.HasIndex(p => new { p.UserId, p.Status });
                 e.HasIndex(p => new { p.ProductType, p.ProductId });
+                e.HasIndex(p => p.CreatedAt);
+                e.HasIndex(p => p.Gateway);
+                
+                // Unique index for IdempotencyKey - Prevents duplicate payments (Race condition protection)
+                // Partial index: Only applies when IdempotencyKey IS NOT NULL
+                e.HasIndex(p => new { p.UserId, p.IdempotencyKey })
+                 .IsUnique()
+                 .HasFilter("\"IdempotencyKey\" IS NOT NULL");
+            });
+
+            // PaymentWebhookQueue entity configuration
+            modelBuilder.Entity<PaymentWebhookQueue>(e =>
+            {
+                e.ToTable("PaymentWebhookQueues");
+                e.HasKey(w => w.WebhookId);
+
+                e.Property(w => w.OrderCode)
+                 .IsRequired();
+
+                e.Property(w => w.WebhookData)
+                 .IsRequired()
+                 .HasColumnType("text");
+
+                e.Property(w => w.Signature)
+                 .HasMaxLength(500);
+
+                e.Property(w => w.Status)
+                 .IsRequired();
+
+                e.Property(w => w.RetryCount)
+                 .IsRequired()
+                 .HasDefaultValue(0);
+
+                e.Property(w => w.MaxRetries)
+                 .IsRequired()
+                 .HasDefaultValue(5);
+
+                e.Property(w => w.CreatedAt)
+                 .IsRequired();
+
+                e.Property(w => w.LastError)
+                 .HasMaxLength(1000);
+
+                e.Property(w => w.ErrorStackTrace)
+                 .HasColumnType("text");
+
+                // Foreign key relationship
+                e.HasOne(w => w.Payment)
+                 .WithMany()
+                 .HasForeignKey(w => w.PaymentId)
+                 .OnDelete(DeleteBehavior.SetNull);
+
+                // Indexes for efficient querying
+                e.HasIndex(w => w.OrderCode);
+                e.HasIndex(w => w.Status);
+                e.HasIndex(w => w.NextRetryAt);
+                e.HasIndex(w => new { w.Status, w.NextRetryAt }); // Composite for retry queries
+                e.HasIndex(w => w.CreatedAt);
             });
 
 

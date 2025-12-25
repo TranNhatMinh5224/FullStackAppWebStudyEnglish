@@ -149,7 +149,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool?>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<string>("KeyImage")
@@ -160,7 +160,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Order")
+                    b.Property<int?>("Order")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -403,11 +403,34 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int>("EssayId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Feedback")
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<DateTime?>("GradedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("GradedByTeacherId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("Score")
+                        .HasColumnType("numeric");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TeacherFeedback")
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<DateTime?>("TeacherGradedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("TeacherScore")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("TextContent")
                         .HasMaxLength(20000)
@@ -419,6 +442,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.HasKey("SubmissionId");
 
                     b.HasIndex("EssayId");
+
+                    b.HasIndex("GradedByTeacherId");
 
                     b.HasIndex("UserId");
 
@@ -942,16 +967,52 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PaymentId"));
 
+                    b.Property<string>("AccountName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("AccountNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<DateTime?>("PaidAt")
+                    b.Property<string>("CheckoutUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("PaymentMethod")
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ErrorCode")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("ExpiredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Gateway")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<long>("OrderCode")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("integer");
@@ -963,19 +1024,108 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("QrCode")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("PaymentId");
 
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("Gateway");
+
+                    b.HasIndex("OrderCode")
+                        .IsUnique();
+
                     b.HasIndex("ProductType", "ProductId");
+
+                    b.HasIndex("UserId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("\"IdempotencyKey\" IS NOT NULL");
 
                     b.HasIndex("UserId", "Status");
 
                     b.ToTable("Payments", (string)null);
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.PaymentWebhookQueue", b =>
+                {
+                    b.Property<int>("WebhookId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("WebhookId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorStackTrace")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("MaxRetries")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(5);
+
+                    b.Property<DateTime?>("NextRetryAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("OrderCode")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("PaymentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RetryCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Signature")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("WebhookData")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("WebhookId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("NextRetryAt");
+
+                    b.HasIndex("OrderCode");
+
+                    b.HasIndex("PaymentId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("Status", "NextRetryAt");
+
+                    b.ToTable("PaymentWebhookQueues", (string)null);
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.PronunciationProgress", b =>
@@ -1636,7 +1786,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             IsMale = true,
                             LastName = "System",
                             NormalizedEmail = "MINHXOANDEV@GMAIL.COM",
-                            PasswordHash = "$2a$11$AmQ6X00tuKWUGAGz7YLFfuteRdOHwq876zDZfZmBk37PPNWuURwh2",
+                            PasswordHash = "$2a$11$.4dLtMVJb.hdW9QPIreIweLOXRqPxytH66GbN/VyL.BQ5t54K1aJi",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -1789,6 +1939,11 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("LearningEnglish.Domain.Entities.User", "GradedByTeacher")
+                        .WithMany()
+                        .HasForeignKey("GradedByTeacherId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("LearningEnglish.Domain.Entities.User", "User")
                         .WithMany("EssaySubmissions")
                         .HasForeignKey("UserId")
@@ -1796,6 +1951,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Essay");
+
+                    b.Navigation("GradedByTeacher");
 
                     b.Navigation("User");
                 });
@@ -1949,6 +2106,16 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.PaymentWebhookQueue", b =>
+                {
+                    b.HasOne("LearningEnglish.Domain.Entities.Payment", "Payment")
+                        .WithMany()
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.PronunciationProgress", b =>

@@ -1,19 +1,26 @@
 using LearningEnglish.Application.Common.Pagination;
+using LearningEnglish.Application.Common.Specifications;
+using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
-using LearningEnglish.Application.Interface;
 using LearningEnglish.Infrastructure.Data;
+using LearningEnglish.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace LearningEnglish.Infrastructure.Repositories
 {
+    // Repository cho Course entity
+    // Tuân thủ Repository pattern: chỉ lo data access
+    // Sử dụng Specification pattern để tách biệt query logic
     public class CourseRepository : ICourseRepository
     {
         private readonly AppDbContext _context;
+        private readonly ISortingService<Course> _sortingService;
 
-        public CourseRepository(AppDbContext context)
+        public CourseRepository(AppDbContext context, ISortingService<Course> sortingService)
         {
             _context = context;
+            _sortingService = sortingService;
         }
 
 
@@ -84,21 +91,45 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
         // Lấy tất cả khóa học với phân trang
-        public async Task<PagedResult<Course>> GetAllCoursesPagedAsync(PageRequest request)
+        public async Task<PagedResult<Course>> GetAllCoursesPagedAsync(CourseQueryParameters parameters)
         {
-            var query = _context.Courses
-                .Include(c => c.Teacher)
-                .OrderBy(c => c.Title)
-                .AsQueryable();
+            var query = _context.Courses.AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            // Apply includes
+            query = query.Include(c => c.Teacher);
+
+            // Apply filters using specifications
+            if (parameters.Type.HasValue)
             {
-                query = query.Where(c =>
-                    c.Title.Contains(request.SearchTerm) ||
-                    (c.ClassCode != null && c.ClassCode.Contains(request.SearchTerm)));
+                query = query.Where(c => c.Type == parameters.Type.Value);
             }
 
-            return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
+            if (parameters.Status.HasValue)
+            {
+                query = query.Where(c => c.Status == parameters.Status.Value);
+            }
+
+            if (parameters.IsFeatured.HasValue)
+            {
+                query = query.Where(c => c.IsFeatured == parameters.IsFeatured.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
+            {
+                var term = parameters.SearchTerm.ToLower();
+                query = query.Where(c =>
+                    c.Title.ToLower().Contains(term) ||
+                    (c.ClassCode != null && c.ClassCode.ToLower().Contains(term)) ||
+                    (c.Teacher != null && 
+                     (c.Teacher.FirstName.ToLower().Contains(term) || 
+                      c.Teacher.LastName.ToLower().Contains(term) ||
+                      (c.Teacher.FirstName + " " + c.Teacher.LastName).ToLower().Contains(term))));
+            }
+
+            // Apply sorting using sorting service
+            query = _sortingService.ApplySort(query, parameters.SortBy, parameters.SortOrder);
+
+            return await query.ToPagedListAsync(parameters.PageNumber, parameters.PageSize);
         }
 
         // Lấy khóa học hệ thống (User trang chủ)
@@ -123,23 +154,25 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
         // Lấy khóa học của giáo viên với phân trang
-        public async Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, PageRequest request)
+        public async Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, CourseQueryParameters parameters)
         {
             var query = _context.Courses
                 .Where(c => c.TeacherId == teacherId && c.Type == CourseType.Teacher)
                 .Include(c => c.Teacher)
-                .OrderBy(c => c.Title)
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
             {
-                var term = request.SearchTerm.ToLower();
+                var term = parameters.SearchTerm.ToLower();
                 query = query.Where(c =>
                     c.Title.ToLower().Contains(term) ||
                     (c.ClassCode != null && c.ClassCode.ToLower().Contains(term)));
             }
 
-            return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
+            // Apply sorting
+            query = _sortingService.ApplySort(query, parameters.SortBy, parameters.SortOrder);
+
+            return await query.ToPagedListAsync(parameters.PageNumber, parameters.PageSize);
         }
 
 
@@ -311,7 +344,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
         // Lấy khóa học user đã đăng ký với phân trang
-        public async Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(int userId, PageRequest request)
+        public async Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(int userId, EnrolledCourseQueryParameters parameters)
         {
             var query = _context.UserCourses
                 .Where(uc => uc.UserId == userId)
@@ -320,18 +353,15 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .Include(uc => uc.Course)
                     .ThenInclude(c => c!.Lessons)
                 .Select(uc => uc.Course!)
-                .OrderBy(c => c.Title)
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            // Filter by Type if specified
+            if (parameters.Type.HasValue)
             {
-                var term = request.SearchTerm.ToLower();
-                query = query.Where(c =>
-                    c.Title.ToLower().Contains(term) ||
-                    (c.ClassCode != null && c.ClassCode.ToLower().Contains(term)));
+                query = query.Where(c => c.Type == parameters.Type.Value);
             }
 
-            return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
+            return await query.ToPagedListAsync(parameters.PageNumber, parameters.PageSize);
         }
 
 
@@ -365,6 +395,78 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             return await _context.UserCourses
                 .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.CourseId == courseId);
+        }
+
+        // Statistics methods cho Admin Dashboard
+        public async Task<int> GetTotalCoursesCountAsync()
+        {
+            return await _context.Courses.CountAsync();
+        }
+
+        public async Task<int> GetCourseCountByTypeAsync(CourseType type)
+        {
+            return await _context.Courses
+                .Where(c => c.Type == type)
+                .CountAsync();
+        }
+
+        public async Task<int> GetCourseCountByStatusAsync(CourseStatus status)
+        {
+            return await _context.Courses
+                .Where(c => c.Status == status)
+                .CountAsync();
+        }
+
+        public async Task<int> GetTotalEnrollmentsCountAsync()
+        {
+            return await _context.UserCourses.CountAsync();
+        }
+
+        public async Task<int> GetNewCoursesCountAsync(DateTime fromDate)
+        {
+            return await _context.Courses
+                .Where(c => c.CreatedAt >= fromDate)
+                .CountAsync();
+        }
+
+        // Teacher statistics methods
+        public async Task<int> GetCoursesCountByTeachersAsync()
+        {
+            return await _context.Courses
+                .Where(c => c.Type == CourseType.Teacher)
+                .CountAsync();
+        }
+
+        public async Task<int> GetPublishedCoursesCountByTeachersAsync()
+        {
+            return await _context.Courses
+                .Where(c => c.Type == CourseType.Teacher && c.Status == CourseStatus.Published)
+                .CountAsync();
+        }
+
+        public async Task<int> GetEnrollmentsCountForTeacherCoursesAsync()
+        {
+            return await _context.UserCourses
+                .Where(uc => uc.Course != null && uc.Course.Type == CourseType.Teacher)
+                .CountAsync();
+        }
+
+        // Student statistics methods
+        public async Task<int> GetStudentsWithEnrollmentsCountAsync()
+        {
+            return await _context.UserCourses
+                .Select(uc => uc.UserId)
+                .Distinct()
+                .CountAsync();
+        }
+
+        public async Task<int> GetActiveStudentsInCoursesCountAsync()
+        {
+            return await _context.UserCourses
+                .Where(uc => uc.User != null && uc.User.Status == AccountStatus.Active)
+                .Select(uc => uc.UserId)
+                .Distinct()
+                .CountAsync();
         }
     }
 }

@@ -47,6 +47,7 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .Include(qa => qa.Quiz)
                 .Include(qa => qa.User)
                 .Where(qa => qa.UserId == userId && qa.QuizId == quizId)
+                .OrderByDescending(qa => qa.StartedAt)
                 .ToListAsync();
 
         }
@@ -78,8 +79,17 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<QuizAttempt>> GetSubmittedAttemptsByQuizIdAsync(int quizId)
+        {
+            return await _context.QuizAttempts
+                .Include(qa => qa.Quiz)
+                .Include(qa => qa.User)
+                .Where(qa => qa.QuizId == quizId && qa.Status == QuizAttemptStatus.Submitted)
+                .ToListAsync();
+        }
+
         // Lấy danh sách attempts với phân trang
-        public async Task<PagedResult<QuizAttempt>> GetQuizAttemptsPagedAsync(int quizId, PageRequest request)
+        public async Task<PagedResult<QuizAttempt>> GetQuizAttemptsPagedAsync(int quizId, QuizAttemptQueryParameters request)
         {
             var query = _context.QuizAttempts
                 .Include(qa => qa.Quiz)
@@ -99,7 +109,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
         // Lấy điểm của học sinh với phân trang
-        public async Task<PagedResult<QuizAttempt>> GetQuizScoresPagedAsync(int quizId, PageRequest request)
+        public async Task<PagedResult<QuizAttempt>> GetQuizScoresPagedAsync(int quizId, QuizAttemptQueryParameters request)
         {
             var query = _context.QuizAttempts
                 .Include(qa => qa.Quiz)
@@ -116,6 +126,16 @@ namespace LearningEnglish.Infrastructure.Repositories
             }
 
             return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
+        }
+
+        public async Task<List<QuizAttempt>> GetQuizScoresAsync(int quizId)
+        {
+            return await _context.QuizAttempts
+                .Include(qa => qa.Quiz)
+                .Include(qa => qa.User)
+                .Where(qa => qa.QuizId == quizId && qa.Status == QuizAttemptStatus.Submitted)
+                .OrderByDescending(qa => qa.TotalScore)
+                .ToListAsync();
         }
 
         public async Task SaveChangesAsync()
