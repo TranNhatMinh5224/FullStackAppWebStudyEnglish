@@ -71,5 +71,6 @@ namespace LearningEnglish.API.Controller.Admin
             var pagedResult = await _userManagementService.GetListTeachersPagedAsync(request);
             return pagedResult.Success ? Ok(pagedResult.Data) : StatusCode(pagedResult.StatusCode, new { message = pagedResult.Message });
         }
+
     }
 }

@@ -6,7 +6,7 @@ public class Permission
     public string Name { get; set; } = string.Empty;            // e.g., "Course.Create", "User.Edit"
     public string DisplayName { get; set; } = string.Empty;     // e.g., "Tạo khóa học", "Chỉnh sửa người dùng"
     public string? Description { get; set; }                    // e.g., "Cho phép tạo khóa học mới"
-    public string Module { get; set; } = string.Empty;          // e.g., "Course", "User", "Assessment"
+    public string Category { get; set; } = string.Empty;        // e.g., "Content", "Finance", "System"
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     

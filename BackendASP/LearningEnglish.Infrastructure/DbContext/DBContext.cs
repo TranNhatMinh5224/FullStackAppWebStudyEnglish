@@ -96,7 +96,7 @@ namespace LearningEnglish.Infrastructure.Data
             //   - value: Giá trị
             //   - is_local: true = LOCAL (chỉ trong transaction), false = SESSION (toàn bộ session)
             //
-            // ⚠️ QUAN TRỌNG: PHẢI dùng is_local=true để an toàn với connection pooling!
+            //  QUAN TRỌNG: PHẢI dùng is_local=true để an toàn với connection pooling!
             // Nếu dùng false, variable sẽ tồn tại suốt session → nguy hiểm khi reuse connection
             await Database.ExecuteSqlRawAsync(
                 "SELECT set_config('app.current_user_id', {0}, true), set_config('app.current_user_role', {1}, true)",
@@ -222,12 +222,12 @@ namespace LearningEnglish.Infrastructure.Data
                 e.Property(p => p.Description)
                  .HasMaxLength(500);
 
-                e.Property(p => p.Module)
+                e.Property(p => p.Category)
                  .IsRequired()
                  .HasMaxLength(50);
 
                 e.HasIndex(p => p.Name).IsUnique();
-                e.HasIndex(p => p.Module);
+                e.HasIndex(p => p.Category);
             });
 
             // ===== RolePermission (Many-to-Many between Role and Permission) =====
@@ -1215,9 +1215,10 @@ namespace LearningEnglish.Infrastructure.Data
         {
             // Roles
             modelBuilder.Entity<Role>().HasData(
-                new Role { RoleId = 1, Name = "Admin" },
-                new Role { RoleId = 2, Name = "Teacher" },
-                new Role { RoleId = 3, Name = "Student" }
+                new Role { RoleId = 1, Name = "SuperAdmin" },
+                new Role { RoleId = 2, Name = "Admin" },
+                new Role { RoleId = 3, Name = "Teacher" },
+                new Role { RoleId = 4, Name = "Student" }
             );
 
             // Dùng thời gian cố định để tránh thay đổi snapshot migration mỗi lần build
