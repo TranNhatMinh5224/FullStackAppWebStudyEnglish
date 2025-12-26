@@ -112,7 +112,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // endpoint Teacher tạo khóa học
         [HttpPost("teacher/create")]
-        [RequireTeacherRole] // Kiểm tra role Teacher trong database (không tin JWT token)
+        [Authorize(Roles = "Teacher")] // Kiểm tra role Teacher trong database (không tin JWT token)
         public async Task<IActionResult> CreateCourse([FromBody] TeacherCreateCourseRequestDto requestDto)
         {
 

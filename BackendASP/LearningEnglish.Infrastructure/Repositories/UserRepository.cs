@@ -107,13 +107,13 @@ namespace LearningEnglish.Infrastructure.Repositories
             }
 
             // Check if user already has Teacher role
-            if (user.Roles.Any(r => r.RoleId == 2))
+            if (user.Roles.Any(r => r.RoleId == 4))
             {
                 return true; // Already has Teacher role
             }
 
-            // Get Teacher role (RoleId = 2)
-            var teacherRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == 2);
+            // Get Teacher role (RoleId = 4)
+            var teacherRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == 4);
             if (teacherRole == null)
             {
                 throw new InvalidOperationException("Teacher role not found in database");
@@ -161,7 +161,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             var teachers = await _context.Users
                 .Include(u => u.Roles)
-                .Where(u => u.Roles.Any(r => r.RoleId == 2))
+                .Where(u => u.Roles.Any(r => r.RoleId == 4))
                 .ToListAsync();
             return teachers;
         }
@@ -171,7 +171,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             var query = _context.Users
                 .Include(u => u.Roles)
-                .Where(u => u.Roles.Any(r => r.RoleId == 2));
+                .Where(u => u.Roles.Any(r => r.RoleId == 4));
 
             // Apply search filter (case-insensitive)
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
