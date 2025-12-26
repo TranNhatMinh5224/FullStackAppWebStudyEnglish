@@ -32,10 +32,13 @@ public class StreakService : IStreakService
         _mapper = mapper;
     }
 
+    // Lấy streak hiện tại của user
+    // RLS đã filter: User chỉ xem streak của chính mình, Admin xem tất cả (có permission)
     public async Task<ServiceResponse<StreakDto>> GetCurrentStreakAsync(int userId)
     {
         try
         {
+            // RLS đã filter theo userId
             var streak = await _streakRepo.GetByUserIdAsync(userId);
 
             if (streak == null)
@@ -73,12 +76,15 @@ public class StreakService : IStreakService
         }
     }
 
+    // Cập nhật streak khi user online
+    // RLS đã filter: User chỉ update streak của chính mình
     public async Task<ServiceResponse<StreakUpdateResultDto>> UpdateStreakAsync(int userId)
     {
         var response = new ServiceResponse<StreakUpdateResultDto>();
 
         try
         {
+            // RLS đã filter theo userId
             var streak = await _streakRepo.GetByUserIdAsync(userId);
 
             if (streak == null)
@@ -182,10 +188,13 @@ public class StreakService : IStreakService
         return response;
     }
 
+    // Gửi reminder cho users sắp đứt streak (Admin/Cron job)
+    // RLS đã filter: Chỉ Admin có permission Admin.User.Manage mới xem được tất cả streaks
     public async Task<ServiceResponse<object>> SendStreakRemindersAsync()
     {
         try
         {
+            // RLS đã filter: Chỉ Admin có permission mới xem được
             // Lấy users có streak >= 3 ngày và LastActivityDate = yesterday (sắp đứt streak)
             var usersAtRisk = await _streakRepo.GetUsersAtRiskOfLosingStreakAsync(minStreak: 3);
             

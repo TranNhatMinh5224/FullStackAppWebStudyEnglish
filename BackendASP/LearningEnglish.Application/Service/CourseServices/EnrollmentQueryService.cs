@@ -55,6 +55,7 @@ namespace LearningEnglish.Application.Service
                     var courseDto = _mapper.Map<EnrolledCourseWithProgressDto>(course);
 
                     // Get progress information for this course
+                    // RLS đã filter: User chỉ xem progress của chính mình
                     var courseProgress = await _courseProgressRepository.GetByUserAndCourseAsync(userId, course.CourseId);
 
                     if (courseProgress != null)

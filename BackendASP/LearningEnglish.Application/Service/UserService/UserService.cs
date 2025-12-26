@@ -495,6 +495,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Lấy thông tin tiến độ học tập
+                // RLS đã filter: Teacher chỉ xem progress của students trong own courses (qua CourseId), Admin xem tất cả
                 var courseProgress = await _courseProgressRepository.GetByUserAndCourseAsync(studentId, courseId);
 
                 // Map dữ liệu sang DTO

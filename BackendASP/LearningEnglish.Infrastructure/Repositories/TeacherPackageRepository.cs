@@ -57,13 +57,13 @@ namespace LearningEnglish.Infrastructure.Repositories
 
         // Lấy TeacherPackage của teacher tại thời điểm date
         // Tự động lấy subscription đang valid (Active hoặc Pending đã đến ngày)
-        // Note: Filter theo teacherId ở application layer (không cần RLS vì đơn giản)
+        // RLS: TeacherSubscriptions đã filter theo userId (Teacher chỉ xem subscriptions của mình, Admin xem tất cả)
         public async Task<TeacherPackage?> GetInformationTeacherpackageAsync(int teacherId, DateTime date)
         {
+            // RLS đã filter TeacherSubscriptions theo userId, chỉ cần filter date và status
             var result = await (from tp in _context.TeacherPackages
                                 join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
-                                where ts.UserId == teacherId
-                                      && ts.StartDate <= date
+                                where ts.StartDate <= date
                                       && ts.EndDate >= date
                                       && (ts.Status == SubscriptionStatus.Active || ts.Status == SubscriptionStatus.Pending)
                                 orderby ts.EndDate descending
@@ -74,14 +74,14 @@ namespace LearningEnglish.Infrastructure.Repositories
 
         // Lấy TeacherPackage hiện tại của teacher
         // Tự động lấy subscription đang valid (Active hoặc Pending đã đến ngày)
-        // Note: Filter theo teacherId ở application layer (không cần RLS vì đơn giản)
+        // RLS: TeacherSubscriptions đã filter theo userId (Teacher chỉ xem subscriptions của mình, Admin xem tất cả)
         public async Task<TeacherPackage?> GetInformationTeacherpackage(int teacherId)
         {
             var now = DateTime.UtcNow;
+            // RLS đã filter TeacherSubscriptions theo userId, chỉ cần filter date và status
             var result = await (from tp in _context.TeacherPackages
                                 join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
-                                where ts.UserId == teacherId
-                                      && ts.StartDate <= now
+                                where ts.StartDate <= now
                                       && ts.EndDate >= now
                                       && (ts.Status == SubscriptionStatus.Active || ts.Status == SubscriptionStatus.Pending)
                                 orderby ts.EndDate descending

@@ -17,16 +17,25 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
+        // RLS đã filter: User chỉ xem progress của chính mình, Teacher xem progress của students trong own courses, Admin xem tất cả
+        // Defense in depth: Vẫn filter theo userId để đảm bảo đúng khi query progress của user cụ thể
         public async Task<CourseProgress?> GetByUserAndCourseAsync(int userId, int courseId)
         {
+            // RLS đã filter: User chỉ query được progress của chính mình
+            // Teacher có thể query progress của students trong own courses
+            // Filter theo userId và courseId để đảm bảo đúng (defense in depth)
             return await _context.CourseProgresses
                 .Include(cp => cp.Course)
                     .ThenInclude(c => c.Lessons)
                 .FirstOrDefaultAsync(cp => cp.UserId == userId && cp.CourseId == courseId);
         }
 
+        // RLS đã filter: User chỉ xem progress của chính mình
+        // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
         public async Task<List<CourseProgress>> GetByUserIdAsync(int userId)
         {
+            // RLS đã filter: User chỉ query được progress của chính mình
+            // Filter theo userId để đảm bảo đúng (defense in depth)
             return await _context.CourseProgresses
                 .Include(cp => cp.Course)
                 .Where(cp => cp.UserId == userId)
@@ -62,21 +71,34 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
+        // RLS đã filter: User chỉ xem completions của chính mình, Teacher xem completions của students trong own courses, Admin xem tất cả
+        // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
         public async Task<LessonCompletion?> GetByUserAndLessonAsync(int userId, int lessonId)
         {
+            // RLS đã filter: User chỉ query được completions của chính mình
+            // Teacher có thể query completions của students trong own courses
+            // Filter theo userId và lessonId để đảm bảo đúng (defense in depth)
             return await _context.LessonCompletions
                 .FirstOrDefaultAsync(lc => lc.UserId == userId && lc.LessonId == lessonId);
         }
 
+        // RLS đã filter: User chỉ xem completions của chính mình
+        // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
         public async Task<List<LessonCompletion>> GetByUserIdAsync(int userId)
         {
+            // RLS đã filter: User chỉ query được completions của chính mình
+            // Filter theo userId để đảm bảo đúng (defense in depth)
             return await _context.LessonCompletions
                 .Where(lc => lc.UserId == userId)
                 .ToListAsync();
         }
 
+        // RLS đã filter: User chỉ xem completions của chính mình
+        // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
         public async Task<List<LessonCompletion>> GetByUserAndLessonIdsAsync(int userId, List<int> lessonIds)
         {
+            // RLS đã filter: User chỉ query được completions của chính mình
+            // Filter theo userId và lessonIds để đảm bảo đúng (defense in depth)
             return await _context.LessonCompletions
                 .Where(lc => lc.UserId == userId && lessonIds.Contains(lc.LessonId))
                 .ToListAsync();
@@ -111,14 +133,23 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
+        // RLS đã filter: User chỉ xem completions của chính mình, Teacher xem completions của students trong own courses, Admin xem tất cả
+        // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
         public async Task<ModuleCompletion?> GetByUserAndModuleAsync(int userId, int moduleId)
         {
+            // RLS đã filter: User chỉ query được completions của chính mình
+            // Teacher có thể query completions của students trong own courses
+            // Filter theo userId và moduleId để đảm bảo đúng (defense in depth)
             return await _context.ModuleCompletions
                 .FirstOrDefaultAsync(mc => mc.UserId == userId && mc.ModuleId == moduleId);
         }
 
+        // RLS đã filter: User chỉ xem completions của chính mình
+        // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
         public async Task<List<ModuleCompletion>> GetByUserAndModuleIdsAsync(int userId, List<int> moduleIds)
         {
+            // RLS đã filter: User chỉ query được completions của chính mình
+            // Filter theo userId và moduleIds để đảm bảo đúng (defense in depth)
             return await _context.ModuleCompletions
                 .Where(mc => mc.UserId == userId && moduleIds.Contains(mc.ModuleId))
                 .ToListAsync();

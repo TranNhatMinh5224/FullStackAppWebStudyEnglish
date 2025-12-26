@@ -16,10 +16,12 @@ public class FlashCardReviewRepository : BaseRepository<FlashCardReview>, IFlash
         _logger = logger;
     }
 
+    // RLS đã filter: User chỉ xem reviews của chính mình, Admin xem tất cả
     public new async Task<FlashCardReview?> GetByIdAsync(int reviewId)
     {
         try
         {
+            // RLS đã filter: User chỉ query được reviews của chính mình
             return await _context.FlashCardReviews
                 .Include(r => r.FlashCard)
                 .Include(r => r.User)
@@ -32,10 +34,14 @@ public class FlashCardReviewRepository : BaseRepository<FlashCardReview>, IFlash
         }
     }
 
+    // RLS đã filter: User chỉ xem reviews của chính mình
+    // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
     public async Task<FlashCardReview?> GetReviewAsync(int userId, int flashCardId)
     {
         try
         {
+            // RLS đã filter: User chỉ query được reviews của chính mình
+            // Filter theo userId để đảm bảo đúng (defense in depth)
             return await _context.FlashCardReviews
                 .FirstOrDefaultAsync(r => r.UserId == userId && r.FlashCardId == flashCardId);
         }
@@ -46,10 +52,14 @@ public class FlashCardReviewRepository : BaseRepository<FlashCardReview>, IFlash
         }
     }
 
+    // RLS đã filter: User chỉ xem due reviews của chính mình
+    // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
     public async Task<List<FlashCardReview>> GetDueReviewsAsync(int userId, DateTime currentDate)
     {
         try
         {
+            // RLS đã filter: User chỉ query được reviews của chính mình
+            // Filter theo userId để đảm bảo đúng (defense in depth)
             return await _context.FlashCardReviews
                 .Include(r => r.FlashCard)
                 .Where(r => r.UserId == userId && r.NextReviewDate <= currentDate)
@@ -63,10 +73,14 @@ public class FlashCardReviewRepository : BaseRepository<FlashCardReview>, IFlash
         }
     }
 
+    // RLS đã filter: User chỉ xem reviews của chính mình
+    // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
     public async Task<List<FlashCardReview>> GetReviewsByUserAsync(int userId, int page = 1, int pageSize = 20)
     {
         try
         {
+            // RLS đã filter: User chỉ query được reviews của chính mình
+            // Filter theo userId để đảm bảo đúng (defense in depth)
             return await _context.FlashCardReviews
                 .Include(r => r.FlashCard)
                 .Where(r => r.UserId == userId)
@@ -83,10 +97,14 @@ public class FlashCardReviewRepository : BaseRepository<FlashCardReview>, IFlash
         }
     }
 
+    // RLS đã filter: User chỉ đếm due reviews của chính mình
+    // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
     public async Task<int> GetDueCountAsync(int userId, DateTime currentDate)
     {
         try
         {
+            // RLS đã filter: User chỉ đếm được reviews của chính mình
+            // Filter theo userId để đảm bảo đúng (defense in depth)
             return await _context.FlashCardReviews
                 .CountAsync(r => r.UserId == userId && r.NextReviewDate <= currentDate);
         }

@@ -107,8 +107,11 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Generate unique OrderCode for PayOS
-                var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-                var orderCode = long.Parse($"{timestamp}{request.ProductId:D6}");
+                // Format: yyMMddHHmmss + ProductId (6 digits) = 12 + 6 = 18 digits (fits in Int64)
+                // Int64.MaxValue = 9,223,372,036,854,775,807 (19 digits)
+                // Using yy instead of yyyy to avoid overflow (20 digits would exceed Int64)
+                var timestamp = DateTime.UtcNow.ToString("yyMMddHHmmss"); // 12 digits (year 2 digits)
+                var orderCode = long.Parse($"{timestamp}{request.ProductId:D6}"); // Total: 18 digits
                 
                 // Get product name for description from Strategy
                 var productName = await processor.GetProductNameAsync(request.ProductId);
