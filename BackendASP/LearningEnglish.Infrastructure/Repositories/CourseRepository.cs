@@ -156,12 +156,11 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
 
-        //Lấy khóa học teacher mà user đã tham gia
-
-        public async Task<IEnumerable<Course>> GetEnrolledTeacherCoursesByUserId(int userId)
+        // Lấy khóa học teacher mà user đã tham gia - RLS đã filter theo userId
+        public async Task<IEnumerable<Course>> GetEnrolledTeacherCoursesByUserId()
         {
             return await _context.UserCourses
-                .Where(uc => uc.UserId == userId && uc.Course!.Type == CourseType.Teacher)
+                .Where(uc => uc.Course!.Type == CourseType.Teacher) // Chỉ filter Type, RLS đã filter userId
                 .Include(uc => uc.Course)
                     .ThenInclude(c => c!.Teacher)
                 .Include(uc => uc.Course)
