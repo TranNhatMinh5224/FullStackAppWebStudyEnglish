@@ -40,22 +40,25 @@ namespace LearningEnglish.Application.Service
             _lessonCompletionRepository = lessonCompletionRepository;
         }
 
-        // admin Thêm Lesson vào Course 
+        // Admin thêm Lesson vào Course
+        // RLS: lessons_policy_admin_all sẽ check permission Admin.Lesson.Manage khi INSERT
         public async Task<ServiceResponse<LessonDto>> AdminAddLesson(AdminCreateLessonDto dto)
         {
             var response = new ServiceResponse<LessonDto>();
             try
             {
+                // RLS đã filter courses theo permission Admin.Course.Manage
+                // Nếu course không tồn tại hoặc không có quyền → RLS sẽ filter → course == null
                 var course = await _courseRepository.GetCourseById(dto.CourseId);
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy khóa học";
+                    response.Message = "Không tìm thấy khóa học hoặc bạn không có quyền truy cập";
                     return response;
                 }
 
-                // Admin có thể thêm vào System course (không giới hạn)
+                // Business logic: Admin chỉ thêm vào System course
                 if (course.Type != CourseType.System)
                 {
                     response.Success = false;
@@ -149,23 +152,26 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // teacher thêm lesson
-
+        // Teacher thêm lesson
+        // RLS: lessons_policy_teacher_all_own sẽ check course ownership khi INSERT
+        // Defense in depth: Check ownership ở service layer để có error message rõ ràng
         public async Task<ServiceResponse<LessonDto>> TeacherAddLesson(TeacherCreateLessonDto dto, int userId)
         {
             var response = new ServiceResponse<LessonDto>();
             try
             {
+                // RLS đã filter courses theo TeacherId (chỉ courses của teacher này)
+                // Nếu course không tồn tại hoặc không thuộc về teacher → RLS sẽ filter → course == null
                 var course = await _courseRepository.GetCourseById(dto.CourseId);
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy khóa học";
+                    response.Message = "Không tìm thấy khóa học hoặc bạn không có quyền truy cập";
                     return response;
                 }
 
-                // Chỉ teacher course mới được thêm
+                // Business logic: Chỉ teacher course mới được thêm lesson
                 if (course.Type != CourseType.Teacher)
                 {
                     response.Success = false;
@@ -174,7 +180,8 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // ✅ Kiểm tra teacher có phải chủ sở hữu course không
+                // Defense in depth: Check ownership ở service layer (RLS cũng sẽ block nếu không đúng)
+                // Giúp trả về error message rõ ràng hơn trước khi INSERT
                 if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
                 {
                     response.Success = false;
@@ -415,18 +422,24 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // cập nhật lesson
+        // Cập nhật lesson
+        // RLS: lessons_policy_* sẽ filter lessons theo role/permission khi UPDATE
+        // Nếu lesson không tồn tại hoặc không có quyền → RLS sẽ filter → lesson == null
         public async Task<ServiceResponse<LessonDto>> UpdateLesson(int lessonId, UpdateLessonDto dto)
         {
             var response = new ServiceResponse<LessonDto>();
             try
             {
+                // RLS đã filter lessons theo role:
+                // - Admin: Tất cả lessons (có permission)
+                // - Teacher: Chỉ lessons của own courses
+                // - Student: Không có quyền UPDATE
                 var lesson = await _lessonRepository.GetLessonById(lessonId);
                 if (lesson == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy bài học";
+                    response.Message = "Không tìm thấy bài học hoặc bạn không có quyền truy cập";
                     return response;
                 }
 
@@ -519,21 +532,32 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Xóa lesson
+        // RLS: lessons_policy_* sẽ filter lessons theo role/permission khi DELETE
+        // - Admin: Có thể xóa tất cả lessons (có permission)
+        // - Teacher: Chỉ xóa được lessons của own courses
+        // - Student: Không có quyền DELETE
         public async Task<ServiceResponse<bool>> DeleteLesson(int lessonId)
         {
             var response = new ServiceResponse<bool>();
             try
             {
+                // RLS đã filter lessons theo role:
+                // - Admin: Tất cả lessons (có permission)
+                // - Teacher: Chỉ lessons của own courses
+                // Nếu lesson không tồn tại hoặc không có quyền → RLS sẽ filter → lesson == null
                 var lesson = await _lessonRepository.GetLessonById(lessonId);
-
                 if (lesson == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy bài học";
+                    response.Message = "Không tìm thấy bài học hoặc bạn không có quyền truy cập";
                     response.Data = false;
                     return response;
                 }
+
+                // Business logic: Kiểm tra course Type để phân biệt System vs Teacher course
+                // RLS đã đảm bảo quyền truy cập, đây chỉ là business logic validation
                 var courseId = lesson.CourseId;
                 var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
@@ -544,18 +568,18 @@ namespace LearningEnglish.Application.Service
                     response.Data = false;
                     return response;
                 }
+
+                // Business logic: Phân biệt System course vs Teacher course
+                // RLS đã filter, đây chỉ là validation để trả về error message phù hợp
                 switch (course.Type)
                 {
                     case CourseType.System:
-                        // Admin mới được xóa lesson trong System course
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Chỉ admin mới có thể xóa bài học từ khóa học hệ thống";
-                        response.Data = false;
-                        return response;
+                        // Admin mới được xóa lesson trong System course (RLS đã check permission)
+                        // Nếu không phải Admin → RLS đã block → lesson == null → đã return 404 ở trên
+                        break;
                     case CourseType.Teacher:
-                        // Teacher mới được xóa lesson trong Teacher course
-                        // Giới hạn số lượng lesson không áp dụng khi xóa
+                        // Teacher chỉ xóa được lessons của own courses (RLS đã check ownership)
+                        // Nếu không phải owner → RLS đã block → lesson == null → đã return 404 ở trên
                         break;
                     default:
                         response.Success = false;

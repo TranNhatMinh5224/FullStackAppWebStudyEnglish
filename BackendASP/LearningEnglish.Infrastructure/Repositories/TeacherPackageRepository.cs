@@ -14,11 +14,15 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
+        // TeacherPackages là public catalog - không cần RLS
+        // Mọi người (Guest, Student, Teacher) đều có thể xem
+        // Chỉ Admin mới có thể CRUD (đã có Permission check ở controller)
         public async Task<List<TeacherPackage>> GetAllTeacherPackagesAsync()
         {
             return await _context.TeacherPackages.ToListAsync();
         }
 
+        // TeacherPackages là public catalog - không cần RLS
         public async Task<TeacherPackage?> GetTeacherPackageByIdAsync(int id)
         {
             return await _context.TeacherPackages.FindAsync(id);
@@ -53,6 +57,7 @@ namespace LearningEnglish.Infrastructure.Repositories
 
         // Lấy TeacherPackage của teacher tại thời điểm date
         // Tự động lấy subscription đang valid (Active hoặc Pending đã đến ngày)
+        // Note: Filter theo teacherId ở application layer (không cần RLS vì đơn giản)
         public async Task<TeacherPackage?> GetInformationTeacherpackageAsync(int teacherId, DateTime date)
         {
             var result = await (from tp in _context.TeacherPackages
@@ -69,6 +74,7 @@ namespace LearningEnglish.Infrastructure.Repositories
 
         // Lấy TeacherPackage hiện tại của teacher
         // Tự động lấy subscription đang valid (Active hoặc Pending đã đến ngày)
+        // Note: Filter theo teacherId ở application layer (không cần RLS vì đơn giản)
         public async Task<TeacherPackage?> GetInformationTeacherpackage(int teacherId)
         {
             var now = DateTime.UtcNow;

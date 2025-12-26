@@ -19,6 +19,7 @@ namespace LearningEnglish.API.Controller.Admin
         }
 
         // endpoint Admin lấy danh sách tất cả gói giáo viên
+        // TeacherPackages là public catalog - không cần RLS, chỉ cần Permission check
         [HttpGet]
         [RequirePermission("Admin.Package.Manage")]
         public async Task<IActionResult> GetAllTeacherPackages()

@@ -41,43 +41,58 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // endpoint Admin/Teacher xóa bài học (RLS đã filter theo ownership)
+        // endpoint Admin/Teacher xóa bài học
+        // RLS: lessons_policy_admin_all (check permission) hoặc lessons_policy_teacher_all_own (check ownership)
         [HttpDelete("delete/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> DeleteLesson(int lessonId)
         {
-            // RLS đã filter, không cần truyền userId/userRole vào service
-            // Nếu lesson không tồn tại hoặc không thuộc về teacher → RLS sẽ filter → service trả về null → 404
+            // RLS đã filter:
+            // - Admin: Cần permission Admin.Lesson.Manage (RLS sẽ check)
+            // - Teacher: Chỉ xóa được lessons của own courses (RLS sẽ check ownership)
+            // Nếu không có quyền → RLS sẽ filter → lesson == null → service trả về 404
             var result = await _lessonService.DeleteLesson(lessonId);
             return result.Success ? NoContent() : StatusCode(result.StatusCode, result);
         }
 
-        // endpoint Admin/Teacher cập nhật bài học (RLS đã filter theo ownership)
+        // endpoint Admin/Teacher cập nhật bài học
+        // RLS: lessons_policy_admin_all (check permission) hoặc lessons_policy_teacher_all_own (check ownership)
         [HttpPut("update/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> UpdateLesson(int lessonId, [FromBody] UpdateLessonDto dto)
         {
-            // RLS đã filter, không cần truyền userId/userRole vào service
+            // RLS đã filter:
+            // - Admin: Cần permission Admin.Lesson.Manage (RLS sẽ check)
+            // - Teacher: Chỉ cập nhật được lessons của own courses (RLS sẽ check ownership)
+            // Nếu không có quyền → RLS sẽ filter → lesson == null → service trả về 404
             var result = await _lessonService.UpdateLesson(lessonId, dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // endpoint Admin/Teacher lấy chi tiết bài học (RLS đã filter theo ownership)
+        // endpoint Admin/Teacher lấy chi tiết bài học
+        // RLS: lessons_policy_admin_all (check permission) hoặc lessons_policy_teacher_all_own (check ownership)
         [HttpGet("get/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> GetLessonById(int lessonId)
         {
-            // RLS đã filter, không cần truyền userId/userRole vào service
+            // RLS đã filter:
+            // - Admin: Cần permission Admin.Lesson.Manage (RLS sẽ check)
+            // - Teacher: Chỉ xem được lessons của own courses (RLS sẽ check ownership)
+            // Nếu không có quyền → RLS sẽ filter → lesson == null → service trả về 404
             var result = await _lessonService.GetLessonById(lessonId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // endpoint Admin/Teacher/Student lấy danh sách bài học theo course (RLS đã filter)
+        // endpoint Admin/Teacher/Student lấy danh sách bài học theo course
+        // RLS: lessons_policy_* sẽ filter lessons theo role/permission/enrollment
         [HttpGet("course/{courseId}")]
         [Authorize]
         public async Task<IActionResult> GetListLessonByCourseId(int courseId)
         {
-            // RLS đã filter theo course ownership/enrollment
+            // RLS đã filter:
+            // - Admin: Tất cả lessons (có permission Admin.Lesson.Manage)
+            // - Teacher: Chỉ lessons của own courses
+            // - Student: Chỉ lessons của enrolled courses
             // userId optional: chỉ cần khi tính progress cho Student
             var userIdValue = User.GetUserIdSafe();
             int? userId = userIdValue > 0 ? userIdValue : null;

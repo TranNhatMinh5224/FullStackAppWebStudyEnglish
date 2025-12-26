@@ -21,6 +21,9 @@ namespace LearningEnglish.Application.Service
             _logger = logger;
         }
 
+        // Lấy tất cả TeacherPackages (public catalog - không cần RLS)
+        // Mọi người (Guest, Student, Teacher) đều có thể xem
+        // Chỉ Admin mới có thể CRUD (đã có Permission check ở controller)
         public async Task<ServiceResponse<List<TeacherPackageDto>>> GetAllTeacherPackagesAsync()
         {
             var response = new ServiceResponse<List<TeacherPackageDto>>();
@@ -40,6 +43,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Lấy TeacherPackage theo ID (public catalog - không cần RLS)
         public async Task<ServiceResponse<TeacherPackageDto>> GetTeacherPackageByIdAsync(int id)
         {
             var response = new ServiceResponse<TeacherPackageDto>();
@@ -68,6 +72,8 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Tạo TeacherPackage mới (chỉ Admin - đã có Permission check ở controller)
+        // TeacherPackages là public catalog - không cần RLS
         public async Task<ServiceResponse<TeacherPackageDto>> CreateTeacherPackageAsync(CreateTeacherPackageDto dto)
         {
             var response = new ServiceResponse<TeacherPackageDto>();
@@ -98,7 +104,8 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // cập nhật gói teacher chỉ admin mới dược cập nhật 
+        // Cập nhật TeacherPackage (chỉ Admin - đã có Permission check ở controller)
+        // TeacherPackages là public catalog - không cần RLS
         public async Task<ServiceResponse<TeacherPackageDto>> UpdateTeacherPackageAsync(int id, UpdateTeacherPackageDto dto)
         {
             var response = new ServiceResponse<TeacherPackageDto>();
@@ -152,6 +159,8 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Xóa TeacherPackage (chỉ Admin - đã có Permission check ở controller)
+        // TeacherPackages là public catalog - không cần RLS
         public async Task<ServiceResponse<bool>> DeleteTeacherPackageAsync(int id)
         {
             var response = new ServiceResponse<bool>();
