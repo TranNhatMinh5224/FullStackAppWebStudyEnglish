@@ -333,24 +333,26 @@ namespace LearningEnglish.Infrastructure.Migrations
                 column: "CreatedAt",
                 value: new DateTime(2025, 12, 26, 16, 29, 53, 117, DateTimeKind.Utc).AddTicks(611));
 
-            migrationBuilder.InsertData(
-                table: "Permissions",
-                columns: new[] { "PermissionId", "Category", "CreatedAt", "Description", "DisplayName", "Name" },
-                values: new object[] { 9, "Finance", new DateTime(2025, 12, 26, 16, 29, 53, 117, DateTimeKind.Utc).AddTicks(588), "Thêm/xóa học viên vào khóa học (dùng khi thanh toán lỗi, nâng cấp user)", "Quản lý học viên trong khóa học", "Admin.Course.Enroll" });
+            // Insert Permission 9 if not exists (using SQL to avoid duplicate key error)
+            migrationBuilder.Sql(@"
+                INSERT INTO ""Permissions"" (""PermissionId"", ""Category"", ""CreatedAt"", ""Description"", ""DisplayName"", ""Name"")
+                VALUES (9, 'Finance', TIMESTAMPTZ '2025-12-26T16:29:53.117058Z', 'Thêm/xóa học viên vào khóa học (dùng khi thanh toán lỗi, nâng cấp user)', 'Quản lý học viên trong khóa học', 'Admin.Course.Enroll')
+                ON CONFLICT (""PermissionId"") DO NOTHING;
+            ");
 
-            migrationBuilder.InsertData(
-                table: "RolePermissions",
-                columns: new[] { "PermissionId", "RoleId", "AssignedAt" },
-                values: new object[,]
-                {
-                    { 1, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 2, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 3, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 4, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 5, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 6, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 7, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }
-                });
+            // Insert RolePermissions if not exists (using SQL to avoid duplicate key error)
+            migrationBuilder.Sql(@"
+                INSERT INTO ""RolePermissions"" (""PermissionId"", ""RoleId"", ""AssignedAt"")
+                VALUES 
+                    (1, 2, TIMESTAMPTZ '2025-01-01T00:00:00Z'),
+                    (2, 2, TIMESTAMPTZ '2025-01-01T00:00:00Z'),
+                    (3, 2, TIMESTAMPTZ '2025-01-01T00:00:00Z'),
+                    (4, 3, TIMESTAMPTZ '2025-01-01T00:00:00Z'),
+                    (5, 3, TIMESTAMPTZ '2025-01-01T00:00:00Z'),
+                    (6, 3, TIMESTAMPTZ '2025-01-01T00:00:00Z'),
+                    (7, 3, TIMESTAMPTZ '2025-01-01T00:00:00Z')
+                ON CONFLICT (""PermissionId"", ""RoleId"") DO NOTHING;
+            ");
 
             migrationBuilder.UpdateData(
                 table: "Roles",
@@ -373,10 +375,12 @@ namespace LearningEnglish.Infrastructure.Migrations
                 column: "Name",
                 value: "Teacher");
 
-            migrationBuilder.InsertData(
-                table: "Roles",
-                columns: new[] { "RoleId", "Name" },
-                values: new object[] { 5, "Student" });
+            // Insert Role 5 (Student) if not exists (using SQL to avoid duplicate key error)
+            migrationBuilder.Sql(@"
+                INSERT INTO ""Roles"" (""RoleId"", ""Name"")
+                VALUES (5, 'Student')
+                ON CONFLICT (""RoleId"") DO NOTHING;
+            ");
 
             migrationBuilder.UpdateData(
                 table: "Users",
@@ -385,14 +389,14 @@ namespace LearningEnglish.Infrastructure.Migrations
                 column: "PasswordHash",
                 value: "$2a$11$rBop2qbpxhc/zLRyADEO6u55GaDgY31msxNKdNzJtMTGER1WVSntK");
 
-            migrationBuilder.InsertData(
-                table: "RolePermissions",
-                columns: new[] { "PermissionId", "RoleId", "AssignedAt" },
-                values: new object[,]
-                {
-                    { 9, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 9, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }
-                });
+            // Insert RolePermissions for Permission 9 if not exists (using SQL to avoid duplicate key error)
+            migrationBuilder.Sql(@"
+                INSERT INTO ""RolePermissions"" (""PermissionId"", ""RoleId"", ""AssignedAt"")
+                VALUES 
+                    (9, 1, TIMESTAMPTZ '2025-01-01T00:00:00Z'),
+                    (9, 3, TIMESTAMPTZ '2025-01-01T00:00:00Z')
+                ON CONFLICT (""PermissionId"", ""RoleId"") DO NOTHING;
+            ");
         }
 
         /// <inheritdoc />
