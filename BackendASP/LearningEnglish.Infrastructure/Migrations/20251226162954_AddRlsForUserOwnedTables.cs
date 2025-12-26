@@ -32,6 +32,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // SuperAdmin: Toàn quyền
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS notifications_policy_superadmin_all ON ""Notifications"";
                 CREATE POLICY notifications_policy_superadmin_all
                 ON ""Notifications"" FOR ALL
                 USING (app.is_superadmin());
@@ -39,6 +40,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Admin: Permission-aware RLS
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS notifications_policy_admin_all ON ""Notifications"";
                 CREATE POLICY notifications_policy_admin_all
                 ON ""Notifications"" FOR ALL
                 USING (app.user_has_permission('Admin.User.Manage'));
@@ -46,6 +48,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // User: Chỉ xem/update notifications của chính mình
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS notifications_policy_user_all_own ON ""Notifications"";
                 CREATE POLICY notifications_policy_user_all_own
                 ON ""Notifications"" FOR ALL
                 USING (""UserId"" = app.current_user_id());
@@ -57,6 +60,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // SuperAdmin: Toàn quyền
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS streaks_policy_superadmin_all ON ""Streaks"";
                 CREATE POLICY streaks_policy_superadmin_all
                 ON ""Streaks"" FOR ALL
                 USING (app.is_superadmin());
@@ -64,6 +68,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Admin: Permission-aware RLS
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS streaks_policy_admin_all ON ""Streaks"";
                 CREATE POLICY streaks_policy_admin_all
                 ON ""Streaks"" FOR ALL
                 USING (app.user_has_permission('Admin.User.Manage'));
@@ -71,6 +76,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // User: Chỉ xem/update streak của chính mình
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS streaks_policy_user_all_own ON ""Streaks"";
                 CREATE POLICY streaks_policy_user_all_own
                 ON ""Streaks"" FOR ALL
                 USING (""UserId"" = app.current_user_id());
@@ -82,6 +88,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // SuperAdmin: Toàn quyền
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS flashcardreviews_policy_superadmin_all ON ""FlashCardReviews"";
                 CREATE POLICY flashcardreviews_policy_superadmin_all
                 ON ""FlashCardReviews"" FOR ALL
                 USING (app.is_superadmin());
@@ -89,6 +96,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Admin: Permission-aware RLS
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS flashcardreviews_policy_admin_all ON ""FlashCardReviews"";
                 CREATE POLICY flashcardreviews_policy_admin_all
                 ON ""FlashCardReviews"" FOR ALL
                 USING (app.user_has_permission('Admin.User.Manage'));
@@ -96,6 +104,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // User: Chỉ xem/update reviews của chính mình
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS flashcardreviews_policy_user_all_own ON ""FlashCardReviews"";
                 CREATE POLICY flashcardreviews_policy_user_all_own
                 ON ""FlashCardReviews"" FOR ALL
                 USING (""UserId"" = app.current_user_id());
@@ -107,6 +116,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // SuperAdmin: Toàn quyền
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS courseprogresses_policy_superadmin_all ON ""CourseProgresses"";
                 CREATE POLICY courseprogresses_policy_superadmin_all
                 ON ""CourseProgresses"" FOR ALL
                 USING (app.is_superadmin());
@@ -114,6 +124,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Admin: Permission-aware RLS
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS courseprogresses_policy_admin_all ON ""CourseProgresses"";
                 CREATE POLICY courseprogresses_policy_admin_all
                 ON ""CourseProgresses"" FOR ALL
                 USING (app.user_has_permission('Admin.User.Manage'));
@@ -121,6 +132,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Teacher: Xem progress của students trong own courses
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS courseprogresses_policy_teacher_select_own_courses ON ""CourseProgresses"";
                 CREATE POLICY courseprogresses_policy_teacher_select_own_courses
                 ON ""CourseProgresses"" FOR SELECT
                 USING (
@@ -136,6 +148,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // User: Chỉ xem/update progress của chính mình
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS courseprogresses_policy_user_all_own ON ""CourseProgresses"";
                 CREATE POLICY courseprogresses_policy_user_all_own
                 ON ""CourseProgresses"" FOR ALL
                 USING (""UserId"" = app.current_user_id());
@@ -147,6 +160,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // SuperAdmin: Toàn quyền
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS lessoncompletions_policy_superadmin_all ON ""LessonCompletions"";
                 CREATE POLICY lessoncompletions_policy_superadmin_all
                 ON ""LessonCompletions"" FOR ALL
                 USING (app.is_superadmin());
@@ -154,6 +168,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Admin: Permission-aware RLS
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS lessoncompletions_policy_admin_all ON ""LessonCompletions"";
                 CREATE POLICY lessoncompletions_policy_admin_all
                 ON ""LessonCompletions"" FOR ALL
                 USING (app.user_has_permission('Admin.User.Manage'));
@@ -161,6 +176,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Teacher: Xem completions của students trong own courses
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS lessoncompletions_policy_teacher_select_own_courses ON ""LessonCompletions"";
                 CREATE POLICY lessoncompletions_policy_teacher_select_own_courses
                 ON ""LessonCompletions"" FOR SELECT
                 USING (
@@ -177,6 +193,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // User: Chỉ xem/update completions của chính mình
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS lessoncompletions_policy_user_all_own ON ""LessonCompletions"";
                 CREATE POLICY lessoncompletions_policy_user_all_own
                 ON ""LessonCompletions"" FOR ALL
                 USING (""UserId"" = app.current_user_id());
@@ -188,6 +205,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // SuperAdmin: Toàn quyền
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS modulecompletions_policy_superadmin_all ON ""ModuleCompletions"";
                 CREATE POLICY modulecompletions_policy_superadmin_all
                 ON ""ModuleCompletions"" FOR ALL
                 USING (app.is_superadmin());
@@ -195,6 +213,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Admin: Permission-aware RLS
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS modulecompletions_policy_admin_all ON ""ModuleCompletions"";
                 CREATE POLICY modulecompletions_policy_admin_all
                 ON ""ModuleCompletions"" FOR ALL
                 USING (app.user_has_permission('Admin.User.Manage'));
@@ -202,6 +221,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Teacher: Xem completions của students trong own courses
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS modulecompletions_policy_teacher_select_own_courses ON ""ModuleCompletions"";
                 CREATE POLICY modulecompletions_policy_teacher_select_own_courses
                 ON ""ModuleCompletions"" FOR SELECT
                 USING (
@@ -219,6 +239,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // User: Chỉ xem/update completions của chính mình
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS modulecompletions_policy_user_all_own ON ""ModuleCompletions"";
                 CREATE POLICY modulecompletions_policy_user_all_own
                 ON ""ModuleCompletions"" FOR ALL
                 USING (""UserId"" = app.current_user_id());
@@ -230,6 +251,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // SuperAdmin: Toàn quyền
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS pronunciationprogresses_policy_superadmin_all ON ""PronunciationProgresses"";
                 CREATE POLICY pronunciationprogresses_policy_superadmin_all
                 ON ""PronunciationProgresses"" FOR ALL
                 USING (app.is_superadmin());
@@ -237,6 +259,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Admin: Permission-aware RLS
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS pronunciationprogresses_policy_admin_all ON ""PronunciationProgresses"";
                 CREATE POLICY pronunciationprogresses_policy_admin_all
                 ON ""PronunciationProgresses"" FOR ALL
                 USING (app.user_has_permission('Admin.User.Manage'));
@@ -244,6 +267,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // User: Chỉ xem/update progress của chính mình
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS pronunciationprogresses_policy_user_all_own ON ""PronunciationProgresses"";
                 CREATE POLICY pronunciationprogresses_policy_user_all_own
                 ON ""PronunciationProgresses"" FOR ALL
                 USING (""UserId"" = app.current_user_id());
@@ -255,6 +279,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // SuperAdmin: Toàn quyền
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS teachersubscriptions_policy_superadmin_all ON ""TeacherSubscriptions"";
                 CREATE POLICY teachersubscriptions_policy_superadmin_all
                 ON ""TeacherSubscriptions"" FOR ALL
                 USING (app.is_superadmin());
@@ -262,6 +287,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Admin: Permission-aware RLS
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS teachersubscriptions_policy_admin_all ON ""TeacherSubscriptions"";
                 CREATE POLICY teachersubscriptions_policy_admin_all
                 ON ""TeacherSubscriptions"" FOR ALL
                 USING (app.user_has_permission('Admin.Package.Manage'));
@@ -269,6 +295,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             // Teacher: Chỉ xem subscriptions của chính mình
             migrationBuilder.Sql(@"
+                DROP POLICY IF EXISTS teachersubscriptions_policy_teacher_all_own ON ""TeacherSubscriptions"";
                 CREATE POLICY teachersubscriptions_policy_teacher_all_own
                 ON ""TeacherSubscriptions"" FOR ALL
                 USING (
