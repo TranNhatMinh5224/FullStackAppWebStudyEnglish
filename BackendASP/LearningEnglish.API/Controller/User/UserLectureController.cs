@@ -1,7 +1,7 @@
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -21,35 +21,26 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
-        }
-
-        // GET: api/userlecture/{lectureId} - lấy lecture theo ID
         [HttpGet("{lectureId}")]
         public async Task<IActionResult> GetLecture(int lectureId)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _lectureService.GetLectureByIdAsync(lectureId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/userlecture/module/{moduleId} - lấy tất cả lecture theo module ID
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetLecturesByModule(int moduleId)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _lectureService.GetLecturesByModuleIdAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/userlecture/module/{moduleId}/tree - lấy cây lecture theo module ID
         [HttpGet("module/{moduleId}/tree")]
         public async Task<IActionResult> GetLectureTree(int moduleId)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _lectureService.GetLectureTreeByModuleIdAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

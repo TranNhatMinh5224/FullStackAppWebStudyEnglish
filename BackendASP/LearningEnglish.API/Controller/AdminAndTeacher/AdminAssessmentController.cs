@@ -1,15 +1,15 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.API.Extensions;
+using LearningEnglish.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [Route("api/assessments")]
     [ApiController]
-    [Authorize(Roles = "Admin,Teacher")]
+    [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin, Teacher")]
     public class AdminAssessmentController : ControllerBase
     {
         private readonly IAssessmentService _assessmentService;
@@ -21,26 +21,21 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _logger = logger;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
-        }
-
-        private string GetCurrentUserRole()
-        {
-            return User.GetPrimaryRole();
-        }
 
 
-        // POST: api/AdminAndTeacher/Assessment/AdminAssessment/create - tạo assessment mới (Admin và Teacher)
+        // POST: api/AdminAndTeacher/Assessment/AdminAssessment/create - tạo assessment mới
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ tạo assessment cho modules của own courses
         [HttpPost("create")]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> CreateAssessment([FromBody] CreateAssessmentDto createAssessmentDto)
         {
-            var userRole = GetCurrentUserRole();
-            _logger.LogInformation("{UserRole} {UserId} đang tạo Assessment mới: {Title}", userRole, GetCurrentUserId(), createAssessmentDto.Title);
+            var userId = User.GetUserId();
+            var userRole = User.GetPrimaryRole();
+            _logger.LogInformation("{UserRole} {UserId} đang tạo Assessment mới: {Title}", userRole, userId, createAssessmentDto.Title);
 
-            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
+            int? teacherId = userRole == "Teacher" ? userId : null;
             var result = await _assessmentService.CreateAssessment(createAssessmentDto, teacherId);
 
             if (!result.Success)
@@ -55,8 +50,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetAssessmentsByModuleId(int moduleId)
         {
-            var userRole = GetCurrentUserRole();
-            _logger.LogInformation("{UserRole} {UserId} đang lấy danh sách Assessment cho Module {ModuleId}", userRole, GetCurrentUserId(), moduleId);
+            var userId = User.GetUserId();
+            var userRole = User.GetPrimaryRole();
+            _logger.LogInformation("{UserRole} {UserId} đang lấy danh sách Assessment cho Module {ModuleId}", userRole, userId, moduleId);
 
             var result = await _assessmentService.GetAssessmentsByModuleId(moduleId);
 
@@ -72,8 +68,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpGet("{assessmentId}")]
         public async Task<IActionResult> GetAssessmentById(int assessmentId)
         {
-            var userRole = GetCurrentUserRole();
-            _logger.LogInformation("{UserRole} {UserId} đang lấy thông tin Assessment {AssessmentId}", userRole, GetCurrentUserId(), assessmentId);
+            var userId = User.GetUserId();
+            var userRole = User.GetPrimaryRole();
+            _logger.LogInformation("{UserRole} {UserId} đang lấy thông tin Assessment {AssessmentId}", userRole, userId, assessmentId);
 
             var result = await _assessmentService.GetAssessmentById(assessmentId);
 
@@ -81,12 +78,17 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - sửa thông tin assessment (Admin và Teacher)
+        // PUT: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - sửa assessment
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ sửa assessment của own courses (RLS check)
         [HttpPut("{assessmentId}")]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> UpdateAssessment(int assessmentId, [FromBody] UpdateAssessmentDto updateAssessmentDto)
         {
-            var userRole = GetCurrentUserRole();
-            _logger.LogInformation("{UserRole} {UserId} đang cập nhật Assessment {AssessmentId}", userRole, GetCurrentUserId(), assessmentId);
+            var userId = User.GetUserId();
+            var userRole = User.GetPrimaryRole();
+            _logger.LogInformation("{UserRole} {UserId} đang cập nhật Assessment {AssessmentId}", userRole, userId, assessmentId);
 
             var result = await _assessmentService.UpdateAssessment(assessmentId, updateAssessmentDto);
 
@@ -94,15 +96,19 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - xoá assessment (Admin và Teacher)
+        // DELETE: api/AdminAndTeacher/Assessment/AdminAssessment/{assessmentId} - xoá assessment
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ xóa assessment của own courses (RLS check)
         [HttpDelete("{assessmentId}")]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> DeleteAssessment(int assessmentId)
         {
-            var userRole = GetCurrentUserRole();
-            var currentUserId = GetCurrentUserId();
-            _logger.LogInformation("{UserRole} {UserId} đang xóa Assessment {AssessmentId}", userRole, currentUserId, assessmentId);
+            var userId = User.GetUserId();
+            var userRole = User.GetPrimaryRole();
+            _logger.LogInformation("{UserRole} {UserId} đang xóa Assessment {AssessmentId}", userRole, userId, assessmentId);
 
-            int? teacherId = userRole == "Teacher" ? currentUserId : null;
+            int? teacherId = userRole == "Teacher" ? userId : null;
             var result = await _assessmentService.DeleteAssessment(assessmentId, teacherId);
 
             _logger.LogInformation("Xóa Assessment thành công: {AssessmentId}", assessmentId);

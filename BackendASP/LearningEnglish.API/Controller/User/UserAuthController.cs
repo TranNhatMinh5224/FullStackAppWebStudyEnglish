@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Extensions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -42,19 +43,6 @@ namespace LearningEnglish.API.Controllers.User
             _logoutService = logoutService;
         }
 
-        // Lấy ID người dùng hiện tại từ JWT token
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-                            ?? User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-            {
-                return 0;
-            }
-
-            return userId;
-        }
 
         // Đăng ký tài khoản người dùng mới
         [HttpPost("register")]
@@ -101,7 +89,7 @@ namespace LearningEnglish.API.Controllers.User
         [HttpGet("profile")]
         public async Task<IActionResult> GetProfile()
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _userManagementService.GetUserProfileAsync(userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -111,7 +99,7 @@ namespace LearningEnglish.API.Controllers.User
         [HttpPut("update/profile")]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserDto dto)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _userManagementService.UpdateUserProfileAsync(userId, dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -121,7 +109,7 @@ namespace LearningEnglish.API.Controllers.User
         [HttpPut("profile/avatar")]
         public async Task<IActionResult> UpdateAvatar([FromBody] UpdateAvatarDto dto)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _userManagementService.UpdateAvatarAsync(userId, dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -131,7 +119,7 @@ namespace LearningEnglish.API.Controllers.User
         [HttpPut("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _passwordService.ChangePasswordAsync(userId, dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -173,7 +161,7 @@ namespace LearningEnglish.API.Controllers.User
         [Authorize]
         public async Task<IActionResult> Logout([FromBody] LogoutDto dto)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _logoutService.LogoutAsync(dto, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -183,7 +171,7 @@ namespace LearningEnglish.API.Controllers.User
         [Authorize]
         public async Task<IActionResult> LogoutAll()
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _logoutService.LogoutAllAsync(userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

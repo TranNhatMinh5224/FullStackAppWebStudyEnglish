@@ -45,53 +45,65 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // endpoint Student tạo yêu cầu thanh toán (Course hoặc TeacherPackage)
+        // RLS: payments_policy_user_all_own (chỉ tạo payments cho chính mình)
+        // FluentValidation: RequestPaymentValidator sẽ tự động validate
         [HttpPost("process")]
         public async Task<IActionResult> ProcessPayment([FromBody] requestPayment request)
         {
             // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            // RLS sẽ filter payments theo userId khi query
             var userId = User.GetUserId();
             var result = await _paymentService.ProcessPaymentAsync(userId, request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // endpoint Student xác nhận thanh toán
+        // RLS: payments_policy_user_all_own (chỉ xác nhận payments của chính mình)
+        // FluentValidation: CompletePaymentValidator sẽ tự động validate
         [HttpPost("confirm")]
         public async Task<IActionResult> ConfirmPayment([FromBody] CompletePayment paymentDto)
         {
             // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            // RLS sẽ filter payments theo userId
             var userId = User.GetUserId();
             var result = await _paymentService.ConfirmPaymentAsync(paymentDto, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // endpoint Student lấy lịch sử giao dịch (phân trang)
+        // RLS: payments_policy_user_all_own (chỉ xem payments của chính mình)
         [HttpGet("history")]
         public async Task<IActionResult> GetTransactionHistory([FromQuery] PageRequest request)
         {
             // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            // RLS sẽ filter payments theo userId
             var userId = User.GetUserId();
             var result = await _paymentService.GetTransactionHistoryAsync(userId, request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // endpoint Student lấy chi tiết giao dịch theo paymentId
+        // RLS: payments_policy_user_all_own (chỉ xem payments của chính mình)
         [HttpGet("transaction/{paymentId}")]
         public async Task<IActionResult> GetTransactionDetail(int paymentId)
         {
             // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            // RLS sẽ filter payments theo userId
             var userId = User.GetUserId();
             var result = await _paymentService.GetTransactionDetailAsync(paymentId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // endpoint Student tạo link thanh toán PayOS
+        // RLS: payments_policy_user_all_own (chỉ xem/update payments của chính mình)
         [HttpPost("payos/create-link/{paymentId}")]
         public async Task<IActionResult> CreatePayOSLink(int paymentId)
         {
             // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            // RLS sẽ filter payments theo userId
             var userId = User.GetUserId();
             var result = await _paymentService.CreatePayOSPaymentLinkAsync(paymentId, userId);
-            return result.Success ? Ok(result) : BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // endpoint PayOS return URL (xử lý redirect từ PayOS sau khi thanh toán)
@@ -284,7 +296,7 @@ namespace LearningEnglish.API.Controller.User
             };
 
             var result = await _paymentService.ConfirmPaymentAsync(confirmDto, userId);
-            return result.Success ? Ok(result) : BadRequest(result);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

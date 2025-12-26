@@ -2,9 +2,9 @@ using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -21,55 +21,38 @@ namespace LearningEnglish.API.Controller.User
             _service = service;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
-        }
-
         // POST: api/PronunciationAssessment - tạo mới bài đánh giá phát âm
+        // RLS: pronunciationprogresses_policy_user_all_own
         [HttpPost]
         public async Task<IActionResult> CreateAssessment([FromBody] CreatePronunciationAssessmentDto dto)
         {
-            var userId = GetCurrentUserId();
-            if (userId == 0)
-                return Unauthorized(new ServiceResponse<object>
-                {
-                    Success = false,
-                    Message = "User not authenticated"
-                });
+            var userId = User.GetUserId();
 
             var result = await _service.CreateAssessmentAsync(dto, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // GET: api/PronunciationAssessment/module/{moduleId} - lấy danh sách flashcard kèm tiến độ phát âm theo module ID
+        // RLS: pronunciationprogresses_policy_user_all_own (chỉ xem progress của chính mình)
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetFlashCardsWithProgress(int moduleId)
         {
-            var userId = GetCurrentUserId();
-            if (userId == 0)
-                return Unauthorized(new ServiceResponse<object>
-                {
-                    Success = false,
-                    Message = "User not authenticated"
-                });
+            // [Authorize] đảm bảo userId luôn có
+            // RLS sẽ filter pronunciation progresses theo userId
+            var userId = User.GetUserId();
 
             var result = await _service.GetFlashCardsWithPronunciationProgressAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // GET: api/PronunciationAssessment/module/{moduleId}/summary - lấy tổng hợp kết quả/thống kê module
+        // RLS: pronunciationprogresses_policy_user_all_own (chỉ xem progress của chính mình)
         [HttpGet("module/{moduleId}/summary")]
         public async Task<IActionResult> GetModulePronunciationSummary(int moduleId)
         {
-            var userId = GetCurrentUserId();
-            if (userId == 0)
-                return Unauthorized(new ServiceResponse<object>
-                {
-                    Success = false,
-                    Message = "User not authenticated"
-                });
+            // [Authorize] đảm bảo userId luôn có
+            // RLS sẽ filter pronunciation progresses theo userId
+            var userId = User.GetUserId();
 
             var result = await _service.GetModulePronunciationSummaryAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);

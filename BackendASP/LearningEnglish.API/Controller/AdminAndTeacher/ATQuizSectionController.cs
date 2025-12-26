@@ -1,5 +1,6 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +8,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/quiz-sections")]
-    [Authorize(Roles = "Admin,Teacher")]
+    [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin, Teacher")]
     public class QuizSectionController : ControllerBase
     {
         private readonly IQuizSectionService _quizSectionService;
@@ -18,7 +19,11 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         // POST: api/admin/quiz-sections - tạo mới quiz section
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ tạo quiz section cho quizzes của own courses
         [HttpPost]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> CreateQuizSection([FromBody] CreateQuizSectionDto createDto)
         {
             var result = await _quizSectionService.CreateQuizSectionAsync(createDto);
@@ -44,7 +49,11 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         // PUT: api/admin/quiz-sections/{id} - sửa quiz section
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ sửa quiz section của own courses (RLS check)
         [HttpPut("{id}")]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> UpdateQuizSection(int id, [FromBody] UpdateQuizSectionDto updateDto)
         {
             var result = await _quizSectionService.UpdateQuizSectionAsync(id, updateDto);
@@ -52,7 +61,11 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         // DELETE: api/admin/quiz-sections/{id} - xoá quiz section
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ xóa quiz section của own courses (RLS check)
         [HttpDelete("{id}")]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> DeleteQuizSection(int id)
         {
             var result = await _quizSectionService.DeleteQuizSectionAsync(id);

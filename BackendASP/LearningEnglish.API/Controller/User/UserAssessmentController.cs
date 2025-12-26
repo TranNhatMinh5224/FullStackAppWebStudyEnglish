@@ -1,7 +1,6 @@
 using LearningEnglish.Application.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -19,13 +18,6 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
-        }
-
-        // GET: api/user/assessment/module/{moduleId} - get danh sách assessment theo module ID
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetAssessmentsByModuleId(int moduleId)
         {
@@ -33,7 +25,6 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/assessment/{assessmentId} - lay chi tiết assessment theo ID
         [HttpGet("{assessmentId}")]
         public async Task<IActionResult> GetAssessmentById(int assessmentId)
         {

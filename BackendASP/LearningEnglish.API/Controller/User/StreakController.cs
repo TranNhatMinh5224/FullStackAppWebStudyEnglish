@@ -1,11 +1,9 @@
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -21,30 +19,22 @@ namespace LearningEnglish.API.Controller.User
             _streakService = streakService;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return 0;
-            }
-            return userId;
-        }
-
         // GET: api/user/streaks - lấy chuỗi ngày học hiện tại của user
+        // RLS: streaks_policy_user_all_own
         [HttpGet]
         public async Task<IActionResult> GetCurrentStreak()
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _streakService.GetCurrentStreakAsync(userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // POST: api/user/streaks/checkin - cập nhật streak khi user online
+        // RLS: streaks_policy_user_all_own
         [HttpPost("checkin")]
         public async Task<IActionResult> CheckInStreak()
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _streakService.UpdateStreakAsync(userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

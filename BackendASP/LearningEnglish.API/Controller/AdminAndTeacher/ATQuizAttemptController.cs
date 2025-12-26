@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Common.Pagination;
+using LearningEnglish.API.Authorization;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/quiz-attempts")]
-    [Authorize(Roles = "Admin,Teacher")]
+    [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin, Teacher")]
     public class ATQuizAttemptController : ControllerBase
     {
         private readonly IQuizAttemptAdminService _quizAttemptAdminService;
@@ -41,9 +42,10 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/AdminTeacher/QuizAttempt/force-submit/{attemptId} - Bắt buộc nộp bài (chỉ Admin)
-        [Authorize(Roles = "Admin")]
+        // POST: api/AdminTeacher/QuizAttempt/force-submit/{attemptId} - Bắt buộc nộp bài
+        // Admin: Cần permission Admin.Content.Manage
         [HttpPost("force-submit/{attemptId}")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> ForceSubmitAttempt(int attemptId)
         {
             var result = await _quizAttemptAdminService.ForceSubmitAttemptAsync(attemptId);

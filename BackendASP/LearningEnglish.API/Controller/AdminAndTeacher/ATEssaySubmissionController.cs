@@ -9,7 +9,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
     // quản lý essay submission cho cả Admin và Teacher
     [Route("api/admin-teacher/essay-submissions")]
     [ApiController]
-    [Authorize(Roles = "Admin,Teacher")]
+    [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin, Teacher")]
     public class ATEssaySubmissionController : ControllerBase
     {
         private readonly IEssaySubmissionService _essaySubmissionService;

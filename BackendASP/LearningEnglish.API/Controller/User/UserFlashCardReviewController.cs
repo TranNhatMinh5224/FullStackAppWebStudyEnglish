@@ -1,9 +1,9 @@
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -23,17 +23,12 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
-        }
-
         // bắt đầu học module mới
+        // RLS: flashcardreviews_policy_user_all_own
         [HttpPost("start-module/{moduleId}")]
         public async Task<ActionResult<ServiceResponse<int>>> StartLearningModule(int moduleId)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             _logger.LogInformation("User {UserId} đang bắt đầu học module {ModuleId}", userId, moduleId);
 
             var result = await _reviewService.StartLearningModuleAsync(userId, moduleId);
@@ -41,10 +36,12 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // lấy danh sách từ cần ôn tập
+        // RLS: flashcardreviews_policy_user_all_own (chỉ xem reviews của chính mình)
         [HttpGet("due")]
         public async Task<ActionResult<ServiceResponse<DueFlashCardsResponseDto>>> GetDueFlashCards()
         {
-            var userId = GetCurrentUserId();
+            // RLS sẽ filter flashcard reviews theo userId
+            var userId = User.GetUserId();
             _logger.LogInformation("User {UserId} đang lấy danh sách từ cần ôn tập", userId);
 
             var result = await _reviewService.GetDueFlashCardsAsync(userId);
@@ -52,10 +49,13 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // review flashcard
+        // RLS: flashcardreviews_policy_user_all_own (chỉ update reviews của chính mình)
+        // FluentValidation: ReviewFlashCardDto validator sẽ tự động validate
         [HttpPost("review")]
         public async Task<ActionResult<ServiceResponse<ReviewFlashCardResponseDto>>> ReviewFlashCard([FromBody] ReviewFlashCardDto reviewDto)
         {
-            var userId = GetCurrentUserId();
+            // RLS sẽ filter flashcard reviews theo userId
+            var userId = User.GetUserId();
             _logger.LogInformation("User {UserId} đang review flashcard {FlashCardId} với quality {Quality}",
                 userId, reviewDto.FlashCardId, reviewDto.Quality);
 
@@ -64,10 +64,12 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // lấy thống kê review
+        // RLS: flashcardreviews_policy_user_all_own (chỉ xem reviews của chính mình)
         [HttpGet("statistics")]
         public async Task<ActionResult<ServiceResponse<ReviewStatisticsDto>>> GetStatistics()
         {
-            var userId = GetCurrentUserId();
+            // RLS sẽ filter flashcard reviews theo userId
+            var userId = User.GetUserId();
             _logger.LogInformation("User {UserId} đang lấy thống kê review", userId);
 
             var result = await _reviewService.GetReviewStatisticsAsync(userId);
@@ -75,10 +77,12 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // lấy danh sách từ đã thuộc
+        // RLS: flashcardreviews_policy_user_all_own (chỉ xem reviews của chính mình)
         [HttpGet("mastered")]
         public async Task<ActionResult<ServiceResponse<DueFlashCardsResponseDto>>> GetMasteredFlashCards()
         {
-            var userId = GetCurrentUserId();
+            // RLS sẽ filter flashcard reviews theo userId
+            var userId = User.GetUserId();
             _logger.LogInformation("User {UserId} đang lấy danh sách từ đã thuộc", userId);
 
             var result = await _reviewService.GetMasteredFlashCardsAsync(userId);

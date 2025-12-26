@@ -1,9 +1,9 @@
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -23,17 +23,11 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
-        }
-
         // GET: api/user/flashcard/{id} - lấy flashcard theo ID
         [HttpGet("{id}")]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> GetFlashCard(int id)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _flashCardService.GetFlashCardByIdAsync(id, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -42,7 +36,7 @@ namespace LearningEnglish.API.Controller.User
         [HttpGet("module/{moduleId}")]
         public async Task<ActionResult<ServiceResponse<List<ListFlashCardDto>>>> GetFlashCardsByModule(int moduleId)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _flashCardService.GetFlashCardsByModuleIdAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

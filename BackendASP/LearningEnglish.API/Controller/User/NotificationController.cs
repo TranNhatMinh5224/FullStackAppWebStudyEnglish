@@ -1,86 +1,60 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
-using LearningEnglish.Application.Common;
-using System.Security.Claims;
+using LearningEnglish.API.Extensions;
 
 namespace LearningEnglish.API.Controller.User
 {
-    // quản lý thông báo cho User
     [ApiController]
     [Route("api/user/notifications")]
     [Authorize]
     public class NotificationController : ControllerBase
     {
-        private readonly INotificationRepository _notificationRepository;
+        private readonly INotificationService _notificationService;
 
-        public NotificationController(INotificationRepository notificationRepository)
+        public NotificationController(INotificationService notificationService)
         {
-            _notificationRepository = notificationRepository;
+            _notificationService = notificationService;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            return int.TryParse(userIdClaim?.Value, out var userId) ? userId : 0;
-        }
-
-        // GET: api/user/notifications - lấy danh sách thông báo của user (mới nhất đến cũ nhất)
+        // GET: api/user/notifications - lấy danh sách thông báo của user
+        // RLS: notifications_policy_user_all_own
         [HttpGet]
         public async Task<IActionResult> GetNotifications()
         {
-            var userId = GetCurrentUserId();
-            var notifications = await _notificationRepository.GetUserNotificationsAsync(userId);
-            return Ok(new ServiceResponse<object>
-            {
-                Success = true,
-                StatusCode = 200,
-                Data = notifications,
-                Message = "Success"
-            });
+            var userId = User.GetUserId();
+            var result = await _notificationService.GetUserNotificationsAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // GET: api/user/notifications/unread-count - đếm thông báo chưa đọc
+        // RLS: notifications_policy_user_all_own
         [HttpGet("unread-count")]
         public async Task<IActionResult> GetUnreadCount()
         {
-            var userId = GetCurrentUserId();
-            var count = await _notificationRepository.GetUnreadCountAsync(userId);
-            return Ok(new ServiceResponse<int>
-            {
-                Success = true,
-                StatusCode = 200,
-                Data = count,
-                Message = "Success"
-            });
+            var userId = User.GetUserId();
+            var result = await _notificationService.GetUnreadCountAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // PUT: api/user/notifications/{id}/mark-as-read - đánh dấu 1 thông báo đã đọc
+        // RLS: notifications_policy_user_all_own
         [HttpPut("{id}/mark-as-read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
-            var userId = GetCurrentUserId();
-            await _notificationRepository.MarkAsReadAsync(id, userId);
-            return Ok(new ServiceResponse<object>
-            {
-                Success = true,
-                StatusCode = 200,
-                Message = "Đã đánh dấu đã đọc"
-            });
+            var userId = User.GetUserId();
+            var result = await _notificationService.MarkAsReadAsync(id, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // PUT: api/user/notifications/mark-all-read - đánh dấu tất cả đã đọc
+        // RLS: notifications_policy_user_all_own
         [HttpPut("mark-all-read")]
         public async Task<IActionResult> MarkAllAsRead()
         {
-            var userId = GetCurrentUserId();
-            await _notificationRepository.MarkAllAsReadAsync(userId);
-            return Ok(new ServiceResponse<object>
-            {
-                Success = true,
-                StatusCode = 200,
-                Message = "Đã đánh dấu tất cả đã đọc"
-            });
+            var userId = User.GetUserId();
+            var result = await _notificationService.MarkAllAsReadAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
 }

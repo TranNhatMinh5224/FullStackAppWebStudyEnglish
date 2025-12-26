@@ -3,15 +3,15 @@ using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.API.Extensions;
+using LearningEnglish.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/flashcards")]
-    [Authorize(Roles = "SuperAdmin, ContentAdmin, Teacher")]
+    [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin, Teacher")]
     public class ATFlashCardController : ControllerBase
     {
         private readonly IFlashCardService _flashCardService;
@@ -25,15 +25,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _logger = logger;
         }
 
-        private int GetCurrentUserId()
-        {
-            return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-        }
-
-        private string GetCurrentUserRole()
-        {
-            return User.GetPrimaryRole();
-        }
 
         // GET: api/flash-card/atflashcard/{id} - lấy flashcard theo ID
         [HttpGet("{id}")]
@@ -61,47 +52,63 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/flash-card/atflashcard - tạo mơis flash card
+        // POST: api/flash-card/atflashcard - tạo mới flash card
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ tạo flashcard cho modules của own courses
         [HttpPost]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> CreateFlashCard(
             [FromBody] CreateFlashCardDto createFlashCardDto)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _flashCardService.CreateFlashCardAsync(createFlashCardDto, userId);
             return result.Success
                 ? CreatedAtAction(nameof(GetFlashCard), new { id = result.Data!.FlashCardId }, result)
                 : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/flash-card/atflashcard/{id} - sửa lại flash card, teacher chỉ sửa của riêng teacher, còn admin sửa tất cả
+        // PUT: api/flash-card/atflashcard/{id} - sửa flash card
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ sửa flashcard của own courses (RLS check)
         [HttpPut("{id}")]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<ActionResult<ServiceResponse<FlashCardDto>>> UpdateFlashCard(
             int id,
             [FromBody] UpdateFlashCardDto updateFlashCardDto)
         {
-            var userId = GetCurrentUserId();
-            var userRole = GetCurrentUserRole();
+            var userId = User.GetUserId();
+            var userRole = User.GetPrimaryRole();
             var result = await _flashCardService.UpdateFlashCardAsync(id, updateFlashCardDto, userId, userRole);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/flash-card/atflashcard/{id} - xoá flash card, teacher chỉ xoá của riêng teacher, còn admin xoá tất cả
+        // DELETE: api/flash-card/atflashcard/{id} - xoá flash card
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ xóa flashcard của own courses (RLS check)
         [HttpDelete("{id}")]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<ActionResult<ServiceResponse<bool>>> DeleteFlashCard(int id)
         {
-            var userId = GetCurrentUserId();
-            var userRole = GetCurrentUserRole();
+            var userId = User.GetUserId();
+            var userRole = User.GetPrimaryRole();
             var result = await _flashCardService.DeleteFlashCardAsync(id, userId, userRole);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // POST: api/flash-card/atflashcard/bulk - tạo nhiều flash card từ file excel
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ tạo flashcard cho modules của own courses
         [HttpPost("bulk")]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<ActionResult<ServiceResponse<List<FlashCardDto>>>> CreateBulkFlashCards(
             [FromBody] BulkImportFlashCardDto bulkImportDto)
         {
-            var userId = GetCurrentUserId();
-            var userRole = GetCurrentUserRole();
+            var userId = User.GetUserId();
+            var userRole = User.GetPrimaryRole();
             var result = await _flashCardService.CreateBulkFlashCardsAsync(bulkImportDto, userId, userRole);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

@@ -35,11 +35,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [ProducesResponseType(typeof(GenerateFlashCardPreviewResponseDto), 200)]
         public async Task<IActionResult> GenerateFlashCard([FromBody] GenerateFlashCardRequestDto request)
         {
-            if (string.IsNullOrWhiteSpace(request.Word))
-            {
-                return BadRequest(new { message = "Word is required" });
-            }
-
+            // FluentValidation: GenerateFlashCardRequestDtoValidator sẽ tự động validate
             var result = await _dictionaryService.GenerateFlashCardFromWordAsync(request.Word);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

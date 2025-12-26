@@ -1,9 +1,9 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.API.Extensions;
+using LearningEnglish.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
@@ -12,7 +12,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
     [Route("api/admin-teacher/essays")]
     [ApiController]
-    [Authorize(Roles = "Admin,Teacher")]
+    [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin, Teacher")]
     public class ATEssayController : ControllerBase
     {
         private readonly IEssayService _essayService;
@@ -22,16 +22,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _essayService = essayService;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
-        }
-
-        private string GetCurrentUserRole()
-        {
-            return User.GetPrimaryRole();
-        }
 
         // lấy essay theo ID
         [HttpGet("{essayId}")]
@@ -50,13 +40,16 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
 
-        // tạo mới essay
-
+        // POST: tạo mới essay
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ tạo essay cho assessments của own courses
         [HttpPost]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> CreateEssay([FromBody] CreateEssayDto createDto)
         {
-            var userRole = GetCurrentUserRole();
-            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
+            var userRole = User.GetPrimaryRole();
+            int? teacherId = userRole == "Teacher" ? User.GetUserId() : null;
 
             var result = await _essayService.CreateEssayAsync(createDto, teacherId);
             return result.Success
@@ -64,23 +57,31 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        //sửa essay
+        // PUT: sửa essay
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ sửa essay của own courses (RLS check)
         [HttpPut("{essayId}")]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> UpdateEssay(int essayId, [FromBody] UpdateEssayDto updateDto)
         {
-            var userRole = GetCurrentUserRole();
-            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
+            var userRole = User.GetPrimaryRole();
+            int? teacherId = userRole == "Teacher" ? User.GetUserId() : null;
 
             var result = await _essayService.UpdateEssayAsync(essayId, updateDto, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // xoa essay
+        // DELETE: xóa essay
+        // Admin: Cần permission Admin.Content.Manage
+        // Teacher: Chỉ xóa essay của own courses (RLS check)
         [HttpDelete("{essayId}")]
+        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> DeleteEssay(int essayId)
         {
-            var userRole = GetCurrentUserRole();
-            int? teacherId = userRole == "Teacher" ? GetCurrentUserId() : null;
+            var userRole = User.GetPrimaryRole();
+            int? teacherId = userRole == "Teacher" ? User.GetUserId() : null;
 
             var result = await _essayService.DeleteEssayAsync(essayId, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);

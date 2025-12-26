@@ -1,15 +1,15 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.API.Extensions;
+using LearningEnglish.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [Route("api/lectures")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin, Teacher")]
     public class ATLectureController : ControllerBase
     {
         private readonly ILectureService _lectureService;
@@ -21,22 +21,12 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _logger = logger;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
-        }
-
-        private string GetCurrentUserRole()
-        {
-            return User.GetPrimaryRole();
-        }
 
         // GET: api/lectures/{lectureId} - lấy lecture theo ID
         [HttpGet("{lectureId}")]
         public async Task<IActionResult> GetLecture(int lectureId)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _lectureService.GetLectureByIdAsync(lectureId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -45,7 +35,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetLecturesByModule(int moduleId)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _lectureService.GetLecturesByModuleIdAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
@@ -54,16 +44,20 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         [HttpGet("module/{moduleId}/tree")]
         public async Task<IActionResult> GetLectureTree(int moduleId)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _lectureService.GetLectureTreeByModuleIdAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // POST: api/atlecture - tạo mới lecture (Admin/Teacher)
+        // Admin: Cần permission Admin.Lesson.Manage (chỉ SuperAdmin, ContentAdmin có)
+        // Teacher: Chỉ tạo lecture cho modules của own courses
         [HttpPost]
+        [RequirePermission("Admin.Lesson.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> CreateLecture([FromBody] CreateLectureDto createLectureDto)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _lectureService.CreateLectureAsync(createLectureDto, userId);
             return result.Success
                 ? CreatedAtAction(nameof(GetLecture), new { lectureId = result.Data?.LectureId }, result)
@@ -71,10 +65,14 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         // POST: api/atlecture/bulk - tạo thêm nhiều lecture cùng lúc (Admin/Teacher)
+        // Admin: Cần permission Admin.Lesson.Manage
+        // Teacher: Chỉ tạo lecture cho modules của own courses
         [HttpPost("bulk")]
+        [RequirePermission("Admin.Lesson.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> BulkCreateLectures([FromBody] BulkCreateLecturesDto bulkCreateDto)
         {
-            var userId = GetCurrentUserId();
+            var userId = User.GetUserId();
             var result = await _lectureService.BulkCreateLecturesAsync(bulkCreateDto, userId);
 
             return result.Success
@@ -82,32 +80,44 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/atlecture/{lectureId} - sửa lecture, teacher chỉ sửa của riêng teacher, còn admin sửa tất cả
+        // PUT: api/atlecture/{lectureId} - sửa lecture
+        // Admin: Cần permission Admin.Lesson.Manage
+        // Teacher: Chỉ sửa lecture của own courses (RLS check)
         [HttpPut("{lectureId}")]
+        [RequirePermission("Admin.Lesson.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> UpdateLecture(int lectureId, [FromBody] UpdateLectureDto updateLectureDto)
         {
-            var userId = GetCurrentUserId();
-            var userRole = GetCurrentUserRole();
+            var userId = User.GetUserId();
+            var userRole = User.GetPrimaryRole();
             var result = await _lectureService.UpdateLectureWithAuthorizationAsync(lectureId, updateLectureDto, userId, userRole);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/atlecture/{lectureId} - xoá lecture, teacher chỉ xoá của riêng teacher, còn admin xoá tất cả
+        // DELETE: api/atlecture/{lectureId} - xoá lecture
+        // Admin: Cần permission Admin.Lesson.Manage
+        // Teacher: Chỉ xóa lecture của own courses (RLS check)
         [HttpDelete("{lectureId}")]
+        [RequirePermission("Admin.Lesson.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> DeleteLecture(int lectureId)
         {
-            var userId = GetCurrentUserId();
-            var userRole = GetCurrentUserRole();
+            var userId = User.GetUserId();
+            var userRole = User.GetPrimaryRole();
             var result = await _lectureService.DeleteLectureWithAuthorizationAsync(lectureId, userId, userRole);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // POST: api/atlecture/reorder - sắp xếp lại thứ tự các lecture trong cùng một module
+        // Admin: Cần permission Admin.Lesson.Manage
+        // Teacher: Chỉ reorder lecture của own courses (RLS check)
         [HttpPost("reorder")]
+        [RequirePermission("Admin.Lesson.Manage")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> ReorderLectures([FromBody] List<ReorderLectureDto> reorderDtos)
         {
-            var userId = GetCurrentUserId();
-            var userRole = GetCurrentUserRole();
+            var userId = User.GetUserId();
+            var userRole = User.GetPrimaryRole();
             var result = await _lectureService.ReorderLecturesAsync(reorderDtos, userId, userRole);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

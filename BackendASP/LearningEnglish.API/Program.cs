@@ -329,6 +329,7 @@ builder.Services.AddHostedService<LearningEnglish.Application.Service.Background
 //  VOCABULARY REMINDER SYSTEM -
 builder.Services.AddScoped<SimpleNotificationService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<VocabularyReminderService>(); // 12:00 UTC = 19:00 VN
 
 // Build app

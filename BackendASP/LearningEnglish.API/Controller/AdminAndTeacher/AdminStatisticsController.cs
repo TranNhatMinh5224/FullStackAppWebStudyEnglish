@@ -7,7 +7,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/admin/statistics")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin")]
     public class AdminStatisticsController : ControllerBase
     {
         private readonly IAdminStatisticsService _adminStatisticsService;
