@@ -41,6 +41,12 @@ namespace LearningEnglish.Application.Service
             _minioFileStorage = minioFileStorage;
         }
 
+        // Helper method: Kiểm tra user có phải Admin có quyền quản lý content không (SuperAdmin hoặc ContentAdmin)
+        private bool IsContentAdmin(string userRole)
+        {
+            return userRole == "SuperAdmin" || userRole == "ContentAdmin";
+        }
+
         // + Kiểm tra quyền teacher với flashcard
         public async Task<bool> CheckTeacherFlashCardPermission(int flashCardId, int teacherId)
         {
@@ -464,7 +470,8 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                if (userRole != "Admin" && userRole != "Teacher")
+                // Chỉ SuperAdmin, ContentAdmin, hoặc Teacher mới có quyền cập nhật FlashCard
+                if (!IsContentAdmin(userRole) && userRole != "Teacher")
                 {
                     response.Success = false;
                     response.Message = "Bạn không có quyền cập nhật FlashCard";
@@ -502,7 +509,8 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                if (userRole != "Admin" && userRole != "Teacher")
+                // Chỉ SuperAdmin, ContentAdmin, hoặc Teacher mới có quyền tạo FlashCard hàng loạt
+                if (!IsContentAdmin(userRole) && userRole != "Teacher")
                 {
                     response.Success = false;
                     response.Message = "Bạn không có quyền thực hiện thao tác này";
@@ -560,8 +568,8 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // Authorization
-                if (userRole != "Admin" && userRole != "Teacher")
+                // Chỉ SuperAdmin, ContentAdmin, hoặc Teacher mới có quyền xóa FlashCard
+                if (!IsContentAdmin(userRole) && userRole != "Teacher")
                 {
                     response.Success = false;
                     response.Message = "Bạn không có quyền xóa FlashCard";

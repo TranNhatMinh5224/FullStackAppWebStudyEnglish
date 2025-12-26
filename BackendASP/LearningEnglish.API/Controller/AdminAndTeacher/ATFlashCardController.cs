@@ -11,7 +11,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/flashcards")]
-    [Authorize(Roles = "Admin,Teacher")]
+    [Authorize(Roles = "SuperAdmin, ContentAdmin, Teacher")]
     public class ATFlashCardController : ControllerBase
     {
         private readonly IFlashCardService _flashCardService;
