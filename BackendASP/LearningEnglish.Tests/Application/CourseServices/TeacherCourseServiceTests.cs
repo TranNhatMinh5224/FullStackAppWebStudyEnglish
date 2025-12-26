@@ -103,7 +103,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync(teacherPackage);
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacher(teacherId))
+            .Setup(x => x.GetCoursesByTeacher())
             .ReturnsAsync(new List<Course>());
 
         _courseRepositoryMock
@@ -230,7 +230,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync(teacherPackage);
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacher(teacherId))
+            .Setup(x => x.GetCoursesByTeacher())
             .ReturnsAsync(existingCourses);
 
         // Act
@@ -277,7 +277,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync(teacherPackage);
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacher(teacherId))
+            .Setup(x => x.GetCoursesByTeacher())
             .ReturnsAsync(new List<Course>());
 
         // Act
@@ -330,7 +330,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync(teacherPackage);
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacher(teacherId))
+            .Setup(x => x.GetCoursesByTeacher())
             .ReturnsAsync(new List<Course>());
 
         _courseRepositoryMock
@@ -398,7 +398,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync(teacherPackage);
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacher(teacherId))
+            .Setup(x => x.GetCoursesByTeacher())
             .ReturnsAsync(new List<Course>());
 
         _minioFileStorageMock
@@ -465,7 +465,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync(teacherPackage);
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacher(teacherId))
+            .Setup(x => x.GetCoursesByTeacher())
             .ReturnsAsync(new List<Course>());
 
         _minioFileStorageMock
@@ -523,7 +523,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync(teacherPackage);
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacher(teacherId))
+            .Setup(x => x.GetCoursesByTeacher())
             .ReturnsAsync(new List<Course>());
 
         _minioFileStorageMock
@@ -616,7 +616,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         _teacherPackageRepositoryMock
@@ -662,7 +662,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync((Course?)null);
 
         // Act
@@ -695,7 +695,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         // Act
@@ -736,7 +736,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         _teacherPackageRepositoryMock
@@ -782,7 +782,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         _teacherPackageRepositoryMock
@@ -834,7 +834,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         _teacherPackageRepositoryMock
@@ -904,7 +904,7 @@ public class TeacherCourseServiceTests
         var courseDto = new CourseResponseDto { CourseId = courseId, Title = "Updated Title" };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         _teacherPackageRepositoryMock
@@ -966,7 +966,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         _teacherPackageRepositoryMock
@@ -995,7 +995,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ThrowsAsync(new Exception("Unexpected error"));
 
         // Act
@@ -1051,7 +1051,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacherPagedAsync(teacherId, It.IsAny<CourseQueryParameters>()))
+            .Setup(x => x.GetCoursesByTeacherPagedAsync(It.IsAny<PageRequest>()))
             .ReturnsAsync(pagedData);
 
         _mapperMock
@@ -1067,7 +1067,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync(10);
 
         // Act
-        var result = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
+        var result = await _teacherCourseService.GetMyCoursesPagedAsync(new PageRequest { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.True(result.Success);
@@ -1092,11 +1092,11 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacherPagedAsync(teacherId, It.IsAny<CourseQueryParameters>()))
+            .Setup(x => x.GetCoursesByTeacherPagedAsync(It.IsAny<PageRequest>()))
             .ReturnsAsync(pagedData);
 
         // Act
-        var result = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
+        var result = await _teacherCourseService.GetMyCoursesPagedAsync(new PageRequest { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.True(result.Success);
@@ -1113,11 +1113,11 @@ public class TeacherCourseServiceTests
         var request = new PageRequest { PageNumber = 1, PageSize = 10 };
 
         _courseRepositoryMock
-            .Setup(x => x.GetCoursesByTeacherPagedAsync(teacherId, It.IsAny<CourseQueryParameters>()))
+            .Setup(x => x.GetCoursesByTeacherPagedAsync(It.IsAny<PageRequest>()))
             .ThrowsAsync(new Exception("Database error"));
 
         // Act
-        var result = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
+        var result = await _teacherCourseService.GetMyCoursesPagedAsync(new PageRequest { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.False(result.Success);
@@ -1143,7 +1143,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -1155,7 +1155,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync(new ServiceResponse<bool> { Success = true });
 
         // Act
-        var result = await _teacherCourseService.DeleteCourseAsync(courseId, teacherId);
+        var result = await _teacherCourseService.DeleteCourseAsync(courseId);
 
         // Assert
         Assert.True(result.Success);
@@ -1173,11 +1173,11 @@ public class TeacherCourseServiceTests
         var teacherId = 1;
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync((Course?)null);
 
         // Act
-        var result = await _teacherCourseService.DeleteCourseAsync(courseId, teacherId);
+        var result = await _teacherCourseService.DeleteCourseAsync(courseId);
 
         // Assert
         Assert.False(result.Success);
@@ -1201,11 +1201,11 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         // Act
-        var result = await _teacherCourseService.DeleteCourseAsync(courseId, teacherId);
+        var result = await _teacherCourseService.DeleteCourseAsync(courseId);
 
         // Assert
         Assert.False(result.Success);
@@ -1229,7 +1229,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -1237,7 +1237,7 @@ public class TeacherCourseServiceTests
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _teacherCourseService.DeleteCourseAsync(courseId, teacherId);
+        var result = await _teacherCourseService.DeleteCourseAsync(courseId);
 
         // Assert
         Assert.True(result.Success);
@@ -1260,7 +1260,7 @@ public class TeacherCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -1272,7 +1272,7 @@ public class TeacherCourseServiceTests
             .ThrowsAsync(new Exception("Image delete failed"));
 
         // Act
-        var result = await _teacherCourseService.DeleteCourseAsync(courseId, teacherId);
+        var result = await _teacherCourseService.DeleteCourseAsync(courseId);
 
         // Assert
         Assert.True(result.Success);
@@ -1289,11 +1289,11 @@ public class TeacherCourseServiceTests
         var teacherId = 1;
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ThrowsAsync(new Exception("Unexpected error"));
 
         // Act
-        var result = await _teacherCourseService.DeleteCourseAsync(courseId, teacherId);
+        var result = await _teacherCourseService.DeleteCourseAsync(courseId);
 
         // Assert
         Assert.False(result.Success);
@@ -1335,7 +1335,7 @@ public class TeacherCourseServiceTests
             .Returns(courseDetailDto);
 
         // Act
-        var result = await _teacherCourseService.GetCourseDetailAsync(courseId, teacherId);
+        var result = await _teacherCourseService.GetCourseDetailAsync(courseId);
 
         // Assert
         Assert.True(result.Success);
@@ -1356,7 +1356,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync((Course?)null);
 
         // Act
-        var result = await _teacherCourseService.GetCourseDetailAsync(courseId, teacherId);
+        var result = await _teacherCourseService.GetCourseDetailAsync(courseId);
 
         // Assert
         Assert.False(result.Success);
@@ -1383,7 +1383,7 @@ public class TeacherCourseServiceTests
             .ReturnsAsync(course);
 
         // Act
-        var result = await _teacherCourseService.GetCourseDetailAsync(courseId, teacherId);
+        var result = await _teacherCourseService.GetCourseDetailAsync(courseId);
 
         // Assert
         Assert.False(result.Success);
@@ -1403,7 +1403,7 @@ public class TeacherCourseServiceTests
             .ThrowsAsync(new Exception("Unexpected error"));
 
         // Act
-        var result = await _teacherCourseService.GetCourseDetailAsync(courseId, teacherId);
+        var result = await _teacherCourseService.GetCourseDetailAsync(courseId);
 
         // Assert
         Assert.False(result.Success);

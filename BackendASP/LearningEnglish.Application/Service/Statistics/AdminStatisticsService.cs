@@ -8,20 +8,17 @@ namespace LearningEnglish.Application.Service
 {
     public class AdminStatisticsService : IAdminStatisticsService
     {
-        private readonly IUserRepository _userRepository;
-        private readonly ICourseRepository _courseRepository;
-        private readonly IPaymentRepository _paymentRepository;
+        private readonly IUserStatisticsRepository _userStatisticsRepository;
+        private readonly IPaymentStatisticsRepository _paymentStatisticsRepository;
         private readonly ILogger<AdminStatisticsService> _logger;
 
         public AdminStatisticsService(
-            IUserRepository userRepository,
-            ICourseRepository courseRepository,
-            IPaymentRepository paymentRepository,
+            IUserStatisticsRepository userStatisticsRepository,
+            IPaymentStatisticsRepository paymentStatisticsRepository,
             ILogger<AdminStatisticsService> logger)
         {
-            _userRepository = userRepository;
-            _courseRepository = courseRepository;
-            _paymentRepository = paymentRepository;
+            _userStatisticsRepository = userStatisticsRepository;
+            _paymentStatisticsRepository = paymentStatisticsRepository;
             _logger = logger;
         }
 
@@ -36,36 +33,31 @@ namespace LearningEnglish.Application.Service
 
                 var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
 
-                // Parallel execution để tối ưu performance
-                var tasks = new[]
-                {
-                    _userRepository.GetTotalUsersCountAsync(),
-                    _userRepository.GetUserCountByRoleAsync("Student"),
-                    _userRepository.GetUserCountByRoleAsync("Teacher"),
-                    _userRepository.GetUserCountByRoleAsync("Admin"),
-                    _courseRepository.GetTotalCoursesCountAsync(),
-                    _courseRepository.GetCourseCountByTypeAsync(CourseType.System),
-                    _courseRepository.GetCourseCountByTypeAsync(CourseType.Teacher),
-                    _courseRepository.GetTotalEnrollmentsCountAsync(),
-                    _userRepository.GetNewUsersCountAsync(thirtyDaysAgo),
-                    _courseRepository.GetNewCoursesCountAsync(thirtyDaysAgo)
-                };
+                // Parallel execution để tối ưu performance - chỉ lấy User và Revenue
+                var totalUsersTask = _userStatisticsRepository.GetTotalUsersCountAsync();
+                var totalStudentsTask = _userStatisticsRepository.GetUserCountByRoleAsync("Student");
+                var totalTeachersTask = _userStatisticsRepository.GetUserCountByRoleAsync("Teacher");
+                var totalAdminsTask = _userStatisticsRepository.GetUserCountByRoleAsync("Admin");
+                var newUsersTask = _userStatisticsRepository.GetNewUsersCountAsync(thirtyDaysAgo);
+                var totalRevenueTask = _paymentStatisticsRepository.GetTotalRevenueAsync();
 
-                var results = await Task.WhenAll(tasks);
+                await Task.WhenAll(totalUsersTask, totalStudentsTask, totalTeachersTask, totalAdminsTask, newUsersTask, totalRevenueTask);
+
+                var totalUsers = await totalUsersTask;
+                var totalStudents = await totalStudentsTask;
+                var totalTeachers = await totalTeachersTask;
+                var totalAdmins = await totalAdminsTask;
+                var newUsers = await newUsersTask;
+                var totalRevenue = await totalRevenueTask;
 
                 var statistics = new AdminOverviewStatisticsDto
                 {
-                    TotalUsers = results[0],
-                    TotalStudents = results[1],
-                    TotalTeachers = results[2],
-                    TotalAdmins = results[3],
-                    TotalCourses = results[4],
-                    TotalSystemCourses = results[5],
-                    TotalTeacherCourses = results[6],
-                    TotalEnrollments = results[7],
-                    NewUsersLast30Days = results[8],
-                    NewCoursesLast30Days = results[9],
-                    TotalRevenue = 0 // TODO: Implement payment repository khi có
+                    TotalUsers = totalUsers,
+                    TotalStudents = totalStudents,
+                    TotalTeachers = totalTeachers,
+                    TotalAdmins = totalAdmins,
+                    NewUsersLast30Days = newUsers,
+                    TotalRevenue = totalRevenue
                 };
 
                 response.Data = statistics;
@@ -103,15 +95,15 @@ namespace LearningEnglish.Application.Service
                 // Parallel execution
                 var tasks = new[]
                 {
-                    _userRepository.GetTotalUsersCountAsync(),
-                    _userRepository.GetUserCountByRoleAsync("Student"),
-                    _userRepository.GetUserCountByRoleAsync("Teacher"),
-                    _userRepository.GetUserCountByRoleAsync("Admin"),
-                    _userRepository.GetActiveUsersCountAsync(),
-                    _userRepository.GetBlockedUsersCountAsync(),
-                    _userRepository.GetNewUsersCountAsync(today),
-                    _userRepository.GetNewUsersCountAsync(weekAgo),
-                    _userRepository.GetNewUsersCountAsync(monthAgo)
+                    _userStatisticsRepository.GetTotalUsersCountAsync(),
+                    _userStatisticsRepository.GetUserCountByRoleAsync("Student"),
+                    _userStatisticsRepository.GetUserCountByRoleAsync("Teacher"),
+                    _userStatisticsRepository.GetUserCountByRoleAsync("Admin"),
+                    _userStatisticsRepository.GetActiveUsersCountAsync(),
+                    _userStatisticsRepository.GetBlockedUsersCountAsync(),
+                    _userStatisticsRepository.GetNewUsersCountAsync(today),
+                    _userStatisticsRepository.GetNewUsersCountAsync(weekAgo),
+                    _userStatisticsRepository.GetNewUsersCountAsync(monthAgo)
                 };
 
                 var results = await Task.WhenAll(tasks);
@@ -147,199 +139,6 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // Lấy chi tiết thống kê courses
-        public async Task<ServiceResponse<CourseStatisticsDto>> GetCourseStatisticsAsync()
-        {
-            var response = new ServiceResponse<CourseStatisticsDto>();
-
-            try
-            {
-                _logger.LogInformation("Fetching course statistics");
-
-                var monthAgo = DateTime.UtcNow.AddMonths(-1);
-
-                // Parallel execution
-                var tasks = new[]
-                {
-                    _courseRepository.GetTotalCoursesCountAsync(),
-                    _courseRepository.GetCourseCountByTypeAsync(CourseType.System),
-                    _courseRepository.GetCourseCountByTypeAsync(CourseType.Teacher),
-                    _courseRepository.GetCourseCountByStatusAsync(CourseStatus.Published),
-                    _courseRepository.GetCourseCountByStatusAsync(CourseStatus.Draft),
-                    _courseRepository.GetNewCoursesCountAsync(monthAgo),
-                    _courseRepository.GetTotalEnrollmentsCountAsync()
-                };
-
-                var results = await Task.WhenAll(tasks);
-
-                var totalCourses = results[0];
-                var totalEnrollments = results[6];
-
-                var statistics = new CourseStatisticsDto
-                {
-                    TotalCourses = totalCourses,
-                    SystemCourses = results[1],
-                    TeacherCourses = results[2],
-                    PublishedCourses = results[3],
-                    DraftCourses = results[4],
-                    NewCoursesThisMonth = results[5],
-                    TotalEnrollments = totalEnrollments,
-                    AverageEnrollmentsPerCourse = totalCourses > 0 
-                        ? (decimal)totalEnrollments / totalCourses 
-                        : 0
-                };
-
-                response.Data = statistics;
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = "Lấy thống kê courses thành công";
-
-                _logger.LogInformation("Successfully fetched course statistics");
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi khi lấy thống kê courses";
-                _logger.LogError(ex, "Error fetching course statistics");
-            }
-
-            return response;
-        }
-
-        // Lấy chi tiết thống kê teachers
-        public async Task<ServiceResponse<TeacherStatisticsDto>> GetTeacherStatisticsAsync()
-        {
-            var response = new ServiceResponse<TeacherStatisticsDto>();
-
-            try
-            {
-                _logger.LogInformation("Fetching teacher statistics");
-
-                var today = DateTime.UtcNow.Date;
-                var weekAgo = DateTime.UtcNow.AddDays(-7);
-                var monthAgo = DateTime.UtcNow.AddMonths(-1);
-
-                // Parallel execution
-                var tasks = new[]
-                {
-                    _userRepository.GetUserCountByRoleAsync("Teacher"),
-                    _userRepository.GetActiveUsersCountAsync(),
-                    _userRepository.GetBlockedUsersCountAsync(),
-                    _userRepository.GetNewUsersCountAsync(today),
-                    _userRepository.GetNewUsersCountAsync(weekAgo),
-                    _userRepository.GetNewUsersCountAsync(monthAgo),
-                    _courseRepository.GetCoursesCountByTeachersAsync(),
-                    _courseRepository.GetPublishedCoursesCountByTeachersAsync(),
-                    _courseRepository.GetEnrollmentsCountForTeacherCoursesAsync()
-                };
-
-                var results = await Task.WhenAll(tasks);
-
-                var totalTeachers = results[0];
-                var totalCoursesCreated = results[6];
-
-                var statistics = new TeacherStatisticsDto
-                {
-                    TotalTeachers = totalTeachers,
-                    ActiveTeachers = results[1],
-                    BlockedTeachers = results[2],
-                    NewTeachersToday = results[3],
-                    NewTeachersThisWeek = results[4],
-                    NewTeachersThisMonth = results[5],
-                    TotalCoursesCreated = totalCoursesCreated,
-                    PublishedCoursesCreated = results[7],
-                    AverageCoursesPerTeacher = totalTeachers > 0 
-                        ? (decimal)totalCoursesCreated / totalTeachers 
-                        : 0,
-                    TotalEnrollmentsForTeacherCourses = results[8]
-                };
-
-                response.Data = statistics;
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = "Lấy thống kê teachers thành công";
-
-                _logger.LogInformation("Successfully fetched teacher statistics");
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi khi lấy thống kê teachers";
-                _logger.LogError(ex, "Error fetching teacher statistics");
-            }
-
-            return response;
-        }
-
-        // Lấy chi tiết thống kê students
-        public async Task<ServiceResponse<StudentStatisticsDto>> GetStudentStatisticsAsync()
-        {
-            var response = new ServiceResponse<StudentStatisticsDto>();
-
-            try
-            {
-                _logger.LogInformation("Fetching student statistics");
-
-                var today = DateTime.UtcNow.Date;
-                var weekAgo = DateTime.UtcNow.AddDays(-7);
-                var monthAgo = DateTime.UtcNow.AddMonths(-1);
-
-                // Parallel execution
-                var tasks = new[]
-                {
-                    _userRepository.GetUserCountByRoleAsync("Student"),
-                    _userRepository.GetActiveUsersCountAsync(),
-                    _userRepository.GetBlockedUsersCountAsync(),
-                    _userRepository.GetNewUsersCountAsync(today),
-                    _userRepository.GetNewUsersCountAsync(weekAgo),
-                    _userRepository.GetNewUsersCountAsync(monthAgo),
-                    _courseRepository.GetTotalEnrollmentsCountAsync(),
-                    _courseRepository.GetStudentsWithEnrollmentsCountAsync(),
-                    _courseRepository.GetActiveStudentsInCoursesCountAsync()
-                };
-
-                var results = await Task.WhenAll(tasks);
-
-                var totalStudents = results[0];
-                var totalEnrollments = results[6];
-                var studentsWithEnrollments = results[7];
-
-                var statistics = new StudentStatisticsDto
-                {
-                    TotalStudents = totalStudents,
-                    ActiveStudents = results[1],
-                    BlockedStudents = results[2],
-                    NewStudentsToday = results[3],
-                    NewStudentsThisWeek = results[4],
-                    NewStudentsThisMonth = results[5],
-                    TotalEnrollments = totalEnrollments,
-                    StudentsWithEnrollments = studentsWithEnrollments,
-                    AverageEnrollmentsPerStudent = totalStudents > 0 
-                        ? (decimal)totalEnrollments / totalStudents 
-                        : 0,
-                    ActiveStudentsInCourses = results[8]
-                };
-
-                response.Data = statistics;
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = "Lấy thống kê students thành công";
-
-                _logger.LogInformation("Successfully fetched student statistics");
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi khi lấy thống kê students";
-                _logger.LogError(ex, "Error fetching student statistics");
-            }
-
-            return response;
-        }
-
         // Lấy chi tiết thống kê doanh thu
         public async Task<ServiceResponse<RevenueStatisticsDto>> GetRevenueStatisticsAsync()
         {
@@ -356,23 +155,23 @@ namespace LearningEnglish.Application.Service
                 var startOfYear = new DateTime(now.Year, 1, 1);
 
                 // Parallel execution
-                var revenueTask = _paymentRepository.GetTotalRevenueAsync();
-                var completedRevenueTask = _paymentRepository.GetRevenueByStatusAsync(PaymentStatus.Completed);
-                var pendingRevenueTask = _paymentRepository.GetRevenueByStatusAsync(PaymentStatus.Pending);
+                var revenueTask = _paymentStatisticsRepository.GetTotalRevenueAsync();
+                var completedRevenueTask = _paymentStatisticsRepository.GetRevenueByStatusAsync(PaymentStatus.Completed);
+                var pendingRevenueTask = _paymentStatisticsRepository.GetRevenueByStatusAsync(PaymentStatus.Pending);
                 
-                var revenueTodayTask = _paymentRepository.GetRevenueByDateRangeAsync(today);
-                var revenueWeekTask = _paymentRepository.GetRevenueByDateRangeAsync(startOfWeek);
-                var revenueMonthTask = _paymentRepository.GetRevenueByDateRangeAsync(startOfMonth);
-                var revenueYearTask = _paymentRepository.GetRevenueByDateRangeAsync(startOfYear);
+                var revenueTodayTask = _paymentStatisticsRepository.GetRevenueByDateRangeAsync(today);
+                var revenueWeekTask = _paymentStatisticsRepository.GetRevenueByDateRangeAsync(startOfWeek);
+                var revenueMonthTask = _paymentStatisticsRepository.GetRevenueByDateRangeAsync(startOfMonth);
+                var revenueYearTask = _paymentStatisticsRepository.GetRevenueByDateRangeAsync(startOfYear);
                 
-                var totalTransactionsTask = _paymentRepository.GetTransactionCountAsync(0); // Get all transactions
-                var completedTransactionsTask = _paymentRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Completed);
-                var pendingTransactionsTask = _paymentRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Pending);
-                var failedTransactionsTask = _paymentRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Failed);
+                var totalTransactionsTask = _paymentStatisticsRepository.GetTotalTransactionsCountAsync(); // Get all transactions (all statuses)
+                var completedTransactionsTask = _paymentStatisticsRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Completed);
+                var pendingTransactionsTask = _paymentStatisticsRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Pending);
+                var failedTransactionsTask = _paymentStatisticsRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Failed);
                 
-                var transactionsTodayTask = _paymentRepository.GetTransactionsCountByDateRangeAsync(today);
-                var transactionsWeekTask = _paymentRepository.GetTransactionsCountByDateRangeAsync(startOfWeek);
-                var transactionsMonthTask = _paymentRepository.GetTransactionsCountByDateRangeAsync(startOfMonth);
+                var transactionsTodayTask = _paymentStatisticsRepository.GetTransactionsCountByDateRangeAsync(today);
+                var transactionsWeekTask = _paymentStatisticsRepository.GetTransactionsCountByDateRangeAsync(startOfWeek);
+                var transactionsMonthTask = _paymentStatisticsRepository.GetTransactionsCountByDateRangeAsync(startOfMonth);
 
                 await Task.WhenAll(
                     revenueTask, completedRevenueTask, pendingRevenueTask,
@@ -451,38 +250,31 @@ namespace LearningEnglish.Application.Service
                 var currentYear = now.Year;
 
                 // Parallel execution để tối ưu performance
-                var totalRevenueTask = _paymentRepository.GetTotalRevenueAsync();
-                var courseRevenueTask = _paymentRepository.GetRevenueByProductTypeAsync(ProductType.Course);
-                var teacherPackageRevenueTask = _paymentRepository.GetRevenueByProductTypeAsync(ProductType.TeacherPackage);
-                var dailyRevenueTask = _paymentRepository.GetDailyRevenueAsync(fromDate, toDate);
-                var monthlyRevenueTask = _paymentRepository.GetMonthlyRevenueAsync(currentYear);
+                var totalRevenueTask = _paymentStatisticsRepository.GetTotalRevenueAsync();
+                var courseRevenueTask = _paymentStatisticsRepository.GetRevenueByProductTypeAsync(ProductType.Course);
+                var teacherPackageRevenueTask = _paymentStatisticsRepository.GetRevenueByProductTypeAsync(ProductType.TeacherPackage);
+                var dailyRevenueTask = _paymentStatisticsRepository.GetDailyRevenueAsync(fromDate, toDate);
+                var monthlyRevenueTask = _paymentStatisticsRepository.GetMonthlyRevenueAsync(currentYear);
 
                 await Task.WhenAll(
                     totalRevenueTask, courseRevenueTask, teacherPackageRevenueTask,
                     dailyRevenueTask, monthlyRevenueTask
                 );
 
+                // Get daily revenue breakdown by ProductType in parallel
+                var dailyCourseRevenueTask = _paymentStatisticsRepository.GetDailyRevenueByProductTypeAsync(ProductType.Course, fromDate, toDate);
+                var dailyTeacherPackageRevenueTask = _paymentStatisticsRepository.GetDailyRevenueByProductTypeAsync(ProductType.TeacherPackage, fromDate, toDate);
+
+                await Task.WhenAll(
+                    totalRevenueTask, courseRevenueTask, teacherPackageRevenueTask,
+                    dailyRevenueTask, monthlyRevenueTask,
+                    dailyCourseRevenueTask, dailyTeacherPackageRevenueTask
+                );
+
                 var dailyRevenue = await dailyRevenueTask;
                 var monthlyRevenue = await monthlyRevenueTask;
-
-                // Query daily revenue by ProductType
-                var dailyCourseRevenueDict = new Dictionary<DateTime, decimal>();
-                var dailyTeacherPackageRevenueDict = new Dictionary<DateTime, decimal>();
-
-                // Get daily breakdown by ProductType in parallel
-                var courseDailyTask = Task.Run(async () =>
-                {
-                    var payments = await _paymentRepository.GetRevenueByProductTypeAndDateRangeAsync(
-                        ProductType.Course, fromDate, toDate);
-                    return await _paymentRepository.GetDailyRevenueAsync(fromDate, toDate);
-                });
-
-                var teacherPackageDailyTask = Task.Run(async () =>
-                {
-                    var payments = await _paymentRepository.GetRevenueByProductTypeAndDateRangeAsync(
-                        ProductType.TeacherPackage, fromDate, toDate);
-                    return await _paymentRepository.GetDailyRevenueAsync(fromDate, toDate);
-                });
+                var dailyCourseRevenue = await dailyCourseRevenueTask;
+                var dailyTeacherPackageRevenue = await dailyTeacherPackageRevenueTask;
 
                 // Format data for chart
                 var chartData = new RevenueChartDto
@@ -508,6 +300,25 @@ namespace LearningEnglish.Application.Service
                         {
                             Date = date,
                             Amount = monthlyRevenue.GetValueOrDefault(date, 0)
+                        })
+                        .ToList(),
+
+                    // Daily revenue breakdown by ProductType
+                    DailyCourseRevenue = Enumerable.Range(0, days + 1)
+                        .Select(offset => fromDate.AddDays(offset))
+                        .Select(date => new RevenueTimelineItem
+                        {
+                            Date = date,
+                            Amount = dailyCourseRevenue.GetValueOrDefault(date, 0)
+                        })
+                        .ToList(),
+
+                    DailyTeacherPackageRevenue = Enumerable.Range(0, days + 1)
+                        .Select(offset => fromDate.AddDays(offset))
+                        .Select(date => new RevenueTimelineItem
+                        {
+                            Date = date,
+                            Amount = dailyTeacherPackageRevenue.GetValueOrDefault(date, 0)
                         })
                         .ToList()
                 };

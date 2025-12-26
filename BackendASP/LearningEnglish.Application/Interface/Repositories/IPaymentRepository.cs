@@ -49,20 +49,5 @@ namespace LearningEnglish.Application.Interface
         
         // Lấy các payment Pending đã hết hạn (ExpiredAt < cutoffTime)
         Task<IEnumerable<Payment>> GetExpiredPendingPaymentsAsync(DateTime cutoffTime);
-        
-        // Revenue statistics methods
-        Task<decimal> GetTotalRevenueAsync();
-        Task<decimal> GetRevenueByStatusAsync(PaymentStatus status);
-        Task<decimal> GetRevenueByDateRangeAsync(DateTime fromDate, DateTime? toDate = null);
-        Task<int> GetTransactionsCountByStatusAsync(PaymentStatus status);
-        Task<int> GetTransactionsCountByDateRangeAsync(DateTime fromDate, DateTime? toDate = null);
-        
-        // Revenue by ProductType (for chart breakdown)
-        Task<decimal> GetRevenueByProductTypeAsync(ProductType productType);
-        Task<decimal> GetRevenueByProductTypeAndDateRangeAsync(ProductType productType, DateTime fromDate, DateTime? toDate = null);
-        
-        // Revenue timeline (for chart data)
-        Task<Dictionary<DateTime, decimal>> GetDailyRevenueAsync(DateTime fromDate, DateTime toDate);
-        Task<Dictionary<DateTime, decimal>> GetMonthlyRevenueAsync(int year);
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.API.Extensions;
-using System.Security.Claims;
+using LearningEnglish.API.Authorization;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
@@ -21,85 +21,68 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _logger = logger;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
-                throw new UnauthorizedAccessException("Invalid user credentials");
-            }
-            return userId;
-        }
-
-        private string GetCurrentUserRole()
-        {
-            var userRole = User.GetPrimaryRole();
-            if (string.IsNullOrEmpty(userRole))
-            {
-                throw new UnauthorizedAccessException("User role not found");
-            }
-            return userRole;
-        }
-
-        // POST: api/lesson/admin/add - admin creates a new lesson
+        // endpoint Admin tạo bài học
         [HttpPost("admin/add")]
-        [Authorize(Roles = "Admin")]
+        [RequirePermission("Admin.Lesson.Manage")]
         public async Task<IActionResult> AddLesson(AdminCreateLessonDto dto)
         {
             var result = await _lessonService.AdminAddLesson(dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/lesson/teacher/add - giáo viên tạo mới lesson
+        // endpoint Teacher tạo bài học
         [HttpPost("teacher/add")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> AddLessonForTeacher(TeacherCreateLessonDto dto)
         {
-            var userId = GetCurrentUserId();
+            // [Authorize(Roles = "Teacher")] đảm bảo userId luôn có
+            var userId = User.GetUserId();
             var result = await _lessonService.TeacherAddLesson(dto, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/lesson/delete/{lessonId} - xoá lesson, Admin xoá tất cả, Teacher chỉ xoá của riêng teacher
+        // endpoint Admin/Teacher xóa bài học (RLS đã filter theo ownership)
         [HttpDelete("delete/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> DeleteLesson(int lessonId)
         {
-            var userId = GetCurrentUserId();
-            var userRole = GetCurrentUserRole();
-            var result = await _lessonService.DeleteLessonWithAuthorizationAsync(lessonId, userId, userRole);
+            // RLS đã filter, không cần truyền userId/userRole vào service
+            // Nếu lesson không tồn tại hoặc không thuộc về teacher → RLS sẽ filter → service trả về null → 404
+            var result = await _lessonService.DeleteLesson(lessonId);
             return result.Success ? NoContent() : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/lesson/update/{lessonId} - xoá lesson, Admin sửa tất cả, Teacher chỉ sửa của riêng teacher
+        // endpoint Admin/Teacher cập nhật bài học (RLS đã filter theo ownership)
         [HttpPut("update/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> UpdateLesson(int lessonId, [FromBody] UpdateLessonDto dto)
         {
-            var userId = GetCurrentUserId();
-            var userRole = GetCurrentUserRole();
-            var result = await _lessonService.UpdateLessonWithAuthorizationAsync(lessonId, dto, userId, userRole);
+            // RLS đã filter, không cần truyền userId/userRole vào service
+            var result = await _lessonService.UpdateLesson(lessonId, dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/lesson/get/{lessonId} - lấy lesson theo ID
+        // endpoint Admin/Teacher lấy chi tiết bài học (RLS đã filter theo ownership)
         [HttpGet("get/{lessonId}")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> GetLessonById(int lessonId)
         {
-            var userId = GetCurrentUserId();
-            var userRole = GetCurrentUserRole();
-            var result = await _lessonService.GetLessonById(lessonId, userId, userRole);
+            // RLS đã filter, không cần truyền userId/userRole vào service
+            var result = await _lessonService.GetLessonById(lessonId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/lesson/course/{courseId} - lấy danh sách lesson theo course ID
+        // endpoint Admin/Teacher/Student lấy danh sách bài học theo course (RLS đã filter)
         [HttpGet("course/{courseId}")]
+        [Authorize]
         public async Task<IActionResult> GetListLessonByCourseId(int courseId)
         {
-            var userId = GetCurrentUserId();
-            var userRole = GetCurrentUserRole();
-            var result = await _lessonService.GetListLessonByCourseId(courseId, userId, userRole);
+            // RLS đã filter theo course ownership/enrollment
+            // userId optional: chỉ cần khi tính progress cho Student
+            var userIdValue = User.GetUserIdSafe();
+            int? userId = userIdValue > 0 ? userIdValue : null;
+            
+            var result = await _lessonService.GetListLessonByCourseId(courseId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

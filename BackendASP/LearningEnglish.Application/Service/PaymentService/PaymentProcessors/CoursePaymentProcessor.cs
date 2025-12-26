@@ -115,7 +115,7 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                 // Tạo notification thanh toán thành công
                 try
                 {
-                    var course = await _courseRepository.GetByIdAsync(productId);
+                    var course = await _courseRepository.GetCourseById(productId);
                     if (course != null)
                     {
                         var notification = new Notification

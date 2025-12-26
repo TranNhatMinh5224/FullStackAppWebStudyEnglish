@@ -37,7 +37,8 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                var courses = await _courseRepository.GetEnrolledCoursesByUser(userId);
+                // RLS đã filter theo userId, không cần truyền userId vào repository
+                var courses = await _courseRepository.GetEnrolledCoursesByUser();
 
                 if (courses == null || !courses.Any())
                 {
@@ -104,15 +105,15 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // Lấy danh sách khóa học đã đăng ký của user với tiến độ - CÓ PHÂN TRANG
-        public async Task<ServiceResponse<PagedResult<EnrolledCourseWithProgressDto>>> GetMyEnrolledCoursesPagedAsync(int userId, EnrolledCourseQueryParameters parameters)
+        // Lấy danh sách khóa học đã đăng ký của user với tiến độ (chỉ phân trang, không filter) - RLS đã filter theo userId
+        public async Task<ServiceResponse<PagedResult<EnrolledCourseWithProgressDto>>> GetMyEnrolledCoursesPagedAsync(int userId, PageRequest request)
         {
             var response = new ServiceResponse<PagedResult<EnrolledCourseWithProgressDto>>();
 
             try
             {
-                // Lấy PagedResult từ repository với Type filter nếu có
-                var pagedCourses = await _courseRepository.GetEnrolledCoursesByUserPagedAsync(userId, parameters);
+                // RLS đã filter theo userId, không cần truyền userId vào repository
+                var pagedCourses = await _courseRepository.GetEnrolledCoursesByUserPagedAsync(request);
 
                 if (pagedCourses.Items == null || !pagedCourses.Items.Any())
                 {
@@ -120,8 +121,8 @@ namespace LearningEnglish.Application.Service
                     {
                         Items = new List<EnrolledCourseWithProgressDto>(),
                         TotalCount = 0,
-                        PageNumber = parameters.PageNumber,
-                        PageSize = parameters.PageSize
+                        PageNumber = request.PageNumber,
+                        PageSize = request.PageSize
                     };
                     response.Message = "No enrolled courses found";
                     return response;
@@ -180,7 +181,7 @@ namespace LearningEnglish.Application.Service
                 response.Message = $"Retrieved {courseDtos.Count} of {pagedCourses.TotalCount} enrolled courses";
 
                 _logger.LogInformation("User {UserId} has {Count}/{Total} enrolled courses on page {Page}", 
-                    userId, courseDtos.Count, pagedCourses.TotalCount, parameters.PageNumber);
+                    userId, courseDtos.Count, pagedCourses.TotalCount, request.PageNumber);
             }
             catch (Exception ex)
             {

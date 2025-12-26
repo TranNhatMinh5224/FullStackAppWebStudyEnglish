@@ -197,40 +197,5 @@ namespace LearningEnglish.Infrastructure.Repositories
 
             return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
         }
-
-        // Statistics methods cho Admin Dashboard
-        public async Task<int> GetTotalUsersCountAsync()
-        {
-            return await _context.Users.CountAsync();
-        }
-
-        public async Task<int> GetUserCountByRoleAsync(string roleName)
-        {
-            return await _context.Users
-                .Include(u => u.Roles)
-                .Where(u => u.Roles.Any(r => r.Name == roleName))
-                .CountAsync();
-        }
-
-        public async Task<int> GetActiveUsersCountAsync()
-        {
-            return await _context.Users
-                .Where(u => u.Status == AccountStatus.Active)
-                .CountAsync();
-        }
-
-        public async Task<int> GetBlockedUsersCountAsync()
-        {
-            return await _context.Users
-                .Where(u => u.Status == AccountStatus.Suspended || u.Status == AccountStatus.Inactive)
-                .CountAsync();
-        }
-
-        public async Task<int> GetNewUsersCountAsync(DateTime fromDate)
-        {
-            return await _context.Users
-                .Where(u => u.CreatedAt >= fromDate)
-                .CountAsync();
-        }
     }
 }

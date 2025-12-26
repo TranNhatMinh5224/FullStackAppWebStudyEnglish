@@ -139,6 +139,7 @@ builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler
 // Repository layer
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserStatisticsRepository, UserStatisticsRepository>();
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<IModuleRepository, ModuleRepository>();
 builder.Services.AddScoped<ILectureRepository, LectureRepository>();
@@ -150,6 +151,7 @@ builder.Services.AddScoped<IEssaySubmissionRepository, EssaySubmissionRepository
 builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 builder.Services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentStatisticsRepository, PaymentStatisticsRepository>();
 builder.Services.AddScoped<IPaymentWebhookQueueRepository, PaymentWebhookQueueRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ITeacherPackageRepository, TeacherPackageRepository>();
@@ -343,9 +345,11 @@ else
 app.UseRouting(); // Đặt UseRouting trước UseCors để CORS hoạt động đúng
 app.UseCors("AllowFrontend"); // CORS
 app.UseAuthentication();  // 1. Xác thực JWT token
-app.UseAuthorization();   // 2. Kiểm tra quyền [Authorize]
 
-app.UseRlsMiddleware();   // 3. Thiết lập context cho RLS
+app.UseRlsMiddleware();   // 2. Thiết lập context cho RLS (TRƯỚC Authorization!)
+                           //    Lý do: Authorization có thể query DB, cần RLS context đã được set
+
+app.UseAuthorization();   // 3. Kiểm tra quyền [Authorize]
 
 app.MapControllers();  // 4. Thực thi controller actions
 

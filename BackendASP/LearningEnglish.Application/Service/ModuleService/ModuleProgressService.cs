@@ -353,7 +353,7 @@ public class ModuleProgressService : IModuleProgressService
     {
         try
         {
-            var course = await _courseRepository.GetByIdAsync(courseId);
+            var course = await _courseRepository.GetCourseById(courseId);
             if (course != null)
             {
                 var notification = new Notification

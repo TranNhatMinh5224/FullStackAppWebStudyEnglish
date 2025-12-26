@@ -1,6 +1,7 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Pagination;
+using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.DTOs.Admin;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
@@ -14,17 +15,23 @@ public class AdminManagementService : IAdminManagementService
     private readonly IUserRepository _userRepository;
     private readonly IPermissionRepository _permissionRepository;
     private readonly IRolePermissionRepository _rolePermissionRepository;
+    private readonly ITeacherSubscriptionService _teacherSubscriptionService;
+    private readonly ITeacherPackageRepository _teacherPackageRepository;
     private readonly IMapper _mapper;
 
     public AdminManagementService(
         IUserRepository userRepository,
         IPermissionRepository permissionRepository,
         IRolePermissionRepository rolePermissionRepository,
+        ITeacherSubscriptionService teacherSubscriptionService,
+        ITeacherPackageRepository teacherPackageRepository,
         IMapper mapper)
     {
         _userRepository = userRepository;
         _permissionRepository = permissionRepository;
         _rolePermissionRepository = rolePermissionRepository;
+        _teacherSubscriptionService = teacherSubscriptionService;
+        _teacherPackageRepository = teacherPackageRepository;
         _mapper = mapper;
     }
 
@@ -471,6 +478,96 @@ public class AdminManagementService : IAdminManagementService
 
             response.StatusCode = 200;
             response.Message = $"Xóa role '{dto.RoleName}' thành công";
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.StatusCode = 500;
+            response.Message = $"Lỗi hệ thống: {ex.Message}";
+        }
+        return response;
+    }
+
+    public async Task<ServiceResponse<RoleOperationResultDto>> UpgradeUserToTeacherAsync(UpgradeUserToTeacherDto dto)
+    {
+        var response = new ServiceResponse<RoleOperationResultDto>();
+        try
+        {
+            // 1. Tìm user theo email
+            var user = await _userRepository.GetUserByEmailAsync(dto.Email);
+            if (user == null)
+            {
+                response.Success = false;
+                response.StatusCode = 404;
+                response.Message = $"Không tìm thấy user với email: {dto.Email}";
+                return response;
+            }
+
+            // 2. Kiểm tra user đã có role Teacher chưa
+            if (user.Roles.Any(r => r.Name.Equals("Teacher", StringComparison.OrdinalIgnoreCase)))
+            {
+                response.Success = false;
+                response.StatusCode = 400;
+                response.Message = $"User {dto.Email} đã có role Teacher";
+                return response;
+            }
+
+            // 3. Kiểm tra TeacherPackage có tồn tại không
+            var package = await _teacherPackageRepository.GetTeacherPackageByIdAsync(dto.TeacherPackageId);
+            if (package == null)
+            {
+                response.Success = false;
+                response.StatusCode = 404;
+                response.Message = $"Không tìm thấy TeacherPackage với ID: {dto.TeacherPackageId}";
+                return response;
+            }
+
+            // 4. Gán role Teacher cho user
+            var roleUpdated = await _userRepository.UpdateRoleTeacher(user.UserId);
+            if (!roleUpdated)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Không thể nâng cấp tài khoản lên giáo viên";
+                return response;
+            }
+
+            // 5. Tạo TeacherSubscription (thay thế cho việc mua gói thất bại)
+            var subscriptionDto = new PurchaseTeacherPackageDto
+            {
+                IdTeacherPackage = dto.TeacherPackageId
+            };
+            var subscriptionResult = await _teacherSubscriptionService.AddTeacherSubscriptionAsync(subscriptionDto, user.UserId);
+            if (!subscriptionResult.Success)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = $"Tạo subscription thất bại: {subscriptionResult.Message}";
+                return response;
+            }
+
+            // 6. Lưu tất cả thay đổi (Role + Subscription)
+            await _userRepository.SaveChangesAsync();
+
+            // 7. Reload user để lấy roles mới nhất
+            user = await _userRepository.GetByIdAsync(user.UserId);
+            if (user == null)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Lỗi khi reload user sau khi nâng cấp";
+                return response;
+            }
+
+            response.Data = new RoleOperationResultDto
+            {
+                UserId = user.UserId,
+                Email = user.Email,
+                Roles = user.Roles.Select(r => r.Name).ToList()
+            };
+
+            response.StatusCode = 200;
+            response.Message = $"Đã nâng cấp user {dto.Email} thành Teacher với gói {package.PackageName} thành công";
         }
         catch (Exception ex)
         {

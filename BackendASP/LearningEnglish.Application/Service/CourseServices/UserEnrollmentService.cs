@@ -78,7 +78,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 // Kiểm tra course tồn tại
-                var course = await _courseRepository.GetByIdAsync(enrollDto.CourseId);
+                var course = await _courseRepository.GetCourseById(enrollDto.CourseId);
                 if (course == null)
                 {
                     response.Success = false;

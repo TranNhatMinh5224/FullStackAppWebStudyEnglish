@@ -1,33 +1,20 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Domain.Enums;
 using FluentValidation;
-using LearningEnglish.Application.Interface;
 
 namespace LearningEnglish.Application.Validators.CourseValidators
 {
     public class TeacherCreateCourseRequestDtoValidator : AbstractValidator<TeacherCreateCourseRequestDto>
     {
-        private readonly ICourseRepository _courseRepository;
-
-        public TeacherCreateCourseRequestDtoValidator(ICourseRepository courseRepository)
+        public TeacherCreateCourseRequestDtoValidator()
         {
-            _courseRepository = courseRepository;
-
             RuleFor(x => x.Title)
                 .NotEmpty().WithMessage("Course title is required")
-                .MaximumLength(200).WithMessage("Course title must not exceed 200 characters")
-                .Must((dto, title) =>
-                {
-                    if (string.IsNullOrWhiteSpace(title)) return true;
-                    // No direct teacherId in validator, so skip uniqueness here; service will handle per-teacher uniqueness.
-                    return true;
-                }).WithMessage("Course title validation failed");
+                .MaximumLength(200).WithMessage("Course title must not exceed 200 characters");
 
             RuleFor(x => x.Description)
                 .NotEmpty().WithMessage("Course description is required")
                 .MaximumLength(2000).WithMessage("Course description must not exceed 2000 characters");
-
-           
 
             RuleFor(x => x.MaxStudent)
                 .GreaterThanOrEqualTo(0).WithMessage("MaxStudent must be greater than or equal to 0 (0 means unlimited)");

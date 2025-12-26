@@ -1,4 +1,5 @@
 using LearningEnglish.Application.Common.Pagination;
+using LearningEnglish.Application.DTOs;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 
@@ -6,12 +7,8 @@ namespace LearningEnglish.Application.Interface
 {
     public interface ICourseRepository
     {
-        // Lấy khóa học theo ID
+        // Lấy khóa học theo ID (bao gồm Teacher, Lessons, UserCourses)
         Task<Course?> GetCourseById(int courseId);
-        Task<Course?> GetByIdAsync(int courseId);
-        
-        // Lấy khóa học với chi tiết
-        Task<Course?> GetCourseWithDetails(int courseId);
         
         // Thêm khóa học
         Task AddCourse(Course course);
@@ -21,27 +18,24 @@ namespace LearningEnglish.Application.Interface
         
         // Xóa khóa học
         Task DeleteCourse(int courseId);
-
-        // Lấy tất cả khóa học
-        Task<IEnumerable<Course>> GetAllCourses();
         
-        // Lấy tất cả khóa học với phân trang (sử dụng CourseQueryParameters)
-        Task<PagedResult<Course>> GetAllCoursesPagedAsync(CourseQueryParameters parameters);
+        // Lấy tất cả khóa học với phân trang (sử dụng AdminCourseQueryParameters) - cho Admin, sort theo Title
+        Task<PagedResult<Course>> GetAllCoursesPagedForAdminAsync(AdminCourseQueryParameters parameters);
         
         // Lấy khóa học hệ thống
         Task<IEnumerable<Course>> GetSystemCourses();
         
-        // Lấy khóa học của giáo viên
-        Task<IEnumerable<Course>> GetCoursesByTeacher(int teacherId);
+        // Lấy khóa học của giáo viên - RLS đã filter theo teacherId
+        Task<IEnumerable<Course>> GetCoursesByTeacher();
 
-        // Lấy khóa học của giáo viên với phân trang
-        Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, CourseQueryParameters parameters);
+        // Lấy khóa học của giáo viên với phân trang (chỉ phân trang, không filter) - RLS đã filter theo teacherId
+        Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(PageRequest request);
 
-        // Lấy khóa học đã đăng ký của user
-        Task<IEnumerable<Course>> GetEnrolledCoursesByUser(int userId);
+        // Lấy khóa học đã đăng ký của user - RLS đã filter theo userId
+        Task<IEnumerable<Course>> GetEnrolledCoursesByUser();
         
-        // Lấy khóa học đã đăng ký của user với phân trang
-        Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(int userId, EnrolledCourseQueryParameters parameters);
+        // Lấy khóa học đã đăng ký của user với phân trang (chỉ phân trang, không filter) - RLS đã filter theo userId
+        Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(PageRequest request);
 
         // Kiểm tra user đã đăng ký khóa học
         Task<bool> IsUserEnrolled(int courseId, int userId);
@@ -73,20 +67,8 @@ namespace LearningEnglish.Application.Interface
         // Tìm kiếm khóa học
         Task<IEnumerable<Course>> SearchCourses(string keyword);
         
-        // Statistics methods cho Admin Dashboard
-        Task<int> GetTotalCoursesCountAsync();
-        Task<int> GetCourseCountByTypeAsync(CourseType type);
-        Task<int> GetCourseCountByStatusAsync(CourseStatus status);
-        Task<int> GetTotalEnrollmentsCountAsync();
-        Task<int> GetNewCoursesCountAsync(DateTime fromDate);
-        
-        // Teacher statistics methods
-        Task<int> GetCoursesCountByTeachersAsync();
-        Task<int> GetPublishedCoursesCountByTeachersAsync();
-        Task<int> GetEnrollmentsCountForTeacherCoursesAsync();
-        
-        // Student statistics methods
-        Task<int> GetStudentsWithEnrollmentsCountAsync();
-        Task<int> GetActiveStudentsInCoursesCountAsync();
+        // Lấy danh sách loại khóa học (System/Teacher) - từ Enum
+        // Dùng cho giao diện quản lý Admin: render dropdown filter để lọc danh sách khóa học
+        Task<IEnumerable<CourseTypeDto>> GetCourseTypesAsync();
     }
 }

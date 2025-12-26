@@ -62,7 +62,7 @@ public class UserEnrollmentServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -102,7 +102,7 @@ public class UserEnrollmentServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -152,7 +152,7 @@ public class UserEnrollmentServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -194,7 +194,7 @@ public class UserEnrollmentServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -230,7 +230,7 @@ public class UserEnrollmentServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -257,7 +257,7 @@ public class UserEnrollmentServiceTests
         var enrollDto = new EnrollCourseDto { CourseId = courseId };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync((Course?)null);
 
         // Act
@@ -291,7 +291,7 @@ public class UserEnrollmentServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -341,7 +341,7 @@ public class UserEnrollmentServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -385,7 +385,7 @@ public class UserEnrollmentServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -425,7 +425,7 @@ public class UserEnrollmentServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock

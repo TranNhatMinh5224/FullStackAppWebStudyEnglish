@@ -1172,7 +1172,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 1,
                             Category = "Content",
-                            CreatedAt = new DateTime(2025, 12, 25, 8, 40, 10, 133, DateTimeKind.Utc).AddTicks(8015),
+                            CreatedAt = new DateTime(2025, 12, 26, 4, 48, 8, 519, DateTimeKind.Utc).AddTicks(5320),
                             Description = "Tạo, sửa, xóa, publish khóa học",
                             DisplayName = "Quản lý khóa học",
                             Name = "Admin.Course.Manage"
@@ -1181,7 +1181,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 2,
                             Category = "Content",
-                            CreatedAt = new DateTime(2025, 12, 25, 8, 40, 10, 133, DateTimeKind.Utc).AddTicks(8047),
+                            CreatedAt = new DateTime(2025, 12, 26, 4, 48, 8, 519, DateTimeKind.Utc).AddTicks(5363),
                             Description = "Tạo, sửa, xóa lessons và modules",
                             DisplayName = "Quản lý bài học",
                             Name = "Admin.Lesson.Manage"
@@ -1190,7 +1190,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 3,
                             Category = "Content",
-                            CreatedAt = new DateTime(2025, 12, 25, 8, 40, 10, 133, DateTimeKind.Utc).AddTicks(8053),
+                            CreatedAt = new DateTime(2025, 12, 26, 4, 48, 8, 519, DateTimeKind.Utc).AddTicks(5366),
                             Description = "Quản lý flashcards, quizzes, essays, assets frontend",
                             DisplayName = "Quản lý nội dung",
                             Name = "Admin.Content.Manage"
@@ -1199,7 +1199,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 4,
                             Category = "Finance",
-                            CreatedAt = new DateTime(2025, 12, 25, 8, 40, 10, 133, DateTimeKind.Utc).AddTicks(8057),
+                            CreatedAt = new DateTime(2025, 12, 26, 4, 48, 8, 519, DateTimeKind.Utc).AddTicks(5368),
                             Description = "Xem, block/unblock, xóa users, gán roles",
                             DisplayName = "Quản lý người dùng",
                             Name = "Admin.User.Manage"
@@ -1208,7 +1208,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 5,
                             Category = "Finance",
-                            CreatedAt = new DateTime(2025, 12, 25, 8, 40, 10, 133, DateTimeKind.Utc).AddTicks(8061),
+                            CreatedAt = new DateTime(2025, 12, 26, 4, 48, 8, 519, DateTimeKind.Utc).AddTicks(5370),
                             Description = "Xem payments, hoàn tiền, fix lỗi thanh toán",
                             DisplayName = "Quản lý thanh toán",
                             Name = "Admin.Payment.Manage"
@@ -1217,7 +1217,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 6,
                             Category = "Finance",
-                            CreatedAt = new DateTime(2025, 12, 25, 8, 40, 10, 133, DateTimeKind.Utc).AddTicks(8077),
+                            CreatedAt = new DateTime(2025, 12, 26, 4, 48, 8, 519, DateTimeKind.Utc).AddTicks(5398),
                             Description = "Xem báo cáo doanh thu và thống kê tài chính",
                             DisplayName = "Xem doanh thu",
                             Name = "Admin.Revenue.View"
@@ -1226,7 +1226,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 7,
                             Category = "Finance",
-                            CreatedAt = new DateTime(2025, 12, 25, 8, 40, 10, 133, DateTimeKind.Utc).AddTicks(8114),
+                            CreatedAt = new DateTime(2025, 12, 26, 4, 48, 8, 519, DateTimeKind.Utc).AddTicks(5431),
                             Description = "Tạo, sửa, xóa teacher packages",
                             DisplayName = "Quản lý gói giáo viên",
                             Name = "Admin.Package.Manage"
@@ -1235,8 +1235,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 8,
                             Category = "System",
-                            CreatedAt = new DateTime(2025, 12, 25, 8, 40, 10, 133, DateTimeKind.Utc).AddTicks(8118),
-                            Description = "Super Admin - full permissions, không thể thu hồi",
+                            CreatedAt = new DateTime(2025, 12, 26, 4, 48, 8, 519, DateTimeKind.Utc).AddTicks(5433),
+                            Description = "Super Admin - full permissions",
                             DisplayName = "Toàn quyền hệ thống",
                             Name = "Admin.System.FullAccess"
                         });
@@ -1975,7 +1975,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             IsMale = true,
                             LastName = "System",
                             NormalizedEmail = "MINHXOANDEV@GMAIL.COM",
-                            PasswordHash = "$2a$11$AR7L/omHs85/ZgrMRpD7vO7ywYJ22Xt0HTA0galJl2Nr2IT/EDueu",
+                            PasswordHash = "$2a$11$8CngTpKoUjWU7zYuZLk.luEO0v.AhytBHvux6FuO7uHEwGYSqiJ1.",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)

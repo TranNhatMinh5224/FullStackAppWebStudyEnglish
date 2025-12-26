@@ -62,16 +62,33 @@ namespace LearningEnglish.API.Extensions
             return principal.HasRole("Student");
         }
 
-        // Lấy UserId từ claims
+        // Lấy UserId từ claims (throw exception nếu không tìm thấy)
+        // Dùng cho INSERT/UPDATE operations (userId là bắt buộc)
         public static int GetUserId(this ClaimsPrincipal principal)
         {
-            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? principal.FindFirst("sub")?.Value;
+            
+            if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
             {
                 return userId;
             }
             
             throw new InvalidOperationException("User ID not found in claims");
+        }
+
+        // Lấy UserId từ claims (safe - trả về 0 nếu không tìm thấy)
+        // Dùng cho SELECT operations (chỉ cần để log, RLS đã filter)
+        public static int GetUserIdSafe(this ClaimsPrincipal principal)
+        {
+            try
+            {
+                return principal.GetUserId();
+            }
+            catch
+            {
+                return 0; // Safe fallback cho logging
+            }
         }
     }
 }

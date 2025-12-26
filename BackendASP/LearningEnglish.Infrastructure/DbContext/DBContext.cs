@@ -88,7 +88,12 @@ namespace LearningEnglish.Infrastructure.Data
         // - Variables CHỈ tồn tại trong transaction hiện tại
         // - Tự động cleared sau COMMIT/ROLLBACK
         // - Connection có thể reuse an toàn cho user khác
-        public async Task SetUserContextAsync(int userId, string role)
+        /// <summary>
+        /// Thiết lập RLS context cho PostgreSQL
+        /// CHỈ set userId, KHÔNG set role
+        /// Role sẽ được check trong RLS policies qua bảng Users và Roles (realtime)
+        /// </summary>
+        public async Task SetUserContextAsync(int userId)
         {
             // ExecuteSqlRawAsync: Thực thi raw SQL command trên database
             //
@@ -100,18 +105,24 @@ namespace LearningEnglish.Infrastructure.Data
             //  QUAN TRỌNG: PHẢI dùng is_local=true để an toàn với connection pooling!
             // Nếu dùng false, variable sẽ tồn tại suốt session → nguy hiểm khi reuse connection
             await Database.ExecuteSqlRawAsync(
-                "SELECT set_config('app.current_user_id', {0}, true), set_config('app.current_user_role', {1}, true)",
-                userId.ToString(),  // {0} - Convert userId sang string
-                role                // {1} - Role name (Admin, Teacher, Student)
+                "SELECT set_config('app.current_user_id', {0}, true)",
+                userId.ToString()  // {0} - Convert userId sang string
             );
             
             // Sau khi execute xong:
-            // PostgreSQL session hiện tại có 2 variables:
+            // PostgreSQL session hiện tại có variable:
             //   - current_setting('app.current_user_id', true) → trả về "123"
-            //   - current_setting('app.current_user_role', true) → trả về "Teacher"
             //
-            // RLS policies sẽ dùng current_setting() để lấy giá trị và filter data
-            // VD: WHERE "TeacherId" = current_setting('app.current_user_id', true)::integer
+            // RLS policies sẽ:
+            // 1. Dùng current_setting('app.current_user_id', true) để lấy userId
+            // 2. Check role từ bảng Users và Roles (realtime, không tin JWT)
+            // VD: 
+            //   WHERE "TeacherId" = current_setting('app.current_user_id', true)::integer
+            //   AND EXISTS (SELECT 1 FROM "Users" u 
+            //               JOIN "UserRoles" ur ON u."UserId" = ur."UserId"
+            //               JOIN "Roles" r ON ur."RoleId" = r."RoleId"
+            //               WHERE u."UserId" = current_setting('app.current_user_id', true)::integer
+            //               AND r."Name" = 'Teacher')
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

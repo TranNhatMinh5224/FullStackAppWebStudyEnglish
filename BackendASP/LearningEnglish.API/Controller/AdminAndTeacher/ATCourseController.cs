@@ -5,7 +5,6 @@ using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.API.Extensions;
 using LearningEnglish.API.Authorization;
-using System.Security.Claims;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
@@ -34,10 +33,20 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             _userManagementService = userManagementService;
         }
 
-        // GET: api/courses - Admin lấy tất cả khoá học với phân trang
-        [HttpGet]
+        // endpoint Admin lấy danh sách loại khóa học để filter (System/Teacher)
+        // Dùng cho giao diện quản lý: render dropdown filter để lọc danh sách khóa học theo Type
+        [HttpGet("types")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetCourseTypes()
+        {
+            var result = await _adminCourseService.GetCourseTypesAsync();
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // endpoint Admin lấy danh sách tất cả khóa học
+        [HttpGet("admin/all")]
         [RequirePermission("Admin.Course.Manage")]
-        public async Task<IActionResult> GetAllCourses([FromQuery] CourseQueryParameters request)
+        public async Task<IActionResult> GetAllCourses([FromQuery] AdminCourseQueryParameters request)
         {
             var userId = User.GetUserId();
             _logger.LogInformation("🔐 Admin {UserId} đang lấy danh sách courses", userId);
@@ -47,26 +56,38 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
         }
 
-        // DELETE: api/courses/{courseId} - Admin xoá khoá học
-        [HttpDelete("{courseId}")]
+        // endpoint Admin xóa khóa học
+        [HttpDelete("admin/{courseId}")]
         [RequirePermission("Admin.Course.Manage")]
-        public async Task<IActionResult> DeleteCourse(int courseId)
+        public async Task<IActionResult> AdminDeleteCourse(int courseId)
         {
             var userId = User.GetUserId();
-            _logger.LogInformation("🔐 Admin {UserId} đang xóa course {CourseId}", userId, courseId);
+            _logger.LogInformation("Admin {UserId} đang xóa course {CourseId}", userId, courseId);
 
             var result = await _adminCourseService.DeleteCourseAsync(courseId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/courses - Admin tạo khoá học mới
-        [HttpPost("create/admin")]
+        // endpoint Teacher xóa khóa học của mình
+        [HttpDelete("teacher/{courseId}")]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> TeacherDeleteCourse(int courseId)
+        {
+            var teacherId = User.GetUserId();
+            _logger.LogInformation("Teacher {TeacherId} đang xóa course {CourseId}", teacherId, courseId);
+
+            var result = await _teacherCourseService.DeleteCourseAsync(courseId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // endpoint Admin tạo khóa học
+        [HttpPost("admin/create")]
         [RequirePermission("Admin.Course.Manage")]
         public async Task<IActionResult> AdminCreateCourse([FromBody] AdminCreateCourseRequestDto requestDto)
         {
             var userId = User.GetUserId();
             _logger.LogInformation(
-                "🔐 Admin {UserId} đang tạo course mới: {Title}",
+                " Admin {UserId} đang tạo course mới: {Title}",
                 userId, requestDto.Title);
 
             var result = await _adminCourseService.AdminCreateCourseAsync(requestDto);
@@ -89,9 +110,9 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/courses/teacher - giáo viên tạo khoá học mới
-        [HttpPost("create/teacher")]
-        [Authorize(Roles = "Teacher")]
+        // endpoint Teacher tạo khóa học
+        [HttpPost("teacher/create")]
+        [RequireTeacherRole] // Kiểm tra role Teacher trong database (không tin JWT token)
         public async Task<IActionResult> CreateCourse([FromBody] TeacherCreateCourseRequestDto requestDto)
         {
 
@@ -102,41 +123,38 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/courses/teacher - giáo viên lấy tất cả khoá học của mình với phân trang
-        [HttpGet("teacher")]
+        // endpoint Teacher lấy danh sách khóa học của mình (chỉ phân trang, không filter)
+        [HttpGet("teacher/my-courses")]
         [Authorize(Roles = "Teacher")]
-        public async Task<IActionResult> GetMyCourses([FromQuery] CourseQueryParameters request)
+        public async Task<IActionResult> GetMyCourses([FromQuery] PageRequest request)
         {
-            var teacherId = User.GetUserId();
-
-            // CourseQueryParameters có giá trị mặc định, luôn dùng phân trang
-            var pagedResult = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, request);
+            // PageRequest có giá trị mặc định (PageNumber=1, PageSize=20), luôn dùng phân trang
+            var pagedResult = await _teacherCourseService.GetMyCoursesPagedAsync(request);
             return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
         }
 
-        // GET: api/courses/teacher/{courseId} - giáo viên lấy chi tiết khoá học của mình
-        [HttpGet("teacher/{courseId}")]
+        // endpoint Teacher xem chi tiết khóa học của mình
+        [HttpGet("teacher/{courseId}/detail")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> GetCourseDetail(int courseId)
         {
-            var teacherId = User.GetUserId();
-            var result = await _teacherCourseService.GetCourseDetailAsync(courseId, teacherId);
+            var result = await _teacherCourseService.GetCourseDetailAsync(courseId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/courses/{courseId} - Admin sửa khoá học
-        [HttpPut("{courseId}")]
+        // endpoint Admin cập nhật khóa học
+        [HttpPut("admin/{courseId}")]
         [RequirePermission("Admin.Course.Manage")]
         public async Task<IActionResult> AdminUpdateCourse(int courseId, [FromBody] AdminUpdateCourseRequestDto requestDto)
         {
             var userId = User.GetUserId();
-            _logger.LogInformation("🔐 Admin {UserId} đang sửa course {CourseId}", userId, courseId);
+            _logger.LogInformation(" Admin {UserId} đang sửa course {CourseId}", userId, courseId);
 
             var result = await _adminCourseService.AdminUpdateCourseAsync(courseId, requestDto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/courses/teacher/{courseId} - giáo viên sửa khoá học của mình
+        // endpoint Teacher cập nhật khóa học của mình
         [HttpPut("teacher/{courseId}")]
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> UpdateCourse(int courseId, [FromBody] TeacherUpdateCourseRequestDto requestDto)
@@ -147,75 +165,78 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/courses/{courseId}/students - lấy danh sách học viên trong khoá học với phân trang
+        // endpoint Admin/Teacher xem danh sách học viên trong khóa học
         [HttpGet("{courseId}/students")]
         [Authorize(Roles = "Admin, Teacher")]
         public async Task<IActionResult> GetUsersByCourseId(int courseId, [FromQuery] PageRequest request)
         {
-            var userId = User.GetUserId();
-            var checkRole = User.GetPrimaryRole();
-
-            if (string.IsNullOrEmpty(checkRole))
-            {
-                return Unauthorized(new { message = "User role not found" });
-            }
+            var userId = User.GetUserIdSafe(); // Chỉ để log, không truyền vào service
+            _logger.LogInformation("User {UserId} đang lấy danh sách students trong course {CourseId}", userId, courseId);
 
             // PageRequest có giá trị mặc định, luôn dùng phân trang
-            var pagedResult = await _userManagementService.GetUsersByCourseIdPagedAsync(courseId, userId, checkRole, request);
+            // RLS đã filter, không cần userId trong service
+            var pagedResult = await _userManagementService.GetUsersByCourseIdPagedAsync(courseId, request);
             return pagedResult.Success ? Ok(pagedResult) : StatusCode(pagedResult.StatusCode, pagedResult);
         }
 
-        // GET: api/courses/{courseId}/students/{studentId} - lấy chi tiết học viên trong khoá học
-        // RLS tự động filter: Admin xem tất cả, Teacher chỉ xem students trong own courses
+        // endpoint Admin/Teacher xem chi tiết học viên trong khóa học
         [HttpGet("{courseId}/students/{studentId}")]
         [Authorize(Roles = "Admin, Teacher")]
         public async Task<IActionResult> GetStudentDetailInCourse(int courseId, int studentId)
         {
-            var userId = User.GetUserId();
-            var role = User.GetPrimaryRole();
+            var userId = User.GetUserIdSafe(); // Chỉ để log, không truyền vào service
+            _logger.LogInformation("User {UserId} đang xem chi tiết student {StudentId} trong course {CourseId}", userId, studentId, courseId);
 
-            if (string.IsNullOrEmpty(role))
-            {
-                return Unauthorized(new { message = "User role not found" });
-            }
-
-            var result = await _userManagementService.GetStudentDetailInCourseAsync(courseId, studentId, userId, role);
+            // RLS đã filter, không cần userId trong service
+            var result = await _userManagementService.GetStudentDetailInCourseAsync(courseId, studentId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/courses/{courseId}/students - Mời học viên vào khoá học qua email
-        // Admin: thêm vào bất kỳ course nào, Teacher: chỉ thêm vào own courses (RLS filter)
-        [HttpPost("{courseId}/students")]
-        [Authorize(Roles = "Admin, Teacher")]
-        public async Task<IActionResult> AddStudentToCourse(int courseId, [FromBody] AddStudentToCourseDto request)
+        // endpoint Admin thêm học viên vào khóa học (bằng email)
+        [HttpPost("admin/{courseId}/students")]
+        [RequirePermission("Admin.Course.Manage")]
+        public async Task<IActionResult> AdminAddStudentToCourse(int courseId, [FromBody] AddStudentToCourseDto request)
         {
-            var userId = User.GetUserId();
-            var role = User.GetPrimaryRole();
+            var userId = User.GetUserId(); // Cần userId để log và audit (throw exception nếu không có)
+            _logger.LogInformation("Admin {UserId} đang thêm student {Email} vào course {CourseId}", userId, request.Email, courseId);
 
-            if (string.IsNullOrEmpty(role))
-            {
-                return Unauthorized(new { message = "User role not found" });
-            }
-
-            var result = await _userManagementService.AddStudentToCourseByEmailAsync(courseId, request.Email, userId, role);
+            var result = await _userManagementService.AddStudentToCourseByEmailAsync(courseId, request.Email, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/courses/{courseId}/students/{studentId} - xoá học viên khỏi khoá học
-        // Admin: xóa bất kỳ student nào, Teacher: chỉ xóa students trong own courses (RLS filter)
-        [HttpDelete("{courseId}/students/{studentId}")]
-        [Authorize(Roles = "Admin, Teacher")]
-        public async Task<IActionResult> RemoveStudentFromCourse(int courseId, int studentId)
+        // endpoint Teacher thêm học viên vào khóa học của mình (bằng email)
+        [HttpPost("teacher/{courseId}/students")]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> TeacherAddStudentToCourse(int courseId, [FromBody] AddStudentToCourseDto request)
         {
-            var userId = User.GetUserId();
-            var role = User.GetPrimaryRole();
+            var userId = User.GetUserId(); // Cần userId để log và audit (throw exception nếu không có)
+            _logger.LogInformation("Teacher {UserId} đang thêm student {Email} vào course {CourseId}", userId, request.Email, courseId);
 
-            if (string.IsNullOrEmpty(role))
-            {
-                return Unauthorized(new { message = "User role not found" });
-            }
+            var result = await _userManagementService.AddStudentToCourseByEmailAsync(courseId, request.Email, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
 
-            var result = await _userManagementService.RemoveStudentFromCourseAsync(courseId, studentId, userId, role);
+        // endpoint Admin xóa học viên khỏi khóa học
+        [HttpDelete("admin/{courseId}/students/{studentId}")]
+        [RequirePermission("Admin.Course.Manage")]
+        public async Task<IActionResult> AdminRemoveStudentFromCourse(int courseId, int studentId)
+        {
+            var userId = User.GetUserId(); // Cần userId để log và audit (throw exception nếu không có)
+            _logger.LogInformation("Admin {UserId} đang xóa student {StudentId} khỏi course {CourseId}", userId, studentId, courseId);
+
+            var result = await _userManagementService.RemoveStudentFromCourseAsync(courseId, studentId, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // endpoint Teacher xóa học viên khỏi khóa học của mình
+        [HttpDelete("teacher/{courseId}/students/{studentId}")]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> TeacherRemoveStudentFromCourse(int courseId, int studentId)
+        {
+            var userId = User.GetUserId(); // Cần userId để log và audit (throw exception nếu không có)
+            _logger.LogInformation("Teacher {UserId} đang xóa student {StudentId} khỏi course {CourseId}", userId, studentId, courseId);
+
+            var result = await _userManagementService.RemoveStudentFromCourseAsync(courseId, studentId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

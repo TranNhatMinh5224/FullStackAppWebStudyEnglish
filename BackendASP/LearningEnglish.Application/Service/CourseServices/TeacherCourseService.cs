@@ -67,8 +67,8 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra số lượng course hiện tại
-                var teacherCourses = await _courseRepository.GetCoursesByTeacher(teacherId);
+                // Kiểm tra số lượng course hiện tại - RLS đã filter theo teacherId
+                var teacherCourses = await _courseRepository.GetCoursesByTeacher();
                 int currentCourseCount = teacherCourses.Count();
                 int maxCourses = teacherPackage.MaxCourses;
 
@@ -192,24 +192,14 @@ namespace LearningEnglish.Application.Service
             try
             {
                 // RLS đã tự động filter courses theo TeacherId
-                // Nếu course == null → teacher không có quyền hoặc course không tồn tại
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                // Nếu course == null → course không tồn tại hoặc không thuộc teacher hiện tại
+                // Trả 404 để không leak thông tin về sự tồn tại của course
+                var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy khóa học hoặc bạn không có quyền truy cập";
-                    return response;
-                }
-
-                // 🔒 Explicit ownership check (defense in depth)
-                if (!course.TeacherId.HasValue || course.TeacherId.Value != teacherId)
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "Bạn không có quyền chỉnh sửa khóa học này";
-                    _logger.LogWarning("Teacher {TeacherId} attempted to update course {CourseId} owned by {OwnerId}",
-                        teacherId, courseId, course.TeacherId);
+                    response.Message = "Không tìm thấy khóa học";
                     return response;
                 }
 
@@ -338,13 +328,13 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // Lấy danh sách khóa học của teacher với phân trang
-        public async Task<ServiceResponse<PagedResult<CourseResponseDto>>> GetMyCoursesPagedAsync(int teacherId, CourseQueryParameters parameters)
+        // Lấy danh sách khóa học của teacher với phân trang (chỉ phân trang, không filter) - RLS đã filter
+        public async Task<ServiceResponse<PagedResult<CourseResponseDto>>> GetMyCoursesPagedAsync(PageRequest request)
         {
             var response = new ServiceResponse<PagedResult<CourseResponseDto>>();
             try
             {
-                var pagedData = await _courseRepository.GetCoursesByTeacherPagedAsync(teacherId, parameters);
+                var pagedData = await _courseRepository.GetCoursesByTeacherPagedAsync(request);
 
                 var items = new List<CourseResponseDto>();
                 foreach (var course in pagedData.Items)
@@ -374,37 +364,27 @@ namespace LearningEnglish.Application.Service
             {
                 response.Success = false;
                 response.Message = $"Error: {ex.Message}";
-                _logger.LogError(ex, "Error for TeacherId: {TeacherId}", teacherId);
+                _logger.LogError(ex, "Error in GetMyCoursesPagedAsync");
             }
             return response;
         }
 
-        // Xóa khóa học
-        public async Task<ServiceResponse<CourseResponseDto>> DeleteCourseAsync(int courseId, int teacherId)
+        // Xóa khóa học - RLS đã filter, chỉ check null → 404
+        public async Task<ServiceResponse<CourseResponseDto>> DeleteCourseAsync(int courseId)
         {
             var response = new ServiceResponse<CourseResponseDto>();
 
             try
             {
                 // RLS đã tự động filter courses theo TeacherId
-                // Nếu course == null → teacher không có quyền hoặc course không tồn tại
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                // Nếu course == null → course không tồn tại hoặc không thuộc teacher hiện tại
+                // Trả 404 để không leak thông tin về sự tồn tại của course
+                var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Course not found or you do not have permission to access it";
-                    return response;
-                }
-
-                // 🔒 Explicit ownership check (defense in depth)
-                if (!course.TeacherId.HasValue || course.TeacherId.Value != teacherId)
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "Bạn không có quyền xóa khóa học này";
-                    _logger.LogWarning("Teacher {TeacherId} attempted to delete course {CourseId} owned by {OwnerId}",
-                        teacherId, courseId, course.TeacherId);
+                    response.Message = "Course not found";
                     return response;
                 }
 
@@ -429,7 +409,7 @@ namespace LearningEnglish.Application.Service
                 response.StatusCode = 200;
                 response.Message = "Course deleted successfully";
 
-                _logger.LogInformation("Course {CourseId} deleted by Teacher {TeacherId}", courseId, teacherId);
+                _logger.LogInformation("Course {CourseId} deleted", courseId);
             }
             catch (Exception ex)
             {
@@ -442,13 +422,15 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        public async Task<ServiceResponse<TeacherCourseDetailDto>> GetCourseDetailAsync(int courseId, int teacherId)
+        public async Task<ServiceResponse<TeacherCourseDetailDto>> GetCourseDetailAsync(int courseId)
         {
             var response = new ServiceResponse<TeacherCourseDetailDto>();
 
             try
             {
-                // Lấy course với đầy đủ thông tin lessons và teacher
+                // RLS đã tự động filter courses theo TeacherId
+                // Nếu course == null → course không tồn tại hoặc không thuộc teacher hiện tại
+                // Trả 404 để không leak thông tin về sự tồn tại của course
                 var course = await _courseRepository.GetCourseById(courseId);
 
                 if (course == null)
@@ -456,19 +438,6 @@ namespace LearningEnglish.Application.Service
                     response.Success = false;
                     response.StatusCode = 404;
                     response.Message = "Course not found";
-                    return response;
-                }
-
-                // Kiểm tra ownership: Teacher chỉ được xem khóa học của mình
-                if (course.TeacherId != teacherId)
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "You do not have permission to view this course";
-                    _logger.LogWarning(
-                        "Teacher {TeacherId} attempted to access Course {CourseId} owned by Teacher {OwnerId}",
-                        teacherId, courseId, course.TeacherId
-                    );
                     return response;
                 }
 
@@ -480,18 +449,14 @@ namespace LearningEnglish.Application.Service
                 response.Data = courseDetailDto;
                 response.Message = "Course details retrieved successfully";
 
-                _logger.LogInformation(
-                    "Teacher {TeacherId} retrieved details for Course {CourseId}",
-                    teacherId, courseId
-                );
+                _logger.LogInformation("Retrieved details for Course {CourseId}", courseId);
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "An error occurred while retrieving course details";
-                _logger.LogError(ex, "Error in GetCourseDetailAsync for CourseId: {CourseId}, TeacherId: {TeacherId}", 
-                    courseId, teacherId);
+                _logger.LogError(ex, "Error in GetCourseDetailAsync for CourseId: {CourseId}", courseId);
             }
 
             return response;

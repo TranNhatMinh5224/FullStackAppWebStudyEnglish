@@ -6,11 +6,11 @@ namespace LearningEnglish.Application.Interface
 {
     public interface IAdminCourseService
     {
-        // Lấy danh sách loại khóa học
-        List<CourseTypeDto> GetCourseTypes();
+        // Lấy danh sách loại khóa học (System/Teacher) - Dùng cho giao diện quản lý Admin để filter
+        Task<ServiceResponse<IEnumerable<CourseTypeDto>>> GetCourseTypesAsync();
         
-        // Lấy danh sách khóa học (phân trang và filter)
-        Task<ServiceResponse<PagedResult<AdminCourseListResponseDto>>> GetAllCoursesPagedAsync(CourseQueryParameters parameters);
+        // Lấy danh sách khóa học (phân trang và filter) - Sort theo Title mặc định
+        Task<ServiceResponse<PagedResult<AdminCourseListResponseDto>>> GetAllCoursesPagedAsync(AdminCourseQueryParameters parameters);
         
         // Tạo khóa học
         Task<ServiceResponse<CourseResponseDto>> AdminCreateCourseAsync(AdminCreateCourseRequestDto requestDto);

@@ -85,7 +85,7 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetAllCoursesPagedAsync(It.IsAny<CourseQueryParameters>()))
+            .Setup(x => x.GetAllCoursesPagedForAdminAsync(It.IsAny<AdminCourseQueryParameters>()))
             .ReturnsAsync(pagedData);
 
         _mapperMock
@@ -101,7 +101,7 @@ public class AdminCourseServiceTests
             .ReturnsAsync(10);
 
         // Act
-        var result = await _adminCourseService.GetAllCoursesPagedAsync(new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
+        var result = await _adminCourseService.GetAllCoursesPagedAsync(new AdminCourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.True(result.Success);
@@ -126,11 +126,11 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetAllCoursesPagedAsync(It.IsAny<CourseQueryParameters>()))
+            .Setup(x => x.GetAllCoursesPagedForAdminAsync(It.IsAny<AdminCourseQueryParameters>()))
             .ReturnsAsync(pagedData);
 
         // Act
-        var result = await _adminCourseService.GetAllCoursesPagedAsync(new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
+        var result = await _adminCourseService.GetAllCoursesPagedAsync(new AdminCourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.True(result.Success);
@@ -172,7 +172,7 @@ public class AdminCourseServiceTests
         var courseDto = new AdminCourseListResponseDto { CourseId = 1, Title = "Course 1" };
 
         _courseRepositoryMock
-            .Setup(x => x.GetAllCoursesPagedAsync(It.IsAny<CourseQueryParameters>()))
+            .Setup(x => x.GetAllCoursesPagedForAdminAsync(It.IsAny<AdminCourseQueryParameters>()))
             .ReturnsAsync(pagedData);
 
         _mapperMock
@@ -188,7 +188,7 @@ public class AdminCourseServiceTests
             .ReturnsAsync(0);
 
         // Act
-        var result = await _adminCourseService.GetAllCoursesPagedAsync(new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
+        var result = await _adminCourseService.GetAllCoursesPagedAsync(new AdminCourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.True(result.Success);
@@ -203,11 +203,11 @@ public class AdminCourseServiceTests
         var request = new PageRequest { PageNumber = 1, PageSize = 10 };
 
         _courseRepositoryMock
-            .Setup(x => x.GetAllCoursesPagedAsync(It.IsAny<CourseQueryParameters>()))
+            .Setup(x => x.GetAllCoursesPagedForAdminAsync(It.IsAny<AdminCourseQueryParameters>()))
             .ThrowsAsync(new Exception("Database error"));
 
         // Act
-        var result = await _adminCourseService.GetAllCoursesPagedAsync(new CourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
+        var result = await _adminCourseService.GetAllCoursesPagedAsync(new AdminCourseQueryParameters { PageNumber = request.PageNumber, PageSize = request.PageSize });
 
         // Assert
         Assert.False(result.Success);
@@ -460,7 +460,7 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         _courseRepositoryMock
@@ -497,7 +497,7 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync((Course?)null);
 
         // Act
@@ -539,7 +539,7 @@ public class AdminCourseServiceTests
         var courseDto = new CourseResponseDto { CourseId = courseId, Title = "Updated Title" };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         _minioFileStorageMock
@@ -597,7 +597,7 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         _minioFileStorageMock
@@ -638,7 +638,7 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         _minioFileStorageMock
@@ -685,7 +685,7 @@ public class AdminCourseServiceTests
         var courseDto = new CourseResponseDto { CourseId = courseId, Title = "Updated Title" };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(existingCourse);
 
         _courseRepositoryMock
@@ -722,7 +722,7 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ThrowsAsync(new Exception("Unexpected error"));
 
         // Act
@@ -750,7 +750,7 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _minioFileStorageMock
@@ -780,7 +780,7 @@ public class AdminCourseServiceTests
         var courseId = 999;
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync((Course?)null);
 
         // Act
@@ -806,7 +806,7 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _courseRepositoryMock
@@ -835,7 +835,7 @@ public class AdminCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _minioFileStorageMock
@@ -863,7 +863,7 @@ public class AdminCourseServiceTests
         var courseId = 1;
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ThrowsAsync(new Exception("Unexpected error"));
 
         // Act

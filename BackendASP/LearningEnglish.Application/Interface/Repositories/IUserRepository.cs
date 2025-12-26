@@ -55,12 +55,5 @@ namespace LearningEnglish.Application.Interface
         
         // Lấy tài khoản bị khóa với phân trang
         Task<PagedResult<User>> GetListBlockedAccountsPagedAsync(UserQueryParameters request);
-        
-        // Statistics methods cho Admin Dashboard
-        Task<int> GetTotalUsersCountAsync();
-        Task<int> GetUserCountByRoleAsync(string roleName);
-        Task<int> GetActiveUsersCountAsync(); // Users không bị block
-        Task<int> GetBlockedUsersCountAsync();
-        Task<int> GetNewUsersCountAsync(DateTime fromDate);
     }
 }

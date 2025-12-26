@@ -22,18 +22,16 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        // GET: api/user/teacher-packages - lấy danh sách tất cả gói dành cho giáo viên
+        // endpoint Guest/User lấy danh sách tất cả gói giáo viên
         [HttpGet]
-        
         public async Task<IActionResult> GetTeacherPackages()
         {
             var result = await _teacherPackageService.GetAllTeacherPackagesAsync();
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/teacher-packages/{id} - lấy chi tiết gói dành cho giáo viên theo ID
+        // endpoint Guest/User lấy chi tiết gói giáo viên theo ID
         [HttpGet("{id}")]
-        
         public async Task<IActionResult> GetTeacherPackageById(int id)
         {
             var result = await _teacherPackageService.GetTeacherPackageByIdAsync(id);

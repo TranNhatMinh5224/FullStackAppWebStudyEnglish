@@ -45,4 +45,10 @@ public interface IAdminManagementService
     /// Xóa role khỏi user
     /// </summary>
     Task<ServiceResponse<RoleOperationResultDto>> RemoveRoleAsync(RemoveRoleDto dto);
+
+    /// <summary>
+    /// Nâng cấp user thành Teacher (gán role + tạo subscription)
+    /// Dùng khi thanh toán thất bại hoặc cần xử lý thủ công
+    /// </summary>
+    Task<ServiceResponse<RoleOperationResultDto>> UpgradeUserToTeacherAsync(UpgradeUserToTeacherDto dto);
 }

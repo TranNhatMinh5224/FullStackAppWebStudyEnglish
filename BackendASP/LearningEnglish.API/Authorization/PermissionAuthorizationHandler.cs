@@ -5,13 +5,13 @@ using LearningEnglish.Application.Interface;
 
 namespace LearningEnglish.API.Authorization
 {
-    /// <summary>
-    /// Authorization handler để kiểm tra permission của Admin
-    /// Logic:
-    /// - SuperAdmin: Tự động pass (toàn quyền, không cần check permission)
-    /// - Content Admin: Chỉ có permissions 1,2,3 (Course, Lesson, Content)
-    /// - Finance Admin: Chỉ có permissions 4,5,6,7 (User, Payment, Revenue, Package)
-    /// </summary>
+   
+    //Authorization handler để kiểm tra permission của Admin
+    // Logic:
+    // - SuperAdmin: Tự động pass (toàn quyền, không cần check permission)
+    // - Content Admin: Chỉ có permissions 1,2,3 (Course, Lesson, Content)
+    // - Finance Admin: Chỉ có permissions 4,5,6,7 (User, Payment, Revenue, Package)
+   
     public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
     {
         private readonly IRolePermissionRepository _rolePermissionRepository;
@@ -45,12 +45,12 @@ namespace LearningEnglish.API.Authorization
                 .Select(c => c.Value)
                 .ToList();
 
-            _logger.LogInformation("🔍 Checking permissions. User roles: {Roles}, Required permissions: {Permissions}", 
+            _logger.LogInformation(" Checking permissions. User roles: {Roles}, Required permissions: {Permissions}", 
                 string.Join(", ", roles), string.Join(", ", requirement.Permissions));
 
             if (roles.Contains("SuperAdmin", StringComparer.OrdinalIgnoreCase))
             {
-                _logger.LogInformation("✅ SuperAdmin tự động có quyền truy cập (toàn quyền)");
+                _logger.LogInformation(" SuperAdmin tự động có quyền truy cập (toàn quyền)");
                 context.Succeed(requirement);
                 return;
             }
@@ -63,7 +63,7 @@ namespace LearningEnglish.API.Authorization
             // Teacher không được phép truy cập Admin endpoints có [RequirePermission]
             if (!roles.Contains("Admin", StringComparer.OrdinalIgnoreCase))
             {
-                _logger.LogWarning("❌ User không phải Admin hoặc SuperAdmin. Roles: {Roles}. [RequirePermission] chỉ dành cho Admin endpoints", 
+                _logger.LogWarning(" User không phải Admin hoặc SuperAdmin. Roles: {Roles}. [RequirePermission] chỉ dành cho Admin endpoints", 
                     string.Join(", ", roles));
                 return;
             }
@@ -76,37 +76,37 @@ namespace LearningEnglish.API.Authorization
 
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
-                _logger.LogWarning("❌ Không tìm thấy userId trong claims. Claims: {Claims}", 
+                _logger.LogWarning(" Không tìm thấy userId trong claims. Claims: {Claims}", 
                     string.Join(", ", context.User.Claims.Select(c => $"{c.Type}={c.Value}")));
                 return;
             }
 
-            _logger.LogInformation("🔍 Checking permissions for Admin UserId: {UserId}", userId);
+            _logger.LogInformation("Checking permissions for Admin UserId: {UserId}", userId);
 
             // Kiểm tra từng permission (OR logic - có 1 trong các permissions là đủ)
             foreach (var permissionName in requirement.Permissions)
             {
                 var hasPermission = await _rolePermissionRepository.UserHasPermissionAsync(userId, permissionName);
                 
-                _logger.LogInformation("🔍 Admin {UserId} - Permission '{Permission}': {HasPermission}", 
+                _logger.LogInformation(" Admin {UserId} - Permission '{Permission}': {HasPermission}", 
                     userId, permissionName, hasPermission ? "✅ CÓ" : "❌ KHÔNG CÓ");
                 
                 if (hasPermission)
                 {
-                    _logger.LogInformation("✅ Admin {UserId} có permission {Permission} - Cho phép truy cập", userId, permissionName);
+                    _logger.LogInformation(" Admin {UserId} có permission {Permission} - Cho phép truy cập", userId, permissionName);
                     context.Succeed(requirement);
                     return;
                 }
             }
 
-            _logger.LogWarning("❌ Admin {UserId} KHÔNG CÓ permission: {Permissions} - Từ chối truy cập", 
+            _logger.LogWarning("Admin {UserId} KHÔNG CÓ permission: {Permissions} - Từ chối truy cập", 
                 userId, string.Join(", ", requirement.Permissions));
         }
     }
 
-    /// <summary>
-    /// Requirement cho permission authorization
-    /// </summary>
+   
+    //Requirement cho permission authorization
+   
     public class PermissionRequirement : IAuthorizationRequirement
     {
         public List<string> Permissions { get; }

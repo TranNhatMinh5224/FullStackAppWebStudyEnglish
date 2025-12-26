@@ -209,22 +209,14 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<bool>();
             try
             {
+                // RLS đã filter theo userId, nếu payment không thuộc về user → null
                 var existingPayment = await _paymentRepository.GetPaymentByIdAsync(paymentDto.PaymentId);
                 if (existingPayment == null)
                 {
-                    _logger.LogWarning("Không tìm thấy thanh toán {PaymentId}", paymentDto.PaymentId);
+                    _logger.LogWarning("Không tìm thấy thanh toán {PaymentId} cho User {UserId}", paymentDto.PaymentId, userId);
                     response.Success = false;
                     response.StatusCode = 404; // Not Found
                     response.Message = "Không tìm thấy thanh toán";
-                    return response;
-                }
-
-                if (existingPayment.UserId != userId)
-                {
-                    _logger.LogWarning("User {UserId} không có quyền truy cập thanh toán {PaymentId}", userId, paymentDto.PaymentId);
-                    response.Success = false;
-                    response.StatusCode = 403; // Forbidden
-                    response.Message = "Không có quyền truy cập";
                     return response;
                 }
 
@@ -427,20 +419,11 @@ namespace LearningEnglish.Application.Service
             {
                 _logger.LogInformation("Creating PayOS payment link for Payment {PaymentId}, User {UserId}", paymentId, userId);
 
-                // 1. Validate payment
+                // RLS đã filter theo userId, nếu payment không thuộc về user → null
                 var payment = await _paymentRepository.GetPaymentByIdAsync(paymentId);
                 if (payment == null)
                 {
                     _logger.LogWarning("Payment {PaymentId} not found for User {UserId}", paymentId, userId);
-                    response.Success = false;
-                    response.StatusCode = 404;
-                    response.Message = "Payment not found";
-                    return response;
-                }
-
-                if (payment.UserId != userId)
-                {
-                    _logger.LogWarning("User {UserId} access denied for Payment {PaymentId}", userId, paymentId);
                     response.Success = false;
                     response.StatusCode = 403;
                     response.Message = "Access denied";

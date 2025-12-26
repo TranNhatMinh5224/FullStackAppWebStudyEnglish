@@ -56,7 +56,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.ProductName, opt => opt.Ignore()); // Set in service after mapping
 
             CreateMap<Payment, TransactionDetailDto>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? $"{src.User.FirstName} {src.User.LastName}" : "N/A"))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : "N/A"))
                 .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : "N/A"))
                 .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.Gateway.ToString()))
                 .ForMember(dest => dest.ProductName, opt => opt.Ignore()); // Set in service after mapping
@@ -79,7 +79,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
-                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
+                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? src.Teacher.FullName : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
 
@@ -87,7 +87,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
-                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
+                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? src.Teacher.FullName : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
 
@@ -123,7 +123,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
-                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
+                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? src.Teacher.FullName : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count))
                 .ForMember(dest => dest.ProgressPercentage, opt => opt.Ignore()) // Set in service
@@ -278,7 +278,7 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<TeacherSubscription, ResPurchaseTeacherPackageDto>()
             .ForMember(dest => dest.IdTeacherPackage, opt => opt.MapFrom(src => src.TeacherSubscriptionId))
             .ForMember(dest => dest.IdUser, opt => opt.MapFrom(src => src.UserId))
-            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? $"{src.User.FirstName} {src.User.LastName}" : string.Empty))
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
             .ForMember(dest => dest.PackageName, opt => opt.MapFrom(src => src.TeacherPackage != null ? src.TeacherPackage.PackageName : string.Empty))
             .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.TeacherPackage != null ? src.TeacherPackage.Price : 0))
             .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate))

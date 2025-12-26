@@ -10,23 +10,19 @@ namespace LearningEnglish.Application.Service
     public class UserCourseService : IUserCourseService
     {
         private readonly ICourseRepository _courseRepository;
-        private readonly ICourseRepository _userCourseRepository;
         private readonly ICourseProgressRepository _courseProgressRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<UserCourseService> _logger;
-
 
         private const string CourseImageBucket = "courses";
 
         public UserCourseService(
             ICourseRepository courseRepository,
-            ICourseRepository userCourseRepository,
             ICourseProgressRepository courseProgressRepository,
             IMapper mapper,
             ILogger<UserCourseService> logger)
         {
             _courseRepository = courseRepository;
-            _userCourseRepository = userCourseRepository;
             _courseProgressRepository = courseProgressRepository;
             _mapper = mapper;
             _logger = logger;
@@ -89,7 +85,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                var course = await _courseRepository.GetCourseById(courseId);
 
                 if (course == null)
                 {

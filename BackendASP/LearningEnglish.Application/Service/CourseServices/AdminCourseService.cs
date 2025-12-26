@@ -35,24 +35,33 @@ namespace LearningEnglish.Application.Service
             _minioFileStorage = minioFileStorage;
         }
 
-        // Lấy danh sách loại khóa học
-        // Tuân thủ SRP: Service chịu trách nhiệm business logic
-        public List<CourseTypeDto> GetCourseTypes()
+        // Lấy danh sách loại khóa học (System/Teacher) - Dùng cho giao diện quản lý Admin để filter
+        // Tuân thủ CLEAN + SOLID: Service gọi Repository, không xử lý business logic trực tiếp
+        public async Task<ServiceResponse<IEnumerable<CourseTypeDto>>> GetCourseTypesAsync()
         {
-            return Enum.GetValues(typeof(CourseType))
-                .Cast<CourseType>()
-                .Select(ct => new CourseTypeDto
-                {
-                    Value = (int)ct,
-                    Name = ct.ToString(),
-                    DisplayName = ct switch
-                    {
-                        CourseType.System => "Khóa học hệ thống",
-                        CourseType.Teacher => "Khóa học giáo viên",
-                        _ => ct.ToString()
-                    }
-                })
-                .ToList();
+            var response = new ServiceResponse<IEnumerable<CourseTypeDto>>();
+            
+            try
+            {
+                // Gọi Repository để lấy data (tuân thủ Dependency Inversion Principle)
+                var courseTypes = await _courseRepository.GetCourseTypesAsync();
+
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Data = courseTypes;
+                response.Message = "Lấy danh sách loại khóa học thành công";
+                
+                _logger.LogInformation("Retrieved {Count} course types", courseTypes.Count());
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi khi lấy danh sách loại khóa học";
+                _logger.LogError(ex, "Error in GetCourseTypesAsync");
+            }
+
+            return response;
         }
 
 
@@ -60,13 +69,13 @@ namespace LearningEnglish.Application.Service
 
 
 
-        // Service cho Admin Lấy ra toàn bộ khóa học với phân trang
-        public async Task<ServiceResponse<PagedResult<AdminCourseListResponseDto>>> GetAllCoursesPagedAsync(CourseQueryParameters parameters)
+        // Service cho Admin Lấy ra toàn bộ khóa học với phân trang - Sort theo Title mặc định
+        public async Task<ServiceResponse<PagedResult<AdminCourseListResponseDto>>> GetAllCoursesPagedAsync(AdminCourseQueryParameters parameters)
         {
             var response = new ServiceResponse<PagedResult<AdminCourseListResponseDto>>();
             try
             {
-                var pagedData = await _courseRepository.GetAllCoursesPagedAsync(parameters);
+                var pagedData = await _courseRepository.GetAllCoursesPagedForAdminAsync(parameters);
 
                 var items = new List<AdminCourseListResponseDto>();
                 foreach (var course in pagedData.Items)
@@ -215,7 +224,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
                     response.Success = false;
@@ -345,7 +354,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
                     response.Success = false;

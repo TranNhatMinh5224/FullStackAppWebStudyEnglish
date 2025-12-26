@@ -11,15 +11,6 @@ namespace LearningEnglish.Application.Interface
         // Lấy chi tiết thống kê users
         Task<ServiceResponse<UserStatisticsDto>> GetUserStatisticsAsync();
         
-        // Lấy chi tiết thống kê courses
-        Task<ServiceResponse<CourseStatisticsDto>> GetCourseStatisticsAsync();
-        
-        // Lấy chi tiết thống kê teachers
-        Task<ServiceResponse<TeacherStatisticsDto>> GetTeacherStatisticsAsync();
-        
-        // Lấy chi tiết thống kê students
-        Task<ServiceResponse<StudentStatisticsDto>> GetStudentStatisticsAsync();
-        
         // Lấy chi tiết thống kê doanh thu
         Task<ServiceResponse<RevenueStatisticsDto>> GetRevenueStatisticsAsync();
         

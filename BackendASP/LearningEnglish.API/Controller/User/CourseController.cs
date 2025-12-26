@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common.Pagination;
-using System.Security.Claims;
+using LearningEnglish.API.Extensions;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -23,20 +23,12 @@ namespace LearningEnglish.API.Controller.User
             _enrollmentQueryService = enrollmentQueryService;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
-        }
-
-        // POST: api/user/enroll/course - Đăng ký khóa học
+        // endpoint Student đăng ký khóa học
         [HttpPost("course")]
         public async Task<IActionResult> EnrollInCourse([FromBody] EnrollCourseDto enrollDto)
         {
-            var userId = GetCurrentUserId();
-            if (userId == 0)
-                return Unauthorized(new { message = "Invalid user credentials" });
-
+            // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            var userId = User.GetUserId();
             var result = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, userId);
 
             return result.Success
@@ -44,14 +36,12 @@ namespace LearningEnglish.API.Controller.User
                 : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/user/enroll/course/{courseId} - Hủy đăng ký khóa học
+        // endpoint Student hủy đăng ký khóa học
         [HttpDelete("course/{courseId}")]
         public async Task<IActionResult> UnenrollFromCourse(int courseId)
         {
-            var userId = GetCurrentUserId();
-            if (userId == 0)
-                return Unauthorized(new { message = "Invalid user credentials" });
-
+            // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            var userId = User.GetUserId();
             var result = await _userEnrollmentService.UnenrollFromCourseAsync(courseId, userId);
 
             return result.Success
@@ -59,14 +49,12 @@ namespace LearningEnglish.API.Controller.User
                 : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/enroll/my-courses - Lấy danh sách khóa học đã đăng ký với phân trang
+        // endpoint Student lấy danh sách khóa học đã đăng ký (chỉ phân trang, không filter)
         [HttpGet("my-courses")]
-        public async Task<IActionResult> GetMyEnrolledCourses([FromQuery] EnrolledCourseQueryParameters request)
+        public async Task<IActionResult> GetMyEnrolledCourses([FromQuery] PageRequest request)
         {
-            var userId = GetCurrentUserId();
-            if (userId == 0)
-                return Unauthorized(new { message = "Invalid user credentials" });
-
+            // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            var userId = User.GetUserId();
             var result = await _enrollmentQueryService.GetMyEnrolledCoursesPagedAsync(userId, request);
 
             return result.Success
@@ -74,14 +62,12 @@ namespace LearningEnglish.API.Controller.User
                 : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/enroll/join-by-class-code - Tham gia khóa học qua mã lớp
+        // endpoint Student tham gia khóa học qua mã lớp
         [HttpPost("join-by-class-code")]
         public async Task<IActionResult> JoincourseByClassCode([FromBody] EnrollCourseByClassCodeDto joinDto)
         {
-            var userId = GetCurrentUserId();
-            if (userId == 0)
-                return Unauthorized(new { message = "Invalid user credentials" });
-
+            // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            var userId = User.GetUserId();
             var result = await _userEnrollmentService.EnrollInCourseByClassCodeAsync(joinDto.ClassCode, userId);
 
             return result.Success

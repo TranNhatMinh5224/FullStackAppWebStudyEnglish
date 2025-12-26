@@ -603,7 +603,7 @@ public class LessonServiceTests
             .Returns(lessonDto);
 
         // Act
-        var result = await _lessonService.GetLessonById(lessonId, userId, userRole);
+        var result = await _lessonService.GetLessonById(lessonId);
 
         // Assert
         Assert.True(result.Success);
@@ -628,7 +628,7 @@ public class LessonServiceTests
             .ReturnsAsync((Lesson?)null);
 
         // Act
-        var result = await _lessonService.GetLessonById(lessonId, userId, userRole);
+        var result = await _lessonService.GetLessonById(lessonId);
 
         // Assert
         Assert.False(result.Success);
@@ -680,7 +680,7 @@ public class LessonServiceTests
             .Returns(lessonDto);
 
         // Act
-        var result = await _lessonService.GetLessonById(lessonId, userId, userRole);
+        var result = await _lessonService.GetLessonById(lessonId);
 
         // Assert
         Assert.True(result.Success);
@@ -690,44 +690,23 @@ public class LessonServiceTests
     }
 
     [Fact]
-    public async Task GetLessonById_AsTeacherWithWrongCourse_ReturnsForbidden()
+    public async Task GetLessonById_AsTeacherWithWrongCourse_ReturnsNotFound()
     {
         // Arrange
         var lessonId = 1;
-        var userId = 1;
-        var ownerId = 2;
-        var userRole = "Teacher";
-
-        var lesson = new Lesson
-        {
-            LessonId = lessonId,
-            Title = "Test Lesson",
-            CourseId = 1
-        };
-
-        var course = new Course
-        {
-            CourseId = 1,
-            Title = "Teacher Course",
-            Type = CourseType.Teacher,
-            TeacherId = ownerId // Different owner
-        };
+        // RLS sẽ filter lesson nếu không thuộc về teacher → lesson == null
 
         _lessonRepositoryMock
             .Setup(x => x.GetLessonById(lessonId))
-            .ReturnsAsync(lesson);
-
-        _courseRepositoryMock
-            .Setup(x => x.GetCourseById(lesson.CourseId))
-            .ReturnsAsync(course);
+            .ReturnsAsync((Lesson?)null); // RLS đã filter, lesson không tồn tại
 
         // Act
-        var result = await _lessonService.GetLessonById(lessonId, userId, userRole);
+        var result = await _lessonService.GetLessonById(lessonId);
 
         // Assert
         Assert.False(result.Success);
-        Assert.Equal(403, result.StatusCode);
-        Assert.Contains("Bạn không có quyền truy cập", result.Message);
+        Assert.Equal(404, result.StatusCode); // RLS trả về 404 để không leak thông tin
+        Assert.Contains("Không tìm thấy bài học", result.Message);
     }
 
     [Fact]
@@ -761,7 +740,7 @@ public class LessonServiceTests
             .Returns(lessonDto);
 
         // Act
-        var result = await _lessonService.GetLessonById(lessonId, userId, userRole);
+        var result = await _lessonService.GetLessonById(lessonId);
 
         // Assert
         Assert.True(result.Success);

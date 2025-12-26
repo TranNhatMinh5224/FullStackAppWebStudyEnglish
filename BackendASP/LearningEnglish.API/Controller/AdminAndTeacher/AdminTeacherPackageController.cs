@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using LearningEnglish.API.Authorization;
 
 namespace LearningEnglish.API.Controller.Admin
 {
@@ -17,16 +18,18 @@ namespace LearningEnglish.API.Controller.Admin
             _teacherPackageService = teacherPackageService;
         }
 
-        // GET: api/admin/teacher-packages - lấy tat cả teacher package
+        // endpoint Admin lấy danh sách tất cả gói giáo viên
         [HttpGet]
+        [RequirePermission("Admin.Package.Manage")]
         public async Task<IActionResult> GetAllTeacherPackages()
         {
             var result = await _teacherPackageService.GetAllTeacherPackagesAsync();
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // GET: api/admin/teacher-packages/{id} - lấy teacher package theo ID
+        // endpoint Admin lấy chi tiết gói giáo viên theo ID
         [HttpGet("{id}")]
+        [RequirePermission("Admin.Package.Manage")]
         public async Task<IActionResult> GetTeacherPackageById(int id)
         {
             if (id <= 0)
@@ -36,16 +39,18 @@ namespace LearningEnglish.API.Controller.Admin
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // POST: api/admin/teacher-packages - tạo mới teacher package
+        // endpoint Admin tạo mới gói giáo viên
         [HttpPost]
+        [RequirePermission("Admin.Package.Manage")]
         public async Task<IActionResult> CreateTeacherPackage([FromBody] CreateTeacherPackageDto createDto)
         {
             var result = await _teacherPackageService.CreateTeacherPackageAsync(createDto);
             return result.Success ? Ok(result.Data) : StatusCode(result.StatusCode, new { message = result.Message });
         }
 
-        // PUT: api/admin/teacher-packages/{id} - sửa gói giao viên
+        // endpoint Admin cập nhật gói giáo viên
         [HttpPut("{id}")]
+        [RequirePermission("Admin.Package.Manage")]
         public async Task<IActionResult> UpdateTeacherPackage(int id, [FromBody] UpdateTeacherPackageDto teacherPackageDto)
         {
 
@@ -55,8 +60,9 @@ namespace LearningEnglish.API.Controller.Admin
                 : StatusCode(result.StatusCode, new { Message = result.Message });
         }
 
-        // DELETE: api/admin/teacher-packages/{id} - xoá gói giáo viên
+        // endpoint Admin xóa gói giáo viên
         [HttpDelete("{id}")]
+        [RequirePermission("Admin.Package.Manage")]
         public async Task<IActionResult> DeleteTeacherPackage(int id)
         {
             if (id <= 0)

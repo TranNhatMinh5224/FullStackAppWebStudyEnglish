@@ -374,13 +374,15 @@ namespace LearningEnglish.Application.Service
         }
 
         // Lấy danh sách người dùng theo khóa học với phân trang
-        public async Task<ServiceResponse<PagedResult<UserDto>>> GetUsersByCourseIdPagedAsync(int courseId, int userId, string checkRole, PageRequest request)
+        // RLS tự động filter: Admin xem tất cả, Teacher chỉ xem students trong own courses
+        // userId không cần (RLS đã filter), chỉ cần để log ở Controller
+        public async Task<ServiceResponse<PagedResult<UserDto>>> GetUsersByCourseIdPagedAsync(int courseId, PageRequest request)
         {
             var response = new ServiceResponse<PagedResult<UserDto>>();
             try
             {
                 // RLS đã tự động filter courses theo role (Admin: all, Teacher: own)
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
                     response.Success = false;
@@ -453,19 +455,17 @@ namespace LearningEnglish.Application.Service
         }
 
         // Lấy thông tin chi tiết của học sinh trong một course cụ thể
-        // Admin: xem tất cả students trong tất cả courses
-        // Teacher: chỉ xem students trong own courses (RLS tự động filter)
+        // RLS tự động filter: Admin xem tất cả, Teacher chỉ xem students trong own courses
+        // currentUserId không cần (RLS đã filter), chỉ cần để log ở Controller
         public async Task<ServiceResponse<StudentDetailInCourseDto>> GetStudentDetailInCourseAsync(
             int courseId, 
-            int studentId, 
-            int currentUserId, 
-            string currentUserRole)
+            int studentId)
         {
             var response = new ServiceResponse<StudentDetailInCourseDto>();
             try
             {
                 // RLS đã tự động filter courses theo role (Admin: all, Teacher: own)
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
                     response.Success = false;
@@ -562,19 +562,17 @@ namespace LearningEnglish.Application.Service
         }
 
         // Xóa học sinh khỏi course (Admin/Teacher)
-        // Admin: xóa bất kỳ student nào khỏi bất kỳ course nào
-        // Teacher: chỉ xóa students khỏi own courses (RLS tự động filter)
+        // RLS tự động filter: Admin xóa bất kỳ student nào, Teacher chỉ xóa students trong own courses
         public async Task<ServiceResponse<bool>> RemoveStudentFromCourseAsync(
             int courseId, 
             int studentId, 
-            int currentUserId, 
-            string currentUserRole)
+            int currentUserId)
         {
             var response = new ServiceResponse<bool>();
             try
             {
                 // RLS đã tự động filter courses theo role (Admin: all, Teacher: own)
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
                     response.Success = false;
@@ -617,19 +615,17 @@ namespace LearningEnglish.Application.Service
         }
 
         // Thêm học sinh vào course bằng email (Admin/Teacher)
-        // Admin: thêm vào bất kỳ course nào
-        // Teacher: chỉ thêm vào own courses (RLS tự động filter)
+        // RLS tự động filter: Admin thêm vào bất kỳ course nào, Teacher chỉ thêm vào own courses
         public async Task<ServiceResponse<bool>> AddStudentToCourseByEmailAsync(
             int courseId,
             string studentEmail,
-            int currentUserId,
-            string currentUserRole)
+            int currentUserId)
         {
             var response = new ServiceResponse<bool>();
             try
             {
                 // RLS đã tự động filter courses theo role (Admin: all, Teacher: own)
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
                     response.Success = false;

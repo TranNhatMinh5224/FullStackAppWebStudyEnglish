@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
-using System.Security.Claims;
+using LearningEnglish.API.Extensions;
 using Microsoft.Extensions.Logging;
 using FluentValidation;
 using LearningEnglish.Application.Validators.Payment;
@@ -44,67 +44,57 @@ namespace LearningEnglish.API.Controller.User
             _configuration = configuration;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
-        }
-
-        // POST: api/payment/process - tạo yêu cầu thanh toán
+        // endpoint Student tạo yêu cầu thanh toán (Course hoặc TeacherPackage)
         [HttpPost("process")]
         public async Task<IActionResult> ProcessPayment([FromBody] requestPayment request)
         {
-            var userId = GetCurrentUserId();
+            // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            var userId = User.GetUserId();
             var result = await _paymentService.ProcessPaymentAsync(userId, request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/payment/confirm - xác nhận thanh toán
+        // endpoint Student xác nhận thanh toán
         [HttpPost("confirm")]
         public async Task<IActionResult> ConfirmPayment([FromBody] CompletePayment paymentDto)
         {
-            var userId = GetCurrentUserId();
+            // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            var userId = User.GetUserId();
             var result = await _paymentService.ConfirmPaymentAsync(paymentDto, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/payment/history - lấy lịch sử giao dịch với phân trang cho người dùng đã xác thực
+        // endpoint Student lấy lịch sử giao dịch (phân trang)
         [HttpGet("history")]
         public async Task<IActionResult> GetTransactionHistory([FromQuery] PageRequest request)
         {
-            var userId = GetCurrentUserId();
+            // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            var userId = User.GetUserId();
             var result = await _paymentService.GetTransactionHistoryAsync(userId, request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/payment/history/all - lấy toàn bộ lịch sử giao dịch với phân trang cho người dùng đã xác thực
-        [HttpGet("history/all")]
-        public async Task<IActionResult> GetAllTransactionHistory([FromQuery] PageRequest request)
-        {
-            var userId = GetCurrentUserId();
-            var result = await _paymentService.GetTransactionHistoryAsync(userId, request);
-            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
-        }
-
-        // GET: api/payment/transaction/{paymentId} - lây chi tiết giao dịch theo paymentId
+        // endpoint Student lấy chi tiết giao dịch theo paymentId
         [HttpGet("transaction/{paymentId}")]
         public async Task<IActionResult> GetTransactionDetail(int paymentId)
         {
-            var userId = GetCurrentUserId();
+            // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            var userId = User.GetUserId();
             var result = await _paymentService.GetTransactionDetailAsync(paymentId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/payment/payos/create-link/{paymentId} - tạo link thanh toán PayOS
+        // endpoint Student tạo link thanh toán PayOS
         [HttpPost("payos/create-link/{paymentId}")]
         public async Task<IActionResult> CreatePayOSLink(int paymentId)
         {
-            var userId = GetCurrentUserId();
+            // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            var userId = User.GetUserId();
             var result = await _paymentService.CreatePayOSPaymentLinkAsync(paymentId, userId);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        // GET: api/payment/payos/return - sửa lý PayOS return URL
+        // endpoint PayOS return URL (xử lý redirect từ PayOS sau khi thanh toán)
         [HttpGet("payos/return")]
         [AllowAnonymous]
         public async Task<IActionResult> PayOSReturn(
@@ -195,7 +185,7 @@ namespace LearningEnglish.API.Controller.User
             }
         }
 
-        // POST: api/payment/payos/webhook - xử lý webhook từ PayOS
+        // endpoint PayOS webhook (xử lý callback từ PayOS)
         [HttpPost("payos/webhook")]
         [AllowAnonymous]
         public async Task<IActionResult> PayOSWebhook([FromBody] PayOSWebhookDto webhookData)
@@ -261,11 +251,12 @@ namespace LearningEnglish.API.Controller.User
             }
         }
 
-        // POST: api/payment/payos/confirm/{paymentId} - xác nhận thanh toán PayOS
+        // endpoint Student xác nhận thanh toán PayOS
         [HttpPost("payos/confirm/{paymentId}")]
         public async Task<IActionResult> ConfirmPayOSPayment(int paymentId)
         {
-            var userId = GetCurrentUserId();
+            // [Authorize(Roles = "Student")] đảm bảo userId luôn có
+            var userId = User.GetUserId();
 
             var payment = await _paymentRepository.GetPaymentByIdAsync(paymentId);
             if (payment == null || payment.UserId != userId)

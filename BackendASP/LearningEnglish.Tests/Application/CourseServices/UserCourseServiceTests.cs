@@ -36,7 +36,6 @@ public class UserCourseServiceTests
 
         _userCourseService = new UserCourseService(
             _courseRepositoryMock.Object,
-            _courseRepositoryMock.Object, 
             _courseProgressRepositoryMock.Object,
             _mapperMock.Object,
             _loggerMock.Object
@@ -300,7 +299,7 @@ public class UserCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _mapperMock
@@ -330,7 +329,7 @@ public class UserCourseServiceTests
         var userId = 1;
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync((Course?)null);
 
         // Act
@@ -375,7 +374,7 @@ public class UserCourseServiceTests
         courseProgress.UpdateProgress(10, 5); // Total: 10, Completed: 5 (50%)
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _mapperMock
@@ -426,7 +425,7 @@ public class UserCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _mapperMock
@@ -472,7 +471,7 @@ public class UserCourseServiceTests
         };
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _mapperMock
@@ -521,7 +520,7 @@ public class UserCourseServiceTests
         courseProgress.UpdateProgress(10, 10); // Total: 10, Completed: 10 (100% - completed, CompletedAt will be set automatically)
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ReturnsAsync(course);
 
         _mapperMock
@@ -557,7 +556,7 @@ public class UserCourseServiceTests
         var userId = 1;
 
         _courseRepositoryMock
-            .Setup(x => x.GetByIdAsync(courseId))
+            .Setup(x => x.GetCourseById(courseId))
             .ThrowsAsync(new Exception("Database error"));
 
         // Act

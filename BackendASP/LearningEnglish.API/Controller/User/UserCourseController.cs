@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
-using System.Security.Claims;
+using LearningEnglish.API.Extensions;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -19,44 +19,32 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        // GET: api/user/courses/system-courses - lấy danh sách tất cả khóa học hệ thống với trạng thái đăng ký của người dùng (nếu đã đăng nhập)
+        // endpoint Guest/User lấy danh sách khóa học hệ thống
         [HttpGet("system-courses")]
         [AllowAnonymous]
         public async Task<IActionResult> GetSystemCourses()
         {
-            int? userId = null;
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (int.TryParse(userIdClaim, out int parsedUserId))
-                {
-                    userId = parsedUserId;
-                }
-            }
+            // [AllowAnonymous] nên userId có thể null (Guest) hoặc có (authenticated user)
+            var userIdValue = User.GetUserIdSafe();
+            int? userId = userIdValue > 0 ? userIdValue : null;
 
             var result = await _userCourseService.GetSystemCoursesAsync(userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // Lấy chi tiết khóa học theo ID với trạng thái đăng ký
+        // endpoint Guest/User xem chi tiết khóa học
         [HttpGet("{courseId}")]
-        [AllowAnonymous] // Cho phép truy cập mà không cần xác thực
+        [AllowAnonymous]
         public async Task<IActionResult> GetCourseById(int courseId)
         {
-            int? userId = null;
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (int.TryParse(userIdClaim, out int parsedUserId))
-                {
-                    userId = parsedUserId;
-                }
-            }
+            // [AllowAnonymous] nên userId có thể null (Guest) hoặc có (authenticated user)
+            var userIdValue = User.GetUserIdSafe();
+            int? userId = userIdValue > 0 ? userIdValue : null;
 
             var result = await _userCourseService.GetCourseByIdAsync(courseId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
-        // Tìm kiếm khóa học theo từ khóa
+        // endpoint Guest/User tìm kiếm khóa học
         [HttpGet("search")]
         [AllowAnonymous]
         public async Task<IActionResult> SearchCourses([FromQuery] string keyword)
