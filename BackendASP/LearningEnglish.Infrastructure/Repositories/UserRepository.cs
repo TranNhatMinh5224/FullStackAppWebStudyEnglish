@@ -140,6 +140,22 @@ namespace LearningEnglish.Infrastructure.Repositories
             return user.Roles.Any(r => r.Name.Equals("admin", StringComparison.CurrentCultureIgnoreCase));
         }
 
+        // Kiểm tra user có role Teacher trong database
+        public async Task<bool> HasTeacherRoleAsync(int userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user == null)
+            {
+                return false;
+            }
+
+            // Kiểm tra có role Teacher không (check theo tên role để linh hoạt)
+            return user.Roles.Any(r => r.Name.Equals("Teacher", StringComparison.OrdinalIgnoreCase));
+        }
+
         // Lấy danh sách teacher
         public async Task<List<User>> GetAllTeachersAsync()
         {

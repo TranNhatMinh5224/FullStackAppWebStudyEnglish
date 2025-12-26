@@ -15,6 +15,7 @@ public class AdminManagementService : IAdminManagementService
     private readonly IUserRepository _userRepository;
     private readonly IPermissionRepository _permissionRepository;
     private readonly IRolePermissionRepository _rolePermissionRepository;
+    private readonly IRoleRepository _roleRepository;
     private readonly ITeacherSubscriptionService _teacherSubscriptionService;
     private readonly ITeacherPackageRepository _teacherPackageRepository;
     private readonly IMapper _mapper;
@@ -23,6 +24,7 @@ public class AdminManagementService : IAdminManagementService
         IUserRepository userRepository,
         IPermissionRepository permissionRepository,
         IRolePermissionRepository rolePermissionRepository,
+        IRoleRepository roleRepository,
         ITeacherSubscriptionService teacherSubscriptionService,
         ITeacherPackageRepository teacherPackageRepository,
         IMapper mapper)
@@ -30,6 +32,7 @@ public class AdminManagementService : IAdminManagementService
         _userRepository = userRepository;
         _permissionRepository = permissionRepository;
         _rolePermissionRepository = rolePermissionRepository;
+        _roleRepository = roleRepository;
         _teacherSubscriptionService = teacherSubscriptionService;
         _teacherPackageRepository = teacherPackageRepository;
         _mapper = mapper;
@@ -50,13 +53,33 @@ public class AdminManagementService : IAdminManagementService
                 return response;
             }
 
-            // Check permissions có hợp lệ không
-            var permissions = await _permissionRepository.GetPermissionsByIdsAsync(dto.PermissionIds);
-            if (permissions.Count != dto.PermissionIds.Count)
+            // Validate role ID - chỉ chấp nhận ContentAdmin (2) hoặc FinanceAdmin (3)
+            var validRoleIds = new[] { 2, 3 }; // ContentAdmin = 2, FinanceAdmin = 3
+            if (!validRoleIds.Contains(dto.RoleId))
             {
                 response.Success = false;
                 response.StatusCode = 400;
-                response.Message = "Một số permission không hợp lệ";
+                response.Message = $"RoleId không hợp lệ. Chỉ chấp nhận: 2 (ContentAdmin) hoặc 3 (FinanceAdmin)";
+                return response;
+            }
+
+            // Lấy role theo ID
+            var adminRole = await _roleRepository.GetRoleByIdAsync(dto.RoleId);
+            if (adminRole == null)
+            {
+                response.Success = false;
+                response.StatusCode = 404;
+                response.Message = $"Role với RoleId {dto.RoleId} không tồn tại trong hệ thống";
+                return response;
+            }
+
+            // Validate role name phải là ContentAdmin hoặc FinanceAdmin
+            var validRoleNames = new[] { "ContentAdmin", "FinanceAdmin" };
+            if (!validRoleNames.Contains(adminRole.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                response.Success = false;
+                response.StatusCode = 400;
+                response.Message = $"RoleId {dto.RoleId} không phải là ContentAdmin hoặc FinanceAdmin";
                 return response;
             }
 
@@ -75,27 +98,15 @@ public class AdminManagementService : IAdminManagementService
                 UpdatedAt = DateTime.UtcNow
             };
 
-            // Gán Admin role
-            var adminRole = await _userRepository.GetRoleByNameAsync("Admin");
-            if (adminRole == null)
-            {
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Admin role không tồn tại trong hệ thống";
-                return response;
-            }
-
             user.Roles.Add(adminRole);
             await _userRepository.AddUserAsync(user);
             await _userRepository.SaveChangesAsync();
+            
+            // Permissions đã được gán cho role trong seeder, không cần gán thêm
 
-            // Gán permissions cho Admin role của user này
-            // Note: Gán vào RolePermissions với RoleId = Admin role
-            foreach (var permissionId in dto.PermissionIds)
-            {
-                await _rolePermissionRepository.AssignPermissionToRoleAsync(adminRole.RoleId, permissionId);
-            }
-            await _rolePermissionRepository.SaveChangesAsync();
+            // Lấy permissions từ role
+            var rolePermissions = await _rolePermissionRepository.GetRolePermissionsAsync(adminRole.RoleId);
+            var permissionDtos = rolePermissions.Select(rp => _mapper.Map<PermissionDto>(rp.Permission)).ToList();
 
             // Map response
             response.Data = new AdminDto
@@ -104,8 +115,8 @@ public class AdminManagementService : IAdminManagementService
                 Email = user.Email,
                 FullName = $"{user.FirstName} {user.LastName}",
                 PhoneNumber = user.PhoneNumber,
-                Roles = new List<string> { "Admin" },
-                Permissions = _mapper.Map<List<PermissionDto>>(permissions),
+                Roles = new List<string> { adminRole.Name },
+                Permissions = permissionDtos,
                 CreatedAt = user.CreatedAt,
                 Status = user.Status.ToString()
             };
@@ -127,8 +138,19 @@ public class AdminManagementService : IAdminManagementService
         var response = new ServiceResponse<PagedResult<AdminDto>>();
         try
         {
-            // Lấy tất cả users có Admin role
-            var adminsQuery = (await _userRepository.GetUsersByRoleAsync("Admin")).AsQueryable();
+            // Lấy tất cả users có Admin roles (ContentAdmin, FinanceAdmin, SuperAdmin)
+            var contentAdmins = await _userRepository.GetUsersByRoleAsync("ContentAdmin");
+            var financeAdmins = await _userRepository.GetUsersByRoleAsync("FinanceAdmin");
+            var superAdmins = await _userRepository.GetUsersByRoleAsync("SuperAdmin");
+            
+            // Combine tất cả admin users
+            var allAdmins = contentAdmins
+                .Union(financeAdmins)
+                .Union(superAdmins)
+                .DistinctBy(u => u.UserId)
+                .ToList();
+            
+            var adminsQuery = allAdmins.AsQueryable();
 
             // Search
             if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
@@ -152,7 +174,16 @@ public class AdminManagementService : IAdminManagementService
             var adminDtos = new List<AdminDto>();
             foreach (var admin in admins)
             {
-                var rolePermissions = await _rolePermissionRepository.GetUserPermissionsAsync(admin.UserId);
+                // Lấy permissions từ role của admin
+                var adminRole = admin.Roles.FirstOrDefault(r => r.Name == "ContentAdmin" || r.Name == "FinanceAdmin" || r.Name == "SuperAdmin");
+                var permissions = new List<Permission>();
+                
+                if (adminRole != null)
+                {
+                    var rolePermissions = await _rolePermissionRepository.GetRolePermissionsAsync(adminRole.RoleId);
+                    permissions = rolePermissions.Select(rp => rp.Permission).ToList();
+                }
+                
                 adminDtos.Add(new AdminDto
                 {
                     UserId = admin.UserId,
@@ -160,7 +191,7 @@ public class AdminManagementService : IAdminManagementService
                     FullName = $"{admin.FirstName} {admin.LastName}",
                     PhoneNumber = admin.PhoneNumber ?? string.Empty,
                     Roles = admin.Roles.Select(r => r.Name).ToList(),
-                    Permissions = rolePermissions.Select(rp => _mapper.Map<PermissionDto>(rp.Permission)).ToList(),
+                    Permissions = permissions.Select(p => _mapper.Map<PermissionDto>(p)).ToList(),
                     CreatedAt = admin.CreatedAt,
                     Status = admin.Status.ToString()
                 });
@@ -185,12 +216,12 @@ public class AdminManagementService : IAdminManagementService
         return response;
     }
 
-    public async Task<ServiceResponse<UpdateAdminPermissionsResultDto>> UpdateAdminPermissionsAsync(UpdateAdminPermissionsDto dto)
+    public async Task<ServiceResponse<AdminDto>> GetAdminByIdAsync(int userId)
     {
-        var response = new ServiceResponse<UpdateAdminPermissionsResultDto>();
+        var response = new ServiceResponse<AdminDto>();
         try
         {
-            var user = await _userRepository.GetByIdAsync(dto.UserId);
+            var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
             {
                 response.Success = false;
@@ -199,54 +230,35 @@ public class AdminManagementService : IAdminManagementService
                 return response;
             }
 
-            // Check user có Admin role không
-            var adminRole = user.Roles.FirstOrDefault(r => r.Name == "Admin");
+            // Kiểm tra user có phải admin không (ContentAdmin, FinanceAdmin, SuperAdmin)
+            var adminRole = user.Roles.FirstOrDefault(r => 
+                r.Name == "ContentAdmin" || r.Name == "FinanceAdmin" || r.Name == "SuperAdmin");
+            
             if (adminRole == null)
             {
                 response.Success = false;
-                response.StatusCode = 400;
+                response.StatusCode = 404;
                 response.Message = "User không phải admin";
                 return response;
             }
 
-            // Lấy permissions hiện tại
-            var currentRolePermissions = await _rolePermissionRepository.GetRolePermissionsAsync(adminRole.RoleId);
-            var currentPermissionIds = currentRolePermissions.Select(rp => rp.PermissionId).ToList();
+            // Lấy permissions từ role
+            var rolePermissions = await _rolePermissionRepository.GetRolePermissionsAsync(adminRole.RoleId);
+            var permissionDtos = rolePermissions.Select(rp => _mapper.Map<PermissionDto>(rp.Permission)).ToList();
 
-            // Tính toán removed và added
-            var removedIds = currentPermissionIds.Except(dto.PermissionIds).ToList();
-            var addedIds = dto.PermissionIds.Except(currentPermissionIds).ToList();
-
-            // Remove old permissions
-            foreach (var permissionId in removedIds)
-            {
-                await _rolePermissionRepository.RemovePermissionFromRoleAsync(adminRole.RoleId, permissionId);
-            }
-
-            // Add new permissions
-            foreach (var permissionId in addedIds)
-            {
-                await _rolePermissionRepository.AssignPermissionToRoleAsync(adminRole.RoleId, permissionId);
-            }
-
-            await _rolePermissionRepository.SaveChangesAsync();
-
-            // Get permission names
-            var removedPermissions = await _permissionRepository.GetPermissionsByIdsAsync(removedIds);
-            var addedPermissions = await _permissionRepository.GetPermissionsByIdsAsync(addedIds);
-            var currentPermissions = await _permissionRepository.GetPermissionsByIdsAsync(dto.PermissionIds);
-
-            response.Data = new UpdateAdminPermissionsResultDto
+            response.Data = new AdminDto
             {
                 UserId = user.UserId,
                 Email = user.Email,
-                RemovedPermissions = removedPermissions.Select(p => p.Name).ToList(),
-                AddedPermissions = addedPermissions.Select(p => p.Name).ToList(),
-                CurrentPermissions = _mapper.Map<List<PermissionDto>>(currentPermissions)
+                FullName = $"{user.FirstName} {user.LastName}",
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
+                Roles = user.Roles.Select(r => r.Name).ToList(),
+                Permissions = permissionDtos,
+                CreatedAt = user.CreatedAt,
+                Status = user.Status.ToString()
             };
 
             response.StatusCode = 200;
-            response.Message = "Cập nhật permissions thành công";
         }
         catch (Exception ex)
         {
@@ -271,7 +283,8 @@ public class AdminManagementService : IAdminManagementService
                 return response;
             }
 
-            var adminRole = user.Roles.FirstOrDefault(r => r.Name == "Admin");
+            var adminRole = user.Roles.FirstOrDefault(r => 
+                r.Name == "ContentAdmin" || r.Name == "FinanceAdmin" || r.Name == "SuperAdmin");
             if (adminRole == null)
             {
                 response.Success = false;
@@ -281,14 +294,11 @@ public class AdminManagementService : IAdminManagementService
             }
 
             // Remove Admin role
+            // Không cần remove permissions vì permissions được gán cho role, không phải cho user
             user.Roles.Remove(adminRole);
-
-            // Remove all permissions của Admin role
-            await _rolePermissionRepository.RemoveAllPermissionsFromRoleAsync(adminRole.RoleId);
 
             await _userRepository.UpdateUserAsync(user);
             await _userRepository.SaveChangesAsync();
-            await _rolePermissionRepository.SaveChangesAsync();
 
             response.Data = new RoleOperationResultDto
             {
@@ -568,6 +578,68 @@ public class AdminManagementService : IAdminManagementService
 
             response.StatusCode = 200;
             response.Message = $"Đã nâng cấp user {dto.Email} thành Teacher với gói {package.PackageName} thành công";
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.StatusCode = 500;
+            response.Message = $"Lỗi hệ thống: {ex.Message}";
+        }
+        return response;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ROLE MANAGEMENT - Chỉ SuperAdmin
+    // ═══════════════════════════════════════════════════════════════
+
+    public async Task<ServiceResponse<List<RoleDto>>> GetAllRolesAsync()
+    {
+        var response = new ServiceResponse<List<RoleDto>>();
+        try
+        {
+            var roles = await _roleRepository.GetAllRolesAsync();
+            
+            var roleDtos = new List<RoleDto>();
+            foreach (var role in roles)
+            {
+                var rolePermissions = await _rolePermissionRepository.GetRolePermissionsAsync(role.RoleId);
+                var userCount = role.Users?.Count ?? 0;
+                
+                roleDtos.Add(new RoleDto
+                {
+                    RoleId = role.RoleId,
+                    Name = role.Name,
+                    Permissions = rolePermissions.Select(rp => _mapper.Map<PermissionDto>(rp.Permission)).ToList(),
+                    UserCount = userCount
+                });
+            }
+
+            response.Data = roleDtos;
+            response.Success = true;
+            response.StatusCode = 200;
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.StatusCode = 500;
+            response.Message = $"Lỗi hệ thống: {ex.Message}";
+        }
+        return response;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PERMISSION MANAGEMENT - Chỉ SuperAdmin (Read-only)
+    // ═══════════════════════════════════════════════════════════════
+
+    public async Task<ServiceResponse<List<PermissionDto>>> GetAllPermissionsAsync()
+    {
+        var response = new ServiceResponse<List<PermissionDto>>();
+        try
+        {
+            var permissions = await _permissionRepository.GetAllPermissionsAsync();
+            response.Data = permissions.Select(p => _mapper.Map<PermissionDto>(p)).ToList();
+            response.Success = true;
+            response.StatusCode = 200;
         }
         catch (Exception ex)
         {

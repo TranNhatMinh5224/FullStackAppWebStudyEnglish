@@ -1225,12 +1225,13 @@ namespace LearningEnglish.Infrastructure.Data
 
         private static void SeedData(ModelBuilder modelBuilder)
         {
-            // Roles
+            // Roles - Seed data cho tất cả roles
             modelBuilder.Entity<Role>().HasData(
                 new Role { RoleId = 1, Name = "SuperAdmin" },
-                new Role { RoleId = 2, Name = "Admin" },
-                new Role { RoleId = 3, Name = "Teacher" },
-                new Role { RoleId = 4, Name = "Student" }
+                new Role { RoleId = 2, Name = "ContentAdmin" },
+                new Role { RoleId = 3, Name = "FinanceAdmin" },
+                new Role { RoleId = 4, Name = "Teacher" },
+                new Role { RoleId = 5, Name = "Student" }
             );
 
             // Dùng thời gian cố định để tránh thay đổi snapshot migration mỗi lần build

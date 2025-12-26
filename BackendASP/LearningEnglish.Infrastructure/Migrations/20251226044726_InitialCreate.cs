@@ -981,7 +981,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     { 5, "Finance", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5714), "Xem payments, hoàn tiền, fix lỗi thanh toán", "Quản lý thanh toán", "Admin.Payment.Manage" },
                     { 6, "Finance", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5726), "Xem báo cáo doanh thu và thống kê tài chính", "Xem doanh thu", "Admin.Revenue.View" },
                     { 7, "Finance", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5745), "Tạo, sửa, xóa teacher packages", "Quản lý gói giáo viên", "Admin.Package.Manage" },
-                    { 8, "System", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5747), "Super Admin - full permissions", "Toàn quyền hệ thống", "Admin.System.FullAccess" }
+                    { 8, "System", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5747), "Super Admin - full permissions", "Toàn quyền hệ thống", "Admin.System.FullAccess" },
+                    { 9, "Finance", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5750), "Thêm/xóa học viên vào khóa học (dùng khi thanh toán lỗi, nâng cấp user)", "Quản lý học viên trong khóa học", "Admin.Course.Enroll" }
                 });
 
             migrationBuilder.InsertData(
@@ -990,9 +991,10 @@ namespace LearningEnglish.Infrastructure.Migrations
                 values: new object[,]
                 {
                     { 1, "SuperAdmin" },
-                    { 2, "Admin" },
-                    { 3, "Teacher" },
-                    { 4, "Student" }
+                    { 2, "ContentAdmin" },
+                    { 3, "FinanceAdmin" },
+                    { 4, "Teacher" },
+                    { 5, "Student" }
                 });
 
             migrationBuilder.InsertData(
@@ -1005,14 +1007,28 @@ namespace LearningEnglish.Infrastructure.Migrations
                 columns: new[] { "PermissionId", "RoleId", "AssignedAt" },
                 values: new object[,]
                 {
-                    { 1, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 2, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 3, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 4, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 5, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 6, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 7, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 8, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }
+                    // SuperAdmin (RoleId = 1): Tất cả permissions
+                    { 1, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Course.Manage
+                    { 2, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Lesson.Manage
+                    { 3, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Content.Manage
+                    { 4, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.User.Manage
+                    { 5, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Payment.Manage
+                    { 6, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Revenue.View
+                    { 7, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Package.Manage
+                    { 8, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.System.FullAccess
+                    { 9, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Course.Enroll
+                    
+                    // ContentAdmin (RoleId = 2): Content permissions (1,2,3)
+                    { 1, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Course.Manage
+                    { 2, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Lesson.Manage
+                    { 3, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Content.Manage
+                    
+                    // FinanceAdmin (RoleId = 3): Finance permissions (9, 4,5,6,7)
+                    { 9, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Course.Enroll
+                    { 4, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.User.Manage
+                    { 5, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Payment.Manage
+                    { 6, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Revenue.View
+                    { 7, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }  // Admin.Package.Manage
                 });
 
             migrationBuilder.InsertData(

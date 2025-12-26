@@ -47,6 +47,9 @@ namespace LearningEnglish.Application.Interface
         // Lấy role của user
         Task<bool> GetUserRolesAsync(int userId);
 
+        // Kiểm tra user có role Teacher trong database
+        Task<bool> HasTeacherRoleAsync(int userId);
+
         // Lấy tất cả giáo viên
         Task<List<User>> GetAllTeachersAsync();
         

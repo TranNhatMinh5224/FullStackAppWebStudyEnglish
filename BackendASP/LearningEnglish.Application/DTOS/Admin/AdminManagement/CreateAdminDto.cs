@@ -10,5 +10,5 @@ public class CreateAdminDto
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
-    public List<int> PermissionIds { get; set; } = new(); // Content: [1,2,3], Finance: [4,5,6,7]
+    public int RoleId { get; set; } // 2 = ContentAdmin, 3 = FinanceAdmin
 }

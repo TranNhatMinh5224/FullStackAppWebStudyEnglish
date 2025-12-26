@@ -11,7 +11,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/admin/users")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin")]
     public class AdminManageUserController : ControllerBase
     {
         private readonly IUserManagementService _userManagementService;

@@ -17,12 +17,12 @@ public interface IAdminManagementService
     Task<ServiceResponse<PagedResult<AdminDto>>> GetAdminsPagedAsync(AdminQueryParameters parameters);
     
     /// <summary>
-    /// Update permissions của admin (replace toàn bộ)
+    /// Lấy admin theo userId
     /// </summary>
-    Task<ServiceResponse<UpdateAdminPermissionsResultDto>> UpdateAdminPermissionsAsync(UpdateAdminPermissionsDto dto);
+    Task<ServiceResponse<AdminDto>> GetAdminByIdAsync(int userId);
     
     /// <summary>
-    /// Xóa admin (remove Admin role + remove permissions)
+    /// Xóa admin (remove Admin role)
     /// </summary>
     Task<ServiceResponse<RoleOperationResultDto>> DeleteAdminAsync(int userId);
     
@@ -51,4 +51,18 @@ public interface IAdminManagementService
     /// Dùng khi thanh toán thất bại hoặc cần xử lý thủ công
     /// </summary>
     Task<ServiceResponse<RoleOperationResultDto>> UpgradeUserToTeacherAsync(UpgradeUserToTeacherDto dto);
+
+    // ═══════════════════════════════════════════════════════════════
+    // ROLE & PERMISSION VIEW - Chỉ SuperAdmin (Read-only, fix cứng)
+    // ═══════════════════════════════════════════════════════════════
+    
+    /// <summary>
+    /// Lấy danh sách tất cả roles (read-only, fix cứng trong seed data)
+    /// </summary>
+    Task<ServiceResponse<List<RoleDto>>> GetAllRolesAsync();
+    
+    /// <summary>
+    /// Lấy danh sách tất cả permissions (read-only, fix cứng trong seed data)
+    /// </summary>
+    Task<ServiceResponse<List<PermissionDto>>> GetAllPermissionsAsync();
 }

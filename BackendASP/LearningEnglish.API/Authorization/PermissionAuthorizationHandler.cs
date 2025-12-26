@@ -9,8 +9,12 @@ namespace LearningEnglish.API.Authorization
     //Authorization handler để kiểm tra permission của Admin
     // Logic:
     // - SuperAdmin: Tự động pass (toàn quyền, không cần check permission)
-    // - Content Admin: Chỉ có permissions 1,2,3 (Course, Lesson, Content)
-    // - Finance Admin: Chỉ có permissions 4,5,6,7 (User, Payment, Revenue, Package)
+    // - ContentAdmin: Permissions 1,2,3 (Course Manage, Lesson, Content) - Quản lý nội dung
+    //   - Có quyền tạo, sửa, xóa course
+    // - FinanceAdmin: Permissions 4,5,6,7,9 (User, Payment, Revenue, Package, Course Enroll)
+    //   - Course Enroll: Chỉ thêm/xóa user vào course (khi thanh toán lỗi, nâng cấp user)
+    //   - KHÔNG có quyền tạo/sửa/xóa course
+    //   - User, Payment, Revenue, Package: Quản lý tài chính
    
     public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
     {
@@ -58,12 +62,16 @@ namespace LearningEnglish.API.Authorization
             // ═══════════════════════════════════════════════════════════════
             // BƯỚC 2: KIỂM TRA ADMIN ROLE
             // ═══════════════════════════════════════════════════════════════
-            // Nếu không phải Admin, không cho phép
+            // Nếu không phải Admin (ContentAdmin, FinanceAdmin) hoặc SuperAdmin, không cho phép
             // LƯU Ý: [RequirePermission] chỉ dành cho Admin endpoints
             // Teacher không được phép truy cập Admin endpoints có [RequirePermission]
-            if (!roles.Contains("Admin", StringComparer.OrdinalIgnoreCase))
+            var isAdmin = roles.Any(r => 
+                r.Equals("ContentAdmin", StringComparison.OrdinalIgnoreCase) ||
+                r.Equals("FinanceAdmin", StringComparison.OrdinalIgnoreCase));
+            
+            if (!isAdmin)
             {
-                _logger.LogWarning(" User không phải Admin hoặc SuperAdmin. Roles: {Roles}. [RequirePermission] chỉ dành cho Admin endpoints", 
+                _logger.LogWarning(" User không phải Admin (ContentAdmin/FinanceAdmin) hoặc SuperAdmin. Roles: {Roles}. [RequirePermission] chỉ dành cho Admin endpoints", 
                     string.Join(", ", roles));
                 return;
             }

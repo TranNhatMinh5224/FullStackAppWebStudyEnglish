@@ -15,4 +15,7 @@ public interface IPermissionRepository
     
     // Lấy permissions theo category
     Task<List<Permission>> GetPermissionsByCategoryAsync(string category);
+    
+    // Lấy permission theo tên
+    Task<Permission?> GetPermissionByNameAsync(string permissionName);
 }

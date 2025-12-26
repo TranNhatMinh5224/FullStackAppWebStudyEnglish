@@ -54,34 +54,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             var superAdminId = User.GetUserIdSafe();
             _logger.LogInformation("SuperAdmin {SuperAdminId} đang xem chi tiết admin {UserId}", superAdminId, userId);
 
-            // Lấy danh sách admins và filter theo userId
-            var parameters = new AdminQueryParameters { PageNumber = 1, PageSize = 1 };
-            var result = await _adminManagementService.GetAdminsPagedAsync(parameters);
-            
-            if (!result.Success)
-            {
-                return StatusCode(result.StatusCode, result);
-            }
-
-            var admin = result.Data?.Items?.FirstOrDefault(a => a.UserId == userId);
-            if (admin == null)
-            {
-                return NotFound(new { message = "Không tìm thấy admin" });
-            }
-
-            return Ok(new { success = true, statusCode = 200, data = admin });
-        }
-
-        // endpoint SuperAdmin cập nhật permissions của admin
-        [HttpPut("admins/{userId}/permissions")]
-        public async Task<IActionResult> UpdateAdminPermissions(int userId, [FromBody] UpdateAdminPermissionsDto dto)
-        {
-            var superAdminId = User.GetUserId();
-            _logger.LogInformation("SuperAdmin {SuperAdminId} đang cập nhật permissions cho admin {UserId}", superAdminId, userId);
-
-            // Đảm bảo userId trong DTO khớp với route
-            dto.UserId = userId;
-            var result = await _adminManagementService.UpdateAdminPermissionsAsync(dto);
+            var result = await _adminManagementService.GetAdminByIdAsync(userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -144,16 +117,29 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // endpoint SuperAdmin nâng cấp user thành Teacher (gán role + tạo subscription)
-        // Dùng khi thanh toán thất bại hoặc cần xử lý thủ công
-        [HttpPost("users/upgrade-to-teacher")]
-        public async Task<IActionResult> UpgradeUserToTeacher([FromBody] UpgradeUserToTeacherDto dto)
-        {
-            var superAdminId = User.GetUserId();
-            _logger.LogInformation("SuperAdmin {SuperAdminId} đang nâng cấp user {Email} thành Teacher với package {PackageId}", 
-                superAdminId, dto.Email, dto.TeacherPackageId);
+        // ═══════════════════════════════════════════════════════════════
+        // ROLE & PERMISSION VIEW - Chỉ SuperAdmin (Read-only, fix cứng)
+        // ═══════════════════════════════════════════════════════════════
 
-            var result = await _adminManagementService.UpgradeUserToTeacherAsync(dto);
+        // GET: api/superadmin/roles - Lấy danh sách tất cả roles (read-only)
+        [HttpGet("roles")]
+        public async Task<IActionResult> GetAllRoles()
+        {
+            var superAdminId = User.GetUserIdSafe();
+            _logger.LogInformation("SuperAdmin {SuperAdminId} đang xem danh sách roles", superAdminId);
+
+            var result = await _adminManagementService.GetAllRolesAsync();
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // GET: api/superadmin/permissions - Lấy danh sách tất cả permissions (read-only)
+        [HttpGet("permissions")]
+        public async Task<IActionResult> GetAllPermissions()
+        {
+            var superAdminId = User.GetUserIdSafe();
+            _logger.LogInformation("SuperAdmin {SuperAdminId} đang xem danh sách permissions", superAdminId);
+
+            var result = await _adminManagementService.GetAllPermissionsAsync();
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

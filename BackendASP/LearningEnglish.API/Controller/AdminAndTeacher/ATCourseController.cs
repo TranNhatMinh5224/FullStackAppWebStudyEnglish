@@ -10,7 +10,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/courses")]
-    [Authorize(Roles = "SuperAdmin, Admin, Teacher")]
+    [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin, Teacher")]
     public class CourseController : ControllerBase
     {
         private readonly IAdminCourseService _adminCourseService;
@@ -167,7 +167,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // endpoint Admin/Teacher xem danh sách học viên trong khóa học
         [HttpGet("{courseId}/students")]
-        [Authorize(Roles = "Admin, Teacher")]
+        [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin, Teacher")]
         public async Task<IActionResult> GetUsersByCourseId(int courseId, [FromQuery] PageRequest request)
         {
             var userId = User.GetUserIdSafe(); // Chỉ để log, không truyền vào service
@@ -181,7 +181,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // endpoint Admin/Teacher xem chi tiết học viên trong khóa học
         [HttpGet("{courseId}/students/{studentId}")]
-        [Authorize(Roles = "Admin, Teacher")]
+        [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin, Teacher")]
         public async Task<IActionResult> GetStudentDetailInCourse(int courseId, int studentId)
         {
             var userId = User.GetUserIdSafe(); // Chỉ để log, không truyền vào service
@@ -194,7 +194,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // endpoint Admin thêm học viên vào khóa học (bằng email)
         [HttpPost("admin/{courseId}/students")]
-        [RequirePermission("Admin.Course.Manage")]
+        [RequirePermission("Admin.Course.Manage", "Admin.Course.Enroll")]
         public async Task<IActionResult> AdminAddStudentToCourse(int courseId, [FromBody] AddStudentToCourseDto request)
         {
             var userId = User.GetUserId(); // Cần userId để log và audit (throw exception nếu không có)
@@ -218,7 +218,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // endpoint Admin xóa học viên khỏi khóa học
         [HttpDelete("admin/{courseId}/students/{studentId}")]
-        [RequirePermission("Admin.Course.Manage")]
+        [RequirePermission("Admin.Course.Manage", "Admin.Course.Enroll")]
         public async Task<IActionResult> AdminRemoveStudentFromCourse(int courseId, int studentId)
         {
             var userId = User.GetUserId(); // Cần userId để log và audit (throw exception nếu không có)

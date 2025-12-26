@@ -70,6 +70,7 @@ public class RolePermissionRepository : IRolePermissionRepository
 
     public async Task<bool> UserHasPermissionAsync(int userId, string permissionName)
     {
+        // Check permissions từ role của user
         return await _context.RolePermissions
             .Include(rp => rp.Permission)
             .Include(rp => rp.Role)

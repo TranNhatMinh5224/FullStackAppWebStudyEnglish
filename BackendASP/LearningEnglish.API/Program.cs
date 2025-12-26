@@ -136,6 +136,11 @@ builder.Services.AddHttpContextAccessor(); // Cần cho AuthorizationHandler
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
+// ═══════════════════════════════════════════════════════════════
+// TEACHER ROLE AUTHORIZATION - Đăng ký hệ thống check Teacher role từ DB
+// ═══════════════════════════════════════════════════════════════
+builder.Services.AddScoped<IAuthorizationHandler, TeacherRoleAuthorizationHandler>();
+
 // Repository layer
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -167,6 +172,7 @@ builder.Services.AddScoped<ILessonCompletionRepository, LessonCompletionReposito
 builder.Services.AddScoped<IModuleCompletionRepository, ModuleCompletionRepository>();
 builder.Services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
