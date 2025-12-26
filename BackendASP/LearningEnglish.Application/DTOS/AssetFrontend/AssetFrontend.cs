@@ -13,6 +13,9 @@ namespace LearningEnglish.Application.DTOs
         // Key/path lưu trong MinIO
         public string KeyImage { get; set; } = string.Empty;
 
+        // URL công khai để truy cập ảnh
+        public string? ImageUrl { get; set; }
+
         // Mô tả/alt text cho SEO
         public string? DescriptionImage { get; set; } = string.Empty;
 
@@ -28,22 +31,24 @@ namespace LearningEnglish.Application.DTOs
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
-    
+
     public class CreateAssetFrontendDto
     {
         public string NameImage { get; set; } = string.Empty;
-        public string KeyImage { get; set; } = string.Empty;
+        public string? ImageTempKey { get; set; } // Key của file tạm thời
+        public string? ImageType { get; set; } // Loại file (image/jpeg, image/png, etc.)
         public string? DescriptionImage { get; set; } = string.Empty;
         public AssetType AssetType { get; set; } = AssetType.Other;
         public int? Order { get; set; } = 0;
         public bool? IsActive { get; set; } = true;
     }
-    
+
     public class UpdateAssetFrontendDto
     {
         public int Id { get; set; }
         public string? NameImage { get; set; }
-        public string? KeyImage { get; set; }
+        public string? ImageTempKey { get; set; } // Key của file tạm thời mới (nếu có)
+        public string? ImageType { get; set; } // Loại file mới
         public string? DescriptionImage { get; set; }
         public AssetType? AssetType { get; set; }
         public int? Order { get; set; }

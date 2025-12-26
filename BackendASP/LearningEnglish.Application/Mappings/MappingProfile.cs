@@ -460,6 +460,40 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Percentage, opt => opt.Ignore())
                 .ForMember(dest => dest.IsPassed, opt => opt.Ignore());
 
+            // ===== ASSET FRONTEND MAPPINGS =====
+            // AssetFrontend Entity -> AssetFrontendDto (string to enum conversion for AssetType, add ImageUrl from KeyImage in service)
+            CreateMap<AssetFrontend, AssetFrontendDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.KeyImage)) // Will be converted to public URL in service
+                .ForMember(dest => dest.AssetType, opt => opt.ConvertUsing<AssetTypeStringToEnumConverter, string?>(src => src.AssetType));
+
+            // AssetFrontendDto -> AssetFrontend Entity (enum to string conversion for AssetType, ignore ImageUrl as it's computed field)  
+            CreateMap<AssetFrontendDto, AssetFrontend>()
+                .ForMember(dest => dest.KeyImage, opt => opt.MapFrom(src => src.KeyImage)) // Keep KeyImage as is, ignore ImageUrl
+                .ForMember(dest => dest.AssetType, opt => opt.ConvertUsing<AssetTypeEnumToStringConverter, AssetType>(src => src.AssetType))
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Preserve existing CreatedAt
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)); // Update timestamp on mapping back to entity
+
+            // CreateAssetFrontendDto -> AssetFrontend Entity (enum to string conversion for AssetType, set timestamps and KeyImage from temp key in service) 
+            CreateMap<CreateAssetFrontendDto, AssetFrontend>()
+                .ForMember(dest => dest.KeyImage, opt => opt.MapFrom(src => src.ImageTempKey)) // Will be committed in service
+                .ForMember(dest => dest.AssetType, opt => opt.ConvertUsing<AssetTypeEnumToStringConverter, AssetType>(src => src.AssetType)) 
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)) 
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)); // Set both timestamps on create
+
+            // UpdateAssetFrontendDto -> AssetFrontend Entity (enum to string conversion for AssetType, set timestamps and KeyImage from temp key in service) 
+            CreateMap<UpdateAssetFrontendDto, AssetFrontend>()
+                .ForMember(dest => dest.NameImage, opt => opt.Condition(src => src.NameImage != null))
+                .ForMember(dest => dest.KeyImage, opt => opt.MapFrom(src => src.ImageTempKey ?? string.Empty)) // Use temp key if provided, otherwise keep existing (handled in service) 
+                .ForMember(dest => dest.DescriptionImage, opt => opt.Condition(src => src.DescriptionImage != null))
+                .ForMember(dest => dest.AssetType, opt => {
+                    opt.Condition(src => src.AssetType.HasValue);
+                    opt.ConvertUsing<AssetTypeNullableEnumToStringConverter, AssetType?>(src => src.AssetType);
+                })
+                .ForMember(dest => dest.Order, opt => opt.Condition(src => src.Order.HasValue))
+                .ForMember(dest => dest.IsActive, opt => opt.Condition(src => src.IsActive.HasValue))
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Preserve existing CreatedAt on update 
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)); // Update timestamp on update
+
 
 
         }
@@ -485,6 +519,40 @@ namespace LearningEnglish.Application.Mappings
             var today = DateTime.UtcNow.Date;
             var lastActivity = source.LastActivityDate?.Date;
             return lastActivity == today;
+        }
+    }
+
+    // Custom converter for AssetType string to enum
+    public class AssetTypeStringToEnumConverter : IValueConverter<string?, AssetType>
+    {
+        public AssetType Convert(string? sourceMember, ResolutionContext context)
+        {
+            if (string.IsNullOrEmpty(sourceMember))
+                return AssetType.Other;
+
+            // Try to parse the string to enum, fallback to Other if invalid
+            if (Enum.TryParse<AssetType>(sourceMember, true, out var result))
+                return result;
+
+            return AssetType.Other;
+        }
+    }
+
+    // Custom converter for AssetType enum to string (non-nullable)
+    public class AssetTypeEnumToStringConverter : IValueConverter<AssetType, string?>
+    {
+        public string? Convert(AssetType sourceMember, ResolutionContext context)
+        {
+            return sourceMember.ToString();
+        }
+    }
+
+    // Custom converter for AssetType enum to string (nullable)
+    public class AssetTypeNullableEnumToStringConverter : IValueConverter<AssetType?, string?>
+    {
+        public string? Convert(AssetType? sourceMember, ResolutionContext context)
+        {
+            return sourceMember?.ToString();
         }
     }
 }

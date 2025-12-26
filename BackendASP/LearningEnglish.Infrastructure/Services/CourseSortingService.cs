@@ -33,19 +33,19 @@ public class CourseSortingService : ISortingService<Course>
         // If no sort field specified, default to CreatedAt descending
         if (string.IsNullOrWhiteSpace(sortBy))
         {
-            return query.OrderByDescending(c => c.CreatedAt);
+            return query.OrderByDescending(c => c.CreatedAt)!;
         }
 
         // Check if sort field exists in dictionary
         if (!_sortExpressions.TryGetValue(sortBy, out var sortExpression))
         {
             // If invalid sort field, fall back to default
-            return query.OrderByDescending(c => c.CreatedAt);
+            return query.OrderByDescending(c => c.CreatedAt)!;
         }
 
         // Apply sorting based on SortOrder enum
         return sortOrder == SortOrder.Ascending
-            ? query.OrderBy(sortExpression!)
-            : query.OrderByDescending(sortExpression!);
+            ? query.OrderBy(sortExpression!)!
+            : query.OrderByDescending(sortExpression!)!;
     }
 }
