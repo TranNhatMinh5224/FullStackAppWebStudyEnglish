@@ -495,10 +495,9 @@ namespace LearningEnglish.Infrastructure.Migrations
                 USING (app.user_has_permission('Admin.Lesson.Manage'));
             ");
 
-            // Teacher: Xem essay submissions của students trong courses của mình
-            // Join: EssaySubmission → Essay → Assessment → Module → Lesson → Course
+            // Teacher: Xem essay submissions của students trong courses của mình (chỉ Teacher courses)
             migrationBuilder.Sql(@"
-                CREATE POLICY essaysubmissions_policy_teacher_select_own
+                CREATE POLICY essaysubmissions_policy_teacher_select
                 ON ""EssaySubmissions"" FOR SELECT
                 USING (
                     app.user_has_role('Teacher')
@@ -511,6 +510,41 @@ namespace LearningEnglish.Infrastructure.Migrations
                         JOIN ""Courses"" c ON l.""CourseId"" = c.""CourseId""
                         WHERE e.""EssayId"" = ""EssaySubmissions"".""EssayId""
                         AND c.""TeacherId"" = app.current_user_id()
+                        AND c.""Type"" = 2
+                    )
+                );
+            ");
+
+            // Teacher: Cập nhật submissions (chấm điểm, feedback) chỉ trong courses của mình
+            migrationBuilder.Sql(@"
+                CREATE POLICY essaysubmissions_policy_teacher_update
+                ON ""EssaySubmissions"" FOR UPDATE
+                USING (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1
+                        FROM ""Essays"" e
+                        JOIN ""Assessments"" a ON e.""AssessmentId"" = a.""AssessmentId""
+                        JOIN ""Modules"" m ON a.""ModuleId"" = m.""ModuleId""
+                        JOIN ""Lessons"" l ON m.""LessonId"" = l.""LessonId""
+                        JOIN ""Courses"" c ON l.""CourseId"" = c.""CourseId""
+                        WHERE e.""EssayId"" = ""EssaySubmissions"".""EssayId""
+                        AND c.""TeacherId"" = app.current_user_id()
+                        AND c.""Type"" = 2
+                    )
+                )
+                WITH CHECK (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1
+                        FROM ""Essays"" e
+                        JOIN ""Assessments"" a ON e.""AssessmentId"" = a.""AssessmentId""
+                        JOIN ""Modules"" m ON a.""ModuleId"" = m.""ModuleId""
+                        JOIN ""Lessons"" l ON m.""LessonId"" = l.""LessonId""
+                        JOIN ""Courses"" c ON l.""CourseId"" = c.""CourseId""
+                        WHERE e.""EssayId"" = ""EssaySubmissions"".""EssayId""
+                        AND c.""TeacherId"" = app.current_user_id()
+                        AND c.""Type"" = 2
                     )
                 );
             ");
@@ -543,10 +577,9 @@ namespace LearningEnglish.Infrastructure.Migrations
                 USING (app.user_has_permission('Admin.Lesson.Manage'));
             ");
 
-            // Teacher: Xem quiz attempts của students trong courses của mình
-            // Join: QuizAttempt → Quiz → Assessment → Module → Lesson → Course
+            // Teacher: Xem quiz attempts của students trong courses của mình (chỉ Teacher courses)
             migrationBuilder.Sql(@"
-                CREATE POLICY quizattempts_policy_teacher_select_own
+                CREATE POLICY quizattempts_policy_teacher_select
                 ON ""QuizAttempts"" FOR SELECT
                 USING (
                     app.user_has_role('Teacher')
@@ -559,6 +592,41 @@ namespace LearningEnglish.Infrastructure.Migrations
                         JOIN ""Courses"" c ON l.""CourseId"" = c.""CourseId""
                         WHERE q.""QuizId"" = ""QuizAttempts"".""QuizId""
                         AND c.""TeacherId"" = app.current_user_id()
+                        AND c.""Type"" = 2
+                    )
+                );
+            ");
+
+            // Teacher: Cập nhật attempts (force-submit) chỉ trong courses của mình
+            migrationBuilder.Sql(@"
+                CREATE POLICY quizattempts_policy_teacher_update
+                ON ""QuizAttempts"" FOR UPDATE
+                USING (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1
+                        FROM ""Quizzes"" q
+                        JOIN ""Assessments"" a ON q.""AssessmentId"" = a.""AssessmentId""
+                        JOIN ""Modules"" m ON a.""ModuleId"" = m.""ModuleId""
+                        JOIN ""Lessons"" l ON m.""LessonId"" = l.""LessonId""
+                        JOIN ""Courses"" c ON l.""CourseId"" = c.""CourseId""
+                        WHERE q.""QuizId"" = ""QuizAttempts"".""QuizId""
+                        AND c.""TeacherId"" = app.current_user_id()
+                        AND c.""Type"" = 2
+                    )
+                )
+                WITH CHECK (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1
+                        FROM ""Quizzes"" q
+                        JOIN ""Assessments"" a ON q.""AssessmentId"" = a.""AssessmentId""
+                        JOIN ""Modules"" m ON a.""ModuleId"" = m.""ModuleId""
+                        JOIN ""Lessons"" l ON m.""LessonId"" = l.""LessonId""
+                        JOIN ""Courses"" c ON l.""CourseId"" = c.""CourseId""
+                        WHERE q.""QuizId"" = ""QuizAttempts"".""QuizId""
+                        AND c.""TeacherId"" = app.current_user_id()
+                        AND c.""Type"" = 2
                     )
                 );
             ");
@@ -687,12 +755,14 @@ namespace LearningEnglish.Infrastructure.Migrations
 
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS essaysubmissions_policy_superadmin_all ON ""EssaySubmissions"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS essaysubmissions_policy_admin_all ON ""EssaySubmissions"";");
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS essaysubmissions_policy_teacher_select_own ON ""EssaySubmissions"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS essaysubmissions_policy_teacher_select ON ""EssaySubmissions"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS essaysubmissions_policy_teacher_update ON ""EssaySubmissions"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS essaysubmissions_policy_student_all_own ON ""EssaySubmissions"";");
 
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS quizattempts_policy_superadmin_all ON ""QuizAttempts"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS quizattempts_policy_admin_all ON ""QuizAttempts"";");
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS quizattempts_policy_teacher_select_own ON ""QuizAttempts"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS quizattempts_policy_teacher_select ON ""QuizAttempts"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS quizattempts_policy_teacher_update ON ""QuizAttempts"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS quizattempts_policy_student_all_own ON ""QuizAttempts"";");
 
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS payments_policy_superadmin_all ON ""Payments"";");
