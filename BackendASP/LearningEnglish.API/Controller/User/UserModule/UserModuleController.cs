@@ -1,7 +1,10 @@
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.Module;
 using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
+// User xem modules và tiến độ học tập
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -10,12 +13,12 @@ namespace LearningEnglish.API.Controller.User
     [Authorize]
     public class UserModuleController : ControllerBase
     {
-        private readonly IModuleService _moduleService;
+        private readonly IUserModuleService _moduleService;
         private readonly IModuleProgressService _moduleProgressService;
         private readonly ILogger<UserModuleController> _logger;
 
         public UserModuleController(
-            IModuleService moduleService, 
+            IUserModuleService moduleService, 
             IModuleProgressService moduleProgressService,
             ILogger<UserModuleController> logger)
         {
@@ -24,34 +27,28 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        // GET: api/user/UserModule/{moduleId} - lấy module với tiến độ của user
-        // RLS: modules_policy_student_select_enrolled, modulecompletions_policy_user_all_own
+        // GET: User xem chi tiết module + progress
         [HttpGet("{moduleId}")]
         public async Task<IActionResult> GetModuleWithProgress(int moduleId)
         {
             var userId = User.GetUserId();
-            var result = await _moduleService.GetModuleWithProgressAsync(moduleId, userId);
+            var result = await _moduleService.GetModuleWithProgress(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/UserModule/lesson/{lessonId} - Get all modules in lesson with user progress
-        // RLS: modules_policy_student_select_enrolled (chỉ xem modules của enrolled courses)
-        // RLS: modulecompletions_policy_user_all_own (chỉ xem completions của chính mình)
+        // GET: User lấy danh sách modules theo lesson + progress
         [HttpGet("lesson/{lessonId}")]
         public async Task<IActionResult> GetModulesWithProgress(int lessonId)
         {
-            // RLS sẽ filter modules theo enrollment và completions theo userId
             var userId = User.GetUserId();
-            var result = await _moduleService.GetModulesWithProgressAsync(lessonId, userId);
+            var result = await _moduleService.GetModulesWithProgress(lessonId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/user/modules/{moduleId}/start - Vào module (auto-complete cho FlashCard/Lecture/Video/Reading)
-        // RLS: modulecompletions_policy_user_all_own (chỉ tạo completions cho chính mình)
+        // POST: User bắt đầu module (auto-complete cho FlashCard/Lecture/Video/Reading)
         [HttpPost("{moduleId}/start")]
         public async Task<IActionResult> StartModule(int moduleId)
         {
-            // RLS sẽ filter module completions theo userId
             var userId = User.GetUserId();
             var result = await _moduleProgressService.StartAndCompleteModuleAsync(userId, moduleId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);

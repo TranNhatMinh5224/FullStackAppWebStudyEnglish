@@ -1,6 +1,6 @@
 using LearningEnglish.Application.Common;
 
-namespace LearningEnglish.Application.Interface;
+namespace LearningEnglish.Application.Interface.Services.Module;
 
 public interface IModuleProgressService
 {

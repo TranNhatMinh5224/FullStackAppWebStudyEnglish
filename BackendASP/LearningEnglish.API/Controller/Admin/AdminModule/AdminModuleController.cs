@@ -1,9 +1,11 @@
 using LearningEnglish.Application.DTOs;
-using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.Module;
 using LearningEnglish.API.Extensions;
 using LearningEnglish.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
+// Admin quản lý modules
 
 namespace LearningEnglish.API.Controller.Admin
 {
@@ -12,17 +14,16 @@ namespace LearningEnglish.API.Controller.Admin
     [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin")]
     public class AdminModuleController : ControllerBase
     {
-        private readonly IModuleService _moduleService;
+        private readonly IAdminModuleService _moduleService;
         private readonly ILogger<AdminModuleController> _logger;
 
-        public AdminModuleController(IModuleService moduleService, ILogger<AdminModuleController> logger)
+        public AdminModuleController(IAdminModuleService moduleService, ILogger<AdminModuleController> logger)
         {
             _moduleService = moduleService;
             _logger = logger;
         }
 
-        // POST: api/admin/modules - Admin tạo module
-        // RLS: modules_policy_admin_all (Admin có quyền tạo module trong bất kỳ lesson nào)
+        // POST: Admin tạo module mới
         [HttpPost]
         [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> CreateModule([FromBody] CreateModuleDto createModuleDto)
@@ -36,8 +37,7 @@ namespace LearningEnglish.API.Controller.Admin
                 : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/admin/modules/{moduleId} - Admin xem chi tiết module
-        // RLS: modules_policy_admin_all (Admin có quyền xem tất cả modules)
+        // GET: Admin xem chi tiết module
         [HttpGet("{moduleId}")]
         [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetModule(int moduleId)
@@ -45,13 +45,11 @@ namespace LearningEnglish.API.Controller.Admin
             var adminId = User.GetUserId();
             _logger.LogInformation("Admin {AdminId} đang xem module {ModuleId}", adminId, moduleId);
 
-            // RLS đã filter: Admin có quyền xem tất cả modules
-            var result = await _moduleService.GetModuleByIdAsync(moduleId);
+            var result = await _moduleService.GetModuleById(moduleId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/admin/modules/lesson/{lessonId} - Admin xem danh sách modules theo lesson
-        // RLS: modules_policy_admin_all (Admin có quyền xem tất cả modules)
+        // GET: Admin lấy danh sách modules theo lesson
         [HttpGet("lesson/{lessonId}")]
         [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetModulesByLesson(int lessonId)
@@ -59,14 +57,11 @@ namespace LearningEnglish.API.Controller.Admin
             var adminId = User.GetUserId();
             _logger.LogInformation("Admin {AdminId} đang xem danh sách modules của lesson {LessonId}", adminId, lessonId);
 
-            // RLS đã filter: Admin có quyền xem tất cả modules
-            // userId = null vì Admin không cần progress info
-            var result = await _moduleService.GetModulesByLessonIdAsync(lessonId, null);
+            var result = await _moduleService.GetModulesByLessonId(lessonId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/admin/modules/{moduleId} - Admin cập nhật module
-        // RLS: modules_policy_admin_all (Admin có quyền cập nhật tất cả modules)
+        // PUT: Admin cập nhật module
         [HttpPut("{moduleId}")]
         [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> UpdateModule(int moduleId, [FromBody] UpdateModuleDto updateModuleDto)
@@ -74,13 +69,11 @@ namespace LearningEnglish.API.Controller.Admin
             var adminId = User.GetUserId();
             _logger.LogInformation("Admin {AdminId} đang cập nhật module {ModuleId}", adminId, moduleId);
 
-            // RLS đã filter: Admin có quyền cập nhật tất cả modules
             var result = await _moduleService.UpdateModule(moduleId, updateModuleDto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/admin/modules/{moduleId} - Admin xóa module
-        // RLS: modules_policy_admin_all (Admin có quyền xóa tất cả modules)
+        // DELETE: Admin xóa module
         [HttpDelete("{moduleId}")]
         [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> DeleteModule(int moduleId)
@@ -88,7 +81,6 @@ namespace LearningEnglish.API.Controller.Admin
             var adminId = User.GetUserId();
             _logger.LogInformation("Admin {AdminId} đang xóa module {ModuleId}", adminId, moduleId);
 
-            // RLS đã filter: Admin có quyền xóa tất cả modules
             var result = await _moduleService.DeleteModule(moduleId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

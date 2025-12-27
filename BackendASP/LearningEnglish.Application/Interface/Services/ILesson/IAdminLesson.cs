@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 
-namespace LearningEnglish.Application.Interface.Services.ILesson
+namespace LearningEnglish.Application.Interface.Services.Lesson
 {
     public interface IAdminLessonService
     {

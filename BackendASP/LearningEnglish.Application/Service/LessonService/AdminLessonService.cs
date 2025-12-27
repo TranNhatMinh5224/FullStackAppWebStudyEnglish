@@ -1,6 +1,6 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
-using LearningEnglish.Application.Interface.Services.ILesson;
+using LearningEnglish.Application.Interface.Services.Lesson;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Common;

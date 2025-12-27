@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
-using LearningEnglish.Application.Interface.Services.ILesson;
+using LearningEnglish.Application.Interface.Services.Lesson;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.API.Extensions;
 

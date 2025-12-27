@@ -2,6 +2,7 @@ using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.Module;
 using LearningEnglish.Application.Interface.Strategies;
 using AutoMapper;
 using LearningEnglish.Domain.Enums;

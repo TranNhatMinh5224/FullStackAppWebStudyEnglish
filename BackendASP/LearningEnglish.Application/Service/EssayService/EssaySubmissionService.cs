@@ -4,6 +4,7 @@ using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.Module;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
