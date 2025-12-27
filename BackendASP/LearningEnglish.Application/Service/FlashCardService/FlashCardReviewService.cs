@@ -635,12 +635,6 @@ namespace LearningEnglish.Application.Service
             return longestStreak;
         }
 
-        // ❌ Removed CheckAndCompleteModuleAsync method
-        // Module completion is now handled by StartAndCompleteModuleAsync when user enters module
-        // FlashCard reviews no longer auto-complete modules
-
-        // Get count of flashcards due for review today
-        // Used by background services and notifications
         public async Task<int> GetDueCountAsync(int userId)
         {
             var currentDate = DateTime.UtcNow.Date;

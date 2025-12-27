@@ -49,8 +49,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // RLS đã filter modules theo TeacherId (chỉ modules của teacher này)
-                // Nếu module không tồn tại hoặc không thuộc về teacher → RLS sẽ filter → module == null
+               
                 if (!createFlashCardDto.ModuleId.HasValue)
                 {
                     response.Success = false;
@@ -68,7 +67,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Defense in depth: Check ownership ở service layer (RLS cũng sẽ block nếu không đúng)
+                
                 var lesson = await _lessonRepository.GetLessonById(module.LessonId);
                 if (lesson == null)
                 {
@@ -204,7 +203,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // RLS đã filter modules theo TeacherId (chỉ modules của teacher này)
+               
                 var module = await _moduleRepository.GetByIdAsync(bulkImportDto.ModuleId);
                 if (module == null)
                 {
@@ -427,8 +426,7 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
-
-        // Teacher xóa flashcard (RLS đã filter theo ownership)
+        // Teacher xóa flashcard 
         public async Task<ServiceResponse<bool>> DeleteFlashCard(int flashCardId)
         {
             var response = new ServiceResponse<bool>();
@@ -516,7 +514,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // Teacher lấy flashcard theo ID (read-only)
+        // Teacher lấy flashcard theo ID
         public async Task<ServiceResponse<FlashCardDto>> GetFlashCardByIdAsync(int flashCardId)
         {
             var response = new ServiceResponse<FlashCardDto>();

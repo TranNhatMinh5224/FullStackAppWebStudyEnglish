@@ -206,13 +206,13 @@ public class ModuleProgressService : IModuleProgressService
             {
                 await CompleteModuleAsync(userId, moduleId);
                 _logger.LogInformation(
-                    "✅ User {UserId} auto-completed {ContentType} module {ModuleId} when entering",
+                    "User {UserId} auto-completed {ContentType} module {ModuleId} when entering",
                     userId, module.ContentType, moduleId);
             }
             else
             {
                 _logger.LogInformation(
-                    "📝 User {UserId} started {ContentType} module {ModuleId} - requires submission to complete",
+                    " User {UserId} started {ContentType} module {ModuleId} - requires submission to complete",
                     userId, module.ContentType, moduleId);
             }
             
@@ -273,7 +273,7 @@ public class ModuleProgressService : IModuleProgressService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi cập nhật lesson progress {LessonId} cho user {UserId}", lessonId, userId);
-            // Don't throw - lesson progress update is non-critical, module is already completed
+           
         }
     }
 

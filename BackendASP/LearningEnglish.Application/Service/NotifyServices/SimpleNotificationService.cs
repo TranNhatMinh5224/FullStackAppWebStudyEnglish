@@ -52,7 +52,7 @@ public class SimpleNotificationService
             response.StatusCode = 200;
             response.Message = "Tạo notification thành công";
 
-            _logger.LogDebug("📤 Tạo notification cho User {UserId}: {Title}", userId, title);
+            _logger.LogDebug(" Tạo notification cho User {UserId}: {Title}", userId, title);
         }
         catch (Exception ex)
         {
@@ -60,7 +60,7 @@ public class SimpleNotificationService
             response.StatusCode = 500;
             response.Message = "Lỗi khi tạo notification";
 
-            _logger.LogError(ex, "❌ Lỗi tạo notification cho User {UserId}", userId);
+            _logger.LogError(ex, " Lỗi tạo notification cho User {UserId}", userId);
         }
 
         return response;
