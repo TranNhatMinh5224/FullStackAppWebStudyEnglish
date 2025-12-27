@@ -25,7 +25,7 @@ namespace LearningEnglish.API.Controller.User
         [AllowAnonymous]
         public async Task<IActionResult> GetSystemCourses()
         {
-            
+            var userIdValue = User.GetUserIdSafe();
             int? userId = userIdValue > 0 ? userIdValue : null;
 
             var result = await _userCourseService.GetSystemCoursesAsync(userId);
@@ -39,7 +39,7 @@ namespace LearningEnglish.API.Controller.User
         {
             
             var userIdValue = User.GetUserIdSafe();
-            
+            int? userId = userIdValue > 0 ? userIdValue : null;
 
             var result = await _userCourseService.GetCourseByIdAsync(courseId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
