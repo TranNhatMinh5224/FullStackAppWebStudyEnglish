@@ -3,38 +3,38 @@ using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.Essay;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
-namespace LearningEnglish.Application.Service
+namespace LearningEnglish.Application.Service.EssayService
 {
-    public class EssayService : IEssayService
+    public class AdminEssayService : IAdminEssayService
     {
         private readonly IEssayRepository _essayRepository;
         private readonly IMapper _mapper;
-        private readonly ILogger<EssayService> _logger;
-        private readonly IMinioFileStorage _minioFileStorage;
+        private readonly ILogger<AdminEssayService> _logger;
+        private readonly IMinioFileStorage? _minioFileStorage;
 
-        // Bucket and folder configuration
         private const string EssayAudioBucket = "essays";
         private const string EssayAudioFolder = "audios";
         private const string EssayImageBucket = "essays";
         private const string EssayImageFolder = "images";
 
-        public EssayService(
+        public AdminEssayService(
             IEssayRepository essayRepository,
             IMapper mapper,
-            ILogger<EssayService> logger,
-            IMinioFileStorage minioFileStorage)
+            ILogger<AdminEssayService> logger,
+            IMinioFileStorage? minioFileStorage = null)
         {
             _essayRepository = essayRepository;
             _mapper = mapper;
             _logger = logger;
             _minioFileStorage = minioFileStorage;
         }
-        // Implement cho phương thức Thêm bài kiểm tra tự luận (Essay)
-        public async Task<ServiceResponse<EssayDto>> CreateEssayAsync(CreateEssayDto dto, int? teacherId = null)
+
+        public async Task<ServiceResponse<EssayDto>> AdminCreateEssay(CreateEssayDto dto)
         {
             var response = new ServiceResponse<EssayDto>();
 
@@ -47,18 +47,6 @@ namespace LearningEnglish.Application.Service
                     response.StatusCode = 404;
                     response.Message = "Assessment không tồn tại";
                     return response;
-                }
-
-                // Kiểm tra quyền Teacher nếu có
-                if (teacherId.HasValue)
-                {
-                    if (!await _essayRepository.IsTeacherOwnerOfAssessmentAsync(teacherId.Value, dto.AssessmentId))
-                    {
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Teacher không có quyền tạo Essay cho Assessment này";
-                        return response;
-                    }
                 }
 
                 // Map DTO to Entity
@@ -76,7 +64,7 @@ namespace LearningEnglish.Application.Service
                 try
                 {
                     // Commit Audio file nếu có
-                    if (!string.IsNullOrWhiteSpace(dto.AudioTempKey))
+                    if (!string.IsNullOrWhiteSpace(dto.AudioTempKey) && _minioFileStorage != null)
                     {
                         var audioCommitResult = await _minioFileStorage.CommitFileAsync(
                             dto.AudioTempKey,
@@ -98,7 +86,7 @@ namespace LearningEnglish.Application.Service
                     }
 
                     // Commit Image file nếu có
-                    if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
+                    if (!string.IsNullOrWhiteSpace(dto.ImageTempKey) && _minioFileStorage != null)
                     {
                         var imageCommitResult = await _minioFileStorage.CommitFileAsync(
                             dto.ImageTempKey,
@@ -149,7 +137,7 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Tạo Essay thành công";
                     response.Data = essayDto;
 
-                    _logger.LogInformation("Created Essay {EssayId} with audio: {HasAudio}, image: {HasImage}",
+                    _logger.LogInformation("Admin created Essay {EssayId} with audio: {HasAudio}, image: {HasImage}",
                         createdEssay.EssayId,
                         !string.IsNullOrWhiteSpace(committedAudioKey),
                         !string.IsNullOrWhiteSpace(committedImageKey));
@@ -161,11 +149,11 @@ namespace LearningEnglish.Application.Service
                     _logger.LogError(dbEx, "Database error while creating Essay");
 
                     // Rollback files
-                    if (committedAudioKey != null)
+                    if (committedAudioKey != null && _minioFileStorage != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(committedAudioKey, EssayAudioBucket);
                     }
-                    if (committedImageKey != null)
+                    if (committedImageKey != null && _minioFileStorage != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(committedImageKey, EssayImageBucket);
                     }
@@ -178,14 +166,14 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi tạo Essay");
+                _logger.LogError(ex, "Lỗi khi Admin tạo Essay");
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Lỗi hệ thống khi tạo Essay";
                 return response;
             }
         }
-        // Implement cho phương thức Lấy thông tin bài kiểm tra tự luận (Essay) theo ID
+
         public async Task<ServiceResponse<EssayDto>> GetEssayByIdAsync(int essayId)
         {
             var response = new ServiceResponse<EssayDto>();
@@ -226,14 +214,14 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy thông tin Essay với ID {EssayId}", essayId);
+                _logger.LogError(ex, "Lỗi khi Admin lấy thông tin Essay với ID {EssayId}", essayId);
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Lỗi hệ thống khi lấy thông tin Essay";
                 return response;
             }
         }
-        // Implement cho phương thức Lấy danh sách bài kiểm tra tự luận (Essay) theo Assessment ID
+
         public async Task<ServiceResponse<List<EssayDto>>> GetEssaysByAssessmentIdAsync(int assessmentId)
         {
             var response = new ServiceResponse<List<EssayDto>>();
@@ -272,15 +260,15 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách Essay theo Assessment ID {AssessmentId}", assessmentId);
+                _logger.LogError(ex, "Lỗi khi Admin lấy danh sách Essay theo Assessment ID {AssessmentId}", assessmentId);
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Lỗi hệ thống khi lấy danh sách Essay";
                 return response;
             }
         }
-        // Implement cho phương thức Cập nhật bài kiểm tra tự luận (Essay)
-        public async Task<ServiceResponse<EssayDto>> UpdateEssayAsync(int essayId, UpdateEssayDto dto, int? teacherId = null)
+
+        public async Task<ServiceResponse<EssayDto>> UpdateEssay(int essayId, UpdateEssayDto dto)
         {
             var response = new ServiceResponse<EssayDto>();
 
@@ -294,18 +282,6 @@ namespace LearningEnglish.Application.Service
                     response.StatusCode = 404;
                     response.Message = "Essay không tồn tại";
                     return response;
-                }
-
-                // Kiểm tra quyền Teacher nếu có
-                if (teacherId.HasValue)
-                {
-                    if (!await _essayRepository.IsTeacherOwnerOfAssessmentAsync(teacherId.Value, existingEssay.AssessmentId))
-                    {
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Teacher không có quyền cập nhật Essay này";
-                        return response;
-                    }
                 }
 
                 // Cập nhật thông tin cơ bản (nullable support)
@@ -323,7 +299,7 @@ namespace LearningEnglish.Application.Service
                 try
                 {
                     // Xử lý Audio file mới
-                    if (!string.IsNullOrWhiteSpace(dto.AudioTempKey))
+                    if (!string.IsNullOrWhiteSpace(dto.AudioTempKey) && _minioFileStorage != null)
                     {
                         var audioCommitResult = await _minioFileStorage.CommitFileAsync(
                             dto.AudioTempKey,
@@ -345,7 +321,7 @@ namespace LearningEnglish.Application.Service
                     }
 
                     // Xử lý Image file mới
-                    if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
+                    if (!string.IsNullOrWhiteSpace(dto.ImageTempKey) && _minioFileStorage != null)
                     {
                         var imageCommitResult = await _minioFileStorage.CommitFileAsync(
                             dto.ImageTempKey,
@@ -356,7 +332,7 @@ namespace LearningEnglish.Application.Service
                         if (!imageCommitResult.Success || string.IsNullOrWhiteSpace(imageCommitResult.Data))
                         {
                             // Rollback audio nếu đã commit
-                            if (newAudioKey != null && newAudioKey != oldAudioKey)
+                            if (newAudioKey != null && newAudioKey != oldAudioKey && _minioFileStorage != null)
                             {
                                 await _minioFileStorage.DeleteFileAsync(newAudioKey, EssayAudioBucket);
                             }
@@ -376,12 +352,12 @@ namespace LearningEnglish.Application.Service
                     var updatedEssay = await _essayRepository.UpdateEssayAsync(existingEssay);
 
                     // Xóa file cũ sau khi update thành công
-                    if (newAudioKey != null && oldAudioKey != null && newAudioKey != oldAudioKey)
+                    if (newAudioKey != null && oldAudioKey != null && newAudioKey != oldAudioKey && _minioFileStorage != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(oldAudioKey, EssayAudioBucket);
                     }
 
-                    if (newImageKey != null && oldImageKey != null && newImageKey != oldImageKey)
+                    if (newImageKey != null && oldImageKey != null && newImageKey != oldImageKey && _minioFileStorage != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(oldImageKey, EssayImageBucket);
                     }
@@ -406,7 +382,7 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Cập nhật Essay thành công";
                     response.Data = essayDto;
 
-                    _logger.LogInformation("Updated Essay {EssayId}", essayId);
+                    _logger.LogInformation("Admin updated Essay {EssayId}", essayId);
 
                     return response;
                 }
@@ -415,11 +391,11 @@ namespace LearningEnglish.Application.Service
                     _logger.LogError(dbEx, "Database error while updating Essay");
 
                     // Rollback new files
-                    if (newAudioKey != null && newAudioKey != oldAudioKey)
+                    if (newAudioKey != null && newAudioKey != oldAudioKey && _minioFileStorage != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(newAudioKey, EssayAudioBucket);
                     }
-                    if (newImageKey != null && newImageKey != oldImageKey)
+                    if (newImageKey != null && newImageKey != oldImageKey && _minioFileStorage != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(newImageKey, EssayImageBucket);
                     }
@@ -432,15 +408,15 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi cập nhật Essay với ID {EssayId}", essayId);
+                _logger.LogError(ex, "Lỗi khi Admin cập nhật Essay với ID {EssayId}", essayId);
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Lỗi hệ thống khi cập nhật Essay";
                 return response;
             }
         }
-        // Implement cho phương thức DeleteEssay (xóa Essay)
-        public async Task<ServiceResponse<bool>> DeleteEssayAsync(int essayId, int? teacherId = null)
+
+        public async Task<ServiceResponse<bool>> DeleteEssay(int essayId)
         {
             var response = new ServiceResponse<bool>();
 
@@ -456,18 +432,6 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 🔒 Kiểm tra quyền Teacher nếu có
-                if (teacherId.HasValue)
-                {
-                    if (!await _essayRepository.IsTeacherOwnerOfAssessmentAsync(teacherId.Value, existingEssay.AssessmentId))
-                    {
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Teacher không có quyền xóa Essay này";
-                        return response;
-                    }
-                }
-
                 // Lưu keys trước khi xóa
                 string? audioKey = existingEssay.AudioKey;
                 string? imageKey = existingEssay.ImageKey;
@@ -476,16 +440,16 @@ namespace LearningEnglish.Application.Service
                 await _essayRepository.DeleteEssayAsync(essayId);
 
                 // Xóa files trong MinIO sau khi xóa database thành công
-                if (!string.IsNullOrWhiteSpace(audioKey))
+                if (!string.IsNullOrWhiteSpace(audioKey) && _minioFileStorage != null)
                 {
                     await _minioFileStorage.DeleteFileAsync(audioKey, EssayAudioBucket);
-                    _logger.LogInformation("Deleted audio file {AudioKey} for Essay {EssayId}", audioKey, essayId);
+                    _logger.LogInformation("Admin deleted audio file {AudioKey} for Essay {EssayId}", audioKey, essayId);
                 }
 
-                if (!string.IsNullOrWhiteSpace(imageKey))
+                if (!string.IsNullOrWhiteSpace(imageKey) && _minioFileStorage != null)
                 {
                     await _minioFileStorage.DeleteFileAsync(imageKey, EssayImageBucket);
-                    _logger.LogInformation("Deleted image file {ImageKey} for Essay {EssayId}", imageKey, essayId);
+                    _logger.LogInformation("Admin deleted image file {ImageKey} for Essay {EssayId}", imageKey, essayId);
                 }
 
                 response.Success = true;
@@ -497,7 +461,7 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi xóa Essay với ID {EssayId}", essayId);
+                _logger.LogError(ex, "Lỗi khi Admin xóa Essay với ID {EssayId}", essayId);
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Lỗi hệ thống khi xóa Essay";

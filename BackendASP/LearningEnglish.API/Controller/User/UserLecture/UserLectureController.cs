@@ -1,4 +1,4 @@
-using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.Lecture;
 using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,11 +10,11 @@ namespace LearningEnglish.API.Controller.User
     [Authorize]
     public class UserLectureController : ControllerBase
     {
-        private readonly ILectureService _lectureService;
+        private readonly IUserLectureService _lectureService;
         private readonly ILogger<UserLectureController> _logger;
 
         public UserLectureController(
-            ILectureService lectureService,
+            IUserLectureService lectureService,
             ILogger<UserLectureController> logger)
         {
             _lectureService = lectureService;
@@ -44,9 +44,5 @@ namespace LearningEnglish.API.Controller.User
             var result = await _lectureService.GetLectureTreeByModuleIdAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
-
-        // ❌ Removed CompleteLecture endpoint
-        // Module completion now handled by POST /api/user/modules/{moduleId}/start
-        // When user enters module, it will auto-complete for Lecture/Video/Reading types
     }
 }

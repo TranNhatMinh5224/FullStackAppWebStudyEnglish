@@ -2,6 +2,7 @@ using AutoMapper;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs.Admin;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.AdminManagement;
 
 namespace LearningEnglish.Application.Service;
 

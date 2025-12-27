@@ -1,8 +1,8 @@
 namespace LearningEnglish.Application.DTOs.Admin;
 
-/// <summary>
-/// Kết quả gán/xóa role
-/// </summary>
+
+// Kết quả gán/xóa role
+
 public class RoleOperationResultDto
 {
     public int UserId { get; set; }

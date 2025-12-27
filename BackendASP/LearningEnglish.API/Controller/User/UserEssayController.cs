@@ -1,5 +1,6 @@
 using LearningEnglish.Application.DTOs;
-using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.Essay;
+using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,9 +12,9 @@ namespace LearningEnglish.API.Controller.User
     [Authorize(Roles = "Student")]
     public class UserEssayController : ControllerBase
     {
-        private readonly IEssayService _essayService;
+        private readonly IUserEssayService _essayService;
 
-        public UserEssayController(IEssayService essayService)
+        public UserEssayController(IUserEssayService essayService)
         {
             _essayService = essayService;
         }
@@ -22,7 +23,8 @@ namespace LearningEnglish.API.Controller.User
         [HttpGet("{essayId}")]
         public async Task<IActionResult> GetEssay(int essayId)
         {
-            var result = await _essayService.GetEssayByIdAsync(essayId);
+            var userId = User.GetUserId();
+            var result = await _essayService.GetEssayByIdAsync(essayId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -30,7 +32,8 @@ namespace LearningEnglish.API.Controller.User
         [HttpGet("assessment/{assessmentId}")]
         public async Task<IActionResult> GetEssaysByAssessment(int assessmentId)
         {
-            var result = await _essayService.GetEssaysByAssessmentIdAsync(assessmentId);
+            var userId = User.GetUserId();
+            var result = await _essayService.GetEssaysByAssessmentIdAsync(assessmentId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

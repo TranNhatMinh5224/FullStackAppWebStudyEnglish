@@ -1,8 +1,8 @@
 namespace LearningEnglish.Application.DTOs.Admin;
 
-/// <summary>
+
 /// DTO trả về thông tin role
-/// </summary>
+
 public class RoleDto
 {
     public int RoleId { get; set; }

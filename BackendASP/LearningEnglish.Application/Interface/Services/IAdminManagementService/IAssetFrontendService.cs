@@ -1,7 +1,8 @@
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 
-namespace LearningEnglish.Application.Interface
+
+namespace LearningEnglish.Application.Interface.AdminManagement
 {
     public interface IAssetFrontendService
     {

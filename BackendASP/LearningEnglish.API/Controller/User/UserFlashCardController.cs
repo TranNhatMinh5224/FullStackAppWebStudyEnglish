@@ -1,6 +1,6 @@
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
-using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.FlashCard;
 using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +12,11 @@ namespace LearningEnglish.API.Controller.User
     [Authorize(Roles = "Student")]
     public class UserFlashCardController : ControllerBase
     {
-        private readonly IFlashCardService _flashCardService;
+        private readonly IUserFlashCardService _flashCardService;
         private readonly ILogger<UserFlashCardController> _logger;
 
         public UserFlashCardController(
-            IFlashCardService flashCardService,
+            IUserFlashCardService flashCardService,
             ILogger<UserFlashCardController> logger)
         {
             _flashCardService = flashCardService;
