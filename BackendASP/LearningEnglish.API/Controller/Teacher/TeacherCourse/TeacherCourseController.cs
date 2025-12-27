@@ -43,7 +43,7 @@ namespace LearningEnglish.API.Controller.Teacher
             var teacherId = User.GetUserId();
             _logger.LogInformation("Teacher {TeacherId} lấy danh sách own courses", teacherId);
 
-            var result = await _teacherCourseService.GetMyCoursesPagedAsync(request);
+            var result = await _teacherCourseService.GetMyCoursesPagedAsync(teacherId, request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 

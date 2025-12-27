@@ -127,10 +127,10 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
         // Lấy khóa học của giáo viên với phân trang (chỉ phân trang, không filter) - RLS đã filter theo teacherId
-        public async Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(PageRequest request)
+        public async Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, PageRequest request)
         {
             var query = _context.Courses
-                .Where(c => c.Type == CourseType.Teacher) // Chỉ filter Type, RLS đã filter TeacherId
+                .Where(c => c.Type == CourseType.Teacher && c.TeacherId == teacherId) // FIX: Filter theo teacherId
                 .Include(c => c.Teacher)
                 .OrderBy(c => c.Title) // Sort theo Title mặc định
                 .AsQueryable();

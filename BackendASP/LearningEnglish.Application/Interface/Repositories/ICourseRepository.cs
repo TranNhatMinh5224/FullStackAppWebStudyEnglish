@@ -28,8 +28,8 @@ namespace LearningEnglish.Application.Interface
         // Lấy khóa học của giáo viên - RLS đã filter theo teacherId
         Task<IEnumerable<Course>> GetCoursesByTeacher();
 
-        // Lấy khóa học của giáo viên với phân trang (chỉ phân trang, không filter) - RLS đã filter theo teacherId
-        Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(PageRequest request);
+        // Lấy khóa học của giáo viên với phân trang
+        Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, PageRequest request);
 
         // Lấy khóa học đã đăng ký của user - RLS đã filter theo userId
         Task<IEnumerable<Course>> GetEnrolledCoursesByUser();
