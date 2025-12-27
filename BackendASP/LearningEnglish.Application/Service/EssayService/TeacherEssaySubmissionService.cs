@@ -299,8 +299,31 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var submission = await _essaySubmissionRepository.GetSubmissionByIdAsync(submissionId);
+                if (submission == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài nộp";
+                    return response;
+                }
+
                 var essay = await _essayRepository.GetEssayByIdAsync(submission.EssayId);
+                if (essay == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài essay";
+                    return response;
+                }
+
                 var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy assessment";
+                    return response;
+                }
 
                 // Validate score
                 if (score < 0 || score > assessment.TotalPoints)
@@ -357,7 +380,23 @@ namespace LearningEnglish.Application.Service
 
                 // Get essay and assessment
                 var essay = await _essayRepository.GetEssayByIdAsync(essayId);
+                if (essay == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài essay";
+                    return response;
+                }
+
                 var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy assessment";
+                    return response;
+                }
+
                 var maxScore = assessment.TotalPoints;
 
                 // Get all submissions chưa chấm (hoặc chỉ có AI score, chưa có teacher score)
@@ -378,7 +417,7 @@ namespace LearningEnglish.Application.Service
                     try
                     {
                         // Build prompt
-                        var prompt = BuildGradingPrompt(essay.Title, essay.Description ?? "Không có mô tả", submission.TextContent, maxScore);
+                        var prompt = BuildGradingPrompt(essay.Title, essay.Description ?? "Không có mô tả", submission.TextContent ?? "Không có nội dung", maxScore);
 
                         // Call Gemini
                         var geminiResponse = await _geminiService.GenerateContentAsync(prompt);

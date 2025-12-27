@@ -80,7 +80,7 @@ namespace LearningEnglish.API.Controller.User
         {
             var result = await _paymentService.ProcessPayOSReturnAsync(code ?? string.Empty, desc ?? string.Empty, data ?? string.Empty);
             
-            if (result.Success && result.Data != null)
+            if (result.Success && result.Data != null && !string.IsNullOrEmpty(result.Data.RedirectUrl))
             {
                 return Redirect(result.Data.RedirectUrl);
             }

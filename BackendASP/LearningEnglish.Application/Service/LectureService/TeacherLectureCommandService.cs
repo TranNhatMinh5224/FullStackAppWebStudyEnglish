@@ -202,6 +202,7 @@ namespace LearningEnglish.Application.Service.LectureService
                 {
                     response.Success = false;
                     response.Message = $"TempId bị trùng lặp: {string.Join(", ", duplicates)}";
+                    response.Data ??= new BulkCreateLecturesResponseDto();
                     response.Data.Errors.Add($"TempId bị trùng lặp: {string.Join(", ", duplicates)}");
                     return response;
                 }
@@ -216,6 +217,7 @@ namespace LearningEnglish.Application.Service.LectureService
                 {
                     response.Success = false;
                     response.Message = $"ParentTempId không hợp lệ cho các lecture: {string.Join(", ", invalidParents)}";
+                    response.Data ??= new BulkCreateLecturesResponseDto();
                     response.Data.Errors.Add($"ParentTempId không hợp lệ: {string.Join(", ", invalidParents)}");
                     return response;
                 }
@@ -251,6 +253,7 @@ namespace LearningEnglish.Application.Service.LectureService
 
                             response.Success = false;
                             response.Message = $"Không thể lưu media cho lecture '{lectureNode.Title}': {mediaResult.Message}";
+                            response.Data ??= new BulkCreateLecturesResponseDto();
                             response.Data.Errors.Add($"Media upload failed for {lectureNode.TempId}");
                             return response;
                         }
@@ -319,6 +322,7 @@ namespace LearningEnglish.Application.Service.LectureService
                     return dto;
                 }).ToList();
 
+                response.Data ??= new BulkCreateLecturesResponseDto();
                 response.Data.CreatedLectures = responseLectures.ToDictionary(l => tempIdToRealId.First(t => t.Value == l.LectureId).Key, l => l);
                 response.Data.TotalCreated = responseLectures.Count;
                 response.Message = $"Tạo thành công {responseLectures.Count} lectures";

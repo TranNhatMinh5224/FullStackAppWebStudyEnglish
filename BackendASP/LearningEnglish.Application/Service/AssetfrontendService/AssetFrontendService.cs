@@ -136,14 +136,16 @@ namespace LearningEnglish.Application.Service
             try
             {
                 // Tạo asset entity
+#pragma warning disable CS8601 // Possible null reference assignment
                 var assetFrontend = new AssetFrontend
                 {
                     NameImage = newAssetFrontend.NameImage,
                     DescriptionImage = newAssetFrontend.DescriptionImage,
-                    AssetType = newAssetFrontend.AssetType.ToString() ?? string.Empty,
+                    AssetType = newAssetFrontend.AssetType.ToString(),
                     Order = newAssetFrontend.Order,
                     IsActive = newAssetFrontend.IsActive
                 };
+
 
                 string? committedImageKey = null;
 
@@ -164,7 +166,7 @@ namespace LearningEnglish.Application.Service
                         return response;
                     }
 
-                    committedImageKey = commitResult.Data;
+                    committedImageKey = commitResult.Data ?? string.Empty;
                     assetFrontend.KeyImage = committedImageKey;
                 }
 
