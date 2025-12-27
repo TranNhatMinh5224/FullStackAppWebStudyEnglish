@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LearningEnglish.Infrastructure.Repositories
 {
-    /// <summary>
-    /// Repository implementation cho User Statistics (tách riêng để dễ quản lý và maintain)
-    /// </summary>
+  
     public class UserStatisticsRepository : IUserStatisticsRepository
     {
         private readonly AppDbContext _context;

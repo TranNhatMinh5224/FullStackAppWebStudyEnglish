@@ -14,12 +14,12 @@ namespace LearningEnglish.Application.Service
     {
         private readonly IEssaySubmissionRepository _essaySubmissionRepository;
         private readonly IEssayRepository _essayRepository;
+        private readonly IAssessmentRepository _assessmentRepository;
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IModuleProgressService _moduleProgressService;
         private readonly IMinioFileStorage _minioFileStorage;
         private readonly IMapper _mapper;
         private readonly ILogger<UserEssaySubmissionService> _logger;
-        private readonly IModuleProgressService _moduleProgressService;
-        private readonly IAssessmentRepository _assessmentRepository;
-        private readonly INotificationRepository _notificationRepository;
 
         private const string AttachmentBucket = "essay-attachments";
         private const string AttachmentFolder = "real";
@@ -27,102 +27,83 @@ namespace LearningEnglish.Application.Service
         public UserEssaySubmissionService(
             IEssaySubmissionRepository essaySubmissionRepository,
             IEssayRepository essayRepository,
+            IAssessmentRepository assessmentRepository,
+            INotificationRepository notificationRepository,
+            IModuleProgressService moduleProgressService,
             IMinioFileStorage minioFileStorage,
             IMapper mapper,
-            ILogger<UserEssaySubmissionService> logger,
-            IModuleProgressService moduleProgressService,
-            IAssessmentRepository assessmentRepository,
-            INotificationRepository notificationRepository)
+            ILogger<UserEssaySubmissionService> logger)
         {
             _essaySubmissionRepository = essaySubmissionRepository;
             _essayRepository = essayRepository;
+            _assessmentRepository = assessmentRepository;
+            _notificationRepository = notificationRepository;
+            _moduleProgressService = moduleProgressService;
             _minioFileStorage = minioFileStorage;
             _mapper = mapper;
             _logger = logger;
-            _moduleProgressService = moduleProgressService;
-            _assessmentRepository = assessmentRepository;
-            _notificationRepository = notificationRepository;
         }
 
+        // Tạo notification khi user nộp essay
         private async Task CreateEssaySubmissionNotificationAsync(int userId, string essayTitle)
         {
             try
             {
-                var notification = new Notification
+                await _notificationRepository.AddAsync(new Notification
                 {
                     UserId = userId,
-                    Title = "✅ Nộp bài essay thành công",
-                    Message = $"Bạn đã nộp bài essay '{essayTitle}' thành công. Giáo viên sẽ chấm điểm sớm nhất có thể.",
+                    Title = " Nộp bài essay thành công",
+                    Message = $"Bạn đã nộp bài essay '{essayTitle}' thành công. Giáo viên sẽ chấm điểm sớm.",
                     Type = NotificationType.AssessmentGraded,
                     IsRead = false,
                     CreatedAt = DateTime.UtcNow
-                };
-                await _notificationRepository.AddAsync(notification);
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create essay submission notification");
+                _logger.LogError(ex, "Create essay submission notification failed for UserId: {UserId}, EssayTitle: {EssayTitle}. Error: {Error}", 
+                    userId, essayTitle, ex.ToString());
             }
         }
 
+        // User nộp bài essay
         public async Task<ServiceResponse<EssaySubmissionDto>> CreateSubmissionAsync(CreateEssaySubmissionDto dto, int userId)
         {
             var response = new ServiceResponse<EssaySubmissionDto>();
 
             try
             {
+                // Kiểm tra essay tồn tại
                 var essay = await _essayRepository.GetEssayByIdAsync(dto.EssayId);
                 if (essay == null)
-                {
-                    response.Success = false;
-                    response.StatusCode = 404;
-                    response.Message = "Essay không tồn tại";
-                    return response;
-                }
+                    return response.Fail(404, "Essay không tồn tại");
 
-                var essayAssessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
-                if (essayAssessment != null && essayAssessment.DueAt.HasValue)
-                {
-                    if (DateTime.UtcNow > essayAssessment.DueAt.Value)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Assessment đã quá hạn nộp bài";
-                        return response;
-                    }
-                }
+                // Kiểm tra hạn nộp assessment
+                var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+                if (assessment?.DueAt != null && DateTime.UtcNow > assessment.DueAt)
+                    return response.Fail(403, "Assessment đã quá hạn nộp bài");
 
-                var existingSubmission = await _essaySubmissionRepository.GetUserSubmissionForEssayAsync(userId, dto.EssayId);
-                if (existingSubmission != null)
-                {
-                    response.Success = false;
-                    response.StatusCode = 409;
-                    response.Message = "Bạn đã nộp bài cho Essay này rồi";
-                    return response;
-                }
+                // Không cho nộp lại
+                var existed = await _essaySubmissionRepository
+                    .GetUserSubmissionForEssayAsync(userId, dto.EssayId);
 
-                await CreateEssaySubmissionNotificationAsync(userId, essay.Title);
+                if (existed != null)
+                    return response.Fail(409, "Bạn đã nộp bài essay này rồi");
 
+                // Commit file attachment
                 string? attachmentKey = null;
                 if (!string.IsNullOrWhiteSpace(dto.AttachmentTempKey))
                 {
-                    var commitResult = await _minioFileStorage.CommitFileAsync(
-                        dto.AttachmentTempKey,
-                        AttachmentBucket,
-                        AttachmentFolder);
+                    var commit = await _minioFileStorage.CommitFileAsync(
+                        dto.AttachmentTempKey, AttachmentBucket, AttachmentFolder);
 
-                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
-                    {
-                        _logger.LogError("Không thể commit attachment file từ temp sang permanent storage");
-                        response.Success = false;
-                        response.StatusCode = 400;
-                        response.Message = "Không thể lưu file đính kèm. Vui lòng thử lại.";
-                        return response;
-                    }
+                    if (!commit.Success || string.IsNullOrWhiteSpace(commit.Data))
+                        return response.Fail(400, "Không thể lưu file đính kèm");
 
-                    attachmentKey = commitResult.Data;
+                    attachmentKey = commit.Data;
                 }
 
+                // Tạo submission
                 var submission = new EssaySubmission
                 {
                     EssayId = dto.EssayId,
@@ -134,63 +115,34 @@ namespace LearningEnglish.Application.Service
                     Status = SubmissionStatus.Submitted
                 };
 
-                try
+                var created = await _essaySubmissionRepository.CreateSubmissionAsync(submission);
+
+                // Hoàn thành module nếu có
+                if (assessment?.ModuleId != null)
+                    await _moduleProgressService.CompleteModuleAsync(userId, assessment.ModuleId);
+
+                // Tạo notification
+                await CreateEssaySubmissionNotificationAsync(userId, essay.Title);
+
+                // Map DTO
+                var dtoResult = _mapper.Map<EssaySubmissionDto>(created);
+                if (!string.IsNullOrWhiteSpace(created.AttachmentKey))
                 {
-                    var createdSubmission = await _essaySubmissionRepository.CreateSubmissionAsync(submission);
-
-                    var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
-                    if (assessment?.ModuleId != null)
-                    {
-                        await _moduleProgressService.CompleteModuleAsync(userId, assessment.ModuleId);
-                    }
-
-                    var submissionDto = _mapper.Map<EssaySubmissionDto>(createdSubmission);
-
-                    if (!string.IsNullOrWhiteSpace(createdSubmission.AttachmentKey))
-                    {
-                        submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                            AttachmentBucket,
-                            $"{AttachmentFolder}/{createdSubmission.AttachmentKey}");
-                    }
-
-                    response.Success = true;
-                    response.StatusCode = 201;
-                    response.Message = "Nộp bài Essay thành công";
-                    response.Data = submissionDto;
-
-                    return response;
+                    dtoResult.AttachmentUrl = BuildPublicUrl.BuildURL(
+                        AttachmentBucket, $"{AttachmentFolder}/{created.AttachmentKey}");
                 }
-                catch (Exception dbEx)
-                {
-                    if (!string.IsNullOrWhiteSpace(attachmentKey))
-                    {
-                        try
-                        {
-                            var deleteResult = await _minioFileStorage.DeleteFileAsync($"{AttachmentFolder}/{attachmentKey}", AttachmentBucket);
-                            if (deleteResult.Success)
-                            {
-                                _logger.LogInformation("Đã rollback attachment file sau khi lưu DB thất bại");
-                            }
-                        }
-                        catch (Exception deleteEx)
-                        {
-                            _logger.LogError(deleteEx, "Lỗi khi rollback attachment file");
-                        }
-                    }
-                    _logger.LogError(dbEx, "Lỗi DB khi tạo submission");
-                    throw;
-                }
+
+                return response.SuccessResult(201, "Nộp bài Essay thành công", dtoResult);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi nộp bài Essay");
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi hệ thống khi nộp bài Essay";
-                return response;
+                _logger.LogError(ex, "CreateSubmission failed for UserId: {UserId}, EssayId: {EssayId}. Error: {Error}", 
+                    userId, dto.EssayId, ex.ToString());
+                return response.Fail(500, "Lỗi hệ thống khi nộp bài Essay");
             }
         }
 
+        // Lấy submission của chính user theo submissionId
         public async Task<ServiceResponse<EssaySubmissionDto>> GetMySubmissionByIdAsync(int submissionId, int userId)
         {
             var response = new ServiceResponse<EssaySubmissionDto>();
@@ -198,224 +150,118 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var submission = await _essaySubmissionRepository.GetSubmissionByIdAsync(submissionId);
-
                 if (submission == null)
-                {
-                    response.Success = false;
-                    response.StatusCode = 404;
-                    response.Message = "Submission không tồn tại";
-                    return response;
-                }
+                    return response.Fail(404, "Submission không tồn tại");
 
                 if (submission.UserId != userId)
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "Bạn không có quyền xem bài nộp này";
-                    return response;
-                }
+                    return response.Fail(403, "Không có quyền truy cập submission này");
 
-                var submissionDto = _mapper.Map<EssaySubmissionDto>(submission);
-
+                var dto = _mapper.Map<EssaySubmissionDto>(submission);
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
-                    submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                        AttachmentBucket,
-                        $"{AttachmentFolder}/{submission.AttachmentKey}");
+                    dto.AttachmentUrl = BuildPublicUrl.BuildURL(
+                        AttachmentBucket, $"{AttachmentFolder}/{submission.AttachmentKey}");
                 }
 
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = "Lấy thông tin submission thành công";
-                response.Data = submissionDto;
-
-                return response;
+                return response.SuccessResult(200, "Lấy submission thành công", dto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy thông tin submission");
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi hệ thống khi lấy thông tin submission";
-                return response;
+                _logger.LogError(ex, "GetMySubmissionById failed for SubmissionId: {SubmissionId}, UserId: {UserId}. Error: {Error}", 
+                    submissionId, userId, ex.ToString());
+                return response.Fail(500, "Lỗi hệ thống");
             }
         }
 
+        // Lấy submission của user theo essayId
         public async Task<ServiceResponse<EssaySubmissionDto?>> GetMySubmissionForEssayAsync(int userId, int essayId)
         {
             var response = new ServiceResponse<EssaySubmissionDto?>();
 
             try
             {
-                var submission = await _essaySubmissionRepository.GetUserSubmissionForEssayAsync(userId, essayId);
+                var submission = await _essaySubmissionRepository
+                    .GetUserSubmissionForEssayAsync(userId, essayId);
 
                 if (submission == null)
-                {
-                    response.Success = true;
-                    response.StatusCode = 200;
-                    response.Message = "User chưa nộp bài cho Essay này";
-                    response.Data = null;
-                    return response;
-                }
+                    return response.SuccessResult(200, "User chưa nộp bài", null);
 
-                var submissionDto = _mapper.Map<EssaySubmissionDto>(submission);
-
+                var dto = _mapper.Map<EssaySubmissionDto>(submission);
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
-                    submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                        AttachmentBucket,
-                        $"{AttachmentFolder}/{submission.AttachmentKey}");
+                    dto.AttachmentUrl = BuildPublicUrl.BuildURL(
+                        AttachmentBucket, $"{AttachmentFolder}/{submission.AttachmentKey}");
                 }
 
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = "Lấy submission thành công";
-                response.Data = submissionDto;
-
-                return response;
+                return response.SuccessResult(200, "Lấy submission thành công", dto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy submission của user {UserId} cho Essay {EssayId}", userId, essayId);
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi hệ thống khi lấy submission";
-                return response;
+                _logger.LogError(ex, "GetMySubmissionForEssay failed for UserId: {UserId}, EssayId: {EssayId}. Error: {Error}", 
+                    userId, essayId, ex.ToString());
+                return response.Fail(500, "Lỗi hệ thống");
             }
         }
 
-        public async Task<ServiceResponse<EssaySubmissionDto>> UpdateSubmissionAsync(int submissionId, UpdateEssaySubmissionDto dto, int userId)
+        // User cập nhật bài nộp
+        public async Task<ServiceResponse<EssaySubmissionDto>> UpdateSubmissionAsync(
+            int submissionId, UpdateEssaySubmissionDto dto, int userId)
         {
             var response = new ServiceResponse<EssaySubmissionDto>();
 
             try
             {
                 var submission = await _essaySubmissionRepository.GetSubmissionByIdAsync(submissionId);
-
                 if (submission == null)
-                {
-                    response.Success = false;
-                    response.StatusCode = 404;
-                    response.Message = "Submission không tồn tại";
-                    return response;
-                }
+                    return response.Fail(404, "Submission không tồn tại");
 
                 if (!await _essaySubmissionRepository.IsUserOwnerOfSubmissionAsync(userId, submissionId))
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "Bạn không có quyền cập nhật submission này";
-                    return response;
-                }
+                    return response.Fail(403, "Không có quyền cập nhật");
 
-                string? oldAttachmentKey = submission.AttachmentKey;
-                string? newAttachmentKey = null;
-
-                if (dto.RemoveAttachment)
+                // Xóa attachment cũ nếu yêu cầu
+                if (dto.RemoveAttachment && !string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
-                    if (!string.IsNullOrWhiteSpace(oldAttachmentKey))
-                    {
-                        try
-                        {
-                            await _minioFileStorage.DeleteFileAsync($"{AttachmentFolder}/{oldAttachmentKey}", AttachmentBucket);
-                            _logger.LogInformation("Đã xóa attachment cũ theo yêu cầu RemoveAttachment");
-                        }
-                        catch (Exception deleteEx)
-                        {
-                            _logger.LogError(deleteEx, "Lỗi khi xóa attachment cũ (RemoveAttachment)");
-                        }
-                    }
+                    await _minioFileStorage.DeleteFileAsync(
+                        $"{AttachmentFolder}/{submission.AttachmentKey}", AttachmentBucket);
                     submission.AttachmentKey = null;
                     submission.AttachmentType = null;
                 }
 
+                // Commit attachment mới
                 if (!string.IsNullOrWhiteSpace(dto.AttachmentTempKey))
                 {
-                    var commitResult = await _minioFileStorage.CommitFileAsync(
-                        dto.AttachmentTempKey,
-                        AttachmentBucket,
-                        AttachmentFolder);
+                    var commit = await _minioFileStorage.CommitFileAsync(
+                        dto.AttachmentTempKey, AttachmentBucket, AttachmentFolder);
 
-                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
-                    {
-                        _logger.LogError("Không thể commit attachment file từ temp sang permanent storage");
-                        response.Success = false;
-                        response.StatusCode = 400;
-                        response.Message = "Không thể lưu file đính kèm. Vui lòng thử lại.";
-                        return response;
-                    }
+                    if (!commit.Success)
+                        return response.Fail(400, "Không thể lưu file mới");
 
-                    newAttachmentKey = commitResult.Data;
-                }
-
-                submission.TextContent = dto.TextContent;
-                if (newAttachmentKey != null)
-                {
-                    submission.AttachmentKey = newAttachmentKey;
+                    submission.AttachmentKey = commit.Data;
                     submission.AttachmentType = dto.AttachmentType;
                 }
 
-                try
+                submission.TextContent = dto.TextContent;
+
+                var updated = await _essaySubmissionRepository.UpdateSubmissionAsync(submission);
+
+                var result = _mapper.Map<EssaySubmissionDto>(updated);
+                if (!string.IsNullOrWhiteSpace(updated.AttachmentKey))
                 {
-                    var updatedSubmission = await _essaySubmissionRepository.UpdateSubmissionAsync(submission);
-
-                    if (newAttachmentKey != null && !string.IsNullOrWhiteSpace(oldAttachmentKey))
-                    {
-                        try
-                        {
-                            await _minioFileStorage.DeleteFileAsync($"{AttachmentFolder}/{oldAttachmentKey}", AttachmentBucket);
-                            _logger.LogInformation("Đã xóa attachment cũ sau khi cập nhật thành công");
-                        }
-                        catch (Exception deleteEx)
-                        {
-                            _logger.LogError(deleteEx, "Lỗi khi xóa attachment cũ (không ảnh hưởng đến update)");
-                        }
-                    }
-
-                    var submissionDto = _mapper.Map<EssaySubmissionDto>(updatedSubmission);
-
-                    if (!string.IsNullOrWhiteSpace(updatedSubmission.AttachmentKey))
-                    {
-                        submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                            AttachmentBucket,
-                            $"{AttachmentFolder}/{updatedSubmission.AttachmentKey}");
-                    }
-
-                    response.Success = true;
-                    response.StatusCode = 200;
-                    response.Message = "Cập nhật submission thành công";
-                    response.Data = submissionDto;
-
-                    return response;
+                    result.AttachmentUrl = BuildPublicUrl.BuildURL(
+                        AttachmentBucket, $"{AttachmentFolder}/{updated.AttachmentKey}");
                 }
-                catch (Exception dbEx)
-                {
-                    if (newAttachmentKey != null)
-                    {
-                        try
-                        {
-                            await _minioFileStorage.DeleteFileAsync($"{AttachmentFolder}/{newAttachmentKey}", AttachmentBucket);
-                            _logger.LogInformation("Đã rollback attachment file mới sau khi update DB thất bại");
-                        }
-                        catch (Exception deleteEx)
-                        {
-                            _logger.LogError(deleteEx, "Lỗi khi rollback attachment file mới");
-                        }
-                    }
-                    _logger.LogError(dbEx, "Lỗi DB khi update submission");
-                    throw;
-                }
+
+                return response.SuccessResult(200, "Cập nhật submission thành công", result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi cập nhật submission {SubmissionId}", submissionId);
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi hệ thống khi cập nhật submission";
-                return response;
+                _logger.LogError(ex, "UpdateSubmission failed for SubmissionId: {SubmissionId}, UserId: {UserId}. Error: {Error}", 
+                    submissionId, userId, ex.ToString());
+                return response.Fail(500, "Lỗi hệ thống");
             }
         }
 
+        // User xóa bài nộp
         public async Task<ServiceResponse<bool>> DeleteSubmissionAsync(int submissionId, int userId)
         {
             var response = new ServiceResponse<bool>();
@@ -423,54 +269,27 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var submission = await _essaySubmissionRepository.GetSubmissionByIdAsync(submissionId);
-
                 if (submission == null)
-                {
-                    response.Success = false;
-                    response.StatusCode = 404;
-                    response.Message = "Submission không tồn tại";
-                    return response;
-                }
+                    return response.Fail(404, "Submission không tồn tại");
 
                 if (!await _essaySubmissionRepository.IsUserOwnerOfSubmissionAsync(userId, submissionId))
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "Bạn không có quyền xóa submission này";
-                    return response;
-                }
-
-                string? attachmentKey = submission.AttachmentKey;
+                    return response.Fail(403, "Không có quyền xóa");
 
                 await _essaySubmissionRepository.DeleteSubmissionAsync(submissionId);
 
-                if (!string.IsNullOrWhiteSpace(attachmentKey))
+                if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
-                    try
-                    {
-                        await _minioFileStorage.DeleteFileAsync($"{AttachmentFolder}/{attachmentKey}", AttachmentBucket);
-                        _logger.LogInformation("Đã xóa attachment file sau khi xóa submission thành công");
-                    }
-                    catch (Exception deleteEx)
-                    {
-                        _logger.LogError(deleteEx, "Lỗi khi xóa attachment file (không ảnh hưởng đến xóa submission)");
-                    }
+                    await _minioFileStorage.DeleteFileAsync(
+                        $"{AttachmentFolder}/{submission.AttachmentKey}", AttachmentBucket);
                 }
 
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = "Xóa submission thành công";
-                response.Data = true;
-
-                return response;
+                return response.SuccessResult(200, "Xóa submission thành công", true);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi xóa submission {SubmissionId}", submissionId);
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi hệ thống khi xóa submission";
-                return response;
+                _logger.LogError(ex, "DeleteSubmission failed for SubmissionId: {SubmissionId}, UserId: {UserId}. Error: {Error}", 
+                    submissionId, userId, ex.ToString());
+                return response.Fail(500, "Lỗi hệ thống");
             }
         }
     }

@@ -22,23 +22,17 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.PronunciationProgressId == id);
         }
 
-        // RLS đã filter: User chỉ xem progress của chính mình, Admin xem tất cả
-        // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
+       
         public async Task<PronunciationProgress?> GetByUserAndFlashCardAsync(int userId, int flashCardId)
         {
-            // RLS đã filter: User chỉ query được progress của chính mình
-            // Filter theo userId và flashCardId để đảm bảo đúng (defense in depth)
             return await _context.PronunciationProgresses
                 .Include(p => p.FlashCard)
                 .FirstOrDefaultAsync(p => p.UserId == userId && p.FlashCardId == flashCardId);
         }
 
-        // RLS đã filter: User chỉ xem progress của chính mình
-        // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
-        public async Task<List<PronunciationProgress>> GetByUserIdAsync(int userId)
+              public async Task<List<PronunciationProgress>> GetByUserIdAsync(int userId)
         {
-            // RLS đã filter: User chỉ query được progress của chính mình
-            // Filter theo userId để đảm bảo đúng (defense in depth)
+            
             return await _context.PronunciationProgresses
                 .Include(p => p.FlashCard)
                 .Where(p => p.UserId == userId)
@@ -55,12 +49,10 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        // RLS đã filter: User chỉ xem progress của chính mình
-        // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
+     
         public async Task<List<PronunciationProgress>> GetByModuleIdAsync(int userId, int moduleId)
         {
-            // RLS đã filter: User chỉ query được progress của chính mình
-            // Filter theo userId và moduleId để đảm bảo đúng (defense in depth)
+            
             return await _context.PronunciationProgresses
                 .Include(p => p.FlashCard)
                 .Where(p => p.UserId == userId && p.FlashCard!.ModuleId == moduleId)

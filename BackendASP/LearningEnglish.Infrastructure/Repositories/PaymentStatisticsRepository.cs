@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LearningEnglish.Infrastructure.Repositories
 {
-    /// <summary>
-    /// Repository implementation cho Payment Statistics (tách riêng để dễ quản lý và maintain)
-    /// </summary>
+
     public class PaymentStatisticsRepository : IPaymentStatisticsRepository
     {
         private readonly AppDbContext _context;

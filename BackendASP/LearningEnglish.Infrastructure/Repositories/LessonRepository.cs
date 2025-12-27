@@ -18,16 +18,16 @@ namespace LearningEnglish.Infrastructure.Repositories
 
 
         // Lấy danh sách bài học của CourseId
-        // RLS đã filter: Admin xem tất cả, Teacher xem của own courses, Student xem của enrolled courses
+        
         public async Task<List<Lesson>> GetListLessonByCourseId(int CourseId)
         {
             return await _context.Lessons
-                .Where(c => c.CourseId == CourseId) // Chỉ filter business logic, RLS đã filter ownership/enrollment
+                .Where(c => c.CourseId == CourseId) 
                 .ToListAsync();
         }
 
         // Lấy chi tiết 1 bài học
-        // RLS đã filter: Admin xem tất cả, Teacher xem của own courses, Student xem của enrolled courses
+       
         public async Task<Lesson?> GetLessonById(int lessonId)
         {
             return await _context.Lessons.FindAsync(lessonId);

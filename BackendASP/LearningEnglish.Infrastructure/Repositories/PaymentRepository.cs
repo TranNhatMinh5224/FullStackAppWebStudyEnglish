@@ -30,26 +30,26 @@ namespace LearningEnglish.Infrastructure.Repositories
 
         public async Task<IEnumerable<Payment>> GetPaymentsByUserAsync(int userId)
         {
-            // RLS đã filter theo userId, không cần .Where(p => p.UserId == userId)
+            
             return await _context.Payments
                 .ToListAsync();
         }
 
-        // RLS đã filter theo userId, không cần .Where(p => p.UserId == userId)
+        
         public async Task<Payment?> GetSuccessfulPaymentByUserAndCourseAsync(int userId, int courseId)
         {
             return await _context.Payments
                 .FirstOrDefaultAsync(p => p.ProductId == courseId && p.ProductType == ProductType.Course && p.Status == PaymentStatus.Completed);
         }
 
-        // RLS đã filter theo userId, không cần .Where(p => p.UserId == userId)
+        
         public async Task<Payment?> GetSuccessfulPaymentByUserAndProductAsync(int userId, int productId, ProductType productType)
         {
             return await _context.Payments
                 .FirstOrDefaultAsync(p => p.ProductId == productId && p.ProductType == productType && p.Status == PaymentStatus.Completed);
         }
 
-        // RLS đã filter theo userId, không cần .Where(p => p.UserId == userId)
+        
         public async Task<Payment?> GetPaymentByIdempotencyKeyAsync(int userId, string idempotencyKey)
         {
             return await _context.Payments
@@ -74,8 +74,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             return await _context.SaveChangesAsync();
         }
 
-        // Transaction History - Giao dịch mới nhất lên đầu
-        // RLS đã filter theo userId, không cần .Where(p => p.UserId == userId)
+       
         public async Task<IEnumerable<Payment>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
         {
             return await _context.Payments
@@ -86,14 +85,14 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        // RLS đã filter theo userId, không cần .Where(p => p.UserId == userId)
+       
         public async Task<int> GetTransactionCountAsync(int userId)
         {
             return await _context.Payments
                 .CountAsync();
         }
 
-        // RLS đã filter theo userId, không cần .Where(p => p.UserId == userId)
+       
         public async Task<Payment?> GetTransactionDetailAsync(int paymentId, int userId)
         {
             return await _context.Payments

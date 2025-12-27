@@ -2,236 +2,125 @@ using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Infrastructure.Repositories
 {
     public class LectureRepository : ILectureRepository
     {
         private readonly AppDbContext _context;
-        private readonly ILogger<LectureRepository> _logger;
 
-        public LectureRepository(AppDbContext context, ILogger<LectureRepository> logger)
+        public LectureRepository(AppDbContext context)
         {
             _context = context;
-            _logger = logger;
         }
 
-        // + Lấy lecture theo ID
         public async Task<Lecture?> GetByIdAsync(int lectureId)
         {
-            try
-            {
-                return await _context.Lectures
-                    .FirstOrDefaultAsync(l => l.LectureId == lectureId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy lecture với ID: {LectureId}", lectureId);
-                throw;
-            }
+            return await _context.Lectures
+                .FirstOrDefaultAsync(l => l.LectureId == lectureId);
         }
 
-        // + Lấy lecture với thông tin chi tiết
         public async Task<Lecture?> GetByIdWithDetailsAsync(int lectureId)
         {
-            try
-            {
-                return await _context.Lectures
-                    .Include(l => l.Module)
-                        .ThenInclude(m => m!.Lesson)
-                            .ThenInclude(lesson => lesson!.Course)
-                    .Include(l => l.Parent)
-                    .Include(l => l.Children)
-                    .FirstOrDefaultAsync(l => l.LectureId == lectureId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy lecture chi tiết với ID: {LectureId}", lectureId);
-                throw;
-            }
+            return await _context.Lectures
+                .Include(l => l.Module)
+                    .ThenInclude(m => m!.Lesson)
+                        .ThenInclude(lesson => lesson!.Course)
+                .Include(l => l.Parent)
+                .Include(l => l.Children)
+                .FirstOrDefaultAsync(l => l.LectureId == lectureId);
         }
 
-        // + Lấy danh sách lecture theo module
         public async Task<List<Lecture>> GetByModuleIdAsync(int moduleId)
         {
-            try
-            {
-                return await _context.Lectures
-                    .Where(l => l.ModuleId == moduleId)
-                    .OrderBy(l => l.OrderIndex)
-                    .ThenBy(l => l.CreatedAt)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách lecture theo ModuleId: {ModuleId}", moduleId);
-                throw;
-            }
+            return await _context.Lectures
+                .Where(l => l.ModuleId == moduleId)
+                .OrderBy(l => l.OrderIndex)
+                .ThenBy(l => l.CreatedAt)
+                .ToListAsync();
         }
 
-        // + Lấy danh sách lecture với thông tin chi tiết
         public async Task<List<Lecture>> GetByModuleIdWithDetailsAsync(int moduleId)
         {
-            try
-            {
-                return await _context.Lectures
-                    .Include(l => l.Module)
-                    .Include(l => l.Parent)
-                    .Include(l => l.Children)
-                    .Where(l => l.ModuleId == moduleId)
-                    .OrderBy(l => l.OrderIndex)
-                    .ThenBy(l => l.CreatedAt)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách lecture chi tiết theo ModuleId: {ModuleId}", moduleId);
-                throw;
-            }
+            return await _context.Lectures
+                .Include(l => l.Module)
+                .Include(l => l.Parent)
+                .Include(l => l.Children)
+                .Where(l => l.ModuleId == moduleId)
+                .OrderBy(l => l.OrderIndex)
+                .ThenBy(l => l.CreatedAt)
+                .ToListAsync();
         }
 
-        // + Tạo lecture mới
         public async Task<Lecture> CreateAsync(Lecture lecture)
         {
-            try
-            {
-                lecture.CreatedAt = DateTime.UtcNow;
-                lecture.UpdatedAt = DateTime.UtcNow;
+            lecture.CreatedAt = DateTime.UtcNow;
+            lecture.UpdatedAt = DateTime.UtcNow;
 
-                _context.Lectures.Add(lecture);
-                await _context.SaveChangesAsync();
+            _context.Lectures.Add(lecture);
+            await _context.SaveChangesAsync();
 
-                return lecture;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi tạo lecture mới: {LectureTitle}", lecture.Title);
-                throw;
-            }
+            return lecture;
         }
 
-        // + Cập nhật lecture
         public async Task<Lecture> UpdateAsync(Lecture lecture)
         {
-            try
-            {
-                lecture.UpdatedAt = DateTime.UtcNow;
-                _context.Lectures.Update(lecture);
-                await _context.SaveChangesAsync();
+            lecture.UpdatedAt = DateTime.UtcNow;
+            _context.Lectures.Update(lecture);
+            await _context.SaveChangesAsync();
 
-                return lecture;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi cập nhật lecture với ID: {LectureId}", lecture.LectureId);
-                throw;
-            }
+            return lecture;
         }
 
-        // + Xóa lecture
         public async Task<bool> DeleteAsync(int lectureId)
         {
-            try
-            {
-                var lecture = await GetByIdAsync(lectureId);
-                if (lecture == null) return false;
+            var lecture = await GetByIdAsync(lectureId);
+            if (lecture == null) return false;
 
-                _context.Lectures.Remove(lecture);
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi xóa lecture với ID: {LectureId}", lectureId);
-                throw;
-            }
+            _context.Lectures.Remove(lecture);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
-        // + Kiểm tra lecture có tồn tại
         public async Task<bool> ExistsAsync(int lectureId)
         {
-            try
-            {
-                return await _context.Lectures.AnyAsync(l => l.LectureId == lectureId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi kiểm tra tồn tại lecture với ID: {LectureId}", lectureId);
-                throw;
-            }
+            return await _context.Lectures.AnyAsync(l => l.LectureId == lectureId);
         }
 
-        // + Lấy cấu trúc cây lecture theo module
         public async Task<List<Lecture>> GetTreeByModuleIdAsync(int moduleId)
         {
-            try
-            {
-                return await _context.Lectures
-                    .Include(l => l.Children.OrderBy(c => c.OrderIndex))
-                    .Where(l => l.ModuleId == moduleId)
-                    .OrderBy(l => l.OrderIndex)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy cấu trúc cây lecture theo ModuleId: {ModuleId}", moduleId);
-                throw;
-            }
+            return await _context.Lectures
+                .Include(l => l.Children.OrderBy(c => c.OrderIndex))
+                .Where(l => l.ModuleId == moduleId)
+                .OrderBy(l => l.OrderIndex)
+                .ToListAsync();
         }
 
-        // + Kiểm tra lecture có con không
         public async Task<bool> HasChildrenAsync(int lectureId)
         {
-            try
-            {
-                return await _context.Lectures.AnyAsync(l => l.ParentLectureId == lectureId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi kiểm tra lecture có con với ID: {LectureId}", lectureId);
-                throw;
-            }
+            return await _context.Lectures.AnyAsync(l => l.ParentLectureId == lectureId);
         }
 
-        // + Lấy OrderIndex lớn nhất
         public async Task<int> GetMaxOrderIndexAsync(int moduleId, int? parentLectureId = null)
         {
-            try
-            {
-                var query = _context.Lectures.Where(l => l.ModuleId == moduleId);
+            var query = _context.Lectures.Where(l => l.ModuleId == moduleId);
 
-                if (parentLectureId.HasValue)
-                    query = query.Where(l => l.ParentLectureId == parentLectureId.Value);
-                else
-                    query = query.Where(l => l.ParentLectureId == null);
+            if (parentLectureId.HasValue)
+                query = query.Where(l => l.ParentLectureId == parentLectureId.Value);
+            else
+                query = query.Where(l => l.ParentLectureId == null);
 
-                var maxOrder = await query.MaxAsync(l => (int?)l.OrderIndex);
-                return maxOrder ?? 0;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy OrderIndex lớn nhất: ModuleId={ModuleId}, ParentId={ParentLectureId}", moduleId, parentLectureId);
-                throw;
-            }
+            var maxOrder = await query.MaxAsync(l => (int?)l.OrderIndex);
+            return maxOrder ?? 0;
         }
 
-        // + Lấy lecture với module và course để kiểm tra quyền
         public async Task<Lecture?> GetLectureWithModuleCourseAsync(int lectureId)
         {
-            try
-            {
-                return await _context.Lectures
-                    .Include(l => l.Module)
-                        .ThenInclude(m => m!.Lesson)
-                            .ThenInclude(lesson => lesson!.Course)
-                    .FirstOrDefaultAsync(l => l.LectureId == lectureId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy lecture với module course để kiểm tra quyền: {LectureId}", lectureId);
-                throw;
-            }
+            return await _context.Lectures
+                .Include(l => l.Module)
+                    .ThenInclude(m => m!.Lesson)
+                        .ThenInclude(lesson => lesson!.Course)
+                .FirstOrDefaultAsync(l => l.LectureId == lectureId);
         }
     }
 }

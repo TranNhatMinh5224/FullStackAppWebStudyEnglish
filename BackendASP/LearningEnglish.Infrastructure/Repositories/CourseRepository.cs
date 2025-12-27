@@ -10,9 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LearningEnglish.Infrastructure.Repositories
 {
-    // Repository cho Course entity
-    // Tuân thủ Repository pattern: chỉ lo data access
-    // Sử dụng Specification pattern để tách biệt query logic
+    
     public class CourseRepository : ICourseRepository
     {
         private readonly AppDbContext _context;

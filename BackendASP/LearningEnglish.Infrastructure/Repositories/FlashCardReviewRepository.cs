@@ -2,203 +2,99 @@ using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Infrastructure.Repositories;
 
-public class FlashCardReviewRepository : BaseRepository<FlashCardReview>, IFlashCardReviewRepository
+public class FlashCardReviewRepository : IFlashCardReviewRepository
 {
-    private readonly ILogger<FlashCardReviewRepository> _logger;
+    private readonly AppDbContext _context;
 
-    public FlashCardReviewRepository(AppDbContext context, ILogger<FlashCardReviewRepository> logger)
-        : base(context)
+    public FlashCardReviewRepository(AppDbContext context)
     {
-        _logger = logger;
+        _context = context;
     }
 
-    // RLS đã filter: User chỉ xem reviews của chính mình, Admin xem tất cả
-    public new async Task<FlashCardReview?> GetByIdAsync(int reviewId)
+    public async Task<FlashCardReview?> GetByIdAsync(int reviewId)
     {
-        try
-        {
-            // RLS đã filter: User chỉ query được reviews của chính mình
-            return await _context.FlashCardReviews
-                .Include(r => r.FlashCard)
-                .Include(r => r.User)
-                .FirstOrDefaultAsync(r => r.FlashCardReviewId == reviewId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting FlashCardReview by ID: {ReviewId}", reviewId);
-            throw;
-        }
+        return await _context.FlashCardReviews
+            .Include(r => r.FlashCard)
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.FlashCardReviewId == reviewId);
     }
 
-    // RLS đã filter: User chỉ xem reviews của chính mình
-    // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
     public async Task<FlashCardReview?> GetReviewAsync(int userId, int flashCardId)
     {
-        try
-        {
-            // RLS đã filter: User chỉ query được reviews của chính mình
-            // Filter theo userId để đảm bảo đúng (defense in depth)
-            return await _context.FlashCardReviews
-                .FirstOrDefaultAsync(r => r.UserId == userId && r.FlashCardId == flashCardId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting review for user {UserId}, card {FlashCardId}", userId, flashCardId);
-            throw;
-        }
+        return await _context.FlashCardReviews
+            .FirstOrDefaultAsync(r => r.UserId == userId && r.FlashCardId == flashCardId);
     }
 
-    // RLS đã filter: User chỉ xem due reviews của chính mình
-    // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
     public async Task<List<FlashCardReview>> GetDueReviewsAsync(int userId, DateTime currentDate)
     {
-        try
-        {
-            // RLS đã filter: User chỉ query được reviews của chính mình
-            // Filter theo userId để đảm bảo đúng (defense in depth)
-            return await _context.FlashCardReviews
-                .Include(r => r.FlashCard)
-                .Where(r => r.UserId == userId && r.NextReviewDate <= currentDate)
-                .OrderBy(r => r.NextReviewDate)
-                .ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting due reviews for user {UserId}", userId);
-            throw;
-        }
+        return await _context.FlashCardReviews
+            .Include(r => r.FlashCard)
+            .Where(r => r.UserId == userId && r.NextReviewDate <= currentDate)
+            .OrderBy(r => r.NextReviewDate)
+            .ToListAsync();
     }
 
-    // RLS đã filter: User chỉ xem reviews của chính mình
-    // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
     public async Task<List<FlashCardReview>> GetReviewsByUserAsync(int userId, int page = 1, int pageSize = 20)
     {
-        try
-        {
-            // RLS đã filter: User chỉ query được reviews của chính mình
-            // Filter theo userId để đảm bảo đúng (defense in depth)
-            return await _context.FlashCardReviews
-                .Include(r => r.FlashCard)
-                .Where(r => r.UserId == userId)
-                .OrderByDescending(r => r.ReviewedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting reviews for user {UserId}, page {Page}, size {PageSize}",
-                userId, page, pageSize);
-            throw;
-        }
+        return await _context.FlashCardReviews
+            .Include(r => r.FlashCard)
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.ReviewedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
     }
 
-    // RLS đã filter: User chỉ đếm due reviews của chính mình
-    // Defense in depth: Vẫn filter theo userId để đảm bảo đúng
     public async Task<int> GetDueCountAsync(int userId, DateTime currentDate)
     {
-        try
-        {
-            // RLS đã filter: User chỉ đếm được reviews của chính mình
-            // Filter theo userId để đảm bảo đúng (defense in depth)
-            return await _context.FlashCardReviews
-                .CountAsync(r => r.UserId == userId && r.NextReviewDate <= currentDate);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting due count for user {UserId}", userId);
-            throw;
-        }
+        return await _context.FlashCardReviews
+            .CountAsync(r => r.UserId == userId && r.NextReviewDate <= currentDate);
     }
 
     public async Task<int> GetTotalReviewsCountAsync(int userId)
     {
-        try
-        {
-            return await _context.FlashCardReviews.CountAsync(r => r.UserId == userId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting total reviews count for user {UserId}", userId);
-            throw;
-        }
+        return await _context.FlashCardReviews.CountAsync(r => r.UserId == userId);
     }
 
     public async Task<int> GetMasteredCardsCountAsync(int userId)
     {
-        try
-        {
-            // Mastered cards are marked with NextReviewDate = DateTime.MaxValue by the service
-            // This approach is flexible and doesn't depend on hard-coded interval values
-            return await _context.FlashCardReviews
-                .CountAsync(r => r.UserId == userId && r.NextReviewDate == DateTime.MaxValue);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting mastered cards count for user {UserId}", userId);
-            throw;
-        }
+        return await _context.FlashCardReviews
+            .CountAsync(r => r.UserId == userId && r.NextReviewDate == DateTime.MaxValue);
     }
 
     public async Task<FlashCardReview> CreateAsync(FlashCardReview review)
     {
-        try
-        {
-            return await AddAsync(review);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating FlashCardReview for user {UserId}, card {FlashCardId}",
-                review.UserId, review.FlashCardId);
-            throw;
-        }
+        await _context.FlashCardReviews.AddAsync(review);
+        await _context.SaveChangesAsync();
+        return review;
     }
 
-    public new async Task UpdateAsync(FlashCardReview review)
+    public async Task UpdateAsync(FlashCardReview review)
     {
-        try
-        {
-            await base.UpdateAsync(review);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating FlashCardReview {ReviewId}", review.FlashCardReviewId);
-            throw;
-        }
+        _context.FlashCardReviews.Update(review);
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(int reviewId)
     {
-        try
+        var review = await _context.FlashCardReviews.FindAsync(reviewId);
+        if (review != null)
         {
-            await DeleteByIdAsync(reviewId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting FlashCardReview {ReviewId}", reviewId);
-            throw;
+            _context.FlashCardReviews.Remove(review);
+            await _context.SaveChangesAsync();
         }
     }
 
     public async Task<List<FlashCardReview>> GetRecentReviewsAsync(int userId, int days = 7)
     {
-        try
-        {
-            var startDate = DateTime.UtcNow.AddDays(-days);
-            return await _context.FlashCardReviews
-                .Include(r => r.FlashCard)
-                .Where(r => r.UserId == userId && r.ReviewedAt >= startDate)
-                .OrderByDescending(r => r.ReviewedAt)
-                .ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting recent reviews for user {UserId}, days {Days}", userId, days);
-            throw;
-        }
+        var startDate = DateTime.UtcNow.AddDays(-days);
+        return await _context.FlashCardReviews
+            .Include(r => r.FlashCard)
+            .Where(r => r.UserId == userId && r.ReviewedAt >= startDate)
+            .OrderByDescending(r => r.ReviewedAt)
+            .ToListAsync();
     }
 }
