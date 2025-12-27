@@ -17,6 +17,7 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
         private readonly IUserRepository _userRepository;
         private readonly ITeacherSubscriptionService _teacherSubscriptionService;
         private readonly INotificationRepository _notificationRepository;
+        private readonly IEmailService _emailService;
         private readonly ILogger<TeacherPackagePaymentProcessor> _logger;
 
         public TeacherPackagePaymentProcessor(
@@ -24,12 +25,14 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
             IUserRepository userRepository,
             ITeacherSubscriptionService teacherSubscriptionService,
             INotificationRepository notificationRepository,
+            IEmailService emailService,
             ILogger<TeacherPackagePaymentProcessor> logger)
         {
             _teacherPackageRepository = teacherPackageRepository;
             _userRepository = userRepository;
             _teacherSubscriptionService = teacherSubscriptionService;
             _notificationRepository = notificationRepository;
+            _emailService = emailService;
             _logger = logger;
         }
 
@@ -143,6 +146,23 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                             CreatedAt = DateTime.UtcNow
                         };
                         await _notificationRepository.AddAsync(notification);
+
+                        // Gửi email xác nhận
+                        try
+                        {
+                            await _emailService.SendNotifyPurchaseTeacherPackageAsync(
+                                teacherUser.Email,
+                                teacherPackage.PackageName,
+                                teacherUser.FullName,
+                                teacherPackage.Price,
+                                endDate
+                            );
+                            _logger.LogInformation("Email xác nhận teacher package đã được gửi tới {Email}", teacherUser.Email);
+                        }
+                        catch (Exception emailEx)
+                        {
+                            _logger.LogWarning(emailEx, "Gửi email xác nhận teacher package thất bại cho User {UserId}", userId);
+                        }
                     }
                 }
                 catch (Exception notifEx)
