@@ -9,7 +9,7 @@ using LearningEnglish.API.Authorization;
 
 
 
-//              Giáo Viên   Quản Lý người dùng trong khóa học của giáo viên 
+//  Giáo Viên   Quản Lý người dùng trong khóa học của giáo viên 
 
 
 
@@ -50,7 +50,7 @@ namespace LearningEnglish.API.Controller.Teacher
                 teacherId, courseId
             );
 
-            var result = await _manageUserInCourseService.GetUsersByCourseIdPagedAsync(courseId, request);
+            var result = await _manageUserInCourseService.GetUsersByCourseIdPagedAsync(courseId, teacherId, request);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -64,7 +64,7 @@ namespace LearningEnglish.API.Controller.Teacher
                 teacherId, studentId, courseId
             );
 
-            var result = await _manageUserInCourseService.GetStudentDetailInCourseAsync(courseId, studentId);
+            var result = await _manageUserInCourseService.GetStudentDetailInCourseAsync(courseId, studentId, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 

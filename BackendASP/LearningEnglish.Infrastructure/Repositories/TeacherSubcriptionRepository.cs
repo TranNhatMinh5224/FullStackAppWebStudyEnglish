@@ -41,5 +41,39 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .OrderByDescending(ts => ts.EndDate)
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<List<TeacherSubscription>> GetAllTeacherSubscriptionsAsync()
+        {
+            return await _context.TeacherSubscriptions
+                .Include(ts => ts.TeacherPackage)
+                .Include(ts => ts.User)
+                .OrderByDescending(ts => ts.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<TeacherSubscription?> GetTeacherSubscriptionByIdAsync(int subscriptionId)
+        {
+            return await _context.TeacherSubscriptions
+                .Include(ts => ts.TeacherPackage)
+                .Include(ts => ts.User)
+                .FirstOrDefaultAsync(ts => ts.TeacherSubscriptionId == subscriptionId);
+        }
+
+        public async Task<TeacherSubscription?> GetTeacherSubscriptionByIdAndUserIdAsync(int subscriptionId, int userId)
+        {
+            return await _context.TeacherSubscriptions
+                .Include(ts => ts.TeacherPackage)
+                .Include(ts => ts.User)
+                .FirstOrDefaultAsync(ts => ts.TeacherSubscriptionId == subscriptionId && ts.UserId == userId);
+        }
+
+        public async Task<List<TeacherSubscription>> GetTeacherSubscriptionsByUserIdAsync(int userId)
+        {
+            return await _context.TeacherSubscriptions
+                .Include(ts => ts.TeacherPackage)
+                .Where(ts => ts.UserId == userId)
+                .OrderByDescending(ts => ts.CreatedAt)
+                .ToListAsync();
+        }
     }
 }

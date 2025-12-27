@@ -120,7 +120,30 @@ namespace LearningEnglish.Application.Service
 
         public async Task<ServiceResponse<QuizAttemptResultDto>> ForceSubmitAttemptAsync(int attemptId)
         {
-            return await _quizAttemptService.SubmitQuizAttemptAsync(attemptId);
+            var response = new ServiceResponse<QuizAttemptResultDto>();
+
+            try
+            {
+                // Get the attempt to retrieve the user ID
+                var attempt = await _quizAttemptRepository.GetByIdAsync(attemptId);
+                if (attempt == null)
+                {
+                    response.Success = false;
+                    response.Message = "Attempt not found";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                // Force submit using the attempt's user ID
+                return await _quizAttemptService.SubmitQuizAttemptAsync(attemptId, attempt.UserId);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+                response.StatusCode = 500;
+                return response;
+            }
         }
 
         public async Task<ServiceResponse<object>> GetQuizAttemptStatsAsync(int quizId)

@@ -34,12 +34,13 @@ using LearningEnglish.Application.Interface.Services.FlashCard;
 using LearningEnglish.Application.Interface.Services.Essay;
 using LearningEnglish.Application.Interface.Services.Module;
 using LearningEnglish.Application.Service.EssayGrading;
+using LearningEnglish.Application.Service.LectureService;
+using LearningEnglish.Application.Service.FlashCardService;
 using Microsoft.Extensions.Options;
 using Minio;
 using LearningEnglish.Infrastructure.MinioFileStorage;
 using LearningEnglish.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
-using LearningEnglish.API.Middleware;
 using LearningEnglish.Domain.Domain;
 using LearningEnglish.Domain.Entities;
 
@@ -201,10 +202,12 @@ builder.Services.AddScoped<IUserModuleService, UserModuleService>();
 builder.Services.AddScoped<IModuleProgressService, ModuleProgressService>();
 builder.Services.AddScoped<IUserLectureService, UserLectureService>();
 builder.Services.AddScoped<IAdminLectureService, AdminLectureService>();
-builder.Services.AddScoped<ITeacherLectureService, TeacherLectureService>();
+builder.Services.AddScoped<ITeacherLectureCommandService, TeacherLectureCommandService>();
+builder.Services.AddScoped<ITeacherLectureQueryService, TeacherLectureQueryService>();
 builder.Services.AddScoped<IUserFlashCardService, UserFlashCardService>();
 builder.Services.AddScoped<IAdminFlashCardService, AdminFlashCardService>();
-builder.Services.AddScoped<ITeacherFlashCardService, TeacherFlashCardService>();
+builder.Services.AddScoped<ITeacherFlashCardCommandService, TeacherFlashCardCommandService>();
+builder.Services.AddScoped<ITeacherFlashCardQueryService, TeacherFlashCardQueryService>();
 builder.Services.AddScoped<IFlashCardReviewService, FlashCardReviewService>();
 builder.Services.AddScoped<IStreakRepository, StreakRepository>();
 builder.Services.AddScoped<IStreakService, StreakService>();
@@ -227,7 +230,6 @@ builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
 builder.Services.AddScoped<ITeacherPackageService, TeacherPackageService>();
-builder.Services.AddScoped<ITeacherSubscriptionService, TeacherSubscriptionService>();
 builder.Services.AddScoped<IUserEnrollmentService, UserEnrollmentService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
@@ -260,6 +262,7 @@ builder.Services.AddScoped<ITeacherQuizService, TeacherQuizService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IQuizAttemptService, QuizAttemptService>();
 builder.Services.AddScoped<IQuizAttemptAdminService, QuizAttemptAdminService>();
+builder.Services.AddScoped<IQuizAttemptTeacherService, QuizAttemptTeacherService>();
 builder.Services.AddScoped<IPronunciationAssessmentService, PronunciationAssessmentService>();
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
@@ -387,16 +390,12 @@ else
     app.UseHttpsRedirection();
 }
 
-app.UseRouting(); // Đặt UseRouting trước UseCors để CORS hoạt động đúng
-app.UseCors("AllowFrontend"); // CORS
-app.UseAuthentication();  // 1. Xác thực JWT token
+app.UseRouting();
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.UseRlsMiddleware();   // 2. Thiết lập context cho RLS (TRƯỚC Authorization!)
-                           //    Lý do: Authorization có thể query DB, cần RLS context đã được set
-
-app.UseAuthorization();   // 3. Kiểm tra quyền [Authorize]
-
-app.MapControllers();  // 4. Thực thi controller actions
+app.MapControllers();
 
 
 

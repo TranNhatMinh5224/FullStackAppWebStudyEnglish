@@ -9,6 +9,9 @@ namespace LearningEnglish.Application.Interface
     {
         // Lấy khóa học theo ID (bao gồm Teacher, Lessons, UserCourses)
         Task<Course?> GetCourseById(int courseId);
+
+        // Lấy khóa học theo ID cho Teacher (kiểm tra ownership)
+        Task<Course?> GetCourseByIdForTeacher(int courseId, int teacherId);
         
         // Thêm khóa học
         Task AddCourse(Course course);
@@ -25,17 +28,17 @@ namespace LearningEnglish.Application.Interface
         // Lấy khóa học hệ thống
         Task<IEnumerable<Course>> GetSystemCourses();
         
-        // Lấy khóa học của giáo viên - RLS đã filter theo teacherId
-        Task<IEnumerable<Course>> GetCoursesByTeacher();
+        // Lấy khóa học của giáo viên
+        Task<IEnumerable<Course>> GetCoursesByTeacher(int teacherId);
 
         // Lấy khóa học của giáo viên với phân trang
         Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, PageRequest request);
 
-        // Lấy khóa học đã đăng ký của user - RLS đã filter theo userId
-        Task<IEnumerable<Course>> GetEnrolledCoursesByUser();
+        // Lấy khóa học đã đăng ký của user - Filter theo userId
+        Task<IEnumerable<Course>> GetEnrolledCoursesByUser(int userId);
         
-        // Lấy khóa học đã đăng ký của user với phân trang (chỉ phân trang, không filter) - RLS đã filter theo userId
-        Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(PageRequest request);
+        // Lấy khóa học đã đăng ký của user với phân trang - Filter theo userId
+        Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(int userId, PageRequest request);
 
         // Kiểm tra user đã đăng ký khóa học
         Task<bool> IsUserEnrolled(int courseId, int userId);

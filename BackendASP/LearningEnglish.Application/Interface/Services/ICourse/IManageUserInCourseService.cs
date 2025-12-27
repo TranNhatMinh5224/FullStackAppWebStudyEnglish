@@ -15,6 +15,12 @@ namespace LearningEnglish.Application.Interface
      
         Task<ServiceResponse<StudentDetailInCourseDto>> GetStudentDetailInCourseAsync(int courseId, int studentId);
         
+        // Teacher lấy danh sách học viên trong course của mình
+        Task<ServiceResponse<PagedResult<UserDto>>> GetUsersByCourseIdPagedAsync(int courseId, int teacherId, PageRequest request);
+        
+        // Teacher lấy chi tiết học sinh trong course của mình
+        Task<ServiceResponse<StudentDetailInCourseDto>> GetStudentDetailInCourseAsync(int courseId, int studentId, int teacherId);
+        
         // Thêm học sinh vào course
        
         Task<ServiceResponse<bool>> AddStudentToCourseByEmailAsync(int courseId, string studentEmail, int currentUserId);

@@ -136,8 +136,10 @@ namespace LearningEnglish.Infrastructure.Repositories
                 return false;
             }
 
-            // Kiểm tra có role Admin không
-            return user.Roles.Any(r => r.Name.Equals("admin", StringComparison.CurrentCultureIgnoreCase));
+            // Kiểm tra có role Admin không (SuperAdmin, ContentAdmin, FinanceAdmin)
+            return user.Roles.Any(r => r.Name.Equals("SuperAdmin", StringComparison.CurrentCultureIgnoreCase) ||
+                                      r.Name.Equals("ContentAdmin", StringComparison.CurrentCultureIgnoreCase) ||
+                                      r.Name.Equals("FinanceAdmin", StringComparison.CurrentCultureIgnoreCase));
         }
 
         // Kiểm tra user có role Teacher trong database
@@ -212,6 +214,55 @@ namespace LearningEnglish.Infrastructure.Repositories
             query = _sortingService.ApplySort(query, request.SortBy, request.SortOrder);
 
             return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
+        }
+
+        // Lấy user theo khóa học với phân trang cho Teacher (kiểm tra ownership)
+        public async Task<PagedResult<User>> GetUsersByCourseIdPagedForTeacherAsync(int courseId, int teacherId, UserQueryParameters request)
+        {
+            var query = _context.UserCourses
+                .Where(uc => uc.CourseId == courseId && uc.User != null)
+                .Join(_context.Courses,
+                    uc => uc.CourseId,
+                    c => c.CourseId,
+                    (uc, c) => new { UserCourse = uc, Course = c })
+                .Where(x => x.Course.TeacherId == teacherId)
+                .Select(x => x.UserCourse.User!)
+                .Include(u => u.Roles)
+                .OrderBy(u => u.FirstName)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                var term = request.SearchTerm.ToLower();
+                query = query.Where(u =>
+                    (u.FirstName + " " + u.LastName).ToLower().Contains(term) ||
+                    u.Email.ToLower().Contains(term));
+            }
+
+            return await query.ToPagedListAsync(request.PageNumber, request.PageSize);
+        }
+
+        // Lấy dữ liệu chi tiết học sinh trong course cho Teacher (kiểm tra ownership)
+        public async Task<(User? Student, UserCourse? UserCourse, CourseProgress? Progress)> GetStudentDetailDataForTeacherAsync(int courseId, int studentId, int teacherId)
+        {
+            // Kiểm tra course ownership
+            var course = await _context.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId && c.TeacherId == teacherId);
+            if (course == null)
+            {
+                return (null, null, null);
+            }
+
+            var student = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.UserId == studentId);
+
+            var userCourse = await _context.UserCourses
+                .FirstOrDefaultAsync(uc => uc.CourseId == courseId && uc.UserId == studentId);
+
+            var progress = await _context.CourseProgresses
+                .FirstOrDefaultAsync(cp => cp.UserId == studentId && cp.CourseId == courseId);
+
+            return (student, userCourse, progress);
         }
     }
 }

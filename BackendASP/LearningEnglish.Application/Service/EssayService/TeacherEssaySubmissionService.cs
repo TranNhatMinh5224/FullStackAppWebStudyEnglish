@@ -4,6 +4,7 @@ using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
@@ -12,6 +13,8 @@ namespace LearningEnglish.Application.Service
     {
         private readonly IEssaySubmissionRepository _essaySubmissionRepository;
         private readonly IEssayRepository _essayRepository;
+        private readonly IAssessmentRepository _assessmentRepository;
+        private readonly IGeminiService _geminiService;
         private readonly IMinioFileStorage _minioFileStorage;
         private readonly IMapper _mapper;
         private readonly ILogger<TeacherEssaySubmissionService> _logger;
@@ -24,12 +27,16 @@ namespace LearningEnglish.Application.Service
         public TeacherEssaySubmissionService(
             IEssaySubmissionRepository essaySubmissionRepository,
             IEssayRepository essayRepository,
+            IAssessmentRepository assessmentRepository,
+            IGeminiService geminiService,
             IMinioFileStorage minioFileStorage,
             IMapper mapper,
             ILogger<TeacherEssaySubmissionService> logger)
         {
             _essaySubmissionRepository = essaySubmissionRepository;
             _essayRepository = essayRepository;
+            _assessmentRepository = assessmentRepository;
+            _geminiService = geminiService;
             _minioFileStorage = minioFileStorage;
             _mapper = mapper;
             _logger = logger;
@@ -274,6 +281,290 @@ namespace LearningEnglish.Application.Service
             }
 
             return response;
+        }
+
+        public async Task<ServiceResponse<EssaySubmissionDto>> GradeSubmissionAsync(int submissionId, int teacherId, decimal score, string? feedback)
+        {
+            var response = new ServiceResponse<EssaySubmissionDto>();
+
+            try
+            {
+                // Validate ownership
+                if (!await ValidateSubmissionEssayOwnershipAsync(submissionId, teacherId))
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền chấm bài nộp này";
+                    return response;
+                }
+
+                var submission = await _essaySubmissionRepository.GetSubmissionByIdAsync(submissionId);
+                var essay = await _essayRepository.GetEssayByIdAsync(submission.EssayId);
+                var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+
+                // Validate score
+                if (score < 0 || score > assessment.TotalPoints)
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = $"Điểm không hợp lệ. Phải từ 0 đến {assessment.TotalPoints}";
+                    return response;
+                }
+
+                // Update score (ghi đè trực tiếp, không dùng TeacherScore)
+                submission.Score = score;
+                submission.Feedback = feedback;
+                submission.GradedAt = DateTime.UtcNow;
+                submission.GradedByTeacherId = teacherId;
+                submission.Status = SubmissionStatus.Graded;
+
+                await _essaySubmissionRepository.UpdateSubmissionAsync(submission);
+
+                response.Data = _mapper.Map<EssaySubmissionDto>(submission);
+                response.Success = true;
+                response.Message = "Chấm điểm thành công";
+                response.StatusCode = 200;
+
+                _logger.LogInformation("Teacher {TeacherId} graded submission {SubmissionId} with score {Score}", teacherId, submissionId, score);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error grading submission {SubmissionId}", submissionId);
+                response.Success = false;
+                response.Message = $"Lỗi: {ex.Message}";
+                response.StatusCode = 500;
+            }
+
+            return response;
+        }
+
+        public async Task<ServiceResponse<BatchGradingResultDto>> BatchGradeByAiAsync(int essayId, int teacherId)
+        {
+            var response = new ServiceResponse<BatchGradingResultDto>();
+
+            try
+            {
+                _logger.LogInformation("👨‍🏫 Teacher {TeacherId} requesting batch AI grading for essay {EssayId}", teacherId, essayId);
+
+                // Validate ownership
+                if (!await ValidateEssayOwnershipAsync(essayId, teacherId))
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền chấm bài essay này";
+                    return response;
+                }
+
+                // Get essay and assessment
+                var essay = await _essayRepository.GetEssayByIdAsync(essayId);
+                var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+                var maxScore = assessment.TotalPoints;
+
+                // Get all submissions chưa chấm (hoặc chỉ có AI score, chưa có teacher score)
+                var allSubmissions = await _essaySubmissionRepository.GetSubmissionsByEssayIdAsync(essayId);
+                var pendingSubmissions = allSubmissions
+                    .Where(s => s.Status != SubmissionStatus.Graded || s.Score == null)
+                    .Where(s => !string.IsNullOrWhiteSpace(s.TextContent)) // Only grade submissions with text
+                    .ToList();
+
+                _logger.LogInformation("Found {Count} submissions to grade", pendingSubmissions.Count);
+
+                var results = new List<GradingResult>();
+                int successCount = 0;
+                int failCount = 0;
+
+                foreach (var submission in pendingSubmissions)
+                {
+                    try
+                    {
+                        // Build prompt
+                        var prompt = BuildGradingPrompt(essay.Title, essay.Description ?? "Không có mô tả", submission.TextContent, maxScore);
+
+                        // Call Gemini
+                        var geminiResponse = await _geminiService.GenerateContentAsync(prompt);
+
+                        if (!geminiResponse.Success)
+                        {
+                            failCount++;
+                            results.Add(new GradingResult
+                            {
+                                SubmissionId = submission.SubmissionId,
+                                UserName = submission.User?.FullName ?? "Unknown",
+                                Success = false,
+                                Error = geminiResponse.ErrorMessage
+                            });
+                            continue;
+                        }
+
+                        // Parse response
+                        var aiResult = ParseAiResponse(geminiResponse.Content);
+
+                        if (aiResult.Score > maxScore)
+                        {
+                            aiResult.Score = maxScore;
+                        }
+
+                        // Save result (AI score, NOT teacher score)
+                        submission.Score = aiResult.Score;
+                        submission.Feedback = aiResult.Feedback;
+                        submission.GradedAt = DateTime.UtcNow;
+                        submission.Status = SubmissionStatus.Graded;
+
+                        await _essaySubmissionRepository.UpdateSubmissionAsync(submission);
+
+                        successCount++;
+                        results.Add(new GradingResult
+                        {
+                            SubmissionId = submission.SubmissionId,
+                            UserName = submission.User?.FullName ?? "Unknown",
+                            Score = aiResult.Score,
+                            Success = true
+                        });
+
+                        _logger.LogInformation("✅ Graded submission {SubmissionId}: {Score}/{MaxScore}", submission.SubmissionId, aiResult.Score, maxScore);
+                    }
+                    catch (Exception ex)
+                    {
+                        failCount++;
+                        results.Add(new GradingResult
+                        {
+                            SubmissionId = submission.SubmissionId,
+                            UserName = submission.User?.FullName ?? "Unknown",
+                            Success = false,
+                            Error = ex.Message
+                        });
+                        _logger.LogError(ex, "Failed to grade submission {SubmissionId}", submission.SubmissionId);
+                    }
+                }
+
+                response.Data = new BatchGradingResultDto
+                {
+                    TotalProcessed = pendingSubmissions.Count,
+                    SuccessCount = successCount,
+                    FailCount = failCount,
+                    Results = results
+                };
+                response.Success = true;
+                response.Message = $"Đã chấm {successCount}/{pendingSubmissions.Count} bài";
+                response.StatusCode = 200;
+
+                _logger.LogInformation("🎯 Batch grading completed. Success: {Success}, Failed: {Failed}", successCount, failCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in batch grading for essay {EssayId}", essayId);
+                response.Success = false;
+                response.Message = $"Lỗi: {ex.Message}";
+                response.StatusCode = 500;
+            }
+
+            return response;
+        }
+
+        public async Task<ServiceResponse<EssayStatisticsDto>> GetEssayStatisticsAsync(int essayId, int teacherId)
+        {
+            var response = new ServiceResponse<EssayStatisticsDto>();
+
+            try
+            {
+                // Validate ownership
+                if (!await ValidateEssayOwnershipAsync(essayId, teacherId))
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền xem thống kê essay này";
+                    return response;
+                }
+
+                var submissions = await _essaySubmissionRepository.GetSubmissionsByEssayIdAsync(essayId);
+
+                var stats = new EssayStatisticsDto
+                {
+                    EssayId = essayId,
+                    TotalSubmissions = submissions.Count,
+                    Pending = submissions.Count(s => s.Status != SubmissionStatus.Graded),
+                    GradedByAi = submissions.Count(s => s.Status == SubmissionStatus.Graded && s.GradedByTeacherId == null),
+                    GradedByTeacher = submissions.Count(s => s.GradedByTeacherId != null),
+                    NoTextContent = submissions.Count(s => string.IsNullOrWhiteSpace(s.TextContent))
+                };
+
+                response.Data = stats;
+                response.Success = true;
+                response.Message = "Lấy thống kê thành công";
+                response.StatusCode = 200;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting statistics for essay {EssayId}", essayId);
+                response.Success = false;
+                response.Message = $"Lỗi: {ex.Message}";
+                response.StatusCode = 500;
+            }
+
+            return response;
+        }
+
+        private string BuildGradingPrompt(string essayTitle, string essayDescription, string studentAnswer, decimal maxScore)
+        {
+            return $@"Bạn là một giáo viên chuyên nghiệp. Hãy chấm điểm bài làm của học sinh dựa trên đề bài.
+
+**ĐỀ BÀI:**
+Tiêu đề: {essayTitle}
+Mô tả: {essayDescription}
+
+**BÀI LÀM CỦA HỌC SINH:**
+{studentAnswer}
+
+**YÊU CẦU:**
+- Điểm tối đa: {maxScore}
+- Đánh giá theo các tiêu chí: Nội dung, Cấu trúc, Ngữ pháp, Từ vựng
+- Trả về kết quả dưới dạng JSON với format:
+{{
+  ""score"": <điểm số>,
+  ""feedback"": ""<nhận xét tổng quan>"",
+  ""breakdown"": ""<chi tiết điểm từng tiêu chí>"",
+  ""strengths"": ""<điểm mạnh>"",
+  ""improvements"": ""<gợi ý cải thiện>""
+}}";
+        }
+
+        private (decimal Score, string Feedback, string Breakdown, string Strengths, string Improvements) ParseAiResponse(string responseText)
+        {
+            try
+            {
+                // Remove markdown code blocks if present
+                var jsonText = responseText.Trim();
+                if (jsonText.StartsWith("```json"))
+                {
+                    jsonText = jsonText.Substring(7);
+                }
+                else if (jsonText.StartsWith("```"))
+                {
+                    jsonText = jsonText.Substring(3);
+                }
+
+                if (jsonText.EndsWith("```"))
+                {
+                    jsonText = jsonText.Substring(0, jsonText.Length - 3);
+                }
+
+                jsonText = jsonText.Trim();
+
+                var result = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(jsonText);
+
+                return (
+                    Score: result.GetProperty("score").GetDecimal(),
+                    Feedback: result.GetProperty("feedback").GetString() ?? "",
+                    Breakdown: result.TryGetProperty("breakdown", out var b) ? b.GetString() ?? "" : "",
+                    Strengths: result.TryGetProperty("strengths", out var s) ? s.GetString() ?? "" : "",
+                    Improvements: result.TryGetProperty("improvements", out var i) ? i.GetString() ?? "" : ""
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to parse AI response: {Response}", responseText);
+                throw new Exception($"Không thể parse AI response: {ex.Message}");
+            }
         }
     }
 }

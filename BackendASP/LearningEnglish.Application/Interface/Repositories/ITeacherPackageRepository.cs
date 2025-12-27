@@ -19,6 +19,9 @@ namespace LearningEnglish.Application.Interface
         // Xóa gói giáo viên
         Task DeleteTeacherPackageAsync(int id);
         
+        // Kiểm tra xem package có đang được sử dụng bởi subscriptions không
+        Task<bool> HasActiveSubscriptionsAsync(int packageId);
+        
         // Lưu thay đổi
         Task SaveChangesAsync();
         

@@ -6,6 +6,7 @@ using LearningEnglish.Application.Common.Utils;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
 using AutoMapper;
+using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
@@ -67,8 +68,8 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra số lượng course hiện tại 
-                var teacherCourses = await _courseRepository.GetCoursesByTeacher();
+                // Kiểm tra số lượng course hiện tại của teacher này
+                var teacherCourses = await _courseRepository.GetCoursesByTeacher(teacherId);
                 int currentCourseCount = teacherCourses.Count();
                 int maxCourses = teacherPackage.MaxCourses;
 
@@ -191,26 +192,17 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                var course = await _courseRepository.GetCourseById(courseId);
+                var course = await _courseRepository.GetCourseByIdForTeacher(courseId, teacherId);
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy khóa học";
-                    return response;
-                }
-
-                // Kiểm tra course phải thuộc về teacher hiện tại
-                if (course.TeacherId != teacherId)
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "Bạn không có quyền cập nhật khóa học này";
+                    response.Message = "Không tìm thấy khóa học hoặc bạn không có quyền truy cập";
                     return response;
                 }
 
                 // Không cho phép teacher cập nhật course System
-                if (course.Type == Domain.Enums.CourseType.System)
+                if (course.Type ==  CourseType.System)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
@@ -403,26 +395,17 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                var course = await _courseRepository.GetCourseById(courseId);
+                var course = await _courseRepository.GetCourseByIdForTeacher(courseId, teacherId);
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy khóa học";
-                    return response;
-                }
-
-                // Kiểm tra course phải thuộc về teacher hiện tại
-                if (course.TeacherId != teacherId)
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "Bạn không có quyền xóa khóa học này";
+                    response.Message = "Không tìm thấy khóa học hoặc bạn không có quyền truy cập";
                     return response;
                 }
 
                 // Không cho phép teacher xóa course System
-                if (course.Type == Domain.Enums.CourseType.System)
+                if (course.Type == CourseType.System)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
@@ -493,7 +476,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Không cho phép teacher xem course System (optional - tùy business logic)
-                if (course.Type == Domain.Enums.CourseType.System)
+                if (course.Type == CourseType.System)
                 {
                     response.Success = false;
                     response.StatusCode = 403;

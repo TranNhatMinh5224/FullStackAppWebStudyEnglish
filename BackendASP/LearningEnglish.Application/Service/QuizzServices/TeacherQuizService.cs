@@ -3,6 +3,7 @@ using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Domain.Entities;
 using AutoMapper;
+using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
@@ -10,18 +11,28 @@ namespace LearningEnglish.Application.Service
     {
         private readonly IQuizRepository _quizRepository;
         private readonly IAssessmentRepository _assessmentRepository;
+        private readonly IModuleRepository _moduleRepository;
+        private readonly ICourseRepository _courseRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<TeacherQuizService> _logger;
 
         public TeacherQuizService(
             IQuizRepository quizRepository, 
-            IAssessmentRepository assessmentRepository, 
-            IMapper mapper)
+            IAssessmentRepository assessmentRepository,
+            IModuleRepository moduleRepository,
+            ICourseRepository courseRepository,
+            IMapper mapper,
+            ILogger<TeacherQuizService> logger)
         {
             _quizRepository = quizRepository;
             _assessmentRepository = assessmentRepository;
+            _moduleRepository = moduleRepository;
+            _courseRepository = courseRepository;
             _mapper = mapper;
+            _logger = logger;
         }
 
+        // Teacher có thể xem Quiz nếu là owner HOẶC đã enroll
         public async Task<ServiceResponse<QuizDto>> GetQuizByIdAsync(int quizId, int teacherId)
         {
             var response = new ServiceResponse<QuizDto>();
@@ -30,19 +41,61 @@ namespace LearningEnglish.Application.Service
                 var quiz = await _quizRepository.GetQuizByIdAsync(quizId);
                 if (quiz == null)
                 {
-                    return new ServiceResponse<QuizDto>
-                    {
-                        Success = false,
-                        Message = "Quiz not found",
-                        StatusCode = 404
-                    };
+                    response.Success = false;
+                    response.Message = "Không tìm thấy Quiz";
+                    response.StatusCode = 404;
+                    return response;
                 }
 
-                if (!await _assessmentRepository.IsTeacherOwnerOfAssessmentAsync(teacherId, quiz.AssessmentId))
+                // Lấy Assessment với Module và Course để check
+                var assessment = await _assessmentRepository.GetAssessmentById(quiz.AssessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy Assessment";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                // Lấy Module với Course để check
+                var module = await _moduleRepository.GetModuleWithCourseAsync(assessment.ModuleId);
+                if (module == null)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy Module";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                // Check: teacher phải là owner HOẶC đã enroll
+                var courseId = module.Lesson?.CourseId;
+                if (!courseId.HasValue)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy khóa học";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                var course = await _courseRepository.GetCourseById(courseId.Value);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy khóa học";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                var isOwner = course.TeacherId.HasValue && course.TeacherId.Value == teacherId;
+                var isEnrolled = await _courseRepository.IsUserEnrolled(courseId.Value, teacherId);
+
+                if (!isOwner && !isEnrolled)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
-                    response.Message = "Teacher không có quyền xem Quiz này";
+                    response.Message = "Bạn cần sở hữu hoặc đăng ký khóa học để xem Quiz này";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to access quiz {QuizId} without ownership or enrollment", 
+                        teacherId, quizId);
                     return response;
                 }
 
@@ -54,6 +107,7 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error getting quiz {QuizId} for teacher {TeacherId}", quizId, teacherId);
                 response.Success = false;
                 response.Message = ex.Message;
                 response.StatusCode = 500;
@@ -61,16 +115,61 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
+        // Teacher có thể xem Quizzes nếu là owner HOẶC đã enroll
         public async Task<ServiceResponse<List<QuizDto>>> GetQuizzesByAssessmentIdAsync(int assessmentId, int teacherId)
         {
             var response = new ServiceResponse<List<QuizDto>>();
             try
             {
-                if (!await _assessmentRepository.IsTeacherOwnerOfAssessmentAsync(teacherId, assessmentId))
+                // Lấy Assessment với Module và Course để check
+                var assessment = await _assessmentRepository.GetAssessmentById(assessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy Assessment";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                // Lấy Module với Course để check
+                var module = await _moduleRepository.GetModuleWithCourseAsync(assessment.ModuleId);
+                if (module == null)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy Module";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                // Check: teacher phải là owner HOẶC đã enroll
+                var courseId = module.Lesson?.CourseId;
+                if (!courseId.HasValue)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy khóa học";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                var course = await _courseRepository.GetCourseById(courseId.Value);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy khóa học";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                var isOwner = course.TeacherId.HasValue && course.TeacherId.Value == teacherId;
+                var isEnrolled = await _courseRepository.IsUserEnrolled(courseId.Value, teacherId);
+
+                if (!isOwner && !isEnrolled)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
-                    response.Message = "Teacher không có quyền xem Quizzes của Assessment này";
+                    response.Message = "Bạn cần sở hữu hoặc đăng ký khóa học để xem các Quiz";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to list quizzes of assessment {AssessmentId} without ownership or enrollment", 
+                        teacherId, assessmentId);
                     return response;
                 }
 
@@ -83,6 +182,7 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error getting quizzes for assessment {AssessmentId} and teacher {TeacherId}", assessmentId, teacherId);
                 response.Success = false;
                 response.Message = ex.Message;
                 response.StatusCode = 500;

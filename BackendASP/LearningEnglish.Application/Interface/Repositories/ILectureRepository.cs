@@ -7,6 +7,9 @@ namespace LearningEnglish.Application.Interface
         // Lấy bài giảng theo ID
         Task<Lecture?> GetByIdAsync(int lectureId);
         
+        // Lấy bài giảng theo ID cho Teacher (kiểm tra ownership qua course)
+        Task<Lecture?> GetByIdForTeacherAsync(int lectureId, int teacherId);
+        
         // Lấy bài giảng với chi tiết
         Task<Lecture?> GetByIdWithDetailsAsync(int lectureId);
         
@@ -39,5 +42,8 @@ namespace LearningEnglish.Application.Interface
 
         // Lấy bài giảng với module và course
         Task<Lecture?> GetLectureWithModuleCourseAsync(int lectureId);
+
+        // Lấy bài giảng với module và course cho Teacher (kiểm tra ownership)
+        Task<Lecture?> GetLectureWithModuleCourseForTeacherAsync(int lectureId, int teacherId);
     }
 }

@@ -3,10 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 namespace LearningEnglish.API.Authorization
 {
 
-    // Attribute để yêu cầu permission cụ thể cho Admin
-    // SuperAdmin tự động pass, Admin cần có permission
-    // 
-    // Sử dụng: [RequirePermission("Admin.Course.Manage")]
     
     public class RequirePermissionAttribute : AuthorizeAttribute
     {

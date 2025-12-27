@@ -3,9 +3,7 @@ using Microsoft.Extensions.Options;
 
 namespace LearningEnglish.API.Authorization
 {
-    /// <summary>
-    /// Policy provider để tự động tạo policy từ RequirePermission và RequireTeacherRole attributes
-    /// </summary>
+  
     public class PermissionPolicyProvider : IAuthorizationPolicyProvider
     {
         private const string POLICY_PREFIX = "PERMISSION_";
@@ -29,9 +27,6 @@ namespace LearningEnglish.API.Authorization
 
         public Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
         {
-            // ═══════════════════════════════════════════════════════════════
-            // HANDLE PERMISSION POLICIES (Admin)
-            // ═══════════════════════════════════════════════════════════════
             if (policyName.StartsWith(POLICY_PREFIX))
             {
                 var permissionNames = policyName

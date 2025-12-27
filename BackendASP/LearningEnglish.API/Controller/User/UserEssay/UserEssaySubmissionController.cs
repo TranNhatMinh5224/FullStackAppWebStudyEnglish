@@ -71,5 +71,15 @@ namespace LearningEnglish.API.Controller.User
             var result = await _essaySubmissionService.DeleteSubmissionAsync(submissionId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
+
+        // POST: api/user/essay-submissions/{submissionId}/request-ai-grading - Student yeu cau AI cham diem (System Course only)
+        [HttpPost("{submissionId}/request-ai-grading")]
+        public async Task<IActionResult> RequestAiGrading(int submissionId)
+        {
+            var userId = User.GetUserId();
+
+            var result = await _essaySubmissionService.RequestAiGradingAsync(submissionId, userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
     }
 }

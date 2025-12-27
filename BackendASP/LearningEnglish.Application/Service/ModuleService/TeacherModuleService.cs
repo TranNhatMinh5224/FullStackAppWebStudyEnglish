@@ -4,6 +4,7 @@ using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.Module;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Common.Helpers;
 using Microsoft.Extensions.Logging;
 
@@ -43,7 +44,7 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<ModuleDto>();
             try
             {
-                var lesson = await _lessonRepository.GetLessonById(dto.LessonId);
+                var lesson = await _lessonRepository.GetLessonByIdForTeacher(dto.LessonId, teacherId);
                 if (lesson == null)
                 {
                     response.Success = false;
@@ -52,12 +53,22 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                var course = await _courseRepository.GetCourseById(lesson.CourseId);
-                if (course == null || course.TeacherId != teacherId)
+                // Validate ownership: teacher phải sở hữu course của lesson
+                var course = await _courseRepository.GetCourseByIdForTeacher(lesson.CourseId, teacherId);
+                if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
-                    response.Message = "Không có quyền tạo module trong bài học này";
+                    response.Message = "Bạn không có quyền tạo module cho bài học này";
+                    return response;
+                }
+
+                // Business logic: Chỉ teacher course mới được tạo module
+                if (course.Type != CourseType.Teacher)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Chỉ có thể tạo module cho khóa học của giáo viên";
                     return response;
                 }
 
@@ -114,13 +125,14 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        // Teacher lấy module theo ID (own course only)
-        public async Task<ServiceResponse<ModuleDto>> GetModuleById(int moduleId)
+        // Teacher lấy module theo ID - Teacher có thể xem nếu là owner HOẶC đã enroll
+        public async Task<ServiceResponse<ModuleDto>> GetModuleById(int moduleId, int teacherId)
         {
             var response = new ServiceResponse<ModuleDto>();
             try
             {
-                var module = await _moduleRepository.GetByIdWithDetailsAsync(moduleId);
+                // Lấy module với course để check
+                var module = await _moduleRepository.GetModuleWithCourseAsync(moduleId);
                 if (module == null)
                 {
                     response.Success = false;
@@ -129,13 +141,57 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                var dto = _mapper.Map<ModuleDto>(module);
-
-                if (!string.IsNullOrWhiteSpace(module.ImageKey))
+                // Check: teacher phải là owner HOẶC đã enroll
+                var courseId = module.Lesson?.CourseId;
+                if (!courseId.HasValue)
                 {
-                    dto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, module.ImageKey);
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
                 }
 
+                var course = await _courseRepository.GetCourseById(courseId.Value);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isOwner = course.TeacherId.HasValue && course.TeacherId.Value == teacherId;
+                var isEnrolled = await _courseRepository.IsUserEnrolled(courseId.Value, teacherId);
+
+                if (!isOwner && !isEnrolled)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn cần sở hữu hoặc đăng ký khóa học để xem module này";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to access module {ModuleId} without ownership or enrollment", 
+                        teacherId, moduleId);
+                    return response;
+                }
+
+                // Load full details
+                var fullModule = await _moduleRepository.GetByIdWithDetailsAsync(moduleId);
+                if (fullModule == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy module";
+                    return response;
+                }
+
+                var dto = _mapper.Map<ModuleDto>(fullModule);
+
+                if (!string.IsNullOrWhiteSpace(fullModule.ImageKey))
+                {
+                    dto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, fullModule.ImageKey);
+                }
+
+                response.Success = true;
+                response.StatusCode = 200;
                 response.Data = dto;
                 response.Message = "Lấy thông tin module thành công";
                 return response;
@@ -150,15 +206,53 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        // Teacher lấy danh sách module theo lesson (own course only)
-        public async Task<ServiceResponse<List<ListModuleDto>>> GetModulesByLessonId(int lessonId)
+        // Teacher lấy danh sách module theo lesson - Teacher có thể xem nếu là owner HOẶC đã enroll
+        public async Task<ServiceResponse<List<ListModuleDto>>> GetModulesByLessonId(int lessonId, int teacherId)
         {
             var response = new ServiceResponse<List<ListModuleDto>>();
             try
             {
-                var modules = await _moduleRepository.GetByLessonIdAsync(lessonId);
+                // Lấy lesson để check course
+                var lesson = await _lessonRepository.GetLessonById(lessonId);
+                if (lesson == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài học";
+                    return response;
+                }
+
+                // Check: teacher phải là owner HOẶC đã enroll
+                var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isOwner = course.TeacherId.HasValue && course.TeacherId.Value == teacherId;
+                var isEnrolled = await _courseRepository.IsUserEnrolled(lesson.CourseId, teacherId);
+
+                if (!isOwner && !isEnrolled)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn cần sở hữu hoặc đăng ký khóa học để xem các module";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to list modules of lesson {LessonId} without ownership or enrollment", 
+                        teacherId, lessonId);
+                    return response;
+                }
+
+                // Nếu là owner, dùng method filter theo teacherId. Nếu chỉ enroll, dùng method thường
+                var modules = isOwner 
+                    ? await _moduleRepository.GetByLessonIdForTeacherAsync(lessonId, teacherId)
+                    : await _moduleRepository.GetByLessonIdAsync(lessonId);
                 var dtos = _mapper.Map<List<ListModuleDto>>(modules);
 
+                response.Success = true;
+                response.StatusCode = 200;
                 response.Data = dtos;
                 response.Message = "Lấy danh sách module thành công";
                 return response;
@@ -174,13 +268,37 @@ namespace LearningEnglish.Application.Service
         }
 
         // Teacher cập nhật module (own course only)
-        public async Task<ServiceResponse<ModuleDto>> UpdateModule(int moduleId, UpdateModuleDto dto)
+        public async Task<ServiceResponse<ModuleDto>> UpdateModule(int moduleId, UpdateModuleDto dto, int teacherId)
         {
             var response = new ServiceResponse<ModuleDto>();
             try
             {
-                var module = await _moduleRepository.GetByIdAsync(moduleId);
+                // Validate ownership: teacher phải sở hữu module qua course
+                var module = await _moduleRepository.GetModuleWithCourseForTeacherAsync(moduleId, teacherId);
                 if (module == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy module hoặc bạn không có quyền truy cập";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to update module {ModuleId} without ownership", 
+                        teacherId, moduleId);
+                    return response;
+                }
+
+                // Business logic: Chỉ teacher course mới được cập nhật module
+                if (module.Lesson?.Course?.Type != CourseType.Teacher)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Chỉ có thể cập nhật module của khóa học giáo viên";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to update module {ModuleId} of System course", 
+                        teacherId, moduleId);
+                    return response;
+                }
+
+                // Load module để update (module đã được validate ownership ở trên)
+                var moduleToUpdate = await _moduleRepository.GetByIdAsync(moduleId);
+                if (moduleToUpdate == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
@@ -189,7 +307,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 string? newImageKey = null;
-                var oldImageKey = module.ImageKey;
+                var oldImageKey = moduleToUpdate.ImageKey;
 
                 if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                 {
@@ -208,16 +326,24 @@ namespace LearningEnglish.Application.Service
                     }
 
                     newImageKey = commit.Data;
-                    module.ImageKey = newImageKey;
-                    module.ImageType = dto.ImageType;
+                    moduleToUpdate.ImageKey = newImageKey;
+                    moduleToUpdate.ImageType = dto.ImageType;
                 }
 
-                _mapper.Map(dto, module);
-                var updated = await _moduleRepository.UpdateAsync(module);
+                _mapper.Map(dto, moduleToUpdate);
+                var updated = await _moduleRepository.UpdateAsync(moduleToUpdate);
 
+                // Xóa ảnh cũ chỉ sau khi update thành công
                 if (!string.IsNullOrWhiteSpace(oldImageKey) && newImageKey != null)
                 {
-                    await _minioFileStorage.DeleteFileAsync(oldImageKey, ModuleImageBucket);
+                    try
+                    {
+                        await _minioFileStorage.DeleteFileAsync(oldImageKey, ModuleImageBucket);
+                    }
+                    catch (Exception deleteEx)
+                    {
+                        _logger.LogWarning(deleteEx, "Failed to delete old module image: {ImageKey}", oldImageKey);
+                    }
                 }
 
                 var fullModule = await _moduleRepository.GetByIdWithDetailsAsync(updated.ModuleId);
@@ -228,6 +354,8 @@ namespace LearningEnglish.Application.Service
                     resultDto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, fullModule.ImageKey);
                 }
 
+                response.Success = true;
+                response.StatusCode = 200;
                 response.Data = resultDto;
                 response.Message = "Cập nhật module thành công";
                 return response;
@@ -243,26 +371,52 @@ namespace LearningEnglish.Application.Service
         }
 
         // Teacher xóa module (own course only)
-        public async Task<ServiceResponse<bool>> DeleteModule(int moduleId)
+        public async Task<ServiceResponse<bool>> DeleteModule(int moduleId, int teacherId)
         {
             var response = new ServiceResponse<bool>();
             try
             {
-                var module = await _moduleRepository.GetByIdAsync(moduleId);
+                // Validate ownership: teacher phải sở hữu module qua course
+                var module = await _moduleRepository.GetModuleWithCourseForTeacherAsync(moduleId, teacherId);
                 if (module == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy module";
+                    response.Message = "Không tìm thấy module hoặc bạn không có quyền truy cập";
+                    response.Data = false;
+                    _logger.LogWarning("Teacher {TeacherId} attempted to delete module {ModuleId} without ownership", 
+                        teacherId, moduleId);
                     return response;
                 }
 
+                // Business logic: Chỉ teacher course mới được xóa module
+                if (module.Lesson?.Course?.Type != CourseType.Teacher)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Chỉ có thể xóa module của khóa học giáo viên";
+                    response.Data = false;
+                    _logger.LogWarning("Teacher {TeacherId} attempted to delete module {ModuleId} of System course", 
+                        teacherId, moduleId);
+                    return response;
+                }
+
+                // Xóa ảnh module trên MinIO nếu có
                 if (!string.IsNullOrWhiteSpace(module.ImageKey))
                 {
-                    await _minioFileStorage.DeleteFileAsync(module.ImageKey, ModuleImageBucket);
+                    try
+                    {
+                        await _minioFileStorage.DeleteFileAsync(module.ImageKey, ModuleImageBucket);
+                    }
+                    catch (Exception deleteEx)
+                    {
+                        _logger.LogWarning(deleteEx, "Failed to delete module image: {ImageKey}", module.ImageKey);
+                    }
                 }
 
                 response.Data = await _moduleRepository.DeleteAsync(moduleId);
+                response.Success = true;
+                response.StatusCode = 200;
                 response.Message = "Xóa module thành công";
                 return response;
             }
@@ -272,6 +426,7 @@ namespace LearningEnglish.Application.Service
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Đã xảy ra lỗi khi xóa module";
+                response.Data = false;
                 return response;
             }
         }

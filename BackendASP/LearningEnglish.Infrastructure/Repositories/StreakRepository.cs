@@ -36,7 +36,6 @@ namespace LearningEnglish.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        // RLS đã filter: User chỉ check streak của chính mình
         public async Task<bool> ExistsAsync(int userId)
         {
             

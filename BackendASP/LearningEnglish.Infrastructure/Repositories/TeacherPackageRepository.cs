@@ -48,6 +48,12 @@ namespace LearningEnglish.Infrastructure.Repositories
             }
         }
 
+        public async Task<bool> HasActiveSubscriptionsAsync(int packageId)
+        {
+            return await _context.TeacherSubscriptions
+                .AnyAsync(ts => ts.TeacherPackageId == packageId);
+        }
+
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
@@ -57,7 +63,6 @@ namespace LearningEnglish.Infrastructure.Repositories
         
         public async Task<TeacherPackage?> GetInformationTeacherpackageAsync(int teacherId, DateTime date)
         {
-            // RLS đã filter TeacherSubscriptions theo userId, chỉ cần filter date và status
             var result = await (from tp in _context.TeacherPackages
                                 join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
                                 where ts.StartDate <= date
@@ -71,7 +76,6 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<TeacherPackage?> GetInformationTeacherpackage(int teacherId)
         {
             var now = DateTime.UtcNow;
-            // RLS đã filter TeacherSubscriptions theo userId, chỉ cần filter date và status
             var result = await (from tp in _context.TeacherPackages
                                 join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
                                 where ts.StartDate <= now

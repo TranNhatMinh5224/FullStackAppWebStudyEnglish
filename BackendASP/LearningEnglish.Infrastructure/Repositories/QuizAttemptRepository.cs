@@ -26,6 +26,15 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .Include(qa => qa.User)
                 .FirstOrDefaultAsync(qa => qa.AttemptId == attemptId);
         }
+
+        public async Task<QuizAttempt?> GetByIdAndUserIdAsync(int attemptId, int userId)
+        {
+            return await _context.QuizAttempts
+                .Include(qa => qa.Quiz)
+                .Include(qa => qa.User)
+                .FirstOrDefaultAsync(qa => qa.AttemptId == attemptId && qa.UserId == userId);
+        }
+
         public async Task UpdateQuizAttemptAsync(QuizAttempt attempt)
         {
             _context.QuizAttempts.Update(attempt);

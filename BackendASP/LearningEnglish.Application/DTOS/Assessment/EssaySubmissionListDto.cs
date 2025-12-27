@@ -17,6 +17,12 @@ namespace LearningEnglish.Application.DTOs
         public DateTime SubmittedAt { get; set; }
         public SubmissionStatus Status { get; set; }
 
+        // Thông tin chấm điểm
+        public decimal? Score { get; set; }
+        public DateTime? GradedAt { get; set; }
+        public int? GradedByTeacherId { get; set; }  // null = AI chấm, có giá trị = Teacher chấm
+        public string? FeedbackPreview { get; set; }  // 100 ký tự đầu
+
         // Có file đính kèm không
         public bool HasAttachment { get; set; }
     }

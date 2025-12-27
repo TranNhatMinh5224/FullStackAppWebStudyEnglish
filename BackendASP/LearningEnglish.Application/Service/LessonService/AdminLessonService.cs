@@ -103,7 +103,7 @@ namespace LearningEnglish.Application.Service
                     lesson.ImageType = dto.ImageType ?? "real";
                 }
 
-                // RLS sẽ check permission Admin.Lesson.Manage khi INSERT
+                // Admin có full quyền quản lý lessons
                 await _lessonRepository.AddLesson(lesson);
 
                 var lessonDto = _mapper.Map<LessonDto>(lesson);
@@ -179,7 +179,7 @@ namespace LearningEnglish.Application.Service
                     lesson.ImageType = dto.ImageType ?? "real";
                 }
 
-                // RLS sẽ check permission khi UPDATE
+                // Admin có full quyền cập nhật lessons
                 await _lessonRepository.UpdateLesson(lesson);
 
                 // Xóa ảnh cũ nếu có ảnh mới
@@ -227,7 +227,7 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<bool>();
             try
             {
-                // RLS đã filter lessons theo role: Admin có thể xóa tất cả lessons (có permission)
+                // Admin có full quyền xóa tất cả lessons
                 var lesson = await _lessonRepository.GetLessonById(lessonId);
                 if (lesson == null)
                 {

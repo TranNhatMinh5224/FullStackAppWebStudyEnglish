@@ -11,6 +11,9 @@ namespace LearningEnglish.Application.Interface
         // Lấy bài làm theo ID
         Task<QuizAttempt?> GetByIdAsync(int attemptId);
         
+        // Lấy bài làm theo ID và UserId (để check ownership)
+        Task<QuizAttempt?> GetByIdAndUserIdAsync(int attemptId, int userId);
+        
         // Cập nhật bài làm quiz
         Task UpdateQuizAttemptAsync(QuizAttempt attempt);
         

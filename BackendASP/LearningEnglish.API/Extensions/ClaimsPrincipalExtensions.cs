@@ -5,7 +5,7 @@ namespace LearningEnglish.API.Extensions
     public static class ClaimsPrincipalExtensions
     {
         // Lấy role có độ ưu tiên cao nhất của user
-        // Độ ưu tiên: Admin > Teacher > Student
+        // Độ ưu tiên: SuperAdmin > ContentAdmin > FinanceAdmin > Teacher > Student
         public static string GetPrimaryRole(this ClaimsPrincipal principal)
         {
             var roles = principal.FindAll(ClaimTypes.Role)
@@ -15,9 +15,15 @@ namespace LearningEnglish.API.Extensions
             if (!roles.Any())
                 return string.Empty;
 
-            // Priority order: Admin > Teacher > Student
-            if (roles.Contains("Admin", StringComparer.OrdinalIgnoreCase))
-                return "Admin";
+            // Priority order: SuperAdmin > ContentAdmin > FinanceAdmin > Teacher > Student
+            if (roles.Contains("SuperAdmin", StringComparer.OrdinalIgnoreCase))
+                return "SuperAdmin";
+            
+            if (roles.Contains("ContentAdmin", StringComparer.OrdinalIgnoreCase))
+                return "ContentAdmin";
+            
+            if (roles.Contains("FinanceAdmin", StringComparer.OrdinalIgnoreCase))
+                return "FinanceAdmin";
             
             if (roles.Contains("Teacher", StringComparer.OrdinalIgnoreCase))
                 return "Teacher";
@@ -44,10 +50,18 @@ namespace LearningEnglish.API.Extensions
                 .Any(c => c.Value.Equals(roleName, StringComparison.OrdinalIgnoreCase));
         }
 
-        // Kiểm tra xem user có phải là Admin không
+        // Kiểm tra xem user có phải là Admin không (SuperAdmin, ContentAdmin, hoặc FinanceAdmin)
         public static bool IsAdmin(this ClaimsPrincipal principal)
         {
-            return principal.HasRole("Admin");
+            return principal.HasRole("SuperAdmin") || 
+                   principal.HasRole("ContentAdmin") || 
+                   principal.HasRole("FinanceAdmin");
+        }
+
+        // Kiểm tra xem user có phải là SuperAdmin không
+        public static bool IsSuperAdmin(this ClaimsPrincipal principal)
+        {
+            return principal.HasRole("SuperAdmin");
         }
 
         // Kiểm tra xem user có phải là Teacher không (có thể đồng thời là Student)
@@ -91,4 +105,3 @@ namespace LearningEnglish.API.Extensions
         }
     }
 }
-

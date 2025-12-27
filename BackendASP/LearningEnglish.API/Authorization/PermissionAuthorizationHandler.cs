@@ -6,15 +6,6 @@ using LearningEnglish.Application.Interface;
 namespace LearningEnglish.API.Authorization
 {
    
-    //Authorization handler để kiểm tra permission của Admin
-    // Logic:
-    // - SuperAdmin: Tự động pass (toàn quyền, không cần check permission)
-    // - ContentAdmin: Permissions 1,2,3 (Course Manage, Lesson, Content) - Quản lý nội dung
-    //   - Có quyền tạo, sửa, xóa course
-    // - FinanceAdmin: Permissions 4,5,6,7,9 (User, Payment, Revenue, Package, Course Enroll)
-    //   - Course Enroll: Chỉ thêm/xóa user vào course (khi thanh toán lỗi, nâng cấp user)
-    //   - KHÔNG có quyền tạo/sửa/xóa course
-    //   - User, Payment, Revenue, Package: Quản lý tài chính
    
     public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
     {
@@ -42,9 +33,6 @@ namespace LearningEnglish.API.Authorization
                 return;
             }
 
-            // ═══════════════════════════════════════════════════════════════
-            // BƯỚC 1: KIỂM TRA SUPERADMIN - TỰ ĐỘNG PASS
-            // ═══════════════════════════════════════════════════════════════
             var roles = context.User.FindAll(ClaimTypes.Role)
                 .Select(c => c.Value)
                 .ToList();

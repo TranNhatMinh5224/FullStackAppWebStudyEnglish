@@ -118,6 +118,19 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // Check duplicate package name nếu có thay đổi tên
+                if (!string.IsNullOrWhiteSpace(dto.PackageName) && dto.PackageName != existingPackage.PackageName)
+                {
+                    var allPackages = await _teacherPackageRepository.GetAllTeacherPackagesAsync();
+                    if (allPackages.Any(p => p.PackageName == dto.PackageName && p.TeacherPackageId != id))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Gói giáo viên với tên này đã tồn tại";
+                        return response;
+                    }
+                }
+
                 // Partial update - chỉ cập nhật những trường không null
                 if (!string.IsNullOrWhiteSpace(dto.PackageName))
                     existingPackage.PackageName = dto.PackageName;
@@ -170,6 +183,19 @@ namespace LearningEnglish.Application.Service
                     response.Success = false;
                     response.StatusCode = 404;
                     response.Message = "Không tìm thấy gói giáo viên";
+                    response.Data = false;
+                    return response;
+                }
+
+                // Kiểm tra xem package có đang được sử dụng bởi subscriptions không
+                var hasSubscriptions = await _teacherPackageRepository.HasActiveSubscriptionsAsync(id);
+                if (hasSubscriptions)
+                {
+                    _logger.LogWarning("Attempted to delete teacher package {PackageId} that has active subscriptions", id);
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Data = false;
+                    response.Message = "Không thể xóa gói giáo viên đang được sử dụng. Vui lòng xóa các subscription liên quan trước";
                     return response;
                 }
 

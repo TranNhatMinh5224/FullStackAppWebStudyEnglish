@@ -80,6 +80,7 @@ namespace LearningEnglish.Application.Service
 
                 response.Data = resultDto;
                 response.Success = true;
+                response.StatusCode = 201;
                 response.Message = message;
                 return response;
             }
@@ -87,34 +88,49 @@ namespace LearningEnglish.Application.Service
             {
                 _logger.LogError(ex, "Error purchasing teacher package.");
                 response.Success = false;
+                response.StatusCode = 500;
                 response.Message = "An error occurred while purchasing the teacher package.";
                 return response;
 
             }
         }
         // xử lý hủy gói teacher
-        public async Task<ServiceResponse<bool>> DeleteTeacherSubscriptionAsync(DeleteTeacherSubscriptionDto dto)
+        public async Task<ServiceResponse<bool>> DeleteTeacherSubscriptionAsync(DeleteTeacherSubscriptionDto dto, int userId)
         { 
             var response = new ServiceResponse<bool>();
             try
             {
-                var teacherSubscription = new TeacherSubscription
+                // Check ownership: user chỉ có thể xóa subscription của chính mình
+                var teacherSubscription = await _teacherSubscriptionRepository.GetTeacherSubscriptionByIdAndUserIdAsync(
+                    dto.TeacherSubscriptionId, userId);
+                
+                if (teacherSubscription == null)
                 {
-                    TeacherSubscriptionId = dto.TeacherSubscriptionId
-                };
+                    _logger.LogWarning("User {UserId} attempted to delete subscription {SubscriptionId} that doesn't exist or doesn't belong to them", 
+                        userId, dto.TeacherSubscriptionId);
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Data = false;
+                    response.Message = "Không tìm thấy subscription hoặc bạn không có quyền xóa subscription này";
+                    return response;
+                }
 
                 await _teacherSubscriptionRepository.DeleteTeacherSubscriptionAsync(teacherSubscription);
 
                 response.Data = true;
                 response.Success = true;
+                response.StatusCode = 200;
                 response.Message = "Teacher subscription deleted successfully.";
                 return response;
 
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting teacher subscription.");
+                _logger.LogError(ex, "Error deleting teacher subscription {SubscriptionId} for user {UserId}", 
+                    dto.TeacherSubscriptionId, userId);
                 response.Success = false;
+                response.StatusCode = 500;
+                response.Data = false;
                 response.Message = "An error occurred while deleting the teacher subscription.";
                 return response;
                 

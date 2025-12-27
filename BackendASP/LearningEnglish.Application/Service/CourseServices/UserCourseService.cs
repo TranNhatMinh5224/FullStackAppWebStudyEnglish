@@ -206,8 +206,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // RLS đã filter theo userId, không cần truyền userId vào repository
-                var pagedCourses = await _courseRepository.GetEnrolledCoursesByUserPagedAsync(request);
+                var pagedCourses = await _courseRepository.GetEnrolledCoursesByUserPagedAsync(userId, request);
 
                 if (pagedCourses.Items == null || !pagedCourses.Items.Any())
                 {

@@ -3,6 +3,7 @@ using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
@@ -10,15 +11,21 @@ namespace LearningEnglish.Application.Service
     public class TeacherAssessmentService : ITeacherAssessmentService
     {
         private readonly IAssessmentRepository _assessmentRepository;
+        private readonly IModuleRepository _moduleRepository;
+        private readonly ICourseRepository _courseRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<TeacherAssessmentService> _logger;
 
         public TeacherAssessmentService(
             IAssessmentRepository assessmentRepository,
+            IModuleRepository moduleRepository,
+            ICourseRepository courseRepository,
             IMapper mapper,
             ILogger<TeacherAssessmentService> logger)
         {
             _assessmentRepository = assessmentRepository;
+            _moduleRepository = moduleRepository;
+            _courseRepository = courseRepository;
             _mapper = mapper;
             _logger = logger;
         }
@@ -43,6 +50,20 @@ namespace LearningEnglish.Application.Service
                     response.Success = false;
                     response.StatusCode = 403;
                     response.Message = "Teacher không có quyền tạo Assessment cho Module này";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to create assessment for module {ModuleId} without ownership", 
+                        teacherId, dto.ModuleId);
+                    return response;
+                }
+
+                // Business logic: Chỉ teacher course mới được tạo assessment
+                var module = await _moduleRepository.GetModuleWithCourseForTeacherAsync(dto.ModuleId, teacherId);
+                if (module?.Lesson?.Course?.Type != CourseType.Teacher)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Chỉ có thể tạo assessment cho khóa học của giáo viên";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to create assessment for System course module {ModuleId}", 
+                        teacherId, dto.ModuleId);
                     return response;
                 }
 
@@ -73,12 +94,45 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<List<AssessmentDto>>();
             try
             {
-                var isOwner = await _assessmentRepository.IsTeacherOwnerOfModule(teacherId, moduleId);
-                if (!isOwner)
+                // Lấy module với course để check
+                var module = await _moduleRepository.GetModuleWithCourseAsync(moduleId);
+                if (module == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy module";
+                    return response;
+                }
+
+                // Check: teacher phải là owner HOẶC đã enroll
+                var courseId = module.Lesson?.CourseId;
+                if (!courseId.HasValue)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var course = await _courseRepository.GetCourseById(courseId.Value);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isOwner = course.TeacherId.HasValue && course.TeacherId.Value == teacherId;
+                var isEnrolled = await _courseRepository.IsUserEnrolled(courseId.Value, teacherId);
+
+                if (!isOwner && !isEnrolled)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
-                    response.Message = "Teacher không có quyền xem Assessments của Module này";
+                    response.Message = "Bạn cần sở hữu hoặc đăng ký khóa học để xem các assessment";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to list assessments of module {ModuleId} without ownership or enrollment", 
+                        teacherId, moduleId);
                     return response;
                 }
 
@@ -116,12 +170,45 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                var isOwner = await _assessmentRepository.IsTeacherOwnerOfModule(teacherId, assessment.ModuleId);
-                if (!isOwner)
+                // Lấy module với course để check
+                var module = await _moduleRepository.GetModuleWithCourseAsync(assessment.ModuleId);
+                if (module == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy module";
+                    return response;
+                }
+
+                // Check: teacher phải là owner HOẶC đã enroll
+                var courseId = module.Lesson?.CourseId;
+                if (!courseId.HasValue)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var course = await _courseRepository.GetCourseById(courseId.Value);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isOwner = course.TeacherId.HasValue && course.TeacherId.Value == teacherId;
+                var isEnrolled = await _courseRepository.IsUserEnrolled(courseId.Value, teacherId);
+
+                if (!isOwner && !isEnrolled)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
-                    response.Message = "Teacher không có quyền xem Assessment này";
+                    response.Message = "Bạn cần sở hữu hoặc đăng ký khóa học để xem assessment này";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to access assessment {AssessmentId} without ownership or enrollment", 
+                        teacherId, assessmentId);
                     return response;
                 }
 
@@ -164,6 +251,20 @@ namespace LearningEnglish.Application.Service
                     response.Success = false;
                     response.StatusCode = 403;
                     response.Message = "Teacher không có quyền cập nhật Assessment này";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to update assessment {AssessmentId} without ownership", 
+                        teacherId, assessmentId);
+                    return response;
+                }
+
+                // Business logic: Chỉ teacher course mới được cập nhật assessment
+                var module = await _moduleRepository.GetModuleWithCourseForTeacherAsync(assessment.ModuleId, teacherId);
+                if (module?.Lesson?.Course?.Type != CourseType.Teacher)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Chỉ có thể cập nhật assessment của khóa học giáo viên";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to update assessment {AssessmentId} of System course", 
+                        teacherId, assessmentId);
                     return response;
                 }
 
@@ -211,6 +312,21 @@ namespace LearningEnglish.Application.Service
                     response.StatusCode = 403;
                     response.Message = "Teacher không có quyền xóa Assessment này";
                     response.Data = false;
+                    _logger.LogWarning("Teacher {TeacherId} attempted to delete assessment {AssessmentId} without ownership", 
+                        teacherId, assessmentId);
+                    return response;
+                }
+
+                // Business logic: Chỉ teacher course mới được xóa assessment
+                var module = await _moduleRepository.GetModuleWithCourseForTeacherAsync(assessment.ModuleId, teacherId);
+                if (module?.Lesson?.Course?.Type != CourseType.Teacher)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Chỉ có thể xóa assessment của khóa học giáo viên";
+                    response.Data = false;
+                    _logger.LogWarning("Teacher {TeacherId} attempted to delete assessment {AssessmentId} of System course", 
+                        teacherId, assessmentId);
                     return response;
                 }
 

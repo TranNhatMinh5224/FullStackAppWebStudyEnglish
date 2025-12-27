@@ -6,9 +6,15 @@ namespace LearningEnglish.Application.Interface
     {
         // Lấy danh sách lesson theo course
         Task<List<Lesson>> GetListLessonByCourseId(int CourseId);
+
+        // Lấy danh sách lesson theo course cho Teacher (kiểm tra ownership)
+        Task<List<Lesson>> GetListLessonByCourseIdForTeacher(int courseId, int teacherId);
         
         // Lấy lesson theo ID
         Task<Lesson?> GetLessonById(int lessonId);
+
+        // Lấy lesson theo ID cho Teacher (kiểm tra ownership qua course)
+        Task<Lesson?> GetLessonByIdForTeacher(int lessonId, int teacherId);
         
         // Thêm lesson
         Task AddLesson(Lesson lesson);

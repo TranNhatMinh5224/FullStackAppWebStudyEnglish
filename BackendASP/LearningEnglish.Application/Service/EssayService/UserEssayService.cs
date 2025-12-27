@@ -11,6 +11,9 @@ namespace LearningEnglish.Application.Service.EssayService
     public class UserEssayService : IUserEssayService
     {
         private readonly IEssayRepository _essayRepository;
+        private readonly IAssessmentRepository _assessmentRepository;
+        private readonly IModuleRepository _moduleRepository;
+        private readonly ICourseRepository _courseRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<UserEssayService> _logger;
 
@@ -19,10 +22,16 @@ namespace LearningEnglish.Application.Service.EssayService
 
         public UserEssayService(
             IEssayRepository essayRepository,
+            IAssessmentRepository assessmentRepository,
+            IModuleRepository moduleRepository,
+            ICourseRepository courseRepository,
             IMapper mapper,
             ILogger<UserEssayService> logger)
         {
             _essayRepository = essayRepository;
+            _assessmentRepository = assessmentRepository;
+            _moduleRepository = moduleRepository;
+            _courseRepository = courseRepository;
             _mapper = mapper;
             _logger = logger;
         }
@@ -40,6 +49,47 @@ namespace LearningEnglish.Application.Service.EssayService
                     response.Success = false;
                     response.StatusCode = 404;
                     response.Message = "Essay không tồn tại";
+                    return response;
+                }
+
+                // Lấy Assessment với Module và Course để check enrollment
+                var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy Assessment";
+                    return response;
+                }
+
+                // Lấy Module với Course để check enrollment
+                var module = await _moduleRepository.GetModuleWithCourseAsync(assessment.ModuleId);
+                if (module == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy Module";
+                    return response;
+                }
+
+                // Check enrollment
+                var courseId = module.Lesson?.CourseId;
+                if (!courseId.HasValue)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isEnrolled = await _courseRepository.IsUserEnrolled(courseId.Value, userId);
+                if (!isEnrolled)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn cần đăng ký khóa học để xem Essay này";
+                    _logger.LogWarning("User {UserId} attempted to access essay {EssayId} without enrollment", 
+                        userId, essayId);
                     return response;
                 }
 
@@ -83,6 +133,47 @@ namespace LearningEnglish.Application.Service.EssayService
 
             try
             {
+                // Lấy Assessment với Module và Course để check enrollment
+                var assessment = await _assessmentRepository.GetAssessmentById(assessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy Assessment";
+                    return response;
+                }
+
+                // Lấy Module với Course để check enrollment
+                var module = await _moduleRepository.GetModuleWithCourseAsync(assessment.ModuleId);
+                if (module == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy Module";
+                    return response;
+                }
+
+                // Check enrollment
+                var courseId = module.Lesson?.CourseId;
+                if (!courseId.HasValue)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isEnrolled = await _courseRepository.IsUserEnrolled(courseId.Value, userId);
+                if (!isEnrolled)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn cần đăng ký khóa học để xem các Essay";
+                    _logger.LogWarning("User {UserId} attempted to list essays of assessment {AssessmentId} without enrollment", 
+                        userId, assessmentId);
+                    return response;
+                }
+
                 var essays = await _essayRepository.GetEssaysByAssessmentIdAsync(assessmentId);
                 var essayDtos = new List<EssayDto>();
 

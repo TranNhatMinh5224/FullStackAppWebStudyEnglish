@@ -2,6 +2,7 @@ using LearningEnglish.Infrastructure.MinioFileStorage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LearningEnglish.API.Controller.AdminAndTeacher
@@ -27,17 +28,20 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         // POST: api/shared/files/temp-file - tải lên file tạm thời
+        // Note: File validation được xử lý bởi FluentValidation (UploadTempFileRequestDtoValidator)
+        // Query parameters validation được xử lý bởi FluentValidation (UploadTempFileQueryDtoValidator)
         [HttpPost("temp-file")]
         [RequestSizeLimit(52_428_800)]  // Max 50MB
-        public async Task<IActionResult> UploadTemplateFile(IFormFile file, [FromQuery] string bucketName, [FromQuery] string tempFolder = "temp")
+        public async Task<IActionResult> UploadTemplateFile(
+            IFormFile file, 
+            [FromQuery] UploadTempFileQueryDto queryDto)
         {
+            // FluentValidation sẽ tự động validate file và query parameters
             if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded.");
+                return BadRequest(new { success = false, message = "File is required" });
 
-            if (string.IsNullOrEmpty(bucketName))
-                return BadRequest("Bucket name is required.");
-
-            var validationResult = ValidateFileSize(file, bucketName);
+            // Validate file size (business logic - phụ thuộc vào bucketName)
+            var validationResult = ValidateFileSize(file, queryDto.BucketName);
             if (!validationResult.IsValid)
             {
                 return BadRequest(new
@@ -48,7 +52,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
                 });
             }
 
-            var result = await _minioFileStorage.UpLoadFileTempAsync(file, bucketName, tempFolder);
+            var result = await _minioFileStorage.UpLoadFileTempAsync(file, queryDto.BucketName, queryDto.TempFolder);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -97,18 +101,12 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
         }
 
         // DELETE: api/files/temp-file -xoá file tạm thời
+      
         [HttpDelete("temp-file")]
-        public async Task<IActionResult> DeleteTemp(
-            [FromQuery] string bucketName,
-            [FromQuery] string tempKey)
+        public async Task<IActionResult> DeleteTemp([FromQuery] DeleteTempFileRequestDto dto)
         {
-            if (string.IsNullOrWhiteSpace(bucketName))
-                return BadRequest("bucketName is required.");
-
-            if (string.IsNullOrWhiteSpace(tempKey))
-                return BadRequest("tempKey is required.");
-
-            var result = await _minioFileStorage.DeleteFileAsync(tempKey, bucketName);
+          
+            var result = await _minioFileStorage.DeleteFileAsync(dto.TempKey, dto.BucketName);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 

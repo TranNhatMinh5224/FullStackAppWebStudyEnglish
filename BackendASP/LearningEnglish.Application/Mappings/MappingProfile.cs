@@ -41,6 +41,9 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<Streak, StreakDto>()
                 .ForMember(dest => dest.IsActiveToday, opt => opt.MapFrom<IsActiveTodayResolver>());
 
+            // Notification mapping
+            CreateMap<Notification, NotificationDto>();
+
             // ===== ADMIN PERMISSION SYSTEM MAPPINGS =====
             // Permission mappings
             CreateMap<Permission, PermissionDto>();
@@ -346,22 +349,23 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.AttachmentUrl, opt => opt.MapFrom(src => src.AttachmentKey)) // Will be replaced with URL in service
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : null))
                 .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
-                // Grading fields
-                .ForMember(dest => dest.AiScore, opt => opt.MapFrom(src => src.Score))
-                .ForMember(dest => dest.AiFeedback, opt => opt.MapFrom(src => src.Feedback))
-                .ForMember(dest => dest.AiGradedAt, opt => opt.MapFrom(src => src.GradedAt))
-                .ForMember(dest => dest.TeacherScore, opt => opt.MapFrom(src => src.TeacherScore))
-                .ForMember(dest => dest.TeacherFeedback, opt => opt.MapFrom(src => src.TeacherFeedback))
-                .ForMember(dest => dest.TeacherGradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt))
+                // Grading fields (1 điểm duy nhất)
+                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
+                .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.Feedback))
+                .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.GradedAt))
+                .ForMember(dest => dest.GradedByTeacherId, opt => opt.MapFrom(src => src.GradedByTeacherId))
                 .ForMember(dest => dest.GradedByTeacherName, opt => opt.MapFrom(src => src.GradedByTeacher != null ? src.GradedByTeacher.FullName : null))
-                .ForMember(dest => dest.FinalScore, opt => opt.MapFrom(src => src.FinalScore))
                 .ForMember(dest => dest.MaxScore, opt => opt.MapFrom(src => src.Essay != null && src.Essay.Assessment != null ? src.Essay.Assessment.TotalPoints : (decimal?)null));
 
             // EssaySubmission to List DTO (basic info for listing)
             CreateMap<EssaySubmission, EssaySubmissionListDto>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FullName))
                 .ForMember(dest => dest.UserAvatarUrl, opt => opt.Ignore()) // Will be built in service
-                .ForMember(dest => dest.HasAttachment, opt => opt.MapFrom(src => !string.IsNullOrWhiteSpace(src.AttachmentKey)));
+                .ForMember(dest => dest.HasAttachment, opt => opt.MapFrom(src => !string.IsNullOrWhiteSpace(src.AttachmentKey)))
+                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
+                .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.GradedAt))
+                .ForMember(dest => dest.GradedByTeacherId, opt => opt.MapFrom(src => src.GradedByTeacherId))
+                .ForMember(dest => dest.FeedbackPreview, opt => opt.MapFrom(src => src.Feedback != null && src.Feedback.Length > 100 ? src.Feedback.Substring(0, 100) + "..." : src.Feedback));
 
             CreateMap<CreateEssaySubmissionDto, EssaySubmission>()
                 .ForMember(dest => dest.SubmissionId, opt => opt.Ignore())

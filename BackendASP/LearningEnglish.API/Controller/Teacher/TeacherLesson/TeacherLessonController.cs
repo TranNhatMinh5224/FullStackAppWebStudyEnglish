@@ -42,7 +42,7 @@ namespace LearningEnglish.API.Controller.Teacher
             var teacherId = User.GetUserId();
             _logger.LogInformation("Teacher {TeacherId} đang xem lesson {LessonId}", teacherId, lessonId);
 
-            var result = await _lessonService.GetLessonById(lessonId);
+            var result = await _lessonService.GetLessonById(lessonId, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -53,7 +53,7 @@ namespace LearningEnglish.API.Controller.Teacher
             var teacherId = User.GetUserId();
             _logger.LogInformation("Teacher {TeacherId} đang xem danh sách lessons của course {CourseId}", teacherId, courseId);
 
-            var result = await _lessonService.GetListLessonByCourseId(courseId);
+            var result = await _lessonService.GetListLessonByCourseId(courseId, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -64,7 +64,7 @@ namespace LearningEnglish.API.Controller.Teacher
             var teacherId = User.GetUserId();
             _logger.LogInformation("Teacher {TeacherId} đang cập nhật lesson {LessonId}", teacherId, lessonId);
 
-            var result = await _lessonService.UpdateLesson(lessonId, dto);
+            var result = await _lessonService.UpdateLesson(lessonId, dto, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -75,7 +75,7 @@ namespace LearningEnglish.API.Controller.Teacher
             var teacherId = User.GetUserId();
             _logger.LogInformation("Teacher {TeacherId} đang xóa lesson {LessonId}", teacherId, lessonId);
 
-            var result = await _lessonService.DeleteLesson(lessonId);
+            var result = await _lessonService.DeleteLesson(lessonId, teacherId);
             return result.Success ? NoContent() : StatusCode(result.StatusCode, result);
         }
     }

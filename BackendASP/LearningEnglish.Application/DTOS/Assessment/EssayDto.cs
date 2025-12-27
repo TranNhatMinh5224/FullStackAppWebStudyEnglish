@@ -75,26 +75,31 @@ namespace LearningEnglish.Application.DTOs
         public DateTime SubmittedAt { get; set; }
         public string Status { get; set; } = string.Empty;
 
-        // 🆕 Grading Information - AI Score
-        public decimal? AiScore { get; set; }
-        public string? AiFeedback { get; set; }
-        public DateTime? AiGradedAt { get; set; }
-
-        // 🆕 Grading Information - Teacher Score (Override)
-        public decimal? TeacherScore { get; set; }
-        public string? TeacherFeedback { get; set; }
-        public DateTime? TeacherGradedAt { get; set; }
-        public string? GradedByTeacherName { get; set; }
-
-        // 🆕 Final Score - prioritizes teacher score
-        public decimal? FinalScore { get; set; }
+        // � Grading Information (1 điểm duy nhất - AI hoặc Teacher ghi đè)
+        public decimal? Score { get; set; }
+        public string? Feedback { get; set; }
+        public DateTime? GradedAt { get; set; }
         
-        // 🆕 Max score from assessment
+        // Ai chấm? null = AI, có giá trị = Teacher đã chấm lại
+        public int? GradedByTeacherId { get; set; }
+        public string? GradedByTeacherName { get; set; }
+        
+        // Max score từ assessment
         public decimal? MaxScore { get; set; }
 
-        // User info (không include full UserDto để tránh circular reference)
+        // User info
         public string? UserName { get; set; }
         public string? UserEmail { get; set; }
+        
+        // Essay info (để student review)
+        public string? EssayTitle { get; set; }
+        public string? EssayDescription { get; set; }
+        
+        // Metadata cho UI
+        public bool CanEdit { get; set; }              // Còn sửa được không
+        public bool CanTriggerAiGrading { get; set; }  // Hiện nút "AI Chấm Điểm" (System Course)
+        public DateTime? DueAt { get; set; }            // Hạn nộp
+        public string? CourseType { get; set; }         // "System" | "Teacher"
     }
 
 

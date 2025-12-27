@@ -5,12 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.API.Authorization
 {
-    // Authorization handler để kiểm tra role Teacher trong database
-    // Logic:
-    // - Extract userId từ JWT claims
-    // - Query database để check role Teacher (realtime, không tin JWT)
-    // - Tương tự cách RLS hoạt động - verify từ DB
-    
+
     public class TeacherRoleAuthorizationHandler : AuthorizationHandler<TeacherRoleRequirement>
     {
         private readonly IUserRepository _userRepository;
@@ -34,9 +29,6 @@ namespace LearningEnglish.API.Authorization
                 return;
             }
 
-            // ═══════════════════════════════════════════════════════════════
-            // BƯỚC 1: EXTRACT USERID TỪ JWT CLAIMS
-            // ═══════════════════════════════════════════════════════════════
             var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                            ?? context.User.FindFirst("sub")?.Value;
 
@@ -49,10 +41,7 @@ namespace LearningEnglish.API.Authorization
 
             _logger.LogInformation("🔍 Checking Teacher role for UserId: {UserId} (from database)", userId);
 
-            // ═══════════════════════════════════════════════════════════════
-            // BƯỚC 2: KIỂM TRA ROLE TEACHER TRONG DATABASE
-            // ═══════════════════════════════════════════════════════════════
-            // Query database để check role (realtime, không tin JWT token)
+          
             var hasTeacherRole = await _userRepository.HasTeacherRoleAsync(userId);
             
             if (hasTeacherRole)

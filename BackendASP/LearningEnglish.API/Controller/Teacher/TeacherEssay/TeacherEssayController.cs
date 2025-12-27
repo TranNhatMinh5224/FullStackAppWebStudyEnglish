@@ -41,7 +41,7 @@ namespace LearningEnglish.API.Controller.Teacher
             var teacherId = User.GetUserId();
             _logger.LogInformation("Teacher {TeacherId} đang xem essay {EssayId}", teacherId, essayId);
 
-            var result = await _essayService.GetEssayByIdAsync(essayId);
+            var result = await _essayService.GetEssayByIdAsync(essayId, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -52,7 +52,7 @@ namespace LearningEnglish.API.Controller.Teacher
             var teacherId = User.GetUserId();
             _logger.LogInformation("Teacher {TeacherId} đang xem danh sách essays của assessment {AssessmentId}", teacherId, assessmentId);
 
-            var result = await _essayService.GetEssaysByAssessmentIdAsync(assessmentId);
+            var result = await _essayService.GetEssaysByAssessmentIdAsync(assessmentId, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 

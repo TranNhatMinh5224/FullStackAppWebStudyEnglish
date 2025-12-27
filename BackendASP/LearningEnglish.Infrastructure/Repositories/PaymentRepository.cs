@@ -30,8 +30,8 @@ namespace LearningEnglish.Infrastructure.Repositories
 
         public async Task<IEnumerable<Payment>> GetPaymentsByUserAsync(int userId)
         {
-            
             return await _context.Payments
+                .Where(p => p.UserId == userId)
                 .ToListAsync();
         }
 
@@ -56,7 +56,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<Payment?> GetPaymentByIdempotencyKeyAsync(int userId, string idempotencyKey)
         {
             return await _context.Payments
-                .FirstOrDefaultAsync(p => p.IdempotencyKey == idempotencyKey);
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.IdempotencyKey == idempotencyKey);
         }
 
         public async Task<Payment?> GetPaymentByOrderCodeAsync(long orderCode)
@@ -81,6 +81,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<IEnumerable<Payment>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
         {
             return await _context.Payments
+                .Where(p => p.UserId == userId)
                 .OrderByDescending(p => p.PaidAt ?? DateTime.MinValue)  // Sort by PaidAt DESC (mới nhất lên đầu)
                 .ThenByDescending(p => p.PaymentId)  // Nếu PaidAt null thì sort theo PaymentId
                 .Skip((pageNumber - 1) * pageSize)
@@ -92,6 +93,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<int> GetTransactionCountAsync(int userId)
         {
             return await _context.Payments
+                .Where(p => p.UserId == userId)
                 .CountAsync();
         }
 
@@ -100,7 +102,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             return await _context.Payments
                 .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.PaymentId == paymentId);
+                .FirstOrDefaultAsync(p => p.PaymentId == paymentId && p.UserId == userId);
         }
 
         public async Task<Payment?> GetPaymentByTransactionIdAsync(string transactionId)

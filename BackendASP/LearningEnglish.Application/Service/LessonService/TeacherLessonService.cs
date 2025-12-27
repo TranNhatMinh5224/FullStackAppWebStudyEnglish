@@ -47,7 +47,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                
-                var course = await _courseRepository.GetCourseById(dto.CourseId);
+                var course = await _courseRepository.GetCourseByIdForTeacher(dto.CourseId, teacherId);
                 if (course == null)
                 {
                     response.Success = false;
@@ -62,18 +62,6 @@ namespace LearningEnglish.Application.Service
                     response.Success = false;
                     response.StatusCode = 403;
                     response.Message = "Chỉ có thể thêm bài học vào khóa học của giáo viên";
-                    return response;
-                }
-
-             
-               
-                if (!course.TeacherId.HasValue || course.TeacherId.Value != teacherId)
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "Bạn không có quyền thêm bài học vào khóa học này";
-                    _logger.LogWarning("Teacher {UserId} attempted to add lesson to course {CourseId} owned by {OwnerId}",
-                        teacherId, dto.CourseId, course.TeacherId);
                     return response;
                 }
 
@@ -188,18 +176,37 @@ namespace LearningEnglish.Application.Service
 
         // Cập nhật lesson
      
-        public async Task<ServiceResponse<LessonDto>> UpdateLesson(int lessonId, UpdateLessonDto dto)
+        public async Task<ServiceResponse<LessonDto>> UpdateLesson(int lessonId, UpdateLessonDto dto, int teacherId)
         {
             var response = new ServiceResponse<LessonDto>();
             try
             {
                 
-                var lesson = await _lessonRepository.GetLessonById(lessonId);
+                var lesson = await _lessonRepository.GetLessonByIdForTeacher(lessonId, teacherId);
                 if (lesson == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
                     response.Message = "Không tìm thấy bài học hoặc bạn không có quyền truy cập";
+                    return response;
+                }
+
+                // Validate ownership: teacher phải sở hữu course của lesson
+                var course = await _courseRepository.GetCourseByIdForTeacher(lesson.CourseId, teacherId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền cập nhật bài học này";
+                    return response;
+                }
+
+                // Business logic: Chỉ teacher course mới được cập nhật lesson
+                if (course.Type != CourseType.Teacher)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Chỉ có thể cập nhật bài học của khóa học giáo viên";
                     return response;
                 }
 
@@ -276,18 +283,39 @@ namespace LearningEnglish.Application.Service
 
         // Xóa lesson
        
-        public async Task<ServiceResponse<bool>> DeleteLesson(int lessonId)
+        public async Task<ServiceResponse<bool>> DeleteLesson(int lessonId, int teacherId)
         {
             var response = new ServiceResponse<bool>();
             try
             {
                
-                var lesson = await _lessonRepository.GetLessonById(lessonId);
+                var lesson = await _lessonRepository.GetLessonByIdForTeacher(lessonId, teacherId);
                 if (lesson == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
                     response.Message = "Không tìm thấy bài học hoặc bạn không có quyền truy cập";
+                    response.Data = false;
+                    return response;
+                }
+
+                // Validate ownership: teacher phải sở hữu course của lesson
+                var course = await _courseRepository.GetCourseByIdForTeacher(lesson.CourseId, teacherId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền xóa bài học này";
+                    response.Data = false;
+                    return response;
+                }
+
+                // Business logic: Chỉ teacher course mới được xóa lesson
+                if (course.Type != CourseType.Teacher)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Chỉ có thể xóa bài học của khóa học giáo viên";
                     response.Data = false;
                     return response;
                 }
@@ -324,18 +352,42 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // Get lesson by ID (read-only)
-        public async Task<ServiceResponse<LessonDto>> GetLessonById(int lessonId)
+        // Get lesson by ID (read-only) - Teacher có thể xem nếu là owner HOẶC đã enroll
+        public async Task<ServiceResponse<LessonDto>> GetLessonById(int lessonId, int teacherId)
         {
             var response = new ServiceResponse<LessonDto>();
             try
             {
+                // Lấy lesson với course để check
                 var lesson = await _lessonRepository.GetLessonById(lessonId);
                 if (lesson == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy bài học hoặc bạn không có quyền truy cập";
+                    response.Message = "Không tìm thấy bài học";
+                    return response;
+                }
+
+                // Check: teacher phải là owner HOẶC đã enroll
+                var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isOwner = course.TeacherId.HasValue && course.TeacherId.Value == teacherId;
+                var isEnrolled = await _courseRepository.IsUserEnrolled(lesson.CourseId, teacherId);
+
+                if (!isOwner && !isEnrolled)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn cần sở hữu hoặc đăng ký khóa học để xem bài học này";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to access lesson {LessonId} without ownership or enrollment", 
+                        teacherId, lessonId);
                     return response;
                 }
 
@@ -363,8 +415,8 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // Get list lessons by courseId (without progress)
-        public async Task<ServiceResponse<List<LessonDto>>> GetListLessonByCourseId(int courseId)
+        // Get list lessons by courseId (without progress) - Teacher có thể xem nếu là owner HOẶC đã enroll
+        public async Task<ServiceResponse<List<LessonDto>>> GetListLessonByCourseId(int courseId, int teacherId)
         {
             var response = new ServiceResponse<List<LessonDto>>();
             try
@@ -374,7 +426,21 @@ namespace LearningEnglish.Application.Service
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy khóa học hoặc bạn không có quyền truy cập";
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                // Check: teacher phải là owner HOẶC đã enroll
+                var isOwner = course.TeacherId.HasValue && course.TeacherId.Value == teacherId;
+                var isEnrolled = await _courseRepository.IsUserEnrolled(courseId, teacherId);
+
+                if (!isOwner && !isEnrolled)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn cần sở hữu hoặc đăng ký khóa học để xem các bài học";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to list lessons of course {CourseId} without ownership or enrollment",
+                        teacherId, courseId);
                     return response;
                 }
 
@@ -397,8 +463,10 @@ namespace LearningEnglish.Application.Service
                     lessonDtos.Add(lessonDto);
                 }
 
+                response.Success = true;
                 response.StatusCode = 200;
                 response.Data = lessonDtos;
+                response.Message = "Lấy danh sách bài học thành công";
             }
             catch (Exception ex)
             {

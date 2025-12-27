@@ -87,5 +87,32 @@ namespace LearningEnglish.API.Controller.Teacher
             var result = await _gradingService.GradeEssayAsync(submissionId, dto, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
+
+        // POST: api/teacher/essay-submissions/{submissionId}/grade-manual - Teacher chấm thủ công
+        [HttpPost("{submissionId}/grade-manual")]
+        public async Task<IActionResult> GradeSubmissionManual(int submissionId, [FromBody] ManualGradeDto dto)
+        {
+            var teacherId = User.GetUserId();
+            var result = await _essaySubmissionService.GradeSubmissionAsync(submissionId, teacherId, dto.Score, dto.Feedback);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/teacher/essay-submissions/essay/{essayId}/batch-grade-ai - Chấm hàng loạt bằng AI
+        [HttpPost("essay/{essayId}/batch-grade-ai")]
+        public async Task<IActionResult> BatchGradeByAi(int essayId)
+        {
+            var teacherId = User.GetUserId();
+            var result = await _essaySubmissionService.BatchGradeByAiAsync(essayId, teacherId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // GET: api/teacher/essay-submissions/essay/{essayId}/statistics - Thống kê essay
+        [HttpGet("essay/{essayId}/statistics")]
+        public async Task<IActionResult> GetEssayStatistics(int essayId)
+        {
+            var teacherId = User.GetUserId();
+            var result = await _essaySubmissionService.GetEssayStatisticsAsync(essayId, teacherId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
     }
 }

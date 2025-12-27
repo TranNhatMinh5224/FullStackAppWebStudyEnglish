@@ -8,7 +8,7 @@ namespace LearningEnglish.Application.Interface.Services.TeacherPackage
         // Mua gói giáo viên
         Task<ServiceResponse<ResPurchaseTeacherPackageDto>> AddTeacherSubscriptionAsync(PurchaseTeacherPackageDto dto, int userId);
         
-        // Hủy gói giáo viên
-        Task<ServiceResponse<bool>> DeleteTeacherSubscriptionAsync(DeleteTeacherSubscriptionDto dto);
+        // Hủy gói giáo viên (chỉ user sở hữu subscription mới được xóa)
+        Task<ServiceResponse<bool>> DeleteTeacherSubscriptionAsync(DeleteTeacherSubscriptionDto dto, int userId);
     }
 }

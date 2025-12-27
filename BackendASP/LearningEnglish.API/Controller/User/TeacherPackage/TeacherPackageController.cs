@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.TeacherPackage;
 using LearningEnglish.Application.DTOs;
 using System.Security.Claims;
@@ -10,7 +9,7 @@ namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
     [Route("api/user/teacher-packages")]
-    [AllowAnonymous] 
+    [AllowAnonymous]
     public class TeacherPackageController : ControllerBase
     {
         private readonly ITeacherPackageService _teacherPackageService;
@@ -23,7 +22,7 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // endpoint Guest/User lấy danh sách tất cả gói giáo viên
-       
+
         [HttpGet]
         public async Task<IActionResult> GetTeacherPackages()
         {
@@ -32,7 +31,7 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // endpoint Guest/User lấy chi tiết gói giáo viên theo ID
-       
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTeacherPackageById(int id)
         {

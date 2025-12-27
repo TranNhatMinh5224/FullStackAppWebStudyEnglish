@@ -227,6 +227,7 @@ namespace LearningEnglish.Application.Service
         }
 
         // Lấy dữ liệu doanh thu cho biểu đồ
+        // Note: Validation được xử lý bởi FluentValidation (GetRevenueChartDataRequestDtoValidator)
         public async Task<ServiceResponse<RevenueChartDto>> GetRevenueChartDataAsync(int days = 30)
         {
             var response = new ServiceResponse<RevenueChartDto>();
@@ -234,15 +235,6 @@ namespace LearningEnglish.Application.Service
             try
             {
                 _logger.LogInformation("📊 Fetching revenue chart data for last {Days} days", days);
-
-                // Validation: days phải trong khoảng 1-365
-                if (days < 1 || days > 365)
-                {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = "Days must be between 1 and 365";
-                    return response;
-                }
 
                 var now = DateTime.UtcNow;
                 var fromDate = now.AddDays(-days).Date;

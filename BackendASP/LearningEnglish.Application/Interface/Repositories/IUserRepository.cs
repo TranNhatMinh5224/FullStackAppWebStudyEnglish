@@ -26,6 +26,9 @@ namespace LearningEnglish.Application.Interface
         // Lấy user theo khóa học với phân trang
         Task<PagedResult<User>> GetUsersByCourseIdPagedAsync(int courseId, UserQueryParameters request);
 
+        // Lấy user theo khóa học với phân trang cho Teacher (kiểm tra ownership)
+        Task<PagedResult<User>> GetUsersByCourseIdPagedForTeacherAsync(int courseId, int teacherId, UserQueryParameters request);
+
         // Cập nhật quyền giáo viên
         Task<bool> UpdateRoleTeacher(int userId);
         
@@ -58,5 +61,8 @@ namespace LearningEnglish.Application.Interface
         
         // Lấy tài khoản bị khóa với phân trang
         Task<PagedResult<User>> GetListBlockedAccountsPagedAsync(UserQueryParameters request);
+
+        // Lấy dữ liệu chi tiết học sinh trong course cho Teacher (kiểm tra ownership)
+        Task<(User? Student, UserCourse? UserCourse, CourseProgress? Progress)> GetStudentDetailDataForTeacherAsync(int courseId, int studentId, int teacherId);
     }
 }

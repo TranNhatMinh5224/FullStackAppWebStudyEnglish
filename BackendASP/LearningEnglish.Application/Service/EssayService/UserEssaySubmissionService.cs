@@ -18,6 +18,10 @@ namespace LearningEnglish.Application.Service
         private readonly INotificationRepository _notificationRepository;
         private readonly IModuleProgressService _moduleProgressService;
         private readonly IMinioFileStorage _minioFileStorage;
+        private readonly IGeminiService _geminiService;
+        private readonly ICourseRepository _courseRepository;
+        private readonly IModuleRepository _moduleRepository;
+        private readonly ILessonRepository _lessonRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<UserEssaySubmissionService> _logger;
 
@@ -31,6 +35,10 @@ namespace LearningEnglish.Application.Service
             INotificationRepository notificationRepository,
             IModuleProgressService moduleProgressService,
             IMinioFileStorage minioFileStorage,
+            IGeminiService geminiService,
+            ICourseRepository courseRepository,
+            IModuleRepository moduleRepository,
+            ILessonRepository lessonRepository,
             IMapper mapper,
             ILogger<UserEssaySubmissionService> logger)
         {
@@ -40,6 +48,10 @@ namespace LearningEnglish.Application.Service
             _notificationRepository = notificationRepository;
             _moduleProgressService = moduleProgressService;
             _minioFileStorage = minioFileStorage;
+            _geminiService = geminiService;
+            _courseRepository = courseRepository;
+            _moduleRepository = moduleRepository;
+            _lessonRepository = lessonRepository;
             _mapper = mapper;
             _logger = logger;
         }
@@ -85,7 +97,45 @@ namespace LearningEnglish.Application.Service
 
                 // Kiểm tra hạn nộp assessment
                 var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
-                if (assessment?.DueAt != null && DateTime.UtcNow > assessment.DueAt)
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy Assessment";
+                    return response;
+                }
+
+                // Check enrollment: User phải enroll vào course để nộp essay
+                var module = await _moduleRepository.GetModuleWithCourseAsync(assessment.ModuleId);
+                if (module == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy Module";
+                    return response;
+                }
+
+                var courseId = module.Lesson?.CourseId;
+                if (!courseId.HasValue)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isEnrolled = await _courseRepository.IsUserEnrolled(courseId.Value, userId);
+                if (!isEnrolled)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn cần đăng ký khóa học để nộp Essay này";
+                    _logger.LogWarning("User {UserId} attempted to submit essay {EssayId} without enrollment", 
+                        userId, dto.EssayId);
+                    return response;
+                }
+
+                if (assessment.DueAt != null && DateTime.UtcNow > assessment.DueAt)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
@@ -386,6 +436,215 @@ namespace LearningEnglish.Application.Service
                 response.StatusCode = 500;
                 response.Message = "Lỗi hệ thống";
                 return response;
+            }
+        }
+
+        public async Task<ServiceResponse<EssayGradingResultDto>> RequestAiGradingAsync(int submissionId, int userId)
+        {
+            var response = new ServiceResponse<EssayGradingResultDto>();
+
+            try
+            {
+                _logger.LogInformation("👨‍🎓 Student {UserId} requesting AI grading for submission {SubmissionId}", userId, submissionId);
+
+                // 1. Validate submission ownership
+                var submission = await _essaySubmissionRepository.GetSubmissionByIdAsync(submissionId);
+                if (submission == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài nộp";
+                    return response;
+                }
+
+                if (submission.UserId != userId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền chấm bài nộp này";
+                    return response;
+                }
+
+                // 2. Get essay và assessment (chỉ cần đề bài + điểm tối đa)
+                var essay = await _essayRepository.GetEssayByIdAsync(submission.EssayId);
+                if (essay == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy đề bài";
+                    return response;
+                }
+
+                var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài kiểm tra";
+                    return response;
+                }
+
+                // 3. Validate submission status
+                if (submission.Status == SubmissionStatus.Graded && submission.Score != null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "Bài nộp đã được chấm điểm rồi";
+                    return response;
+                }
+
+                // 4. Check TextContent
+                if (string.IsNullOrWhiteSpace(submission.TextContent))
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "Bài làm chỉ có file đính kèm. AI không thể chấm tự động. Vui lòng liên hệ admin.";
+                    return response;
+                }
+
+                // 6. Build prompt
+                var maxScore = assessment.TotalPoints;
+                var prompt = BuildGradingPrompt(
+                    essay.Title,
+                    essay.Description ?? string.Empty,
+                    submission.TextContent,
+                    maxScore
+                );
+
+                // 7. Call Gemini AI
+                var geminiResponse = await _geminiService.GenerateContentAsync(prompt);
+                if (!geminiResponse.Success)
+                {
+                    response.Success = false;
+                    response.StatusCode = 500;
+                    response.Message = $"AI grading failed: {geminiResponse.ErrorMessage}";
+                    return response;
+                }
+
+                // 8. Parse AI response
+                var aiResult = ParseAiResponse(geminiResponse.Content);
+
+                if (aiResult.Score > maxScore)
+                {
+                    _logger.LogWarning("⚠️ AI score {Score} exceeds max score {MaxScore}, adjusting...", aiResult.Score, maxScore);
+                    aiResult.Score = maxScore;
+                }
+
+                // 9. Save result
+                submission.Score = aiResult.Score;
+                submission.Feedback = aiResult.Feedback;
+                submission.GradedAt = DateTime.UtcNow;
+                submission.Status = SubmissionStatus.Graded;
+
+                await _essaySubmissionRepository.UpdateSubmissionAsync(submission);
+
+                _logger.LogInformation("✅ AI grading completed for submission {SubmissionId}. Score: {Score}/{MaxScore}", submissionId, aiResult.Score, maxScore);
+
+                // 10. Map result
+                var result = new EssayGradingResultDto
+                {
+                    SubmissionId = submissionId,
+                    Score = aiResult.Score,
+                    MaxScore = maxScore,
+                    Feedback = aiResult.Feedback,
+                    Breakdown = aiResult.Breakdown,
+                    Strengths = aiResult.Strengths,
+                    Improvements = aiResult.Improvements,
+                    GradedAt = DateTime.UtcNow,
+                    GradedByTeacher = false,
+                    FinalScore = aiResult.Score
+                };
+
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Chấm điểm AI thành công";
+                response.Data = result;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error in RequestAiGradingAsync for SubmissionId: {SubmissionId}, UserId: {UserId}", submissionId, userId);
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Có lỗi xảy ra khi chấm điểm";
+                return response;
+            }
+        }
+
+        // Helper: Build grading prompt
+        private string BuildGradingPrompt(string title, string description, string studentAnswer, decimal maxScore)
+        {
+            return $@"
+You are an English teacher grading an essay. Please evaluate the following essay and provide detailed feedback.
+
+Essay Title: {title}
+Essay Instructions: {description}
+Max Score: {maxScore}
+
+Student's Answer:
+{studentAnswer}
+
+Please provide your evaluation in the following JSON format:
+{{
+    ""score"": <number between 0 and {maxScore}>,
+    ""feedback"": ""<overall feedback>"",
+    ""breakdown"": {{
+        ""contentScore"": <number>,
+        ""languageScore"": <number>,
+        ""organizationScore"": <number>,
+        ""mechanicsScore"": <number>
+    }},
+    ""strengths"": [""<strength1>"", ""<strength2>""],
+    ""improvements"": [""<improvement1>"", ""<improvement2>""]
+}}
+
+Focus on:
+- Content relevance and depth
+- Language accuracy and vocabulary
+- Organization and structure
+- Grammar and mechanics
+";
+        }
+
+        // Helper: Parse AI response
+        private AiGradingResult ParseAiResponse(string content)
+        {
+            try
+            {
+                // Extract JSON from markdown code block if present
+                var jsonContent = content.Trim();
+                if (jsonContent.Contains("```json"))
+                {
+                    var startIndex = jsonContent.IndexOf("```json") + 7;
+                    var endIndex = jsonContent.LastIndexOf("```");
+                    jsonContent = jsonContent.Substring(startIndex, endIndex - startIndex).Trim();
+                }
+                else if (jsonContent.Contains("```"))
+                {
+                    var startIndex = jsonContent.IndexOf("```") + 3;
+                    var endIndex = jsonContent.LastIndexOf("```");
+                    jsonContent = jsonContent.Substring(startIndex, endIndex - startIndex).Trim();
+                }
+
+                var result = System.Text.Json.JsonSerializer.Deserialize<AiGradingResult>(jsonContent, new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                return result ?? new AiGradingResult
+                {
+                    Score = 0,
+                    Feedback = "Error parsing AI response"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error parsing AI response: {Content}", content);
+                return new AiGradingResult
+                {
+                    Score = 0,
+                    Feedback = "Error parsing AI response. Please grade manually."
+                };
             }
         }
     }

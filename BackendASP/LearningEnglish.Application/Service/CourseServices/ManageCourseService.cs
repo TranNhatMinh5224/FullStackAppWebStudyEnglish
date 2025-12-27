@@ -41,7 +41,6 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<PagedResult<UserDto>>();
             try
             {
-                // RLS đã tự động filter courses theo role (Admin: all, Teacher: own)
                 var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
@@ -51,7 +50,6 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // RLS policy đã tự động filter UserCourses
                 var userParams = new UserQueryParameters
                 {
                     PageNumber = request.PageNumber,
@@ -84,6 +82,44 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
+        // Teacher lấy danh sách học viên trong course của mình
+        public async Task<ServiceResponse<PagedResult<UserDto>>> GetUsersByCourseIdPagedAsync(int courseId, int teacherId, PageRequest request)
+        {
+            var response = new ServiceResponse<PagedResult<UserDto>>();
+            try
+            {
+                var userParams = new UserQueryParameters
+                {
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize
+                };
+                var pagedUsers = await _userRepository.GetUsersByCourseIdPagedForTeacherAsync(courseId, teacherId, userParams);
+
+                var userDtos = _mapper.Map<List<UserDto>>(pagedUsers.Items);
+
+                var result = new PagedResult<UserDto>
+                {
+                    Items = userDtos,
+                    TotalCount = pagedUsers.TotalCount,
+                    PageNumber = pagedUsers.PageNumber,
+                    PageSize = pagedUsers.PageSize
+                };
+
+                response.Data = result;
+                response.StatusCode = 200;
+                response.Success = true;
+                response.Message = "Lấy danh sách học sinh thành công";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetUsersByCourseIdPagedAsync for CourseId: {CourseId}, TeacherId: {TeacherId}", courseId, teacherId);
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi hệ thống";
+            }
+            return response;
+        }
+
 
         // Lấy thông tin chi tiết của học sinh trong một course cụ thể
 
@@ -94,7 +130,6 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<StudentDetailInCourseDto>();
             try
             {
-                // RLS đã tự động filter courses theo role (Admin: all, Teacher: own)
                 var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
@@ -125,7 +160,6 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Lấy thông tin tiến độ học tập
-                // RLS đã filter: Teacher chỉ xem progress của students trong own courses (qua CourseId), Admin xem tất cả
                 var courseProgress = await _courseProgressRepository.GetByUserAndCourseAsync(studentId, courseId);
 
                 // Map dữ liệu sang DTO
@@ -192,8 +226,102 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
+        // Teacher lấy chi tiết học sinh trong course của mình
+        public async Task<ServiceResponse<StudentDetailInCourseDto>> GetStudentDetailInCourseAsync(
+            int courseId, 
+            int studentId,
+            int teacherId)
+        {
+            var response = new ServiceResponse<StudentDetailInCourseDto>();
+            try
+            {
+                var (student, userCourse, progress) = await _userRepository.GetStudentDetailDataForTeacherAsync(courseId, studentId, teacherId);
+
+                if (student == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy học sinh hoặc bạn không có quyền truy cập";
+                    return response;
+                }
+
+                if (userCourse == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Học sinh chưa tham gia khóa học này";
+                    return response;
+                }
+
+                // Lấy course để có title
+                var course = await _courseRepository.GetCourseById(courseId);
+
+                // Map dữ liệu sang DTO
+                var studentDetailDto = new StudentDetailInCourseDto
+                {
+                    UserId = student.UserId,
+                    FirstName = student.FirstName,
+                    LastName = student.LastName,
+                    DisplayName = $"{student.FirstName} {student.LastName}",
+                    Email = student.Email,
+                    DateOfBirth = student.DateOfBirth,
+                    IsMale = student.IsMale,
+                    CourseId = courseId,
+                    CourseName = course?.Title ?? "Unknown",
+                    JoinedAt = userCourse.JoinedAt
+                };
+
+                // Build avatar URL nếu có
+                if (!string.IsNullOrWhiteSpace(student.AvatarKey))
+                {
+                    studentDetailDto.AvatarUrl = BuildPublicUrl.BuildURL(AvatarBucket, student.AvatarKey);
+                }
+
+                // Thêm thông tin tiến độ nếu có
+                if (progress != null)
+                {
+                    studentDetailDto.Progress = new CourseProgressDetailDto
+                    {
+                        CompletedLessons = progress.CompletedLessons,
+                        TotalLessons = progress.TotalLessons,
+                        ProgressPercentage = progress.ProgressPercentage,
+                        IsCompleted = progress.IsCompleted,
+                        CompletedAt = progress.CompletedAt,
+                        LastUpdated = progress.LastUpdated,
+                        ProgressDisplay = progress.GetProgressDisplay()
+                    };
+                }
+                else
+                {
+                    // Nếu chưa có progress record, tạo default
+                    var totalLessons = course?.Lessons?.Count ?? 0;
+                    studentDetailDto.Progress = new CourseProgressDetailDto
+                    {
+                        CompletedLessons = 0,
+                        TotalLessons = totalLessons,
+                        ProgressPercentage = 0,
+                        IsCompleted = false,
+                        CompletedAt = null,
+                        LastUpdated = userCourse.JoinedAt,
+                        ProgressDisplay = $"0/{totalLessons} (0.0%)"
+                    };
+                }
+
+                response.Data = studentDetailDto;
+                response.StatusCode = 200;
+                response.Success = true;
+                response.Message = "Lấy thông tin học sinh thành công";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = $"Đã xảy ra lỗi hệ thống: {ex.Message}";
+            }
+            return response;
+        }
+
         // Xóa học sinh khỏi course (Admin/Teacher)
-        // RLS tự động filter: Admin xóa bất kỳ student nào, Teacher chỉ xóa students trong own courses
         public async Task<ServiceResponse<bool>> RemoveStudentFromCourseAsync(
             int courseId, 
             int studentId, 
@@ -202,15 +330,30 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<bool>();
             try
             {
-                // RLS đã tự động filter courses theo role (Admin: all, Teacher: own)
                 var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy khóa học hoặc bạn không có quyền truy cập";
+                    response.Message = "Không tìm thấy khóa học";
                     return response;
                 }
+
+                // Validate ownership for teachers: teacher phải sở hữu course
+                var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+                if (currentUser != null && currentUser.Roles.Any(r => r.Name == "Teacher"))
+                {
+                    if (!course.TeacherId.HasValue || course.TeacherId.Value != currentUserId)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Bạn không có quyền xóa học sinh khỏi khóa học này";
+                        _logger.LogWarning("Teacher {TeacherId} attempted to remove student {StudentId} from course {CourseId} owned by {OwnerId}",
+                            currentUserId, studentId, courseId, course.TeacherId);
+                        return response;
+                    }
+                }
+                // Admin có full quyền, không cần validate ownership
 
                 // Kiểm tra student có enrolled trong course không
                 var isEnrolled = await _courseRepository.IsUserEnrolled(courseId, studentId);
@@ -230,23 +373,19 @@ namespace LearningEnglish.Application.Service
                 response.Success = true;
                 response.Message = "Xóa học sinh khỏi khóa học thành công";
 
-                // Log action (important for audit trail)
-                // _logger.LogInformation("{Role} {UserId} removed student {StudentId} from course {CourseId}", 
-                //     currentUserRole, currentUserId, studentId, courseId);
+               
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = $"Đã xảy ra lỗi hệ thống: {ex.Message}";
-                // _logger.LogError(ex, "Error removing student {StudentId} from course {CourseId} by {Role} {UserId}", 
-                //     studentId, courseId, currentUserRole, currentUserId);
+                
             }
             return response;
         }
 
         // Thêm học sinh vào course bằng email (Admin/Teacher)
-        // RLS tự động filter: Admin thêm vào bất kỳ course nào, Teacher chỉ thêm vào own courses
         public async Task<ServiceResponse<bool>> AddStudentToCourseByEmailAsync(
             int courseId,
             string studentEmail,
@@ -255,15 +394,30 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<bool>();
             try
             {
-                // RLS đã tự động filter courses theo role (Admin: all, Teacher: own)
                 var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Không tìm thấy khóa học hoặc bạn không có quyền truy cập";
+                    response.Message = "Không tìm thấy khóa học";
                     return response;
                 }
+
+                // Validate ownership for teachers: teacher phải sở hữu course
+                var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+                if (currentUser != null && currentUser.Roles.Any(r => r.Name == "Teacher"))
+                {
+                    if (!course.TeacherId.HasValue || course.TeacherId.Value != currentUserId)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 403;
+                        response.Message = "Bạn không có quyền thêm học sinh vào khóa học này";
+                        _logger.LogWarning("Teacher {TeacherId} attempted to add student to course {CourseId} owned by {OwnerId}",
+                            currentUserId, courseId, course.TeacherId);
+                        return response;
+                    }
+                }
+                // Admin có full quyền, không cần validate ownership
 
                 // Tìm user theo email
                 var student = await _userRepository.GetUserByEmailAsync(studentEmail);

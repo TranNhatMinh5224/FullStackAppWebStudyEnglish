@@ -18,8 +18,8 @@ namespace LearningEnglish.API.Controller.User
             _quizService = quizService;
         }
 
-        // GET: api/User/Quizz/{assessmentId} - lấy thông tin quiz theo assessment ID
-        [HttpGet("Quizz/{assessmentId}")]
+        // GET: api/user/quizzes/assessment/{assessmentId} - lấy thông tin quiz theo assessment ID
+        [HttpGet("assessment/{assessmentId}")]
         public async Task<IActionResult> GetQuizInformation(int assessmentId)
         {
             var userId = User.GetUserId();

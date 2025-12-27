@@ -42,6 +42,16 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .FirstOrDefaultAsync(c => c.CourseId == courseId);
         }
 
+        // Lấy khóa học theo ID cho Teacher (kiểm tra ownership)
+        public async Task<Course?> GetCourseByIdForTeacher(int courseId, int teacherId)
+        {
+            return await _context.Courses
+                .Include(c => c.Teacher)
+                .Include(c => c.Lessons)
+                .Include(c => c.UserCourses)
+                .FirstOrDefaultAsync(c => c.CourseId == courseId && c.TeacherId == teacherId);
+        }
+
 
         // Cập nhật khóa học
 
@@ -114,19 +124,19 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
 
-        /// Lấy khóa học do teacher tạo - RLS đã filter theo teacherId
+        /// Lấy khóa học do teacher tạo - Filter theo teacherId
 
-        public async Task<IEnumerable<Course>> GetAllCoursesByTeacherId()
+        public async Task<IEnumerable<Course>> GetAllCoursesByTeacherId(int teacherId)
         {
             return await _context.Courses
-                .Where(c => c.Type == CourseType.Teacher) // Chỉ filter Type, RLS đã filter TeacherId
+                .Where(c => c.Type == CourseType.Teacher && c.TeacherId == teacherId)
                 .Include(c => c.Teacher)
                 .Include(c => c.Lessons)
                 .Include(c => c.UserCourses)
                 .ToListAsync();
         }
 
-        // Lấy khóa học của giáo viên với phân trang (chỉ phân trang, không filter) - RLS đã filter theo teacherId
+        // Lấy khóa học của giáo viên với phân trang
         public async Task<PagedResult<Course>> GetCoursesByTeacherPagedAsync(int teacherId, PageRequest request)
         {
             var query = _context.Courses
@@ -139,12 +149,12 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
 
-        /// Lấy khóa học user đã đăng ký - RLS đã filter theo userId
+        /// Lấy khóa học user đã đăng ký - Filter theo userId
 
-        public async Task<IEnumerable<Course>> GetEnrolledCoursesByUserId()
+        public async Task<IEnumerable<Course>> GetEnrolledCoursesByUserId(int userId)
         {
             return await _context.UserCourses
-                // RLS đã filter theo userId, không cần .Where(uc => uc.UserId == userId)
+                .Where(uc => uc.UserId == userId)
                 .Include(uc => uc.Course) // Include khóa học
                     .ThenInclude(c => c!.Teacher) // Include thông tin giáo viên
                 .Include(uc => uc.Course) // Include khóa học
@@ -154,11 +164,11 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
 
-        // Lấy khóa học teacher mà user đã tham gia - RLS đã filter theo userId
-        public async Task<IEnumerable<Course>> GetEnrolledTeacherCoursesByUserId()
+        // Lấy khóa học teacher mà user đã tham gia - Filter theo userId
+        public async Task<IEnumerable<Course>> GetEnrolledTeacherCoursesByUserId(int userId)
         {
             return await _context.UserCourses
-                .Where(uc => uc.Course!.Type == CourseType.Teacher) // Chỉ filter Type, RLS đã filter userId
+                .Where(uc => uc.UserId == userId && uc.Course!.Type == CourseType.Teacher)
                 .Include(uc => uc.Course)
                     .ThenInclude(c => c!.Teacher)
                 .Include(uc => uc.Course)
@@ -284,26 +294,26 @@ namespace LearningEnglish.Infrastructure.Repositories
         }
 
 
-        // Lấy khóa học do teacher tạo - RLS đã filter theo teacherId
+        // Lấy khóa học do teacher tạo - Filter theo teacherId
 
-        public async Task<IEnumerable<Course>> GetCoursesByTeacher()
+        public async Task<IEnumerable<Course>> GetCoursesByTeacher(int teacherId)
         {
-            return await GetAllCoursesByTeacherId();
+            return await GetAllCoursesByTeacherId(teacherId);
         }
 
 
-        // Lấy khóa học user đã đăng ký - RLS đã filter theo userId
+        // Lấy khóa học user đã đăng ký - Filter theo userId
 
-        public async Task<IEnumerable<Course>> GetEnrolledCoursesByUser()
+        public async Task<IEnumerable<Course>> GetEnrolledCoursesByUser(int userId)
         {
-            return await GetEnrolledCoursesByUserId();
+            return await GetEnrolledCoursesByUserId(userId);
         }
 
-        // Lấy khóa học user đã đăng ký với phân trang (chỉ phân trang, không filter) - RLS đã filter theo userId
-        public async Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(PageRequest request)
+        // Lấy khóa học user đã đăng ký với phân trang - Filter theo userId
+        public async Task<PagedResult<Course>> GetEnrolledCoursesByUserPagedAsync(int userId, PageRequest request)
         {
             var query = _context.UserCourses
-                // RLS đã filter theo userId, không cần .Where(uc => uc.UserId == userId)
+                .Where(uc => uc.UserId == userId)
                 .Include(uc => uc.Course)
                     .ThenInclude(c => c!.Teacher)
                 .Include(uc => uc.Course)

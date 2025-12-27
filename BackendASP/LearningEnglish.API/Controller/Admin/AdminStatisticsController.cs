@@ -45,10 +45,12 @@ namespace LearningEnglish.API.Controller.Admin
         }
 
         // endpoint Admin lấy dữ liệu doanh thu cho biểu đồ
+      
         [HttpGet("revenue/chart")]
         [RequirePermission("Admin.Revenue.View")]
         public async Task<IActionResult> GetRevenueChartData([FromQuery] int days = 30)
         {
+
             var result = await _adminStatisticsService.GetRevenueChartDataAsync(days);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

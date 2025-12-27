@@ -21,6 +21,13 @@ namespace LearningEnglish.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        // Lấy thông báo theo ID
+        public async Task<Notification?> GetByIdAsync(int notificationId)
+        {
+            return await _context.Notifications
+                .FirstOrDefaultAsync(n => n.Id == notificationId);
+        }
+
         
         public async Task<IEnumerable<Notification>> GetUserNotificationsAsync(int userId)
         {
@@ -32,7 +39,6 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        // RLS đã filter: User chỉ đếm notifications của chính mình
         public async Task<int> GetUnreadCountAsync(int userId)
         {
             

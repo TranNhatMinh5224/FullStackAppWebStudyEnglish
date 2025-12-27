@@ -17,8 +17,7 @@ namespace LearningEnglish.API.Controller.User
             _notificationService = notificationService;
         }
 
-        // GET: api/user/notifications - lấy danh sách thông báo của user
-        // RLS: notifications_policy_user_all_own
+        // GET: api/user/notifications - lấy danh sách thông báo của user (chỉ của chính mình)
         [HttpGet]
         public async Task<IActionResult> GetNotifications()
         {
@@ -27,8 +26,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/user/notifications/unread-count - đếm thông báo chưa đọc
-        // RLS: notifications_policy_user_all_own
+        // GET: api/user/notifications/unread-count - đếm thông báo chưa đọc (chỉ của chính mình)
         [HttpGet("unread-count")]
         public async Task<IActionResult> GetUnreadCount()
         {
@@ -37,8 +35,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/user/notifications/{id}/mark-as-read - đánh dấu 1 thông báo đã đọc
-        // RLS: notifications_policy_user_all_own
+        // PUT: api/user/notifications/{id}/mark-as-read - đánh dấu 1 thông báo đã đọc (chỉ của chính mình)
         [HttpPut("{id}/mark-as-read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
@@ -47,8 +44,7 @@ namespace LearningEnglish.API.Controller.User
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/user/notifications/mark-all-read - đánh dấu tất cả đã đọc
-        // RLS: notifications_policy_user_all_own
+        // PUT: api/user/notifications/mark-all-read - đánh dấu tất cả đã đọc (chỉ của chính mình)
         [HttpPut("mark-all-read")]
         public async Task<IActionResult> MarkAllAsRead()
         {

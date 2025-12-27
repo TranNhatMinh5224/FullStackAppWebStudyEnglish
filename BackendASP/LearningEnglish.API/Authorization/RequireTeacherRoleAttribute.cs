@@ -8,7 +8,6 @@ namespace LearningEnglish.API.Authorization
     // Logic:
     // - Kiểm tra role Teacher trong database (realtime)
     // - Không dựa vào JWT token (an toàn hơn khi role thay đổi)
-    // - Tương tự cách RLS hoạt động - verify từ DB
     
     public class RequireTeacherRoleAttribute : AuthorizeAttribute
     {

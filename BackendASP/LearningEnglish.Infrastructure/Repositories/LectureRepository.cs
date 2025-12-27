@@ -20,6 +20,26 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .FirstOrDefaultAsync(l => l.LectureId == lectureId);
         }
 
+        public async Task<Lecture?> GetByIdForTeacherAsync(int lectureId, int teacherId)
+        {
+            return await _context.Lectures
+                .Join(_context.Modules,
+                    l => l.ModuleId,
+                    m => m.ModuleId,
+                    (l, m) => new { Lecture = l, Module = m })
+                .Join(_context.Lessons,
+                    lm => lm.Module.LessonId,
+                    lesson => lesson.LessonId,
+                    (lm, lesson) => new { lm.Lecture, lm.Module, Lesson = lesson })
+                .Join(_context.Courses,
+                    lml => lml.Lesson.CourseId,
+                    c => c.CourseId,
+                    (lml, c) => new { lml.Lecture, lml.Module, lml.Lesson, Course = c })
+                .Where(x => x.Lecture.LectureId == lectureId && x.Course.TeacherId == teacherId)
+                .Select(x => x.Lecture)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<Lecture?> GetByIdWithDetailsAsync(int lectureId)
         {
             return await _context.Lectures
@@ -121,6 +141,16 @@ namespace LearningEnglish.Infrastructure.Repositories
                     .ThenInclude(m => m!.Lesson)
                         .ThenInclude(lesson => lesson!.Course)
                 .FirstOrDefaultAsync(l => l.LectureId == lectureId);
+        }
+
+        public async Task<Lecture?> GetLectureWithModuleCourseForTeacherAsync(int lectureId, int teacherId)
+        {
+            return await _context.Lectures
+                .Include(l => l.Module)
+                    .ThenInclude(m => m!.Lesson)
+                        .ThenInclude(lesson => lesson!.Course)
+                .Where(l => l.LectureId == lectureId && l.Module!.Lesson!.Course!.TeacherId == teacherId)
+                .FirstOrDefaultAsync();
         }
     }
 }

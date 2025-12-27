@@ -115,5 +115,93 @@ namespace LearningEnglish.Infrastructure.Repositories
                         .ThenInclude(l => l!.Course)
                 .FirstOrDefaultAsync(fc => fc.FlashCardId == flashCardId);
         }
+
+        public async Task<FlashCard?> GetByIdForTeacherAsync(int flashCardId, int teacherId)
+        {
+            return await _context.FlashCards
+                .Join(_context.Modules,
+                    fc => fc.ModuleId,
+                    m => m.ModuleId,
+                    (fc, m) => new { FlashCard = fc, Module = m })
+                .Join(_context.Lessons,
+                    fm => fm.Module.LessonId,
+                    l => l.LessonId,
+                    (fm, l) => new { fm.FlashCard, fm.Module, Lesson = l })
+                .Join(_context.Courses,
+                    fml => fml.Lesson.CourseId,
+                    c => c.CourseId,
+                    (fml, c) => new { fml.FlashCard, fml.Module, fml.Lesson, Course = c })
+                .Where(x => x.FlashCard.FlashCardId == flashCardId && x.Course.TeacherId == teacherId)
+                .Select(x => x.FlashCard)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<FlashCard?> GetByIdWithDetailsForTeacherAsync(int flashCardId, int teacherId)
+        {
+            return await _context.FlashCards
+                .Include(fc => fc.Module)
+                    .ThenInclude(m => m!.Lesson)
+                        .ThenInclude(l => l!.Course)
+                .Include(fc => fc.Reviews)
+                .Join(_context.Modules,
+                    fc => fc.ModuleId,
+                    m => m.ModuleId,
+                    (fc, m) => new { FlashCard = fc, Module = m })
+                .Join(_context.Lessons,
+                    fm => fm.Module.LessonId,
+                    l => l.LessonId,
+                    (fm, l) => new { fm.FlashCard, fm.Module, Lesson = l })
+                .Join(_context.Courses,
+                    fml => fml.Lesson.CourseId,
+                    c => c.CourseId,
+                    (fml, c) => new { fml.FlashCard, fml.Module, fml.Lesson, Course = c })
+                .Where(x => x.FlashCard.FlashCardId == flashCardId && x.Course.TeacherId == teacherId)
+                .Select(x => x.FlashCard)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<FlashCard>> GetByModuleIdForTeacherAsync(int moduleId, int teacherId)
+        {
+            return await _context.FlashCards
+                .Join(_context.Modules,
+                    fc => fc.ModuleId,
+                    m => m.ModuleId,
+                    (fc, m) => new { FlashCard = fc, Module = m })
+                .Join(_context.Lessons,
+                    fm => fm.Module.LessonId,
+                    l => l.LessonId,
+                    (fm, l) => new { fm.FlashCard, fm.Module, Lesson = l })
+                .Join(_context.Courses,
+                    fml => fml.Lesson.CourseId,
+                    c => c.CourseId,
+                    (fml, c) => new { fml.FlashCard, fml.Module, fml.Lesson, Course = c })
+                .Where(x => x.FlashCard.ModuleId == moduleId && x.Course.TeacherId == teacherId)
+                .Select(x => x.FlashCard)
+                .OrderBy(fc => fc.Word)
+                .ToListAsync();
+        }
+
+        public async Task<List<FlashCard>> GetByModuleIdWithDetailsForTeacherAsync(int moduleId, int teacherId)
+        {
+            return await _context.FlashCards
+                .Include(fc => fc.Module)
+                .Include(fc => fc.Reviews)
+                .Join(_context.Modules,
+                    fc => fc.ModuleId,
+                    m => m.ModuleId,
+                    (fc, m) => new { FlashCard = fc, Module = m })
+                .Join(_context.Lessons,
+                    fm => fm.Module.LessonId,
+                    l => l.LessonId,
+                    (fm, l) => new { fm.FlashCard, fm.Module, Lesson = l })
+                .Join(_context.Courses,
+                    fml => fml.Lesson.CourseId,
+                    c => c.CourseId,
+                    (fml, c) => new { fml.FlashCard, fml.Module, fml.Lesson, Course = c })
+                .Where(x => x.FlashCard.ModuleId == moduleId && x.Course.TeacherId == teacherId)
+                .Select(x => x.FlashCard)
+                .OrderBy(fc => fc.Word)
+                .ToListAsync();
+        }
     }
 }

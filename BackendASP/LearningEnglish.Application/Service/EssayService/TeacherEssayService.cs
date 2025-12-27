@@ -13,6 +13,9 @@ namespace LearningEnglish.Application.Service.EssayService
     public class TeacherEssayService : ITeacherEssayService
     {
         private readonly IEssayRepository _essayRepository;
+        private readonly IAssessmentRepository _assessmentRepository;
+        private readonly IModuleRepository _moduleRepository;
+        private readonly ICourseRepository _courseRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<TeacherEssayService> _logger;
         private readonly IMinioFileStorage? _minioFileStorage;
@@ -24,11 +27,17 @@ namespace LearningEnglish.Application.Service.EssayService
 
         public TeacherEssayService(
             IEssayRepository essayRepository,
+            IAssessmentRepository assessmentRepository,
+            IModuleRepository moduleRepository,
+            ICourseRepository courseRepository,
             IMapper mapper,
             ILogger<TeacherEssayService> logger,
             IMinioFileStorage? minioFileStorage = null)
         {
             _essayRepository = essayRepository;
+            _assessmentRepository = assessmentRepository;
+            _moduleRepository = moduleRepository;
+            _courseRepository = courseRepository;
             _mapper = mapper;
             _logger = logger;
             _minioFileStorage = minioFileStorage;
@@ -184,7 +193,8 @@ namespace LearningEnglish.Application.Service.EssayService
             }
         }
 
-        public async Task<ServiceResponse<EssayDto>> GetEssayByIdAsync(int essayId)
+        // Teacher có thể xem Essay nếu là owner HOẶC đã enroll
+        public async Task<ServiceResponse<EssayDto>> GetEssayByIdAsync(int essayId, int teacherId)
         {
             var response = new ServiceResponse<EssayDto>();
 
@@ -197,6 +207,58 @@ namespace LearningEnglish.Application.Service.EssayService
                     response.Success = false;
                     response.StatusCode = 404;
                     response.Message = "Essay không tồn tại";
+                    return response;
+                }
+
+                // Lấy Assessment với Module và Course để check
+                var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy Assessment";
+                    return response;
+                }
+
+                // Lấy Module với Course để check
+                var module = await _moduleRepository.GetModuleWithCourseAsync(assessment.ModuleId);
+                if (module == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy Module";
+                    return response;
+                }
+
+                // Check: teacher phải là owner HOẶC đã enroll
+                var courseId = module.Lesson?.CourseId;
+                if (!courseId.HasValue)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var course = await _courseRepository.GetCourseById(courseId.Value);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isOwner = course.TeacherId.HasValue && course.TeacherId.Value == teacherId;
+                var isEnrolled = await _courseRepository.IsUserEnrolled(courseId.Value, teacherId);
+
+                if (!isOwner && !isEnrolled)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn cần sở hữu hoặc đăng ký khóa học để xem Essay này";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to access essay {EssayId} without ownership or enrollment", 
+                        teacherId, essayId);
                     return response;
                 }
 
@@ -232,12 +294,65 @@ namespace LearningEnglish.Application.Service.EssayService
             }
         }
 
-        public async Task<ServiceResponse<List<EssayDto>>> GetEssaysByAssessmentIdAsync(int assessmentId)
+        // Teacher có thể xem Essays nếu là owner HOẶC đã enroll
+        public async Task<ServiceResponse<List<EssayDto>>> GetEssaysByAssessmentIdAsync(int assessmentId, int teacherId)
         {
             var response = new ServiceResponse<List<EssayDto>>();
 
             try
             {
+                // Lấy Assessment với Module và Course để check
+                var assessment = await _assessmentRepository.GetAssessmentById(assessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy Assessment";
+                    return response;
+                }
+
+                // Lấy Module với Course để check
+                var module = await _moduleRepository.GetModuleWithCourseAsync(assessment.ModuleId);
+                if (module == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy Module";
+                    return response;
+                }
+
+                // Check: teacher phải là owner HOẶC đã enroll
+                var courseId = module.Lesson?.CourseId;
+                if (!courseId.HasValue)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var course = await _courseRepository.GetCourseById(courseId.Value);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                var isOwner = course.TeacherId.HasValue && course.TeacherId.Value == teacherId;
+                var isEnrolled = await _courseRepository.IsUserEnrolled(courseId.Value, teacherId);
+
+                if (!isOwner && !isEnrolled)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn cần sở hữu hoặc đăng ký khóa học để xem các Essay";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to list essays of assessment {AssessmentId} without ownership or enrollment", 
+                        teacherId, assessmentId);
+                    return response;
+                }
+
                 var essays = await _essayRepository.GetEssaysByAssessmentIdAsync(assessmentId);
                 var essayDtos = new List<EssayDto>();
 
