@@ -51,7 +51,12 @@ namespace LearningEnglish.Application.Service
                         dto.ImageTempKey, IMAGE_BUCKET, FLASHCARD_FOLDER);
                     
                     if (!imageResult.Success || string.IsNullOrWhiteSpace(imageResult.Data))
-                        return response.Fail(400, "Không thể lưu image");
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu image";
+                        return response;
+                    }
                     
                     imageKey = imageResult.Data;
                     flashCard.ImageKey = imageKey;
@@ -77,7 +82,10 @@ namespace LearningEnglish.Application.Service
                                 _logger.LogWarning(ex, "Failed to rollback image {Key}", imageKey);
                             }
                         }
-                        return response.Fail(400, "Không thể lưu audio");
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu audio";
+                        return response;
                     }
                     
                     audioKey = audioResult.Data;
@@ -93,13 +101,20 @@ namespace LearningEnglish.Application.Service
                 if (!string.IsNullOrWhiteSpace(created.AudioKey))
                     result.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET, created.AudioKey);
 
-                return response.SuccessResult(201, "Tạo FlashCard thành công", result);
+                response.Success = true;
+                response.StatusCode = 201;
+                response.Message = "Tạo FlashCard thành công";
+                response.Data = result;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Create FlashCard failed for ModuleId: {ModuleId}. Error: {Error}", 
                     dto.ModuleId, ex.ToString());
-                return response.Fail(500, "Có lỗi xảy ra khi tạo FlashCard");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Có lỗi xảy ra khi tạo FlashCard";
+                return response;
             }
         }
 
@@ -130,13 +145,20 @@ namespace LearningEnglish.Application.Service
                     return d;
                 }).ToList();
 
-                return response.SuccessResult(201, "Import flashcards thành công", result);
+                response.Success = true;
+                response.StatusCode = 201;
+                response.Message = "Import flashcards thành công";
+                response.Data = result;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Bulk import flashcards failed for ModuleId: {ModuleId}. Error: {Error}", 
                     dto.ModuleId, ex.ToString());
-                return response.Fail(500, "Có lỗi khi import flashcards");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Có lỗi khi import flashcards";
+                return response;
             }
         }
 
@@ -149,7 +171,12 @@ namespace LearningEnglish.Application.Service
             {
                 var flashCard = await _flashCardRepository.GetByIdAsync(flashCardId);
                 if (flashCard == null)
-                    return response.Fail(404, "Không tìm thấy FlashCard");
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy FlashCard";
+                    return response;
+                }
 
                 var oldImageKey = flashCard.ImageKey;
                 var oldAudioKey = flashCard.AudioKey;
@@ -166,7 +193,12 @@ namespace LearningEnglish.Application.Service
                         dto.ImageTempKey, IMAGE_BUCKET, FLASHCARD_FOLDER);
                     
                     if (!imageResult.Success || string.IsNullOrWhiteSpace(imageResult.Data))
-                        return response.Fail(400, "Không thể lưu image mới");
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu image mới";
+                        return response;
+                    }
                     
                     newImageKey = imageResult.Data;
                     flashCard.ImageKey = newImageKey;
@@ -192,7 +224,10 @@ namespace LearningEnglish.Application.Service
                                 _logger.LogWarning(ex, "Failed to rollback image {Key}", newImageKey);
                             }
                         }
-                        return response.Fail(400, "Không thể lưu audio mới");
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu audio mới";
+                        return response;
                     }
                     
                     newAudioKey = audioResult.Data;
@@ -233,13 +268,20 @@ namespace LearningEnglish.Application.Service
                 if (!string.IsNullOrWhiteSpace(updated.AudioKey))
                     result.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET, updated.AudioKey);
 
-                return response.SuccessResult(200, "Cập nhật FlashCard thành công", result);
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Cập nhật FlashCard thành công";
+                response.Data = result;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Update FlashCard failed for FlashCardId: {FlashCardId}. Error: {Error}", 
                     flashCardId, ex.ToString());
-                return response.Fail(500, "Có lỗi khi cập nhật FlashCard");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Có lỗi khi cập nhật FlashCard";
+                return response;
             }
         }
 
@@ -252,7 +294,12 @@ namespace LearningEnglish.Application.Service
             {
                 var flashCard = await _flashCardRepository.GetByIdAsync(flashCardId);
                 if (flashCard == null)
-                    return response.Fail(404, "Không tìm thấy FlashCard");
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy FlashCard";
+                    return response;
+                }
 
                 await _flashCardRepository.DeleteAsync(flashCardId);
 
@@ -281,13 +328,20 @@ namespace LearningEnglish.Application.Service
                     }
                 }
 
-                return response.SuccessResult(200, "Xóa FlashCard thành công", true);
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Xóa FlashCard thành công";
+                response.Data = true;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Delete FlashCard failed for FlashCardId: {FlashCardId}. Error: {Error}", 
                     flashCardId, ex.ToString());
-                return response.Fail(500, "Có lỗi khi xóa FlashCard");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Có lỗi khi xóa FlashCard";
+                return response;
             }
         }
 
@@ -300,7 +354,12 @@ namespace LearningEnglish.Application.Service
             {
                 var flashCard = await _flashCardRepository.GetByIdWithDetailsAsync(flashCardId);
                 if (flashCard == null)
-                    return response.Fail(404, "Không tìm thấy FlashCard");
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy FlashCard";
+                    return response;
+                }
 
                 // Map DTO inline
                 var result = _mapper.Map<FlashCardDto>(flashCard);
@@ -309,13 +368,20 @@ namespace LearningEnglish.Application.Service
                 if (!string.IsNullOrWhiteSpace(flashCard.AudioKey))
                     result.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET, flashCard.AudioKey);
 
-                return response.SuccessResult(200, "Lấy FlashCard thành công", result);
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Lấy FlashCard thành công";
+                response.Data = result;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Get FlashCard by ID failed for FlashCardId: {FlashCardId}. Error: {Error}", 
                     flashCardId, ex.ToString());
-                return response.Fail(500, "Có lỗi khi lấy FlashCard");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Có lỗi khi lấy FlashCard";
+                return response;
             }
         }
 
@@ -337,13 +403,20 @@ namespace LearningEnglish.Application.Service
                     return dto;
                 }).ToList();
 
-                return response.SuccessResult(200, "Lấy danh sách FlashCard thành công", result);
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Lấy danh sách FlashCard thành công";
+                response.Data = result;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Get FlashCards by ModuleId failed for ModuleId: {ModuleId}. Error: {Error}", 
                     moduleId, ex.ToString());
-                return response.Fail(500, "Có lỗi khi lấy danh sách FlashCard");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Có lỗi khi lấy danh sách FlashCard";
+                return response;
             }
         }
     }

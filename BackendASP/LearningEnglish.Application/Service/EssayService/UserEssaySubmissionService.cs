@@ -76,19 +76,34 @@ namespace LearningEnglish.Application.Service
                 // Kiểm tra essay tồn tại
                 var essay = await _essayRepository.GetEssayByIdAsync(dto.EssayId);
                 if (essay == null)
-                    return response.Fail(404, "Essay không tồn tại");
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Essay không tồn tại";
+                    return response;
+                }
 
                 // Kiểm tra hạn nộp assessment
                 var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
                 if (assessment?.DueAt != null && DateTime.UtcNow > assessment.DueAt)
-                    return response.Fail(403, "Assessment đã quá hạn nộp bài");
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Assessment đã quá hạn nộp bài";
+                    return response;
+                }
 
                 // Không cho nộp lại
                 var existed = await _essaySubmissionRepository
                     .GetUserSubmissionForEssayAsync(userId, dto.EssayId);
 
                 if (existed != null)
-                    return response.Fail(409, "Bạn đã nộp bài essay này rồi");
+                {
+                    response.Success = false;
+                    response.StatusCode = 409;
+                    response.Message = "Bạn đã nộp bài essay này rồi";
+                    return response;
+                }
 
                 // Commit file attachment
                 string? attachmentKey = null;
@@ -98,7 +113,12 @@ namespace LearningEnglish.Application.Service
                         dto.AttachmentTempKey, AttachmentBucket, AttachmentFolder);
 
                     if (!commit.Success || string.IsNullOrWhiteSpace(commit.Data))
-                        return response.Fail(400, "Không thể lưu file đính kèm");
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu file đính kèm";
+                        return response;
+                    }
 
                     attachmentKey = commit.Data;
                 }
@@ -132,13 +152,20 @@ namespace LearningEnglish.Application.Service
                         AttachmentBucket, $"{AttachmentFolder}/{created.AttachmentKey}");
                 }
 
-                return response.SuccessResult(201, "Nộp bài Essay thành công", dtoResult);
+                response.Success = true;
+                response.StatusCode = 201;
+                response.Message = "Nộp bài Essay thành công";
+                response.Data = dtoResult;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "CreateSubmission failed for UserId: {UserId}, EssayId: {EssayId}. Error: {Error}", 
                     userId, dto.EssayId, ex.ToString());
-                return response.Fail(500, "Lỗi hệ thống khi nộp bài Essay");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Lỗi hệ thống khi nộp bài Essay";
+                return response;
             }
         }
 
@@ -151,10 +178,20 @@ namespace LearningEnglish.Application.Service
             {
                 var submission = await _essaySubmissionRepository.GetSubmissionByIdAsync(submissionId);
                 if (submission == null)
-                    return response.Fail(404, "Submission không tồn tại");
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Submission không tồn tại";
+                    return response;
+                }
 
                 if (submission.UserId != userId)
-                    return response.Fail(403, "Không có quyền truy cập submission này");
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Không có quyền truy cập submission này";
+                    return response;
+                }
 
                 var dto = _mapper.Map<EssaySubmissionDto>(submission);
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
@@ -163,13 +200,20 @@ namespace LearningEnglish.Application.Service
                         AttachmentBucket, $"{AttachmentFolder}/{submission.AttachmentKey}");
                 }
 
-                return response.SuccessResult(200, "Lấy submission thành công", dto);
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Lấy submission thành công";
+                response.Data = dto;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "GetMySubmissionById failed for SubmissionId: {SubmissionId}, UserId: {UserId}. Error: {Error}", 
                     submissionId, userId, ex.ToString());
-                return response.Fail(500, "Lỗi hệ thống");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Lỗi hệ thống";
+                return response;
             }
         }
 
@@ -184,7 +228,13 @@ namespace LearningEnglish.Application.Service
                     .GetUserSubmissionForEssayAsync(userId, essayId);
 
                 if (submission == null)
-                    return response.SuccessResult(200, "User chưa nộp bài", null);
+                {
+                    response.Success = true;
+                    response.StatusCode = 200;
+                    response.Message = "User chưa nộp bài";
+                    response.Data = null;
+                    return response;
+                }
 
                 var dto = _mapper.Map<EssaySubmissionDto>(submission);
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
@@ -193,13 +243,20 @@ namespace LearningEnglish.Application.Service
                         AttachmentBucket, $"{AttachmentFolder}/{submission.AttachmentKey}");
                 }
 
-                return response.SuccessResult(200, "Lấy submission thành công", dto);
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Lấy submission thành công";
+                response.Data = dto;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "GetMySubmissionForEssay failed for UserId: {UserId}, EssayId: {EssayId}. Error: {Error}", 
                     userId, essayId, ex.ToString());
-                return response.Fail(500, "Lỗi hệ thống");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Lỗi hệ thống";
+                return response;
             }
         }
 
@@ -213,10 +270,20 @@ namespace LearningEnglish.Application.Service
             {
                 var submission = await _essaySubmissionRepository.GetSubmissionByIdAsync(submissionId);
                 if (submission == null)
-                    return response.Fail(404, "Submission không tồn tại");
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Submission không tồn tại";
+                    return response;
+                }
 
                 if (!await _essaySubmissionRepository.IsUserOwnerOfSubmissionAsync(userId, submissionId))
-                    return response.Fail(403, "Không có quyền cập nhật");
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Không có quyền cập nhật";
+                    return response;
+                }
 
                 // Xóa attachment cũ nếu yêu cầu
                 if (dto.RemoveAttachment && !string.IsNullOrWhiteSpace(submission.AttachmentKey))
@@ -234,7 +301,12 @@ namespace LearningEnglish.Application.Service
                         dto.AttachmentTempKey, AttachmentBucket, AttachmentFolder);
 
                     if (!commit.Success)
-                        return response.Fail(400, "Không thể lưu file mới");
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu file mới";
+                        return response;
+                    }
 
                     submission.AttachmentKey = commit.Data;
                     submission.AttachmentType = dto.AttachmentType;
@@ -251,13 +323,20 @@ namespace LearningEnglish.Application.Service
                         AttachmentBucket, $"{AttachmentFolder}/{updated.AttachmentKey}");
                 }
 
-                return response.SuccessResult(200, "Cập nhật submission thành công", result);
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Cập nhật submission thành công";
+                response.Data = result;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "UpdateSubmission failed for SubmissionId: {SubmissionId}, UserId: {UserId}. Error: {Error}", 
                     submissionId, userId, ex.ToString());
-                return response.Fail(500, "Lỗi hệ thống");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Lỗi hệ thống";
+                return response;
             }
         }
 
@@ -270,10 +349,20 @@ namespace LearningEnglish.Application.Service
             {
                 var submission = await _essaySubmissionRepository.GetSubmissionByIdAsync(submissionId);
                 if (submission == null)
-                    return response.Fail(404, "Submission không tồn tại");
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Submission không tồn tại";
+                    return response;
+                }
 
                 if (!await _essaySubmissionRepository.IsUserOwnerOfSubmissionAsync(userId, submissionId))
-                    return response.Fail(403, "Không có quyền xóa");
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Không có quyền xóa";
+                    return response;
+                }
 
                 await _essaySubmissionRepository.DeleteSubmissionAsync(submissionId);
 
@@ -283,13 +372,20 @@ namespace LearningEnglish.Application.Service
                         $"{AttachmentFolder}/{submission.AttachmentKey}", AttachmentBucket);
                 }
 
-                return response.SuccessResult(200, "Xóa submission thành công", true);
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Xóa submission thành công";
+                response.Data = true;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "DeleteSubmission failed for SubmissionId: {SubmissionId}, UserId: {UserId}. Error: {Error}", 
                     submissionId, userId, ex.ToString());
-                return response.Fail(500, "Lỗi hệ thống");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Lỗi hệ thống";
+                return response;
             }
         }
     }
