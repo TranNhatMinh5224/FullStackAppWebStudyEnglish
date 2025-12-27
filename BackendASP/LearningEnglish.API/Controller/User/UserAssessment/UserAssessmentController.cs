@@ -1,4 +1,5 @@
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,13 +7,13 @@ namespace LearningEnglish.API.Controller.User
 {
     [Route("api/user/assessments")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "Student")]
     public class UserAssessmentController : ControllerBase
     {
-        private readonly IAssessmentService _assessmentService;
+        private readonly IUserAssessmentService _assessmentService;
         private readonly ILogger<UserAssessmentController> _logger;
 
-        public UserAssessmentController(IAssessmentService assessmentService, ILogger<UserAssessmentController> logger)
+        public UserAssessmentController(IUserAssessmentService assessmentService, ILogger<UserAssessmentController> logger)
         {
             _assessmentService = assessmentService;
             _logger = logger;
@@ -21,14 +22,16 @@ namespace LearningEnglish.API.Controller.User
         [HttpGet("module/{moduleId}")]
         public async Task<IActionResult> GetAssessmentsByModuleId(int moduleId)
         {
-            var result = await _assessmentService.GetAssessmentsByModuleId(moduleId);
+            var userId = User.GetUserId();
+            var result = await _assessmentService.GetAssessmentsByModuleIdAsync(moduleId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         [HttpGet("{assessmentId}")]
         public async Task<IActionResult> GetAssessmentById(int assessmentId)
         {
-            var result = await _assessmentService.GetAssessmentById(assessmentId);
+            var userId = User.GetUserId();
+            var result = await _assessmentService.GetAssessmentByIdAsync(assessmentId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

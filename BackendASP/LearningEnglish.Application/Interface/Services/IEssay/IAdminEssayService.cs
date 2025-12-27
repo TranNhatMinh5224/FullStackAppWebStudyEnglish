@@ -5,7 +5,7 @@ namespace LearningEnglish.Application.Interface.Services.Essay
 {
     public interface IAdminEssayService
     {
-        // Admin tạo essay (không cần kiểm tra ownership)
+        // Admin tạo essay
         Task<ServiceResponse<EssayDto>> AdminCreateEssay(CreateEssayDto dto);
         
         // Admin lấy thông tin essay

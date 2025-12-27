@@ -7,28 +7,27 @@ using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
-    public class AssessmentService : IAssessmentService
+    public class AdminAssessmentService : IAdminAssessmentService
     {
         private readonly IAssessmentRepository _assessmentRepository;
         private readonly IMapper _mapper;
-        private readonly ILogger<AssessmentService> _logger;
+        private readonly ILogger<AdminAssessmentService> _logger;
 
-        public AssessmentService(
+        public AdminAssessmentService(
             IAssessmentRepository assessmentRepository,
             IMapper mapper,
-            ILogger<AssessmentService> logger)
+            ILogger<AdminAssessmentService> logger)
         {
             _assessmentRepository = assessmentRepository;
             _mapper = mapper;
             _logger = logger;
         }
 
-        public async Task<ServiceResponse<AssessmentDto>> CreateAssessment(CreateAssessmentDto dto, int? teacherId = null)
+        public async Task<ServiceResponse<AssessmentDto>> CreateAssessmentAsync(CreateAssessmentDto dto)
         {
             var response = new ServiceResponse<AssessmentDto>();
             try
             {
-                // Kiểm tra Module tồn tại
                 var moduleExists = await _assessmentRepository.ModuleExists(dto.ModuleId);
                 if (!moduleExists)
                 {
@@ -38,35 +37,13 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra quyền Teacher cho Module (nếu có teacherId)
-                if (teacherId.HasValue)
-                {
-                    var isOwner = await _assessmentRepository.IsTeacherOwnerOfModule(teacherId.Value, dto.ModuleId);
-                    if (!isOwner)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Teacher không có quyền tạo Assessment cho Module này";
-                        return response;
-                    }
-                }
-
-
-
-
-
-
-                // Map DTO to Entity
                 var assessment = _mapper.Map<Assessment>(dto);
-
-                // Tạo Assessment
                 await _assessmentRepository.AddAssessment(assessment);
 
-                // Map Entity to DTO
                 var assessmentDto = _mapper.Map<AssessmentDto>(assessment);
 
                 response.Success = true;
-                response.StatusCode = 200;
+                response.StatusCode = 201;
                 response.Message = "Tạo Assessment thành công";
                 response.Data = assessmentDto;
 
@@ -81,7 +58,8 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
         }
-        public async Task<ServiceResponse<List<AssessmentDto>>> GetAssessmentsByModuleId(int moduleId)
+
+        public async Task<ServiceResponse<List<AssessmentDto>>> GetAssessmentsByModuleIdAsync(int moduleId)
         {
             var response = new ServiceResponse<List<AssessmentDto>>();
             try
@@ -105,7 +83,8 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
         }
-        public async Task<ServiceResponse<AssessmentDto>> GetAssessmentById(int assessmentId)
+
+        public async Task<ServiceResponse<AssessmentDto>> GetAssessmentByIdAsync(int assessmentId)
         {
             var response = new ServiceResponse<AssessmentDto>();
             try
@@ -137,8 +116,8 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
         }
-        // chức năng cập nhật Assessment
-        public async Task<ServiceResponse<AssessmentDto>> UpdateAssessment(int assessmentId, UpdateAssessmentDto dto)
+
+        public async Task<ServiceResponse<AssessmentDto>> UpdateAssessmentAsync(int assessmentId, UpdateAssessmentDto dto)
         {
             var response = new ServiceResponse<AssessmentDto>();
             try
@@ -152,9 +131,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Cập nhật các thuộc tính của Assessment. khi đó dữ liệu mới từ dto sẽ ghi đè lên dữ liệu cũ trong assessment
                 _mapper.Map(dto, assessment);
-
                 await _assessmentRepository.UpdateAssessment(assessment);
 
                 var assessmentDto = _mapper.Map<AssessmentDto>(assessment);
@@ -175,7 +152,8 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
         }
-        public async Task<ServiceResponse<bool>> DeleteAssessment(int assessmentId, int? teacherId = null)
+
+        public async Task<ServiceResponse<bool>> DeleteAssessmentAsync(int assessmentId)
         {
             var response = new ServiceResponse<bool>();
             try
@@ -188,20 +166,6 @@ namespace LearningEnglish.Application.Service
                     response.Message = "Không tìm thấy Assessment";
                     response.Data = false;
                     return response;
-                }
-
-                // Kiểm tra quyền Teacher cho Module (nếu có teacherId)
-                if (teacherId.HasValue)
-                {
-                    var isOwner = await _assessmentRepository.IsTeacherOwnerOfModule(teacherId.Value, assessment.ModuleId);
-                    if (!isOwner)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Teacher không có quyền xóa Assessment này";
-                        response.Data = false;
-                        return response;
-                    }
                 }
 
                 await _assessmentRepository.DeleteAssessment(assessmentId);

@@ -117,13 +117,49 @@ namespace LearningEnglish.Infrastructure.Migrations
                 USING (app.user_has_permission('Admin.Course.Manage'));
             ");
 
-            // Teacher: Chỉ thao tác trên courses của chính mình
+            // Teacher: Chỉ courses của mình (Type = Teacher = 2)
             migrationBuilder.Sql(@"
-                CREATE POLICY courses_policy_teacher_all_own
-                ON ""Courses"" FOR ALL
+                CREATE POLICY courses_policy_teacher_select
+                ON ""Courses"" FOR SELECT
                 USING (
                     app.user_has_role('Teacher')
                     AND ""TeacherId"" = app.current_user_id()
+                    AND ""Type"" = 2
+                );
+            ");
+            
+            migrationBuilder.Sql(@"
+                CREATE POLICY courses_policy_teacher_insert
+                ON ""Courses"" FOR INSERT
+                WITH CHECK (
+                    app.user_has_role('Teacher')
+                    AND ""TeacherId"" = app.current_user_id()
+                    AND ""Type"" = 2
+                );
+            ");
+            
+            migrationBuilder.Sql(@"
+                CREATE POLICY courses_policy_teacher_update
+                ON ""Courses"" FOR UPDATE
+                USING (
+                    app.user_has_role('Teacher')
+                    AND ""TeacherId"" = app.current_user_id()
+                    AND ""Type"" = 2
+                )
+                WITH CHECK (
+                    app.user_has_role('Teacher')
+                    AND ""TeacherId"" = app.current_user_id()
+                    AND ""Type"" = 2
+                );
+            ");
+            
+            migrationBuilder.Sql(@"
+                CREATE POLICY courses_policy_teacher_delete
+                ON ""Courses"" FOR DELETE
+                USING (
+                    app.user_has_role('Teacher')
+                    AND ""TeacherId"" = app.current_user_id()
+                    AND ""Type"" = 2
                 );
             ");
 
@@ -251,17 +287,68 @@ namespace LearningEnglish.Infrastructure.Migrations
                 USING (app.user_has_permission('Admin.Lesson.Manage'));
             ");
 
-            // Teacher: Chỉ thao tác trên lessons của courses thuộc về mình
+            // Teacher: Lessons trong courses của mình (Type = 2)
             migrationBuilder.Sql(@"
-                CREATE POLICY lessons_policy_teacher_all_own
-                ON ""Lessons"" FOR ALL
+                CREATE POLICY lessons_policy_teacher_select
+                ON ""Lessons"" FOR SELECT
                 USING (
                     app.user_has_role('Teacher')
                     AND EXISTS (
-                        SELECT 1
-                        FROM ""Courses""
+                        SELECT 1 FROM ""Courses""
                         WHERE ""Courses"".""CourseId"" = ""Lessons"".""CourseId""
                         AND ""Courses"".""TeacherId"" = app.current_user_id()
+                        AND ""Courses"".""Type"" = 2
+                    )
+                );
+            ");
+            
+            migrationBuilder.Sql(@"
+                CREATE POLICY lessons_policy_teacher_insert
+                ON ""Lessons"" FOR INSERT
+                WITH CHECK (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1 FROM ""Courses""
+                        WHERE ""Courses"".""CourseId"" = ""Lessons"".""CourseId""
+                        AND ""Courses"".""TeacherId"" = app.current_user_id()
+                        AND ""Courses"".""Type"" = 2
+                    )
+                );
+            ");
+            
+            migrationBuilder.Sql(@"
+                CREATE POLICY lessons_policy_teacher_update
+                ON ""Lessons"" FOR UPDATE
+                USING (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1 FROM ""Courses""
+                        WHERE ""Courses"".""CourseId"" = ""Lessons"".""CourseId""
+                        AND ""Courses"".""TeacherId"" = app.current_user_id()
+                        AND ""Courses"".""Type"" = 2
+                    )
+                )
+                WITH CHECK (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1 FROM ""Courses""
+                        WHERE ""Courses"".""CourseId"" = ""Lessons"".""CourseId""
+                        AND ""Courses"".""TeacherId"" = app.current_user_id()
+                        AND ""Courses"".""Type"" = 2
+                    )
+                );
+            ");
+            
+            migrationBuilder.Sql(@"
+                CREATE POLICY lessons_policy_teacher_delete
+                ON ""Lessons"" FOR DELETE
+                USING (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1 FROM ""Courses""
+                        WHERE ""Courses"".""CourseId"" = ""Lessons"".""CourseId""
+                        AND ""Courses"".""TeacherId"" = app.current_user_id()
+                        AND ""Courses"".""Type"" = 2
                     )
                 );
             ");
@@ -301,18 +388,73 @@ namespace LearningEnglish.Infrastructure.Migrations
                 USING (app.user_has_permission('Admin.Lesson.Manage'));
             ");
 
-            // Teacher: Chỉ thao tác trên modules của lessons thuộc courses của mình
+            // Teacher: Modules trong courses của mình (Type = 2)
             migrationBuilder.Sql(@"
-                CREATE POLICY modules_policy_teacher_all_own
-                ON ""Modules"" FOR ALL
+                CREATE POLICY modules_policy_teacher_select
+                ON ""Modules"" FOR SELECT
                 USING (
                     app.user_has_role('Teacher')
                     AND EXISTS (
-                        SELECT 1
-                        FROM ""Lessons"" l
+                        SELECT 1 FROM ""Lessons"" l
                         JOIN ""Courses"" c ON l.""CourseId"" = c.""CourseId""
                         WHERE l.""LessonId"" = ""Modules"".""LessonId""
                         AND c.""TeacherId"" = app.current_user_id()
+                        AND c.""Type"" = 2
+                    )
+                );
+            ");
+            
+            migrationBuilder.Sql(@"
+                CREATE POLICY modules_policy_teacher_insert
+                ON ""Modules"" FOR INSERT
+                WITH CHECK (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1 FROM ""Lessons"" l
+                        JOIN ""Courses"" c ON l.""CourseId"" = c.""CourseId""
+                        WHERE l.""LessonId"" = ""Modules"".""LessonId""
+                        AND c.""TeacherId"" = app.current_user_id()
+                        AND c.""Type"" = 2
+                    )
+                );
+            ");
+            
+            migrationBuilder.Sql(@"
+                CREATE POLICY modules_policy_teacher_update
+                ON ""Modules"" FOR UPDATE
+                USING (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1 FROM ""Lessons"" l
+                        JOIN ""Courses"" c ON l.""CourseId"" = c.""CourseId""
+                        WHERE l.""LessonId"" = ""Modules"".""LessonId""
+                        AND c.""TeacherId"" = app.current_user_id()
+                        AND c.""Type"" = 2
+                    )
+                )
+                WITH CHECK (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1 FROM ""Lessons"" l
+                        JOIN ""Courses"" c ON l.""CourseId"" = c.""CourseId""
+                        WHERE l.""LessonId"" = ""Modules"".""LessonId""
+                        AND c.""TeacherId"" = app.current_user_id()
+                        AND c.""Type"" = 2
+                    )
+                );
+            ");
+            
+            migrationBuilder.Sql(@"
+                CREATE POLICY modules_policy_teacher_delete
+                ON ""Modules"" FOR DELETE
+                USING (
+                    app.user_has_role('Teacher')
+                    AND EXISTS (
+                        SELECT 1 FROM ""Lessons"" l
+                        JOIN ""Courses"" c ON l.""CourseId"" = c.""CourseId""
+                        WHERE l.""LessonId"" = ""Modules"".""LessonId""
+                        AND c.""TeacherId"" = app.current_user_id()
+                        AND c.""Type"" = 2
                     )
                 );
             ");
@@ -512,29 +654,36 @@ namespace LearningEnglish.Infrastructure.Migrations
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_admin_insert ON ""Courses"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_admin_update ON ""Courses"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_admin_delete ON ""Courses"";");
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_teacher_all_own ON ""Courses"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_teacher_select_update_delete_own ON ""Courses"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_teacher_update_own ON ""Courses"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_teacher_delete_own ON ""Courses"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_teacher_insert_own ON ""Courses"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_student_select_system ON ""Courses"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_student_select_enrolled ON ""Courses"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_guest_select_system ON ""Courses"";");
 
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS usercourses_policy_superadmin_all ON ""UserCourses"";");
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS usercourses_policy_admin_all ON ""UserCourses"";");
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS usercourses_policy_teacher_select_own_courses ON ""UserCourses"";");
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS usercourses_policy_teacher_insert_own_courses ON ""UserCourses"";");
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS usercourses_policy_teacher_delete_own_courses ON ""UserCourses"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS usercourses_policy_admin_all  ON ""Courses"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_teacher_insert ON ""Courses"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_teacher_update ON ""Courses"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS courses_policy_teacher_delete_own_courses ON ""UserCourses"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS usercourses_policy_student_all_own ON ""UserCourses"";");
 
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS lessons_policy_superadmin_all ON ""Lessons"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS lessons_policy_admin_all ON ""Lessons"";");
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS lessons_policy_teacher_all_own ON ""Lessons"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS lessons_policy_teacher_select ON ""Lessons"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS lessons_policy_teacher_insert ON ""Lessons"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS lessons_policy_teacher_update ON ""Lessons"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS lessons_policy_teacher_delete ON ""Lessons"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS lessons_policy_student_select_enrolled ON ""Lessons"";");
-            // Guest policy đã bị xóa - không cần drop
 
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS modules_policy_superadmin_all ON ""Modules"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS modules_policy_admin_all ON ""Modules"";");
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS modules_policy_teacher_all_own ON ""Modules"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS modules_policy_teacher_select ON ""Modules"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS modules_policy_teacher_insert ON ""Modules"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS modules_policy_teacher_update ON ""Modules"";");
+            migrationBuilder.Sql(@"DROP POLICY IF EXISTS modules_policy_teacher_delete ON ""Modules"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS modules_policy_student_select_enrolled ON ""Modules"";");
-            // Guest policy đã bị xóa - không cần drop
 
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS essaysubmissions_policy_superadmin_all ON ""EssaySubmissions"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS essaysubmissions_policy_admin_all ON ""EssaySubmissions"";");

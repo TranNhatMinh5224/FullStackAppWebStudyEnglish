@@ -157,18 +157,16 @@ namespace LearningEnglish.Application.DTOs
         public decimal? Price { get; set; }
         public int? MaxStudent { get; set; }
         public bool? IsFeatured { get; set; }
-        public CourseType? Type { get; set; }
     }
 
     // DTO cập nhật khóa học (Teacher) - Request
     public class TeacherUpdateCourseRequestDto
     {
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
+        public string? Title { get; set; }
+        public string? Description { get; set; }
         public string? ImageTempKey { get; set; }
         public string? ImageType { get; set; }
-        public int MaxStudent { get; set; } = 0;
-        public CourseType Type { get; set; } = CourseType.Teacher;
+        public int? MaxStudent { get; set; }
     }
 
     // DTO chi tiết khóa học cho Teacher với thông tin đầy đủ về lessons và students

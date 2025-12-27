@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.API.Extensions;
 using LearningEnglish.Application.DTOs;
 
 namespace LearningEnglish.API.Controller.User
@@ -10,9 +11,9 @@ namespace LearningEnglish.API.Controller.User
     [Authorize(Roles = "Student")]
     public class UserQuizController : ControllerBase
     {
-        private readonly IQuizService _quizService;
+        private readonly IUserQuizService _quizService;
 
-        public UserQuizController(IQuizService quizService)
+        public UserQuizController(IUserQuizService quizService)
         {
             _quizService = quizService;
         }
@@ -21,7 +22,8 @@ namespace LearningEnglish.API.Controller.User
         [HttpGet("Quizz/{assessmentId}")]
         public async Task<IActionResult> GetQuizInformation(int assessmentId)
         {
-            var result = await _quizService.GetQuizzesByAssessmentIdAsync(assessmentId);
+            var userId = User.GetUserId();
+            var result = await _quizService.GetQuizzesByAssessmentIdAsync(assessmentId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -29,7 +31,8 @@ namespace LearningEnglish.API.Controller.User
         [HttpGet("quiz/{quizId}")]
         public async Task<IActionResult> GetQuizById(int quizId)
         {
-            var result = await _quizService.GetQuizByIdAsync(quizId);
+            var userId = User.GetUserId();
+            var result = await _quizService.GetQuizByIdAsync(quizId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

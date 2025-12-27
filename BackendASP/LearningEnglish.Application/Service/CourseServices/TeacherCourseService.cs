@@ -200,6 +200,24 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // Kiểm tra course phải thuộc về teacher hiện tại
+                if (course.TeacherId != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền cập nhật khóa học này";
+                    return response;
+                }
+
+                // Không cho phép teacher cập nhật course System
+                if (course.Type == Domain.Enums.CourseType.System)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Không thể cập nhật khóa học System";
+                    return response;
+                }
+
                 // Kiểm tra package limit khi update MaxStudent
                 var teacherPackage = await _teacherPackageRepository.GetInformationTeacherpackage(teacherId);
                 if (teacherPackage == null)
@@ -210,29 +228,41 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra MaxStudent không vượt quá package limit
-                if (requestDto.MaxStudent > 0 && requestDto.MaxStudent > teacherPackage.MaxStudents)
+                // Cập nhật Title nếu có
+                if (!string.IsNullOrWhiteSpace(requestDto.Title))
                 {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = $"Số học sinh tối đa ({requestDto.MaxStudent}) không được vượt quá giới hạn gói ({teacherPackage.MaxStudents})";
-                    return response;
+                    course.Title = requestDto.Title;
                 }
 
-                // Nếu đã có students enrolled, không cho phép giảm MaxStudent xuống dưới EnrollmentCount
-                if (requestDto.MaxStudent > 0 && requestDto.MaxStudent < course.EnrollmentCount)
+                // Cập nhật Description nếu có
+                if (!string.IsNullOrWhiteSpace(requestDto.Description))
                 {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = $"Không thể đặt số học sinh tối đa ({requestDto.MaxStudent}) thấp hơn số lượng đã đăng ký ({course.EnrollmentCount})";
-                    return response;
+                    course.DescriptionMarkdown = requestDto.Description;
                 }
 
-                // Cập nhật course basic info
-                course.Title = requestDto.Title;
-                course.DescriptionMarkdown = requestDto.Description;
-                course.Type = requestDto.Type;
-                course.MaxStudent = requestDto.MaxStudent > 0 ? requestDto.MaxStudent : teacherPackage.MaxStudents;
+                // Cập nhật MaxStudent nếu có
+                if (requestDto.MaxStudent.HasValue && requestDto.MaxStudent.Value > 0)
+                {
+                    // Kiểm tra MaxStudent không vượt quá package limit
+                    if (requestDto.MaxStudent.Value > teacherPackage.MaxStudents)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = $"Số học sinh tối đa ({requestDto.MaxStudent.Value}) không được vượt quá giới hạn gói ({teacherPackage.MaxStudents})";
+                        return response;
+                    }
+
+                    // Nếu đã có students enrolled, không cho phép giảm MaxStudent xuống dưới EnrollmentCount
+                    if (requestDto.MaxStudent.Value < course.EnrollmentCount)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = $"Không thể đặt số học sinh tối đa ({requestDto.MaxStudent.Value}) thấp hơn số lượng đã đăng ký ({course.EnrollmentCount})";
+                        return response;
+                    }
+
+                    course.MaxStudent = requestDto.MaxStudent.Value;
+                }
 
                 string? newImageKey = null;
                 string? oldImageKey = !string.IsNullOrWhiteSpace(course.ImageKey) ? course.ImageKey : null;
@@ -366,20 +396,37 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // Xóa khóa học - RLS đã filter, chỉ check null → 404
-        public async Task<ServiceResponse<CourseResponseDto>> DeleteCourseAsync(int courseId)
+      
+        public async Task<ServiceResponse<CourseResponseDto>> DeleteCourseAsync(int courseId, int teacherId)
         {
             var response = new ServiceResponse<CourseResponseDto>();
 
             try
             {
-                
                 var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Course not found";
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                // Kiểm tra course phải thuộc về teacher hiện tại
+                if (course.TeacherId != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền xóa khóa học này";
+                    return response;
+                }
+
+                // Không cho phép teacher xóa course System
+                if (course.Type == Domain.Enums.CourseType.System)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Không thể xóa khóa học System";
                     return response;
                 }
 
@@ -418,22 +465,39 @@ namespace LearningEnglish.Application.Service
         }
         
 
-        // Lấy chi Tiết 1 khóa học 
+        // Lấy chi tiết 1 khóa học
 
-        public async Task<ServiceResponse<TeacherCourseDetailDto>> GetCourseDetailAsync(int courseId)
+        public async Task<ServiceResponse<TeacherCourseDetailDto>> GetCourseDetailAsync(int courseId, int teacherId)
         {
             var response = new ServiceResponse<TeacherCourseDetailDto>();
 
             try
             {
-                
                 var course = await _courseRepository.GetCourseById(courseId);
 
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Course not found";
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                // Kiểm tra course phải thuộc về teacher hiện tại
+                if (course.TeacherId != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền xem khóa học này";
+                    return response;
+                }
+
+                // Không cho phép teacher xem course System (optional - tùy business logic)
+                if (course.Type == Domain.Enums.CourseType.System)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Không thể xem chi tiết khóa học System";
                     return response;
                 }
 

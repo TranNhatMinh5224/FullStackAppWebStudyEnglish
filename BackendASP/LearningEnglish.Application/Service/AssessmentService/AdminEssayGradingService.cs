@@ -4,28 +4,27 @@ using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Domain.Enums;
-using LearningEnglish.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace LearningEnglish.Application.Service.EssayGrading;
 
-public class EssayGradingService : IEssayGradingService
+public class AdminEssayGradingService : IAdminEssayGradingService
 {
     private readonly IEssaySubmissionRepository _submissionRepository;
     private readonly IEssayRepository _essayRepository;
     private readonly IAssessmentRepository _assessmentRepository;
     private readonly IGeminiService _geminiService;
     private readonly IMapper _mapper;
-    private readonly ILogger<EssayGradingService> _logger;
+    private readonly ILogger<AdminEssayGradingService> _logger;
 
-    public EssayGradingService(
+    public AdminEssayGradingService(
         IEssaySubmissionRepository submissionRepository,
         IEssayRepository essayRepository,
         IAssessmentRepository assessmentRepository,
         IGeminiService geminiService,
         IMapper mapper,
-        ILogger<EssayGradingService> logger)
+        ILogger<AdminEssayGradingService> logger)
     {
         _submissionRepository = submissionRepository;
         _essayRepository = essayRepository;
@@ -41,9 +40,8 @@ public class EssayGradingService : IEssayGradingService
         
         try
         {
-            _logger.LogInformation("📝 Starting AI grading for submission {SubmissionId}", submissionId);
+            _logger.LogInformation("📝 Admin starting AI grading for submission {SubmissionId}", submissionId);
 
-            // 1. Fetch submission
             var submission = await _submissionRepository.GetSubmissionByIdAsync(submissionId);
             if (submission == null)
             {
@@ -53,7 +51,6 @@ public class EssayGradingService : IEssayGradingService
                 return response;
             }
 
-            // 2. Fetch essay and assessment
             var essay = await _essayRepository.GetEssayByIdAsync(submission.EssayId);
             if (essay == null)
             {
@@ -72,18 +69,16 @@ public class EssayGradingService : IEssayGradingService
                 return response;
             }
 
-            // Check if submission has text content (AI can only grade text)
             if (string.IsNullOrWhiteSpace(submission.TextContent))
             {
                 response.Success = false;
                 response.StatusCode = 400;
-                response.Message = "Bài làm chỉ có file đính kèm. AI không thể chấm tự động. Vui lòng chờ giáo viên chấm thủ công.";
+                response.Message = "Bài làm chỉ có file đính kèm. AI không thể chấm tự động.";
                 return response;
             }
 
             var maxScore = assessment.TotalPoints;
 
-            // 3. Build grading prompt
             var prompt = BuildGradingPrompt(
                 essay.Title,
                 essay.Description ?? string.Empty,
@@ -91,7 +86,6 @@ public class EssayGradingService : IEssayGradingService
                 maxScore
             );
 
-            // 4. Call Gemini API
             var geminiResponse = await _geminiService.GenerateContentAsync(prompt, cancellationToken);
             if (!geminiResponse.Success)
             {
@@ -103,17 +97,14 @@ public class EssayGradingService : IEssayGradingService
                 };
             }
 
-            // 5. Parse AI response
             var aiResult = ParseAiResponse(geminiResponse.Content);
 
-            // 6. Validate score
             if (aiResult.Score > maxScore)
             {
                 _logger.LogWarning("⚠️ AI score {Score} exceeds max score {MaxScore}, adjusting...", aiResult.Score, maxScore);
                 aiResult.Score = maxScore;
             }
 
-            // 7. Save to database
             submission.Score = aiResult.Score;
             submission.Feedback = aiResult.Feedback;
             submission.GradedAt = DateTime.UtcNow;
@@ -124,10 +115,7 @@ public class EssayGradingService : IEssayGradingService
             _logger.LogInformation("✅ AI grading completed for submission {SubmissionId}. Score: {Score}/{MaxScore}", 
                 submissionId, aiResult.Score, maxScore);
 
-            // 8. Map to DTO using AutoMapper
             var result = _mapper.Map<EssayGradingResultDto>(submission);
-            
-            // Override with AI-specific data
             result.MaxScore = maxScore;
             result.Breakdown = aiResult.Breakdown;
             result.Strengths = aiResult.Strengths;
@@ -149,19 +137,17 @@ public class EssayGradingService : IEssayGradingService
         }
     }
 
-    public async Task<ServiceResponse<EssayGradingResultDto>> GradeByTeacherAsync(
+    public async Task<ServiceResponse<EssayGradingResultDto>> GradeByAdminAsync(
         int submissionId, 
         TeacherGradingDto dto, 
-        int teacherId, 
         CancellationToken cancellationToken = default)
     {
         var response = new ServiceResponse<EssayGradingResultDto>();
         
         try
         {
-            _logger.LogInformation("👨‍🏫 Teacher {TeacherId} grading submission {SubmissionId}", teacherId, submissionId);
+            _logger.LogInformation("👨‍💼 Admin grading submission {SubmissionId}", submissionId);
 
-            // 1. Fetch submission
             var submission = await _submissionRepository.GetSubmissionByIdAsync(submissionId);
             if (submission == null)
             {
@@ -171,7 +157,6 @@ public class EssayGradingService : IEssayGradingService
                 return response;
             }
 
-            // 2. Fetch essay and assessment
             var essay = await _essayRepository.GetEssayByIdAsync(submission.EssayId);
             if (essay == null)
             {
@@ -192,12 +177,11 @@ public class EssayGradingService : IEssayGradingService
 
             var maxScore = assessment.TotalPoints;
 
-            // 3. Validate teacher score
             if (dto.Score > maxScore)
             {
                 response.Success = false;
                 response.StatusCode = 400;
-                response.Message = $"Điểm giáo viên chấm ({dto.Score}) vượt quá điểm tối đa ({maxScore})";
+                response.Message = $"Điểm ({dto.Score}) vượt quá điểm tối đa ({maxScore})";
                 return response;
             }
 
@@ -209,34 +193,32 @@ public class EssayGradingService : IEssayGradingService
                 return response;
             }
 
-            // 4. Update submission with teacher grading
             submission.TeacherScore = dto.Score;
             submission.TeacherFeedback = dto.Feedback;
-            submission.GradedByTeacherId = teacherId;
+            submission.GradedByTeacherId = null; // Admin không có teacherId
             submission.TeacherGradedAt = DateTime.UtcNow;
             submission.Status = SubmissionStatus.Graded;
 
             await _submissionRepository.UpdateSubmissionAsync(submission);
 
-            _logger.LogInformation("✅ Teacher grading completed for submission {SubmissionId}. Score: {Score}/{MaxScore}", 
+            _logger.LogInformation("✅ Admin grading completed for submission {SubmissionId}. Score: {Score}/{MaxScore}", 
                 submissionId, dto.Score, maxScore);
 
-            // 5. Map to DTO using AutoMapper
             var result = _mapper.Map<EssayGradingResultDto>(submission);
             result.MaxScore = maxScore;
 
             response.Success = true;
             response.StatusCode = 200;
-            response.Message = "Chấm điểm thành công bởi giáo viên";
+            response.Message = "Chấm điểm thành công bởi Admin";
             response.Data = result;
             return response;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Error in teacher grading for submission {SubmissionId}", submissionId);
+            _logger.LogError(ex, "❌ Error in admin grading for submission {SubmissionId}", submissionId);
             response.Success = false;
             response.StatusCode = 500;
-            response.Message = "Có lỗi xảy ra khi giáo viên chấm điểm";
+            response.Message = "Có lỗi xảy ra khi chấm điểm";
             return response;
         }
     }
@@ -298,7 +280,6 @@ OUTPUT FORMAT (JSON only, no other text):
     {
         try
         {
-            // Extract JSON from response (in case there's extra text)
             var jsonStart = content.IndexOf('{');
             var jsonEnd = content.LastIndexOf('}');
             
@@ -327,7 +308,6 @@ OUTPUT FORMAT (JSON only, no other text):
         {
             _logger.LogError(ex, "Failed to parse AI response: {Content}", content);
             
-            // Fallback: return basic result
             return new AiGradingResult
             {
                 Score = 0,

@@ -73,7 +73,7 @@ namespace LearningEnglish.Infrastructure.Services
             }
         }
 
-        // Exchange authorization code với Google để lấy ID token và access token
+        
         private async Task<GoogleTokenResponse?> ExchangeCodeForTokenAsync(string code)
         {
             try

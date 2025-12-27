@@ -1,7 +1,6 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
-using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.Module;
@@ -11,25 +10,39 @@ using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
-    public class EssaySubmissionService : IEssaySubmissionService
+    public class UserEssaySubmissionService : IUserEssaySubmissionService
     {
         private readonly IEssaySubmissionRepository _essaySubmissionRepository;
-        private readonly IEssayRepository _essayRepository; // Cần để check teacher permission
+        private readonly IEssayRepository _essayRepository;
         private readonly IMinioFileStorage _minioFileStorage;
         private readonly IMapper _mapper;
-        private readonly ILogger<EssaySubmissionService> _logger;
+        private readonly ILogger<UserEssaySubmissionService> _logger;
         private readonly IModuleProgressService _moduleProgressService;
         private readonly IAssessmentRepository _assessmentRepository;
-        private readonly IStreakService _streakService;
         private readonly INotificationRepository _notificationRepository;
 
-        // MinIO configuration for essay attachments
         private const string AttachmentBucket = "essay-attachments";
         private const string AttachmentFolder = "real";
-        
-        // MinIO configuration for user avatars
-        private const string AvatarBucket = "avatars";
-        private const string AvatarFolder = "real";
+
+        public UserEssaySubmissionService(
+            IEssaySubmissionRepository essaySubmissionRepository,
+            IEssayRepository essayRepository,
+            IMinioFileStorage minioFileStorage,
+            IMapper mapper,
+            ILogger<UserEssaySubmissionService> logger,
+            IModuleProgressService moduleProgressService,
+            IAssessmentRepository assessmentRepository,
+            INotificationRepository notificationRepository)
+        {
+            _essaySubmissionRepository = essaySubmissionRepository;
+            _essayRepository = essayRepository;
+            _minioFileStorage = minioFileStorage;
+            _mapper = mapper;
+            _logger = logger;
+            _moduleProgressService = moduleProgressService;
+            _assessmentRepository = assessmentRepository;
+            _notificationRepository = notificationRepository;
+        }
 
         private async Task CreateEssaySubmissionNotificationAsync(int userId, string essayTitle)
         {
@@ -52,35 +65,12 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        public EssaySubmissionService(
-            IEssaySubmissionRepository essaySubmissionRepository,
-            IEssayRepository essayRepository,
-            IMinioFileStorage minioFileStorage,
-            IMapper mapper,
-            ILogger<EssaySubmissionService> logger,
-            IModuleProgressService moduleProgressService,
-            IAssessmentRepository assessmentRepository,
-            IStreakService streakService,
-            INotificationRepository notificationRepository)
-        {
-            _essaySubmissionRepository = essaySubmissionRepository;
-            _essayRepository = essayRepository;
-            _minioFileStorage = minioFileStorage;
-            _mapper = mapper;
-            _logger = logger;
-            _moduleProgressService = moduleProgressService;
-            _assessmentRepository = assessmentRepository;
-            _streakService = streakService;
-            _notificationRepository = notificationRepository;
-        }
-        // Implement cho phương thức Nộp bài kiểm tra tự luận (Essay Submission)
         public async Task<ServiceResponse<EssaySubmissionDto>> CreateSubmissionAsync(CreateEssaySubmissionDto dto, int userId)
         {
             var response = new ServiceResponse<EssaySubmissionDto>();
 
             try
             {
-                // Kiểm tra Essay có tồn tại không
                 var essay = await _essayRepository.GetEssayByIdAsync(dto.EssayId);
                 if (essay == null)
                 {
@@ -90,7 +80,6 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra Assessment deadline
                 var essayAssessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
                 if (essayAssessment != null && essayAssessment.DueAt.HasValue)
                 {
@@ -103,7 +92,6 @@ namespace LearningEnglish.Application.Service
                     }
                 }
 
-                // Kiểm tra học sinh đã nộp bài chưa
                 var existingSubmission = await _essaySubmissionRepository.GetUserSubmissionForEssayAsync(userId, dto.EssayId);
                 if (existingSubmission != null)
                 {
@@ -113,10 +101,8 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Tạo notification
                 await CreateEssaySubmissionNotificationAsync(userId, essay.Title);
 
-                // Xử lý file attachment nếu có
                 string? attachmentKey = null;
                 if (!string.IsNullOrWhiteSpace(dto.AttachmentTempKey))
                 {
@@ -137,7 +123,6 @@ namespace LearningEnglish.Application.Service
                     attachmentKey = commitResult.Data;
                 }
 
-                // Tạo submission
                 var submission = new EssaySubmission
                 {
                     EssayId = dto.EssayId,
@@ -153,7 +138,6 @@ namespace LearningEnglish.Application.Service
                 {
                     var createdSubmission = await _essaySubmissionRepository.CreateSubmissionAsync(submission);
 
-                    // ✅ Mark module as completed after essay submission
                     var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
                     if (assessment?.ModuleId != null)
                     {
@@ -162,7 +146,6 @@ namespace LearningEnglish.Application.Service
 
                     var submissionDto = _mapper.Map<EssaySubmissionDto>(createdSubmission);
 
-                    // Build attachment URL if attachment exists
                     if (!string.IsNullOrWhiteSpace(createdSubmission.AttachmentKey))
                     {
                         submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
@@ -179,7 +162,6 @@ namespace LearningEnglish.Application.Service
                 }
                 catch (Exception dbEx)
                 {
-                    // Rollback: Xóa file đã commit nếu lưu DB thất bại
                     if (!string.IsNullOrWhiteSpace(attachmentKey))
                     {
                         try
@@ -208,8 +190,8 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
         }
-        // Implement cho phương thức Lấy thông tin submission theo ID
-        public async Task<ServiceResponse<EssaySubmissionDto>> GetSubmissionByIdAsync(int submissionId, int? userId = null)
+
+        public async Task<ServiceResponse<EssaySubmissionDto>> GetMySubmissionByIdAsync(int submissionId, int userId)
         {
             var response = new ServiceResponse<EssaySubmissionDto>();
 
@@ -225,8 +207,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 🔒 Validate ownership if userId is provided (Student)
-                if (userId.HasValue && submission.UserId != userId.Value)
+                if (submission.UserId != userId)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
@@ -236,7 +217,6 @@ namespace LearningEnglish.Application.Service
 
                 var submissionDto = _mapper.Map<EssaySubmissionDto>(submission);
 
-                // Build attachment URL if attachment exists
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
                     submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
@@ -261,103 +241,7 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        // Implement cho phương thức lấy danh sách submission của một essay cụ thể với phân trang
-        // RLS Policy sẽ tự động filter: Teacher chỉ thấy submissions của courses mình dạy
-        // Trả về EssaySubmissionListDto (chỉ thông tin cơ bản)
-        public async Task<ServiceResponse<PagedResult<EssaySubmissionListDto>>> GetSubmissionsByEssayIdPagedAsync(
-            int essayId, 
-            PageRequest request)
-        {
-            var response = new ServiceResponse<PagedResult<EssaySubmissionListDto>>();
-
-            try
-            {
-                var totalCount = await _essaySubmissionRepository.GetSubmissionsCountByEssayIdAsync(essayId);
-                var submissions = await _essaySubmissionRepository.GetSubmissionsByEssayIdPagedAsync(
-                    essayId, 
-                    request.PageNumber, 
-                    request.PageSize);
-
-                var submissionListDtos = _mapper.Map<List<EssaySubmissionListDto>>(submissions);
-
-                // Build avatar URLs for each submission
-                foreach (var submissionDto in submissionListDtos)
-                {
-                    var submission = submissions.FirstOrDefault(s => s.SubmissionId == submissionDto.SubmissionId);
-                    if (submission?.User != null && !string.IsNullOrWhiteSpace(submission.User.AvatarKey))
-                    {
-                        submissionDto.UserAvatarUrl = BuildPublicUrl.BuildURL(
-                            AvatarBucket,
-                            $"{AvatarFolder}/{submission.User.AvatarKey}");
-                    }
-                }
-
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = $"Lấy danh sách {submissionListDtos.Count} submission thành công";
-                response.Data = new PagedResult<EssaySubmissionListDto>
-                {
-                    Items = submissionListDtos,
-                    TotalCount = totalCount,
-                    PageNumber = request.PageNumber,
-                    PageSize = request.PageSize
-                };
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách submission theo Essay {EssayId}", essayId);
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi hệ thống khi lấy danh sách submission";
-                return response;
-            }
-        }
-
-        // Implement cho phương thức lấy danh sách submission của một essay cụ thể KHÔNG phân trang
-        // RLS Policy sẽ tự động filter: Teacher chỉ thấy submissions của courses mình dạy
-        // Trả về EssaySubmissionListDto (chỉ thông tin cơ bản)
-        public async Task<ServiceResponse<List<EssaySubmissionListDto>>> GetSubmissionsByEssayIdAsync(int essayId)
-        {
-            var response = new ServiceResponse<List<EssaySubmissionListDto>>();
-
-            try
-            {
-                var submissions = await _essaySubmissionRepository.GetSubmissionsByEssayIdAsync(essayId);
-                var submissionListDtos = _mapper.Map<List<EssaySubmissionListDto>>(submissions);
-
-                // Build avatar URLs for each submission
-                foreach (var submissionDto in submissionListDtos)
-                {
-                    var submission = submissions.FirstOrDefault(s => s.SubmissionId == submissionDto.SubmissionId);
-                    if (submission?.User != null && !string.IsNullOrWhiteSpace(submission.User.AvatarKey))
-                    {
-                        submissionDto.UserAvatarUrl = BuildPublicUrl.BuildURL(
-                            AvatarBucket,
-                            $"{AvatarFolder}/{submission.User.AvatarKey}");
-                    }
-                }
-
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = $"Lấy danh sách {submissionListDtos.Count} submission thành công";
-                response.Data = submissionListDtos;
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách submission theo Essay {EssayId}", essayId);
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi hệ thống khi lấy danh sách submission";
-                return response;
-            }
-        }
-
-        // Implement cho phương thức lấy ra xem học sinh đã nộp bài cho Essay nào đó chưa(1 bài tự luận cụ thể)
-        public async Task<ServiceResponse<EssaySubmissionDto?>> GetUserSubmissionForEssayAsync(int userId, int essayId)
+        public async Task<ServiceResponse<EssaySubmissionDto?>> GetMySubmissionForEssayAsync(int userId, int essayId)
         {
             var response = new ServiceResponse<EssaySubmissionDto?>();
 
@@ -376,7 +260,6 @@ namespace LearningEnglish.Application.Service
 
                 var submissionDto = _mapper.Map<EssaySubmissionDto>(submission);
 
-                // Build attachment URL if attachment exists
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
                     submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
@@ -400,7 +283,7 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
         }
-        // Implement cho phương thức Cập nhật submission của học sinh
+
         public async Task<ServiceResponse<EssaySubmissionDto>> UpdateSubmissionAsync(int submissionId, UpdateEssaySubmissionDto dto, int userId)
         {
             var response = new ServiceResponse<EssaySubmissionDto>();
@@ -417,7 +300,6 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra quyền: chỉ user tạo submission mới có thể cập nhật
                 if (!await _essaySubmissionRepository.IsUserOwnerOfSubmissionAsync(userId, submissionId))
                 {
                     response.Success = false;
@@ -426,11 +308,9 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Lưu attachment key cũ để xóa nếu cần
                 string? oldAttachmentKey = submission.AttachmentKey;
                 string? newAttachmentKey = null;
 
-                // Nếu RemoveAttachment = true, xóa file cũ trên MinIO và cập nhật lại submission
                 if (dto.RemoveAttachment)
                 {
                     if (!string.IsNullOrWhiteSpace(oldAttachmentKey))
@@ -449,7 +329,6 @@ namespace LearningEnglish.Application.Service
                     submission.AttachmentType = null;
                 }
 
-                // Xử lý file attachment mới nếu có
                 if (!string.IsNullOrWhiteSpace(dto.AttachmentTempKey))
                 {
                     var commitResult = await _minioFileStorage.CommitFileAsync(
@@ -469,7 +348,6 @@ namespace LearningEnglish.Application.Service
                     newAttachmentKey = commitResult.Data;
                 }
 
-                // Cập nhật submission
                 submission.TextContent = dto.TextContent;
                 if (newAttachmentKey != null)
                 {
@@ -481,7 +359,6 @@ namespace LearningEnglish.Application.Service
                 {
                     var updatedSubmission = await _essaySubmissionRepository.UpdateSubmissionAsync(submission);
 
-                    // Xóa file cũ nếu có file mới và có file cũ
                     if (newAttachmentKey != null && !string.IsNullOrWhiteSpace(oldAttachmentKey))
                     {
                         try
@@ -497,7 +374,6 @@ namespace LearningEnglish.Application.Service
 
                     var submissionDto = _mapper.Map<EssaySubmissionDto>(updatedSubmission);
 
-                    // Build attachment URL if attachment exists
                     if (!string.IsNullOrWhiteSpace(updatedSubmission.AttachmentKey))
                     {
                         submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
@@ -514,7 +390,6 @@ namespace LearningEnglish.Application.Service
                 }
                 catch (Exception dbEx)
                 {
-                    // Rollback: Xóa file mới nếu lưu DB thất bại
                     if (newAttachmentKey != null)
                     {
                         try
@@ -557,7 +432,6 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra quyền: chỉ user tạo submission mới có thể xóa
                 if (!await _essaySubmissionRepository.IsUserOwnerOfSubmissionAsync(userId, submissionId))
                 {
                     response.Success = false;
@@ -566,12 +440,10 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Lưu attachment key để xóa file sau khi xóa DB thành công
                 string? attachmentKey = submission.AttachmentKey;
 
                 await _essaySubmissionRepository.DeleteSubmissionAsync(submissionId);
 
-                // Xóa file attachment nếu có
                 if (!string.IsNullOrWhiteSpace(attachmentKey))
                 {
                     try
@@ -600,65 +472,6 @@ namespace LearningEnglish.Application.Service
                 response.Message = "Lỗi hệ thống khi xóa submission";
                 return response;
             }
-        }
-
-        // Teacher - Download file attachment of submission
-        public async Task<ServiceResponse<(Stream fileStream, string fileName, string contentType)>> DownloadSubmissionFileAsync(int submissionId)
-        {
-            var response = new ServiceResponse<(Stream, string, string)>();
-
-            try
-            {
-                // Lấy thông tin submission
-                var submission = await _essaySubmissionRepository.GetSubmissionByIdAsync(submissionId);
-                if (submission == null)
-                {
-                    response.Success = false;
-                    response.Message = "Không tìm thấy bài nộp";
-                    response.StatusCode = 404;
-                    return response;
-                }
-
-                // Kiểm tra có file đính kèm không
-                if (string.IsNullOrWhiteSpace(submission.AttachmentKey))
-                {
-                    response.Success = false;
-                    response.Message = "Bài nộp không có file đính kèm";
-                    response.StatusCode = 404;
-                    return response;
-                }
-
-                // Download file từ MinIO
-                var downloadResult = await _minioFileStorage.DownloadFileAsync(submission.AttachmentKey, AttachmentBucket);
-                if (!downloadResult.Success || downloadResult.Data == null)
-                {
-                    response.Success = false;
-                    response.Message = $"Không thể tải file: {downloadResult.Message}";
-                    response.StatusCode = downloadResult.StatusCode;
-                    return response;
-                }
-
-                // Lấy tên file từ AttachmentKey (lấy phần cuối của path)
-                var fileName = Path.GetFileName(submission.AttachmentKey);
-                var contentType = submission.AttachmentType ?? "application/octet-stream";
-
-                response.Data = (downloadResult.Data, fileName, contentType);
-                response.Success = true;
-                response.Message = "Tải file thành công";
-                response.StatusCode = 200;
-
-                _logger.LogInformation("Downloaded submission file. SubmissionId={SubmissionId}, FileName={FileName}", 
-                    submissionId, fileName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi tải file submission. SubmissionId={SubmissionId}", submissionId);
-                response.Success = false;
-                response.Message = $"Lỗi: {ex.Message}";
-                response.StatusCode = 500;
-            }
-
-            return response;
         }
     }
 }

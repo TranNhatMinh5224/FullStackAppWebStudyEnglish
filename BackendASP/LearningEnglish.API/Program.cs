@@ -208,11 +208,21 @@ builder.Services.AddScoped<ITeacherFlashCardService, TeacherFlashCardService>();
 builder.Services.AddScoped<IFlashCardReviewService, FlashCardReviewService>();
 builder.Services.AddScoped<IStreakRepository, StreakRepository>();
 builder.Services.AddScoped<IStreakService, StreakService>();
-builder.Services.AddScoped<IAssessmentService, AssessmentService>();
+
+// Assessment Services (refactored by role)
+builder.Services.AddScoped<IUserAssessmentService, UserAssessmentService>();
+builder.Services.AddScoped<IAdminAssessmentService, AdminAssessmentService>();
+builder.Services.AddScoped<ITeacherAssessmentService, TeacherAssessmentService>();
+
 builder.Services.AddScoped<IUserEssayService, UserEssayService>();
 builder.Services.AddScoped<IAdminEssayService, AdminEssayService>();
 builder.Services.AddScoped<ITeacherEssayService, TeacherEssayService>();
-builder.Services.AddScoped<IEssaySubmissionService, EssaySubmissionService>();
+
+// Essay Submission Services (refactored by role)
+builder.Services.AddScoped<IUserEssaySubmissionService, UserEssaySubmissionService>();
+builder.Services.AddScoped<IAdminEssaySubmissionService, AdminEssaySubmissionService>();
+builder.Services.AddScoped<ITeacherEssaySubmissionService, TeacherEssaySubmissionService>();
+
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
@@ -241,7 +251,12 @@ builder.Services.AddScoped<IUserCourseService, UserCourseService>();
 builder.Services.AddScoped<IManageUserInCourseService, ManageUserInCourseService>();
 builder.Services.AddScoped<IQuizSectionService, QuizSectionService>();
 builder.Services.AddScoped<IQuizGroupService, QuizGroupService>();
-builder.Services.AddScoped<IQuizService, QuizService>();
+
+// Quiz Services (refactored by role)
+builder.Services.AddScoped<IUserQuizService, UserQuizService>();
+builder.Services.AddScoped<IAdminQuizService, AdminQuizService>();
+builder.Services.AddScoped<ITeacherQuizService, TeacherQuizService>();
+
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IQuizAttemptService, QuizAttemptService>();
 builder.Services.AddScoped<IQuizAttemptAdminService, QuizAttemptAdminService>();
@@ -299,7 +314,9 @@ builder.Services.AddScoped<IPayOSService, PayOSService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
-builder.Services.AddScoped<IEssayGradingService, EssayGradingService>();
+// Essay Grading Services (refactored by role)
+builder.Services.AddScoped<IAdminEssayGradingService, AdminEssayGradingService>();
+builder.Services.AddScoped<ITeacherEssayGradingService, TeacherEssayGradingService>();
 
 // MinIO Client (Singleton - dùng chung cho toàn bộ app)
 builder.Services.AddSingleton<IMinioClient>(sp =>

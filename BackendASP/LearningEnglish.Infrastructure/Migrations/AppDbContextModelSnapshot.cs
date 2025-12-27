@@ -168,7 +168,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AssetsFrontend");
+                    b.ToTable("AssetsFrontend", (string)null);
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Course", b =>
@@ -2094,7 +2094,7 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("UserRoles");
+                    b.ToTable("UserRoles", (string)null);
 
                     b.HasData(
                         new

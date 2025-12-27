@@ -246,9 +246,6 @@ namespace LearningEnglish.Application.Service
                 if (requestDto.IsFeatured.HasValue)
                     course.IsFeatured = requestDto.IsFeatured.Value;
 
-                if (requestDto.Type.HasValue)
-                    course.Type = requestDto.Type.Value;
-
                 string? newImageKey = null;
                 string? oldImageKey = !string.IsNullOrWhiteSpace(course.ImageKey) ? course.ImageKey : null;
 

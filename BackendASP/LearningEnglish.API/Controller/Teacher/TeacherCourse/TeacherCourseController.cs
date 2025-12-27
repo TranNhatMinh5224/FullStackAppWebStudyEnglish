@@ -54,7 +54,7 @@ namespace LearningEnglish.API.Controller.Teacher
             var teacherId = User.GetUserId();
             _logger.LogInformation("Teacher {TeacherId} xem chi tiết course {CourseId}", teacherId, courseId);
 
-            var result = await _teacherCourseService.GetCourseDetailAsync(courseId);
+            var result = await _teacherCourseService.GetCourseDetailAsync(courseId, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -89,7 +89,7 @@ namespace LearningEnglish.API.Controller.Teacher
             var teacherId = User.GetUserId();
             _logger.LogInformation("Teacher {TeacherId} xóa course {CourseId}", teacherId, courseId);
 
-            var result = await _teacherCourseService.DeleteCourseAsync(courseId);
+            var result = await _teacherCourseService.DeleteCourseAsync(courseId, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

@@ -94,7 +94,7 @@ namespace LearningEnglish.Application.Service
                 var fullModule = await _moduleRepository.GetByIdWithDetailsAsync(created.ModuleId);
                 var resultDto = _mapper.Map<ModuleDto>(fullModule);
 
-                if (!string.IsNullOrWhiteSpace(fullModule.ImageKey))
+                if (!string.IsNullOrWhiteSpace(fullModule?.ImageKey))
                 {
                     resultDto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, fullModule.ImageKey);
                 }
@@ -223,7 +223,7 @@ namespace LearningEnglish.Application.Service
                 var fullModule = await _moduleRepository.GetByIdWithDetailsAsync(updated.ModuleId);
                 var resultDto = _mapper.Map<ModuleDto>(fullModule);
 
-                if (!string.IsNullOrWhiteSpace(fullModule.ImageKey))
+                if (!string.IsNullOrWhiteSpace(fullModule?.ImageKey))
                 {
                     resultDto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, fullModule.ImageKey);
                 }
