@@ -107,13 +107,13 @@ namespace LearningEnglish.Infrastructure.Repositories
             }
 
             // Check if user already has Teacher role
-            if (user.Roles.Any(r => r.RoleId == 4))
+            if (user.Roles.Any(r => r.Name == "Teacher"))
             {
                 return true; // Already has Teacher role
             }
 
-            // Get Teacher role (RoleId = 4)
-            var teacherRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == 4);
+            // Get Teacher role by name
+            var teacherRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Teacher");
             if (teacherRole == null)
             {
                 throw new InvalidOperationException("Teacher role not found in database");

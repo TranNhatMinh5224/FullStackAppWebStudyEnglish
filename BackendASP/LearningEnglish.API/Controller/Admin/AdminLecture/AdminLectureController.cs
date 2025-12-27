@@ -94,7 +94,7 @@ namespace LearningEnglish.API.Controller.Admin
         }
 
         // PUT: api/admin/lectures/{lectureId} - Admin cập nhật lecture
-        
+        [HttpPut("{lectureId}")]
         [RequirePermission("Admin.Lesson.Manage")]
         public async Task<IActionResult> UpdateLecture(int lectureId, [FromBody] UpdateLectureDto updateLectureDto)
         {

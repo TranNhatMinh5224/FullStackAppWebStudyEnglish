@@ -15,7 +15,7 @@ namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
     [Route("api/user/payments")]
-    [Authorize(Roles = "Student")]
+    [Authorize(Roles = "Student,Teacher")]
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
