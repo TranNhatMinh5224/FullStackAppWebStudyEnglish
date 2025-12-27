@@ -30,7 +30,7 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // GET: api/User/EssaySubmission/{submissionId} - lấy bài nộp theo ID
-      
+        [HttpGet("{submissionId}")]
         public async Task<IActionResult> GetSubmission(int submissionId)
         {
             var userId = User.GetUserId();
