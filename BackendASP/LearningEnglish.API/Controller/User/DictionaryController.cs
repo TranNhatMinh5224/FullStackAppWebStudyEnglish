@@ -3,7 +3,7 @@ using LearningEnglish.Application.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LearningEnglish.API.Controller.AdminAndTeacher
+namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
     [Route("api/public/dictionary")]

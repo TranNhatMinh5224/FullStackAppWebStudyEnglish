@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.API.Authorization;
 
-namespace LearningEnglish.API.Controller.AdminAndTeacher
+namespace LearningEnglish.API.Controller.Admin
 {
     [ApiController]
     [Route("api/admin/statistics")]
