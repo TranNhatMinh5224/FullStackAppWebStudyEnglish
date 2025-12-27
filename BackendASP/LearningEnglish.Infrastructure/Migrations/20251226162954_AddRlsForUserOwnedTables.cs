@@ -24,7 +24,8 @@ namespace LearningEnglish.Infrastructure.Migrations
             migrationBuilder.Sql(@"ALTER TABLE ""LessonCompletions"" ENABLE ROW LEVEL SECURITY;");
             migrationBuilder.Sql(@"ALTER TABLE ""ModuleCompletions"" ENABLE ROW LEVEL SECURITY;");
             migrationBuilder.Sql(@"ALTER TABLE ""PronunciationProgresses"" ENABLE ROW LEVEL SECURITY;");
-            migrationBuilder.Sql(@"ALTER TABLE ""TeacherSubscriptions"" ENABLE ROW LEVEL SECURITY;");
+            // KHÔNG enable RLS cho TeacherSubscriptions - thiếu policy cho Student
+            // migrationBuilder.Sql(@"ALTER TABLE ""TeacherSubscriptions"" ENABLE ROW LEVEL SECURITY;");
 
             // ============================================================================
             // RLS POLICIES CHO NOTIFICATIONS
@@ -274,35 +275,9 @@ namespace LearningEnglish.Infrastructure.Migrations
             ");
 
             // ============================================================================
-            // RLS POLICIES CHO TEACHERSUBSCRIPTIONS
+            // RLS POLICIES CHO TEACHERSUBSCRIPTIONS - KHÔNG TẠO
             // ============================================================================
-
-            // SuperAdmin: Toàn quyền
-            migrationBuilder.Sql(@"
-                DROP POLICY IF EXISTS teachersubscriptions_policy_superadmin_all ON ""TeacherSubscriptions"";
-                CREATE POLICY teachersubscriptions_policy_superadmin_all
-                ON ""TeacherSubscriptions"" FOR ALL
-                USING (app.is_superadmin());
-            ");
-
-            // Admin: Permission-aware RLS
-            migrationBuilder.Sql(@"
-                DROP POLICY IF EXISTS teachersubscriptions_policy_admin_all ON ""TeacherSubscriptions"";
-                CREATE POLICY teachersubscriptions_policy_admin_all
-                ON ""TeacherSubscriptions"" FOR ALL
-                USING (app.user_has_permission('Admin.Package.Manage'));
-            ");
-
-            // Teacher: Chỉ xem subscriptions của chính mình
-            migrationBuilder.Sql(@"
-                DROP POLICY IF EXISTS teachersubscriptions_policy_teacher_all_own ON ""TeacherSubscriptions"";
-                CREATE POLICY teachersubscriptions_policy_teacher_all_own
-                ON ""TeacherSubscriptions"" FOR ALL
-                USING (
-                    app.user_has_role('Teacher')
-                    AND ""UserId"" = app.current_user_id()
-                );
-            ");
+            // Không tạo policies vì RLS không được enable cho table này
 
             migrationBuilder.UpdateData(
                 table: "Permissions",
@@ -461,9 +436,7 @@ namespace LearningEnglish.Infrastructure.Migrations
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS pronunciationprogresses_policy_admin_all ON ""PronunciationProgresses"";");
             migrationBuilder.Sql(@"DROP POLICY IF EXISTS pronunciationprogresses_policy_user_all_own ON ""PronunciationProgresses"";");
 
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS teachersubscriptions_policy_superadmin_all ON ""TeacherSubscriptions"";");
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS teachersubscriptions_policy_admin_all ON ""TeacherSubscriptions"";");
-            migrationBuilder.Sql(@"DROP POLICY IF EXISTS teachersubscriptions_policy_teacher_all_own ON ""TeacherSubscriptions"";");
+            // Không drop policies cho TeacherSubscriptions vì không tạo policies
 
             migrationBuilder.DeleteData(
                 table: "RolePermissions",
