@@ -46,7 +46,10 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<Payment?> GetSuccessfulPaymentByUserAndProductAsync(int userId, int productId, ProductType productType)
         {
             return await _context.Payments
-                .FirstOrDefaultAsync(p => p.ProductId == productId && p.ProductType == productType && p.Status == PaymentStatus.Completed);
+                .FirstOrDefaultAsync(p => p.UserId == userId 
+                                       && p.ProductId == productId 
+                                       && p.ProductType == productType 
+                                       && p.Status == PaymentStatus.Completed);
         }
 
         

@@ -32,7 +32,8 @@ namespace LearningEnglish.Application.Service
 
 
         public async Task<ServiceResponse<ResPurchaseTeacherPackageDto>> AddTeacherSubscriptionAsync(PurchaseTeacherPackageDto dto, int userId)
-        {
+        { 
+                  var response = new ServiceResponse<ResPurchaseTeacherPackageDto>();
             try
             {
                 DateTime startDate;
@@ -77,27 +78,24 @@ namespace LearningEnglish.Application.Service
                     ? $"Teacher package purchased successfully. Will be activated on {startDate:yyyy-MM-dd}."
                     : "Teacher package purchased and activated successfully.";
 
-                return new ServiceResponse<ResPurchaseTeacherPackageDto>
-                {
-                    Data = resultDto,
-                    Success = true,
-                    Message = message
-                };
+                response.Data = resultDto;
+                response.Success = true;
+                response.Message = message;
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error purchasing teacher package.");
-                return new ServiceResponse<ResPurchaseTeacherPackageDto>
-                {
-                    Data = null,
-                    Success = false,
-                    Message = "An error occurred while purchasing the teacher package."
-                };
+                response.Success = false;
+                response.Message = "An error occurred while purchasing the teacher package.";
+                return response;
+
             }
         }
         // xử lý hủy gói teacher
         public async Task<ServiceResponse<bool>> DeleteTeacherSubscriptionAsync(DeleteTeacherSubscriptionDto dto)
-        {
+        { 
+            var response = new ServiceResponse<bool>();
             try
             {
                 var teacherSubscription = new TeacherSubscription
@@ -107,22 +105,19 @@ namespace LearningEnglish.Application.Service
 
                 await _teacherSubscriptionRepository.DeleteTeacherSubscriptionAsync(teacherSubscription);
 
-                return new ServiceResponse<bool>
-                {
-                    Data = true,
-                    Success = true,
-                    Message = "Teacher subscription deleted successfully."
-                };
+                response.Data = true;
+                response.Success = true;
+                response.Message = "Teacher subscription deleted successfully.";
+                return response;
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting teacher subscription.");
-                return new ServiceResponse<bool>
-                {
-                    Data = false,
-                    Success = false,
-                    Message = "An error occurred while deleting the teacher subscription."
-                };
+                response.Success = false;
+                response.Message = "An error occurred while deleting the teacher subscription.";
+                return response;
+                
             }
         }
     }
