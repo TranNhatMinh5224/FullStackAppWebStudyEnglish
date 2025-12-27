@@ -11,20 +11,17 @@ namespace LearningEnglish.Application.Interface
         // Lấy danh sách module theo lesson
         Task<ServiceResponse<List<ListModuleDto>>> GetModulesByLessonIdAsync(int lessonId, int? userId = null);
         
-        // Tạo module
-        Task<ServiceResponse<ModuleDto>> CreateModuleAsync(CreateModuleDto createModuleDto, int createdByUserId, string userRole = "Admin");
+        // Admin tạo module
+        Task<ServiceResponse<ModuleDto>> AdminCreateModule(CreateModuleDto createModuleDto);
         
-        // Cập nhật module
-        Task<ServiceResponse<ModuleDto>> UpdateModuleAsync(int moduleId, UpdateModuleDto updateModuleDto, int updatedByUserId);
+        // Teacher tạo module
+        Task<ServiceResponse<ModuleDto>> TeacherCreateModule(CreateModuleDto createModuleDto, int teacherId);
         
-        // Xóa module
-        Task<ServiceResponse<bool>> DeleteModuleAsync(int moduleId, int deletedByUserId);
-
-        // Cập nhật module có kiểm tra quyền
-        Task<ServiceResponse<ModuleDto>> UpdateModuleWithAuthorizationAsync(int moduleId, UpdateModuleDto updateModuleDto, int userId, string userRole);
+        // Cập nhật module (RLS đã filter theo ownership)
+        Task<ServiceResponse<ModuleDto>> UpdateModule(int moduleId, UpdateModuleDto updateModuleDto);
         
-        // Xóa module có kiểm tra quyền
-        Task<ServiceResponse<bool>> DeleteModuleWithAuthorizationAsync(int moduleId, int userId, string userRole);
+        // Xóa module (RLS đã filter theo ownership)
+        Task<ServiceResponse<bool>> DeleteModule(int moduleId);
 
         // Lấy module với tiến độ học
         Task<ServiceResponse<List<ModuleWithProgressDto>>> GetModulesWithProgressAsync(int lessonId, int userId);

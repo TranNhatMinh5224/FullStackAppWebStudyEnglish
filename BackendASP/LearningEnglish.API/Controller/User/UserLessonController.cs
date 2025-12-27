@@ -20,16 +20,11 @@ namespace LearningEnglish.API.Controller.User
             _logger = logger;
         }
 
-        // endpoint User lấy danh sách bài học theo course
-        // RLS: lessons_policy_student_select_enrolled sẽ filter lessons của enrolled courses
+       
         [HttpGet("course/{courseId}")]
         public async Task<IActionResult> GetLessonsByCourseId(int courseId)
         {
-            // RLS đã filter:
-            // - Student: Chỉ lessons của enrolled courses
-            // - Teacher: Chỉ lessons của own courses (nếu có role Teacher)
-            // - Admin: Tất cả lessons (nếu có permission)
-            // userId cần để tính progress cho Student
+          
             var userIdValue = User.GetUserIdSafe();
             int? userId = userIdValue > 0 ? userIdValue : null;
 
@@ -38,14 +33,11 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // endpoint User lấy chi tiết bài học
-        // RLS: lessons_policy_student_select_enrolled sẽ filter lessons của enrolled courses
+     
         [HttpGet("{lessonId}")]
         public async Task<IActionResult> GetLessonById(int lessonId)
         {
-            // RLS đã filter:
-            // - Student: Chỉ lessons của enrolled courses
-            // - Teacher: Chỉ lessons của own courses (nếu có role Teacher)
-            // - Admin: Tất cả lessons (nếu có permission)
+         
             var result = await _lessonService.GetLessonById(lessonId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }

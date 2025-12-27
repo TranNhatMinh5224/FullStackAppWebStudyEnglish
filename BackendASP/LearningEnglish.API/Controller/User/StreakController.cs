@@ -20,7 +20,7 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // GET: api/user/streaks - lấy chuỗi ngày học hiện tại của user
-        // RLS: streaks_policy_user_all_own
+       
         [HttpGet]
         public async Task<IActionResult> GetCurrentStreak()
         {
@@ -30,7 +30,7 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // POST: api/user/streaks/checkin - cập nhật streak khi user online
-        // RLS: streaks_policy_user_all_own
+       
         [HttpPost("checkin")]
         public async Task<IActionResult> CheckInStreak()
         {
@@ -41,7 +41,7 @@ namespace LearningEnglish.API.Controller.User
 
         // POST: api/user/streaks/send-reminders - gửi reminder cho users sắp đứt streak (Admin/Cron job)
         [HttpPost("send-reminders")]
-        [AllowAnonymous] // Cho phép cron job/admin tool gọi
+        [AllowAnonymous] 
         public async Task<IActionResult> SendStreakReminders()
         {
             var result = await _streakService.SendStreakRemindersAsync();

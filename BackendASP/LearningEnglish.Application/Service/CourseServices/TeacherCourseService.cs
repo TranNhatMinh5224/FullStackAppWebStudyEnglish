@@ -7,7 +7,6 @@ using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 
 namespace LearningEnglish.Application.Service
 {
@@ -39,6 +38,7 @@ namespace LearningEnglish.Application.Service
             _teacherPackageRepository = teacherPackageRepository;
             _minioFileStorage = minioFileStorage;
         }
+        // Tạo Khóa học 
 
         public async Task<ServiceResponse<CourseResponseDto>> CreateCourseAsync(
             TeacherCreateCourseRequestDto requestDto,
@@ -67,7 +67,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra số lượng course hiện tại - RLS đã filter theo teacherId
+                // Kiểm tra số lượng course hiện tại 
                 var teacherCourses = await _courseRepository.GetCoursesByTeacher();
                 int currentCourseCount = teacherCourses.Count();
                 int maxCourses = teacherPackage.MaxCourses;
@@ -191,9 +191,6 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // RLS đã tự động filter courses theo TeacherId
-                // Nếu course == null → course không tồn tại hoặc không thuộc teacher hiện tại
-                // Trả 404 để không leak thông tin về sự tồn tại của course
                 var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
@@ -328,7 +325,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // Lấy danh sách khóa học của teacher với phân trang (chỉ phân trang, không filter) - RLS đã filter
+        // Lấy danh sách khóa học của teacher với phân trang
         public async Task<ServiceResponse<PagedResult<CourseResponseDto>>> GetMyCoursesPagedAsync(PageRequest request)
         {
             var response = new ServiceResponse<PagedResult<CourseResponseDto>>();
@@ -376,9 +373,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // RLS đã tự động filter courses theo TeacherId
-                // Nếu course == null → course không tồn tại hoặc không thuộc teacher hiện tại
-                // Trả 404 để không leak thông tin về sự tồn tại của course
+                
                 var course = await _courseRepository.GetCourseById(courseId);
                 if (course == null)
                 {
@@ -421,6 +416,9 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
+        
+
+        // Lấy chi Tiết 1 khóa học 
 
         public async Task<ServiceResponse<TeacherCourseDetailDto>> GetCourseDetailAsync(int courseId)
         {
@@ -428,9 +426,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // RLS đã tự động filter courses theo TeacherId
-                // Nếu course == null → course không tồn tại hoặc không thuộc teacher hiện tại
-                // Trả 404 để không leak thông tin về sự tồn tại của course
+                
                 var course = await _courseRepository.GetCourseById(courseId);
 
                 if (course == null)

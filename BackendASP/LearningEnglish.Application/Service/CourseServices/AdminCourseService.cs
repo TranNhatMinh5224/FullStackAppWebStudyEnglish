@@ -8,7 +8,6 @@ using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 
 namespace LearningEnglish.Application.Service
 {
@@ -35,8 +34,7 @@ namespace LearningEnglish.Application.Service
             _minioFileStorage = minioFileStorage;
         }
 
-        // Lấy danh sách loại khóa học (System/Teacher) - Dùng cho giao diện quản lý Admin để filter
-        // Tuân thủ CLEAN + SOLID: Service gọi Repository, không xử lý business logic trực tiếp
+        // Lấy danh sách loại khóa học (System/Teacher) 
         public async Task<ServiceResponse<IEnumerable<CourseTypeDto>>> GetCourseTypesAsync()
         {
             var response = new ServiceResponse<IEnumerable<CourseTypeDto>>();

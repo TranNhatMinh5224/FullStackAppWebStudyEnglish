@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.TeacherPackage;
 using LearningEnglish.Application.DTOs;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,7 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // endpoint Guest/User lấy danh sách tất cả gói giáo viên
-        // TeacherPackages là public catalog - không cần RLS, mọi người đều có thể xem
+       
         [HttpGet]
         public async Task<IActionResult> GetTeacherPackages()
         {
@@ -31,7 +32,7 @@ namespace LearningEnglish.API.Controller.User
         }
 
         // endpoint Guest/User lấy chi tiết gói giáo viên theo ID
-        // TeacherPackages là public catalog - không cần RLS, mọi người đều có thể xem
+       
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTeacherPackageById(int id)
         {

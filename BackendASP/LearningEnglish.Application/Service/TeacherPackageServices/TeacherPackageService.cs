@@ -1,6 +1,8 @@
 using LearningEnglish.Application.DTOs;
-using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.TeacherPackage;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Interface;
+
 using LearningEnglish.Domain.Entities;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
@@ -21,8 +23,6 @@ namespace LearningEnglish.Application.Service
             _logger = logger;
         }
 
-        // Lấy tất cả TeacherPackages (public catalog - không cần RLS)
-        // Mọi người (Guest, Student, Teacher) đều có thể xem
         // Chỉ Admin mới có thể CRUD (đã có Permission check ở controller)
         public async Task<ServiceResponse<List<TeacherPackageDto>>> GetAllTeacherPackagesAsync()
         {
@@ -43,7 +43,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // Lấy TeacherPackage theo ID (public catalog - không cần RLS)
+        // Lấy TeacherPackage theo ID 
         public async Task<ServiceResponse<TeacherPackageDto>> GetTeacherPackageByIdAsync(int id)
         {
             var response = new ServiceResponse<TeacherPackageDto>();
@@ -72,8 +72,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // Tạo TeacherPackage mới (chỉ Admin - đã có Permission check ở controller)
-        // TeacherPackages là public catalog - không cần RLS
+        // Tạo TeacherPackage mới 
         public async Task<ServiceResponse<TeacherPackageDto>> CreateTeacherPackageAsync(CreateTeacherPackageDto dto)
         {
             var response = new ServiceResponse<TeacherPackageDto>();
@@ -104,8 +103,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // Cập nhật TeacherPackage (chỉ Admin - đã có Permission check ở controller)
-        // TeacherPackages là public catalog - không cần RLS
+        // Cập nhật TeacherPackage theo ID
         public async Task<ServiceResponse<TeacherPackageDto>> UpdateTeacherPackageAsync(int id, UpdateTeacherPackageDto dto)
         {
             var response = new ServiceResponse<TeacherPackageDto>();
@@ -159,8 +157,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // Xóa TeacherPackage (chỉ Admin - đã có Permission check ở controller)
-        // TeacherPackages là public catalog - không cần RLS
+        // Xóa TeacherPackage theo ID
         public async Task<ServiceResponse<bool>> DeleteTeacherPackageAsync(int id)
         {
             var response = new ServiceResponse<bool>();

@@ -11,7 +11,6 @@ namespace LearningEnglish.Application.Service
     public class ModuleService : IModuleService
     {
         private readonly IModuleRepository _moduleRepository;
-        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<ModuleService> _logger;
         private readonly ILessonRepository _lessonRepository;
@@ -19,13 +18,11 @@ namespace LearningEnglish.Application.Service
         private readonly IModuleCompletionRepository _moduleCompletionRepository;
         private readonly IMinioFileStorage _minioFileStorage;
 
-        // Đặt bucket + folder cho ảnh module
         private const string ModuleImageBucket = "modules";
         private const string ModuleImageFolder = "real";
 
         public ModuleService(
             IModuleRepository moduleRepository,
-            IUnitOfWork unitOfWork,
             IMapper mapper,
             ILogger<ModuleService> logger,
             ILessonRepository lessonRepository,
@@ -34,7 +31,6 @@ namespace LearningEnglish.Application.Service
             IMinioFileStorage minioFileStorage)
         {
             _moduleRepository = moduleRepository;
-            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
             _lessonRepository = lessonRepository;
@@ -49,7 +45,6 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<ModuleDto>();
             try
             {
-                // Lấy module với thông tin chi tiết từ database
                 var module = await _moduleRepository.GetByIdWithDetailsAsync(moduleId);
                 if (module == null)
                 {
@@ -59,20 +54,14 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Chuyển đổi entity sang DTO để trả về client
-                var moduleDto = _mapper.Map<ModuleDto>(module);
-                // Note: Progress info should be retrieved using GetModuleWithProgressAsync method
-                
-                // Generate URL từ key
+                var dto = _mapper.Map<ModuleDto>(module);
+
                 if (!string.IsNullOrWhiteSpace(module.ImageKey))
                 {
-                    moduleDto.ImageUrl = BuildPublicUrl.BuildURL(
-                        ModuleImageBucket,
-                        module.ImageKey
-                    );
+                    dto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, module.ImageKey);
                 }
-                
-                response.Data = moduleDto;
+
+                response.Data = dto;
                 response.Message = "Lấy thông tin module thành công";
                 return response;
             }
@@ -92,29 +81,27 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<List<ListModuleDto>>();
             try
             {
-                // Lấy tất cả module thuộc lesson này
                 var modules = await _moduleRepository.GetByLessonIdAsync(lessonId);
-                // Chuyển đổi sang DTO để trả về (ListModuleDto chỉ chứa thông tin cơ bản)
-                var moduleDtos = _mapper.Map<List<ListModuleDto>>(modules);
+                var dtos = _mapper.Map<List<ListModuleDto>>(modules);
 
-                // Add progress info if userId provided
                 if (userId.HasValue)
                 {
                     var moduleIds = modules.Select(m => m.ModuleId).ToList();
-                    var moduleCompletions = await _moduleCompletionRepository.GetByUserAndModuleIdsAsync(userId.Value, moduleIds);
+                    var completions = await _moduleCompletionRepository
+                        .GetByUserAndModuleIdsAsync(userId.Value, moduleIds);
 
-                    foreach (var moduleDto in moduleDtos)
+                    foreach (var dto in dtos)
                     {
-                        var completion = moduleCompletions.FirstOrDefault(mc => mc.ModuleId == moduleDto.ModuleId);
+                        var completion = completions.FirstOrDefault(x => x.ModuleId == dto.ModuleId);
                         if (completion != null)
                         {
-                            moduleDto.IsCompleted = completion.IsCompleted;
-                            moduleDto.ProgressPercentage = completion.ProgressPercentage;
+                            dto.IsCompleted = completion.IsCompleted;
+                            dto.ProgressPercentage = completion.ProgressPercentage;
                         }
                     }
                 }
 
-                response.Data = moduleDtos;
+                response.Data = dtos;
                 response.Message = "Lấy danh sách module thành công";
                 return response;
             }
@@ -128,124 +115,157 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        // + Tạo module mới
-        public async Task<ServiceResponse<ModuleDto>> CreateModuleAsync(CreateModuleDto createModuleDto, int createdByUserId, string userRole = "Admin")
+        // + Admin tạo module
+        public async Task<ServiceResponse<ModuleDto>> AdminCreateModule(CreateModuleDto dto)
         {
             var response = new ServiceResponse<ModuleDto>();
             try
             {
-                // 🔒 For Teacher: validate ownership of the lesson's course
-                if (userRole == "Teacher")
+                var lesson = await _lessonRepository.GetLessonById(dto.LessonId);
+                if (lesson == null)
                 {
-                    var lesson = await _lessonRepository.GetLessonById(createModuleDto.LessonId);
-                    if (lesson == null)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 404;
-                        response.Message = "Không tìm thấy bài học";
-                        return response;
-                    }
-
-                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
-                    if (course == null)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 404;
-                        response.Message = "Không tìm thấy khóa học";
-                        return response;
-                    }
-
-                    if (!course.TeacherId.HasValue || course.TeacherId.Value != createdByUserId)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Bạn không có quyền tạo module trong bài học này";
-                        _logger.LogWarning("Teacher {UserId} attempted to create module in lesson {LessonId}, course {CourseId} owned by {OwnerId}",
-                            createdByUserId, createModuleDto.LessonId, lesson.CourseId, course.TeacherId);
-                        return response;
-                    }
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài học hoặc không có quyền";
+                    return response;
                 }
 
-                // Tự động đặt thứ tự nếu chưa có (đảm bảo module mới luôn ở cuối)
-                if (createModuleDto.OrderIndex <= 0)
+                if (dto.OrderIndex <= 0)
                 {
-                    var maxOrder = await _moduleRepository.GetMaxOrderIndexAsync(createModuleDto.LessonId);
-                    createModuleDto.OrderIndex = maxOrder + 1;
+                    dto.OrderIndex = await _moduleRepository.GetMaxOrderIndexAsync(dto.LessonId) + 1;
                 }
 
-                // Chuyển đổi DTO thành entity để lưu vào database
-                var module = _mapper.Map<Module>(createModuleDto);
-
+                var module = _mapper.Map<Module>(dto);
                 string? committedImageKey = null;
 
-                // Convert temp file → real file nếu có ImageTempKey
-                if (!string.IsNullOrWhiteSpace(createModuleDto.ImageTempKey))
+                if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                 {
-                    var commitResult = await _minioFileStorage.CommitFileAsync(
-                        createModuleDto.ImageTempKey,
+                    var commit = await _minioFileStorage.CommitFileAsync(
+                        dto.ImageTempKey,
                         ModuleImageBucket,
                         ModuleImageFolder
                     );
 
-                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    if (!commit.Success || string.IsNullOrWhiteSpace(commit.Data))
                     {
                         response.Success = false;
                         response.StatusCode = 400;
-                        response.Message = "Không thể lưu ảnh module. Vui lòng thử lại.";
+                        response.Message = "Không thể lưu ảnh module";
                         return response;
                     }
 
-                    committedImageKey = commitResult.Data;
+                    committedImageKey = commit.Data;
                     module.ImageKey = committedImageKey;
-                    module.ImageType = createModuleDto.ImageType;
+                    module.ImageType = dto.ImageType;
                 }
 
-                Module createdModule;
+                Module created;
                 try
                 {
-                    createdModule = await _moduleRepository.CreateAsync(module);
+                    created = await _moduleRepository.CreateAsync(module);
                 }
-                catch (Exception dbEx)
+                catch
                 {
-                    _logger.LogError(dbEx, "Database error while creating module");
-
-                    // Rollback MinIO file
                     if (committedImageKey != null)
                     {
                         await _minioFileStorage.DeleteFileAsync(committedImageKey, ModuleImageBucket);
                     }
-
-                    response.Success = false;
-                    response.StatusCode = 500;
-                    response.Message = "Lỗi database khi tạo module";
-                    return response;
+                    throw;
                 }
 
-                // Lấy lại module đã tạo với đầy đủ thông tin để trả về
-                var moduleWithDetails = await _moduleRepository.GetByIdWithDetailsAsync(createdModule.ModuleId);
-                var moduleDto = _mapper.Map<ModuleDto>(moduleWithDetails);
+                var fullModule = await _moduleRepository.GetByIdWithDetailsAsync(created.ModuleId);
+                var resultDto = _mapper.Map<ModuleDto>(fullModule);
 
-                // Generate URL từ key
-                if (!string.IsNullOrWhiteSpace(module.ImageKey))
+                if (!string.IsNullOrWhiteSpace(fullModule.ImageKey))
                 {
-                    moduleDto.ImageUrl = BuildPublicUrl.BuildURL(
-                        ModuleImageBucket,
-                        module.ImageKey
-                    );
+                    resultDto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, fullModule.ImageKey);
                 }
 
-                response.Data = moduleDto;
-                response.StatusCode = 201; // Created
+                response.Data = resultDto;
+                response.StatusCode = 201;
                 response.Message = "Tạo module thành công";
-
-                _logger.LogInformation("Module {ModuleId} được tạo thành công bởi user {UserId}",
-                    createdModule.ModuleId, createdByUserId);
-
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi tạo module cho lesson {LessonId}", createModuleDto.LessonId);
+                _logger.LogError(ex, "Lỗi khi admin tạo module");
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Đã xảy ra lỗi khi tạo module";
+                return response;
+            }
+        }
+
+        // + Teacher tạo module
+        public async Task<ServiceResponse<ModuleDto>> TeacherCreateModule(CreateModuleDto dto, int teacherId)
+        {
+            var response = new ServiceResponse<ModuleDto>();
+            try
+            {
+                var lesson = await _lessonRepository.GetLessonById(dto.LessonId);
+                if (lesson == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài học hoặc không có quyền";
+                    return response;
+                }
+
+                var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                if (course == null || course.TeacherId != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Không có quyền tạo module trong bài học này";
+                    return response;
+                }
+
+                if (dto.OrderIndex <= 0)
+                {
+                    dto.OrderIndex = await _moduleRepository.GetMaxOrderIndexAsync(dto.LessonId) + 1;
+                }
+
+                var module = _mapper.Map<Module>(dto);
+                string? committedImageKey = null;
+
+                if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
+                {
+                    var commit = await _minioFileStorage.CommitFileAsync(
+                        dto.ImageTempKey,
+                        ModuleImageBucket,
+                        ModuleImageFolder
+                    );
+
+                    if (!commit.Success || string.IsNullOrWhiteSpace(commit.Data))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu ảnh module";
+                        return response;
+                    }
+
+                    committedImageKey = commit.Data;
+                    module.ImageKey = committedImageKey;
+                    module.ImageType = dto.ImageType;
+                }
+
+                var created = await _moduleRepository.CreateAsync(module);
+                var fullModule = await _moduleRepository.GetByIdWithDetailsAsync(created.ModuleId);
+                var resultDto = _mapper.Map<ModuleDto>(fullModule);
+
+                if (!string.IsNullOrWhiteSpace(fullModule.ImageKey))
+                {
+                    resultDto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, fullModule.ImageKey);
+                }
+
+                response.Data = resultDto;
+                response.StatusCode = 201;
+                response.Message = "Tạo module thành công";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi teacher tạo module");
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "Đã xảy ra lỗi khi tạo module";
@@ -254,14 +274,13 @@ namespace LearningEnglish.Application.Service
         }
 
         // + Cập nhật module
-        public async Task<ServiceResponse<ModuleDto>> UpdateModuleAsync(int moduleId, UpdateModuleDto updateModuleDto, int updatedByUserId)
+        public async Task<ServiceResponse<ModuleDto>> UpdateModule(int moduleId, UpdateModuleDto dto)
         {
             var response = new ServiceResponse<ModuleDto>();
             try
             {
-                // Kiểm tra module có tồn tại không
-                var existingModule = await _moduleRepository.GetByIdAsync(moduleId);
-                if (existingModule == null)
+                var module = await _moduleRepository.GetByIdAsync(moduleId);
+                if (module == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
@@ -270,87 +289,47 @@ namespace LearningEnglish.Application.Service
                 }
 
                 string? newImageKey = null;
-                string? oldImageKey = !string.IsNullOrWhiteSpace(existingModule.ImageKey) ? existingModule.ImageKey : null;
+                var oldImageKey = module.ImageKey;
 
-                // Xử lý file ảnh: commit new first
-                if (!string.IsNullOrWhiteSpace(updateModuleDto.ImageTempKey))
+                if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                 {
-                    // Commit ảnh mới
-                    var commitResult = await _minioFileStorage.CommitFileAsync(
-                        updateModuleDto.ImageTempKey,
+                    var commit = await _minioFileStorage.CommitFileAsync(
+                        dto.ImageTempKey,
                         ModuleImageBucket,
                         ModuleImageFolder
                     );
 
-                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    if (!commit.Success || string.IsNullOrWhiteSpace(commit.Data))
                     {
                         response.Success = false;
                         response.StatusCode = 400;
-                        response.Message = "Không thể cập nhật ảnh module.";
+                        response.Message = "Không thể cập nhật ảnh module";
                         return response;
                     }
 
-                    newImageKey = commitResult.Data;
-                    existingModule.ImageKey = newImageKey;
-                    existingModule.ImageType = updateModuleDto.ImageType;
+                    newImageKey = commit.Data;
+                    module.ImageKey = newImageKey;
+                    module.ImageType = dto.ImageType;
                 }
 
-                // Áp dụng các thay đổi từ DTO vào entity hiện tại (trừ ImageKey đã xử lý ở trên)
-                _mapper.Map(updateModuleDto, existingModule);
-                
-                Module updatedModule;
-                try
+                _mapper.Map(dto, module);
+                var updated = await _moduleRepository.UpdateAsync(module);
+
+                if (!string.IsNullOrWhiteSpace(oldImageKey) && newImageKey != null)
                 {
-                    updatedModule = await _moduleRepository.UpdateAsync(existingModule);
+                    await _minioFileStorage.DeleteFileAsync(oldImageKey, ModuleImageBucket);
                 }
-                catch (Exception dbEx)
+
+                var fullModule = await _moduleRepository.GetByIdWithDetailsAsync(updated.ModuleId);
+                var resultDto = _mapper.Map<ModuleDto>(fullModule);
+
+                if (!string.IsNullOrWhiteSpace(fullModule.ImageKey))
                 {
-                    _logger.LogError(dbEx, "Database error while updating module");
-
-                    // Rollback new image
-                    if (newImageKey != null)
-                    {
-                        await _minioFileStorage.DeleteFileAsync(newImageKey, ModuleImageBucket);
-                    }
-
-                    response.Success = false;
-                    response.StatusCode = 500;
-                    response.Message = "Lỗi database khi cập nhật module";
-                    return response;
+                    resultDto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, fullModule.ImageKey);
                 }
 
-                // Delete old image only after successful DB update
-                if (oldImageKey != null && newImageKey != null)
-                {
-                    try
-                    {
-                        await _minioFileStorage.DeleteFileAsync(oldImageKey, ModuleImageBucket);
-                    }
-                    catch
-                    {
-                        _logger.LogWarning("Failed to delete old module image: {ImageKey}", oldImageKey);
-                    }
-                }
-
-                // Lấy lại module đã cập nhật với đầy đủ thông tin để trả về
-                var moduleWithDetails = await _moduleRepository.GetByIdWithDetailsAsync(updatedModule.ModuleId);
-                var moduleDto = _mapper.Map<ModuleDto>(moduleWithDetails);
-
-                // Generate URL từ key
-                if (!string.IsNullOrWhiteSpace(updatedModule.ImageKey))
-                {
-                    moduleDto.ImageUrl = BuildPublicUrl.BuildURL(
-                        ModuleImageBucket,
-                        updatedModule.ImageKey
-                    );
-                }
-
-                response.Data = moduleDto;
+                response.Data = resultDto;
                 response.Message = "Cập nhật module thành công";
-
-                _logger.LogInformation("Module {ModuleId} được cập nhật thành công bởi user {UserId}",
-                    moduleId, updatedByUserId);
-
                 return response;
             }
             catch (Exception ex)
@@ -364,12 +343,11 @@ namespace LearningEnglish.Application.Service
         }
 
         // + Xóa module
-        public async Task<ServiceResponse<bool>> DeleteModuleAsync(int moduleId, int deletedByUserId)
+        public async Task<ServiceResponse<bool>> DeleteModule(int moduleId)
         {
             var response = new ServiceResponse<bool>();
             try
             {
-                // Kiểm tra module có tồn tại không
                 var module = await _moduleRepository.GetByIdAsync(moduleId);
                 if (module == null)
                 {
@@ -379,33 +357,13 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Xóa ảnh module trên MinIO nếu có
                 if (!string.IsNullOrWhiteSpace(module.ImageKey))
                 {
-                    try
-                    {
-                        await _minioFileStorage.DeleteFileAsync(
-                            module.ImageKey,
-                            ModuleImageBucket
-                        );
-                    }
-                    catch (Exception deleteEx)
-                    {
-                        _logger.LogWarning(deleteEx, "Failed to delete module image: {ImageKey}", module.ImageKey);
-                    }
+                    await _minioFileStorage.DeleteFileAsync(module.ImageKey, ModuleImageBucket);
                 }
 
-                // Thực hiện xóa module
-                var result = await _moduleRepository.DeleteAsync(moduleId);
-                response.Data = result;
-                response.Message = result ? "Xóa module thành công" : "Không thể xóa module";
-
-                if (result)
-                {
-                    _logger.LogInformation("Module {ModuleId} được xóa thành công bởi user {UserId}",
-                        moduleId, deletedByUserId);
-                }
-
+                response.Data = await _moduleRepository.DeleteAsync(moduleId);
+                response.Message = "Xóa module thành công";
                 return response;
             }
             catch (Exception ex)
@@ -418,194 +376,49 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        // + Cập nhật module với authorization
-        public async Task<ServiceResponse<ModuleDto>> UpdateModuleWithAuthorizationAsync(int moduleId, UpdateModuleDto updateModuleDto, int userId, string userRole)
-        {
-            var response = new ServiceResponse<ModuleDto>();
-            try
-            {
-                // Get module entity to validate ownership
-                var module = await _moduleRepository.GetByIdAsync(moduleId);
-                if (module == null)
-                {
-                    response.Success = false;
-                    response.StatusCode = 404;
-                    response.Message = "Không tìm thấy module";
-                    return response;
-                }
-
-                // 🔒 For Teacher: validate ownership via lesson's course
-                if (userRole == "Teacher")
-                {
-                    var lesson = await _lessonRepository.GetLessonById(module.LessonId);
-                    if (lesson == null)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 404;
-                        response.Message = "Không tìm thấy bài học của module này";
-                        return response;
-                    }
-
-                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
-                    if (course == null)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 404;
-                        response.Message = "Không tìm thấy khóa học";
-                        return response;
-                    }
-
-                    if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Bạn không có quyền chỉnh sửa module này";
-                        _logger.LogWarning("Teacher {UserId} attempted to update module {ModuleId} in lesson {LessonId}, course {CourseId} owned by {OwnerId}",
-                            userId, moduleId, module.LessonId, lesson.CourseId, course.TeacherId);
-                        return response;
-                    }
-                }
-
-                // Admin can update any module, Teacher can update own modules
-                _logger.LogInformation("{Role} {UserId} đang cập nhật module {ModuleId}", userRole, userId, moduleId);
-                return await UpdateModuleAsync(moduleId, updateModuleDto, userId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi trong UpdateModuleWithAuthorizationAsync cho module {ModuleId} bởi user {UserId}", moduleId, userId);
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Đã xảy ra lỗi hệ thống";
-                return response;
-            }
-        }
-
-        // + Xóa module với authorization
-        public async Task<ServiceResponse<bool>> DeleteModuleWithAuthorizationAsync(int moduleId, int userId, string userRole)
-        {
-            var response = new ServiceResponse<bool>();
-            try
-            {
-                // Get module entity to validate ownership
-                var module = await _moduleRepository.GetByIdAsync(moduleId);
-                if (module == null)
-                {
-                    response.Success = false;
-                    response.StatusCode = 404;
-                    response.Message = "Không tìm thấy module";
-                    response.Data = false;
-                    return response;
-                }
-
-                // 🔒 For Teacher: validate ownership via lesson's course
-                if (userRole == "Teacher")
-                {
-                    var lesson = await _lessonRepository.GetLessonById(module.LessonId);
-                    if (lesson == null)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 404;
-                        response.Message = "Không tìm thấy bài học của module này";
-                        response.Data = false;
-                        return response;
-                    }
-
-                    var course = await _courseRepository.GetCourseById(lesson.CourseId);
-                    if (course == null)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 404;
-                        response.Message = "Không tìm thấy khóa học";
-                        response.Data = false;
-                        return response;
-                    }
-
-                    if (!course.TeacherId.HasValue || course.TeacherId.Value != userId)
-                    {
-                        response.Success = false;
-                        response.StatusCode = 403;
-                        response.Message = "Bạn không có quyền xóa module này";
-                        response.Data = false;
-                        _logger.LogWarning("Teacher {UserId} attempted to delete module {ModuleId} in lesson {LessonId}, course {CourseId} owned by {OwnerId}",
-                            userId, moduleId, module.LessonId, lesson.CourseId, course.TeacherId);
-                        return response;
-                    }
-                }
-
-                // Admin can delete any module, Teacher can delete own modules
-                _logger.LogInformation("{Role} {UserId} đang xóa module {ModuleId}", userRole, userId, moduleId);
-                return await DeleteModuleAsync(moduleId, userId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi trong DeleteModuleWithAuthorizationAsync cho module {ModuleId} bởi user {UserId}", moduleId, userId);
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Đã xảy ra lỗi hệ thống";
-                response.Data = false;
-                return response;
-            }
-        }
-
         // + Lấy danh sách module với tiến độ
         public async Task<ServiceResponse<List<ModuleWithProgressDto>>> GetModulesWithProgressAsync(int lessonId, int userId)
         {
             var response = new ServiceResponse<List<ModuleWithProgressDto>>();
             try
             {
-                // Lấy tất cả module thuộc lesson với thông tin liên quan
                 var modules = await _moduleRepository.GetByLessonIdWithDetailsAsync(lessonId);
-                var moduleWithProgressDtos = new List<ModuleWithProgressDto>();
+                var completions = await _moduleCompletionRepository
+                    .GetByUserAndModuleIdsAsync(userId, modules.Select(x => x.ModuleId).ToList());
 
-                // Lấy tất cả module completions cho user này trong lesson này
-                var moduleIds = modules.Select(m => m.ModuleId).ToList();
-                var moduleCompletions = await _moduleCompletionRepository.GetByUserAndModuleIdsAsync(userId, moduleIds);
+                var result = new List<ModuleWithProgressDto>();
 
                 foreach (var module in modules)
                 {
                     var dto = _mapper.Map<ModuleWithProgressDto>(module);
 
-                    // Generate URL từ key
                     if (!string.IsNullOrWhiteSpace(module.ImageKey))
                     {
-                        dto.ImageUrl = BuildPublicUrl.BuildURL(
-                            ModuleImageBucket,
-                            module.ImageKey
-                        );
+                        dto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, module.ImageKey);
                     }
 
-                    // Lấy thông tin tiến độ học tập từ bảng ModuleCompletion
-                    var completion = moduleCompletions.FirstOrDefault(mc => mc.ModuleId == module.ModuleId);
+                    var completion = completions.FirstOrDefault(x => x.ModuleId == module.ModuleId);
                     if (completion != null)
                     {
-                        // User đã có tiến độ học tập cho module này
                         dto.IsCompleted = completion.IsCompleted;
                         dto.ProgressPercentage = completion.ProgressPercentage;
                         dto.StartedAt = completion.StartedAt;
                         dto.CompletedAt = completion.CompletedAt;
                     }
-                    else
-                    {
-                        // User chưa bắt đầu học module này
-                        dto.IsCompleted = false;
-                        dto.ProgressPercentage = 0;
-                        dto.StartedAt = null;
-                        dto.CompletedAt = null;
-                    }
 
-                    moduleWithProgressDtos.Add(dto);
+                    result.Add(dto);
                 }
 
-                response.Data = moduleWithProgressDtos;
+                response.Data = result;
                 response.Message = "Lấy danh sách module với tiến độ thành công";
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách module với tiến độ cho lesson {LessonId}", lessonId);
+                _logger.LogError(ex, "Lỗi khi lấy module với tiến độ");
                 response.Success = false;
                 response.StatusCode = 500;
-                response.Message = "Đã xảy ra lỗi khi lấy danh sách module với tiến độ";
+                response.Message = "Đã xảy ra lỗi khi lấy module với tiến độ";
                 return response;
             }
         }
@@ -616,7 +429,6 @@ namespace LearningEnglish.Application.Service
             var response = new ServiceResponse<ModuleWithProgressDto>();
             try
             {
-                // Lấy module với thông tin chi tiết
                 var module = await _moduleRepository.GetByIdWithDetailsAsync(moduleId);
                 if (module == null)
                 {
@@ -628,32 +440,20 @@ namespace LearningEnglish.Application.Service
 
                 var dto = _mapper.Map<ModuleWithProgressDto>(module);
 
-                // Generate URL từ key
                 if (!string.IsNullOrWhiteSpace(module.ImageKey))
                 {
-                    dto.ImageUrl = BuildPublicUrl.BuildURL(
-                        ModuleImageBucket,
-                        module.ImageKey
-                    );
+                    dto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, module.ImageKey);
                 }
 
-                // Lấy thông tin tiến độ học tập cá nhân của user từ repository
-                var completion = await _moduleCompletionRepository.GetByUserAndModuleAsync(userId, moduleId);
+                var completion = await _moduleCompletionRepository
+                    .GetByUserAndModuleAsync(userId, moduleId);
+
                 if (completion != null)
                 {
-                    // User đã có tiến độ học tập cho module này
                     dto.IsCompleted = completion.IsCompleted;
                     dto.ProgressPercentage = completion.ProgressPercentage;
                     dto.StartedAt = completion.StartedAt;
                     dto.CompletedAt = completion.CompletedAt;
-                }
-                else
-                {
-                    // User chưa bắt đầu học module này - thiết lập giá trị mặc định
-                    dto.IsCompleted = false;
-                    dto.ProgressPercentage = 0;
-                    dto.StartedAt = null;
-                    dto.CompletedAt = null;
                 }
 
                 response.Data = dto;
@@ -662,10 +462,10 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy module với tiến độ {ModuleId} cho user {UserId}", moduleId, userId);
+                _logger.LogError(ex, "Lỗi khi lấy module với tiến độ {ModuleId}", moduleId);
                 response.Success = false;
                 response.StatusCode = 500;
-                response.Message = "Đã xảy ra lỗi khi lấy thông tin module với tiến độ";
+                response.Message = "Đã xảy ra lỗi khi lấy module với tiến độ";
                 return response;
             }
         }

@@ -14,28 +14,25 @@ namespace LearningEnglish.Application.Interface
         // Lấy cây lecture
         Task<ServiceResponse<List<LectureTreeDto>>> GetLectureTreeByModuleIdAsync(int moduleId, int? userId = null);
         
-        // Tạo lecture
-        Task<ServiceResponse<LectureDto>> CreateLectureAsync(CreateLectureDto createLectureDto, int createdByUserId);
+        // Admin tạo lecture
+        Task<ServiceResponse<LectureDto>> AdminCreateLecture(CreateLectureDto createLectureDto);
         
-        // Tạo nhiều lecture
-        Task<ServiceResponse<BulkCreateLecturesResponseDto>> BulkCreateLecturesAsync(BulkCreateLecturesDto bulkCreateDto, int createdByUserId);
+        // Teacher tạo lecture
+        Task<ServiceResponse<LectureDto>> TeacherCreateLecture(CreateLectureDto createLectureDto, int teacherId);
         
-        // Cập nhật lecture
-        Task<ServiceResponse<LectureDto>> UpdateLectureAsync(int lectureId, UpdateLectureDto updateLectureDto, int updatedByUserId);
+        // Admin tạo nhiều lecture
+        Task<ServiceResponse<BulkCreateLecturesResponseDto>> AdminBulkCreateLectures(BulkCreateLecturesDto bulkCreateDto);
         
-        // Xóa lecture
-        Task<ServiceResponse<bool>> DeleteLectureAsync(int lectureId, int deletedByUserId);
-
-        // Cập nhật lecture có kiểm tra quyền
-        Task<ServiceResponse<LectureDto>> UpdateLectureWithAuthorizationAsync(int lectureId, UpdateLectureDto updateLectureDto, int userId, string userRole);
+        // Teacher tạo nhiều lecture
+        Task<ServiceResponse<BulkCreateLecturesResponseDto>> TeacherBulkCreateLectures(BulkCreateLecturesDto bulkCreateDto, int teacherId);
         
-        // Xóa lecture có kiểm tra quyền
-        Task<ServiceResponse<bool>> DeleteLectureWithAuthorizationAsync(int lectureId, int userId, string userRole);
-
-        // Kiểm tra quyền teacher
-        Task<bool> CheckTeacherLecturePermission(int lectureId, int teacherId);
+        // Cập nhật lecture (RLS đã filter theo ownership)
+        Task<ServiceResponse<LectureDto>> UpdateLecture(int lectureId, UpdateLectureDto updateLectureDto);
         
-        // Sắp xếp lại lecture
-        Task<ServiceResponse<bool>> ReorderLecturesAsync(List<ReorderLectureDto> reorderDtos, int userId, string userRole);
+        // Xóa lecture (RLS đã filter theo ownership)
+        Task<ServiceResponse<bool>> DeleteLecture(int lectureId);
+        
+        // Sắp xếp lại lecture (RLS đã filter theo ownership)
+        Task<ServiceResponse<bool>> ReorderLectures(List<ReorderLectureDto> reorderDtos);
     }
 }

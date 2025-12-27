@@ -1,6 +1,5 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common;
-using LearningEnglish.Application.Common.Pagination;
 
 namespace LearningEnglish.Application.Interface
 {
@@ -12,22 +11,22 @@ namespace LearningEnglish.Application.Interface
         // Lấy danh sách flashcard theo module
         Task<ServiceResponse<List<ListFlashCardDto>>> GetFlashCardsByModuleIdAsync(int moduleId, int? userId = null);
         
-        // Lấy flashcard phân trang
-        Task<ServiceResponse<PagedResult<ListFlashCardDto>>> GetFlashCardsByModuleIdPaginatedAsync(int moduleId, PageRequest request, int? userId = null);
-        
-        // Tạo flashcard
-        Task<ServiceResponse<FlashCardDto>> CreateFlashCardAsync(CreateFlashCardDto createFlashCardDto, int createdByUserId);
-        
-        // Cập nhật flashcard
-        Task<ServiceResponse<FlashCardDto>> UpdateFlashCardAsync(int flashCardId, UpdateFlashCardDto updateFlashCardDto, int userId, string userRole);
-        
-        // Xóa flashcard
-        Task<ServiceResponse<bool>> DeleteFlashCardAsync(int flashCardId, int userId, string userRole);
+        // Admin tạo flashcard
+        Task<ServiceResponse<FlashCardDto>> AdminCreateFlashCard(CreateFlashCardDto createFlashCardDto);
 
-        // Tạo nhiều flashcard
-        Task<ServiceResponse<List<FlashCardDto>>> CreateBulkFlashCardsAsync(BulkImportFlashCardDto bulkImportDto, int userId, string userRole);
+        // Teacher tạo flashcard
+        Task<ServiceResponse<FlashCardDto>> TeacherCreateFlashCard(CreateFlashCardDto createFlashCardDto, int teacherId);
 
-        // Kiểm tra quyền teacher
-        Task<bool> CheckTeacherFlashCardPermission(int flashCardId, int teacherId);
+        // Cập nhật flashcard (RLS đã filter theo ownership)
+        Task<ServiceResponse<FlashCardDto>> UpdateFlashCard(int flashCardId, UpdateFlashCardDto updateFlashCardDto);
+
+        // Xóa flashcard (RLS đã filter theo ownership)
+        Task<ServiceResponse<bool>> DeleteFlashCard(int flashCardId);
+
+        // Admin tạo nhiều flashcard
+        Task<ServiceResponse<List<FlashCardDto>>> AdminBulkCreateFlashCards(BulkImportFlashCardDto bulkImportDto);
+
+        // Teacher tạo nhiều flashcard
+        Task<ServiceResponse<List<FlashCardDto>>> TeacherBulkCreateFlashCards(BulkImportFlashCardDto bulkImportDto, int teacherId);
     }
 }

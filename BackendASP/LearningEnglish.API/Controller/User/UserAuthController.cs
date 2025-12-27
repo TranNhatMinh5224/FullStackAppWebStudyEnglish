@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using LearningEnglish.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
-using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Auth;
+using LearningEnglish.Application.Interface.AdminManagement;
 using LearningEnglish.API.Extensions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -16,6 +17,7 @@ namespace LearningEnglish.API.Controllers.User
         private readonly IRegisterService _registerService;
         private readonly ILoginService _loginService;
         private readonly IUserManagementService _userManagementService;
+        private readonly IInformationUserService _informationUserService;
         private readonly IPasswordService _passwordService;
         private readonly ITokenService _tokenService;
         private readonly IGoogleLoginService _googleLoginService;
@@ -27,6 +29,7 @@ namespace LearningEnglish.API.Controllers.User
             IRegisterService registerService,
             ILoginService loginService,
             IUserManagementService userManagementService,
+            IInformationUserService informationUserService,
             IPasswordService passwordService,
             ITokenService tokenService,
             IGoogleLoginService googleLoginService,
@@ -36,6 +39,7 @@ namespace LearningEnglish.API.Controllers.User
             _registerService = registerService;
             _loginService = loginService;
             _userManagementService = userManagementService;
+            _informationUserService = informationUserService;
             _passwordService = passwordService;
             _tokenService = tokenService;
             _googleLoginService = googleLoginService;
@@ -90,7 +94,7 @@ namespace LearningEnglish.API.Controllers.User
         public async Task<IActionResult> GetProfile()
         {
             var userId = User.GetUserId();
-            var result = await _userManagementService.GetUserProfileAsync(userId);
+            var result = await _informationUserService.GetUserProfileAsync(userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -100,7 +104,7 @@ namespace LearningEnglish.API.Controllers.User
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserDto dto)
         {
             var userId = User.GetUserId();
-            var result = await _userManagementService.UpdateUserProfileAsync(userId, dto);
+            var result = await _informationUserService.UpdateUserProfileAsync(userId, dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -110,7 +114,7 @@ namespace LearningEnglish.API.Controllers.User
         public async Task<IActionResult> UpdateAvatar([FromBody] UpdateAvatarDto dto)
         {
             var userId = User.GetUserId();
-            var result = await _userManagementService.UpdateAvatarAsync(userId, dto);
+            var result = await _informationUserService.UpdateAvatarAsync(userId, dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 

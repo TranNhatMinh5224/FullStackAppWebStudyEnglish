@@ -12,7 +12,10 @@ namespace LearningEnglish.Application.Service
     public class LectureService : ILectureService
     {
         private readonly ILectureRepository _lectureRepository;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IModuleRepository _moduleRepository;
+        private readonly ILessonRepository _lessonRepository;
+        private readonly ICourseRepository _courseRepository;
+      
         private readonly IMapper _mapper;
         private readonly ILogger<LectureService> _logger;
         private readonly IMinioFileStorage _minioFileStorage;
@@ -23,35 +26,24 @@ namespace LearningEnglish.Application.Service
 
         public LectureService(
             ILectureRepository lectureRepository,
-            IUnitOfWork unitOfWork,
+            IModuleRepository moduleRepository,
+            ILessonRepository lessonRepository,
+            ICourseRepository courseRepository,
+        
             IMapper mapper,
             ILogger<LectureService> logger,
             IMinioFileStorage minioFileStorage)
         {
             _lectureRepository = lectureRepository;
-            _unitOfWork = unitOfWork;
+            _moduleRepository = moduleRepository;
+            _lessonRepository = lessonRepository;
+            _courseRepository = courseRepository;
+         
             _mapper = mapper;
             _logger = logger;
             _minioFileStorage = minioFileStorage;
         }
 
-        // + Kiểm tra quyền teacher với lecture
-        public async Task<bool> CheckTeacherLecturePermission(int lectureId, int teacherId)
-        {
-            try
-            {
-                var lecture = await _lectureRepository.GetLectureWithModuleCourseAsync(lectureId);
-                if (lecture?.Module?.Lesson?.Course == null) return false;
-
-                var course = lecture.Module.Lesson.Course;
-                return course.Type == CourseType.Teacher && course.TeacherId == teacherId;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi kiểm tra quyền teacher với lecture: {LectureId}, Teacher: {TeacherId}", lectureId, teacherId);
-                return false;
-            }
-        }
 
         // + Lấy thông tin lecture theo ID
         public async Task<ServiceResponse<LectureDto>> GetLectureByIdAsync(int lectureId, int? userId = null)
@@ -157,12 +149,13 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // + Tạo lecture mới
-        public async Task<ServiceResponse<LectureDto>> CreateLectureAsync(CreateLectureDto createLectureDto, int createdByUserId)
+        // Admin tạo lecture
+        // RLS: lectures_policy_admin_all sẽ check permission Admin.Lesson.Manage khi INSERT
+        public async Task<ServiceResponse<LectureDto>> AdminCreateLecture(CreateLectureDto createLectureDto)
         {
             var response = new ServiceResponse<LectureDto>();
 
-            _logger.LogInformation("Starting CreateLectureAsync. ModuleId: {ModuleId}, ParentLectureId: {ParentId}, Title: {Title}",
+            _logger.LogInformation("Admin đang tạo lecture. ModuleId: {ModuleId}, ParentLectureId: {ParentId}, Title: {Title}",
                 createLectureDto.ModuleId, createLectureDto.ParentLectureId, createLectureDto.Title);
 
             try
@@ -269,7 +262,7 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi tạo lecture mới: {LectureTitle}", createLectureDto.Title);
+                _logger.LogError(ex, "Lỗi khi Admin tạo lecture: {LectureTitle}", createLectureDto.Title);
                 response.Success = false;
                 response.Message = "Có lỗi xảy ra khi tạo lecture";
             }
@@ -277,17 +270,171 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // + Tạo nhiều lectures cùng lúc với cấu trúc cha-con (Bulk Create)
-        public async Task<ServiceResponse<BulkCreateLecturesResponseDto>> BulkCreateLecturesAsync(
-            BulkCreateLecturesDto bulkCreateDto, 
-            int createdByUserId)
+        // Teacher tạo lecture
+        // RLS: lectures_policy_teacher_all_own sẽ check module ownership khi INSERT
+        // Defense in depth: Check ownership ở service layer để có error message rõ ràng
+        public async Task<ServiceResponse<LectureDto>> TeacherCreateLecture(CreateLectureDto createLectureDto, int teacherId)
+        {
+            var response = new ServiceResponse<LectureDto>();
+
+            _logger.LogInformation("Teacher {TeacherId} đang tạo lecture. ModuleId: {ModuleId}, ParentLectureId: {ParentId}, Title: {Title}",
+                teacherId, createLectureDto.ModuleId, createLectureDto.ParentLectureId, createLectureDto.Title);
+
+            try
+            {
+                // RLS đã filter modules theo TeacherId (chỉ modules của teacher này)
+                // Nếu module không tồn tại hoặc không thuộc về teacher → RLS sẽ filter → module == null
+                var module = await _moduleRepository.GetByIdAsync(createLectureDto.ModuleId);
+                if (module == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy module hoặc bạn không có quyền truy cập";
+                    return response;
+                }
+
+                // Defense in depth: Check ownership ở service layer (RLS cũng sẽ block nếu không đúng)
+                // Giúp trả về error message rõ ràng hơn trước khi INSERT
+                var lesson = await _lessonRepository.GetLessonById(module.LessonId);
+                if (lesson == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài học";
+                    return response;
+                }
+
+                var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                if (!course.TeacherId.HasValue || course.TeacherId.Value != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền tạo lecture trong module này";
+                    _logger.LogWarning("Teacher {TeacherId} attempted to create lecture in module {ModuleId}, course {CourseId} owned by {OwnerId}",
+                        teacherId, createLectureDto.ModuleId, lesson.CourseId, course.TeacherId);
+                    return response;
+                }
+
+                // Tự động set OrderIndex nếu không có
+                if (createLectureDto.OrderIndex == 0)
+                {
+                    var maxOrder = await _lectureRepository.GetMaxOrderIndexAsync(createLectureDto.ModuleId, createLectureDto.ParentLectureId);
+                    createLectureDto.OrderIndex = maxOrder + 1;
+                }
+
+                // Kiểm tra parent hợp lệ nếu có
+                if (createLectureDto.ParentLectureId.HasValue)
+                {
+                    _logger.LogInformation("Checking parent lecture with ID: {ParentId}", createLectureDto.ParentLectureId.Value);
+
+                    var parentLecture = await _lectureRepository.GetByIdAsync(createLectureDto.ParentLectureId.Value);
+                    if (parentLecture == null)
+                    {
+                        _logger.LogWarning("Parent lecture not found with ID: {ParentId}", createLectureDto.ParentLectureId.Value);
+                        response.Success = false;
+                        response.Message = "Parent lecture không tồn tại";
+                        return response;
+                    }
+
+                    if (parentLecture.ModuleId != createLectureDto.ModuleId)
+                    {
+                        _logger.LogWarning("Module mismatch. Parent ModuleId: {ParentModuleId}, Current ModuleId: {CurrentModuleId}",
+                            parentLecture.ModuleId, createLectureDto.ModuleId);
+                        response.Success = false;
+                        response.Message = "Parent lecture phải thuộc cùng module";
+                        return response;
+                    }
+                }
+
+                var lecture = _mapper.Map<Lecture>(createLectureDto);
+
+                string? committedMediaKey = null;
+
+                // Commit MediaTempKey nếu có
+                if (!string.IsNullOrWhiteSpace(createLectureDto.MediaTempKey))
+                {
+                    var mediaResult = await _minioFileStorage.CommitFileAsync(
+                        createLectureDto.MediaTempKey,
+                        LectureMediaBucket,
+                        LectureMediaFolder
+                    );
+
+                    if (!mediaResult.Success || string.IsNullOrWhiteSpace(mediaResult.Data))
+                    {
+                        _logger.LogError("Failed to commit lecture media: {Error}", mediaResult.Message);
+                        response.Success = false;
+                        response.Message = $"Không thể lưu media: {mediaResult.Message}";
+                        return response;
+                    }
+
+                    committedMediaKey = mediaResult.Data;
+                    lecture.MediaKey = committedMediaKey;
+                }
+
+                // Render HTML từ Markdown (đơn giản)
+                if (!string.IsNullOrEmpty(lecture.MarkdownContent))
+                {
+                    lecture.RenderedHtml = ConvertMarkdownToHtml(lecture.MarkdownContent);
+                }
+
+                Lecture createdLecture;
+                try
+                {
+                    createdLecture = await _lectureRepository.CreateAsync(lecture);
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error while creating lecture");
+
+                    // Rollback MinIO file
+                    if (committedMediaKey != null)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(committedMediaKey, LectureMediaBucket);
+                    }
+
+                    response.Success = false;
+                    response.Message = "Lỗi database khi tạo lecture";
+                    return response;
+                }
+                var lectureDto = _mapper.Map<LectureDto>(createdLecture);
+
+                // Generate URL cho response
+                if (!string.IsNullOrWhiteSpace(lectureDto.MediaUrl))
+                {
+                    lectureDto.MediaUrl = BuildPublicUrl.BuildURL(LectureMediaBucket, lectureDto.MediaUrl);
+                }
+
+                response.Data = lectureDto;
+                response.Message = "Tạo lecture thành công";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi Teacher tạo lecture: {LectureTitle}", createLectureDto.Title);
+                response.Success = false;
+                response.Message = "Có lỗi xảy ra khi tạo lecture";
+            }
+
+            return response;
+        }
+
+        // Admin tạo nhiều lectures cùng lúc với cấu trúc cha-con (Bulk Create)
+        // RLS: lectures_policy_admin_all sẽ check permission Admin.Lesson.Manage khi INSERT
+        public async Task<ServiceResponse<BulkCreateLecturesResponseDto>> AdminBulkCreateLectures(BulkCreateLecturesDto bulkCreateDto)
         {
             var response = new ServiceResponse<BulkCreateLecturesResponseDto>
             {
                 Data = new BulkCreateLecturesResponseDto()
             };
 
-            _logger.LogInformation("Starting BulkCreateLecturesAsync for ModuleId: {ModuleId}, TotalLectures: {Count}",
+            _logger.LogInformation("Admin đang bulk create lectures. ModuleId: {ModuleId}, TotalLectures: {Count}",
                 bulkCreateDto.ModuleId, bulkCreateDto.Lectures.Count);
 
             try
@@ -478,7 +625,260 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in BulkCreateLecturesAsync");
+                _logger.LogError(ex, "Error in AdminBulkCreateLectures");
+                response.Success = false;
+                response.Message = "Có lỗi xảy ra khi tạo bulk lectures";
+                response.Data.Errors.Add(ex.Message);
+            }
+
+            return response;
+        }
+
+        // Teacher tạo nhiều lectures cùng lúc với cấu trúc cha-con (Bulk Create)
+        // RLS: lectures_policy_teacher_all_own sẽ check module ownership khi INSERT
+        // Defense in depth: Check ownership ở service layer để có error message rõ ràng
+        public async Task<ServiceResponse<BulkCreateLecturesResponseDto>> TeacherBulkCreateLectures(BulkCreateLecturesDto bulkCreateDto, int teacherId)
+        {
+            var response = new ServiceResponse<BulkCreateLecturesResponseDto>
+            {
+                Data = new BulkCreateLecturesResponseDto()
+            };
+
+            _logger.LogInformation("Teacher {TeacherId} đang bulk create lectures. ModuleId: {ModuleId}, TotalLectures: {Count}",
+                teacherId, bulkCreateDto.ModuleId, bulkCreateDto.Lectures.Count);
+
+            try
+            {
+                // RLS đã filter modules theo TeacherId (chỉ modules của teacher này)
+                // Nếu module không tồn tại hoặc không thuộc về teacher → RLS sẽ filter → module == null
+                var module = await _moduleRepository.GetByIdAsync(bulkCreateDto.ModuleId);
+                if (module == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy module hoặc bạn không có quyền truy cập";
+                    response.Data.Errors.Add("Module not found or access denied");
+                    return response;
+                }
+
+                // Defense in depth: Check ownership ở service layer (RLS cũng sẽ block nếu không đúng)
+                var lesson = await _lessonRepository.GetLessonById(module.LessonId);
+                if (lesson == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài học";
+                    response.Data.Errors.Add("Lesson not found");
+                    return response;
+                }
+
+                var course = await _courseRepository.GetCourseById(lesson.CourseId);
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    response.Data.Errors.Add("Course not found");
+                    return response;
+                }
+
+                if (!course.TeacherId.HasValue || course.TeacherId.Value != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền tạo lecture trong module này";
+                    response.Data.Errors.Add("Access denied");
+                    _logger.LogWarning("Teacher {TeacherId} attempted to bulk create lectures in module {ModuleId}, course {CourseId} owned by {OwnerId}",
+                        teacherId, bulkCreateDto.ModuleId, lesson.CourseId, course.TeacherId);
+                    return response;
+                }
+
+                // Validation: Check if module exists by trying to get existing lectures
+                var existingLectures = await _lectureRepository.GetByModuleIdAsync(bulkCreateDto.ModuleId);
+                
+                _logger.LogInformation("Found {Count} existing lectures in module {ModuleId}", 
+                    existingLectures.Count, bulkCreateDto.ModuleId);
+
+                // Validation: Check for duplicate TempIds
+                var tempIds = bulkCreateDto.Lectures.Select(l => l.TempId).ToList();
+                var duplicates = tempIds.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+                if (duplicates.Any())
+                {
+                    response.Success = false;
+                    response.Message = $"TempId bị trùng lặp: {string.Join(", ", duplicates)}";
+                    response.Data.Errors.Add($"TempId bị trùng lặp: {string.Join(", ", duplicates)}");
+                    return response;
+                }
+
+                // Validation: Check if all ParentTempIds reference valid TempIds
+                var invalidParents = bulkCreateDto.Lectures
+                    .Where(l => !string.IsNullOrEmpty(l.ParentTempId) && !tempIds.Contains(l.ParentTempId))
+                    .Select(l => l.TempId)
+                    .ToList();
+
+                if (invalidParents.Any())
+                {
+                    response.Success = false;
+                    response.Message = $"ParentTempId không hợp lệ cho các lecture: {string.Join(", ", invalidParents)}";
+                    response.Data.Errors.Add($"ParentTempId không hợp lệ: {string.Join(", ", invalidParents)}");
+                    return response;
+                }
+
+                // Map TempId → LectureEntity (chưa có ID thật)
+                var tempIdToLecture = new Dictionary<string, Lecture>();
+                var tempIdToMediaKey = new Dictionary<string, string>(); // Track committed media keys for rollback
+                var committedMediaKeys = new List<string>(); // For cleanup on error
+
+                // Step 1: Process media uploads first (commit from temp to real)
+                foreach (var lectureNode in bulkCreateDto.Lectures)
+                {
+                    string? committedMediaKey = null;
+
+                    if (!string.IsNullOrWhiteSpace(lectureNode.MediaTempKey))
+                    {
+                        var mediaResult = await _minioFileStorage.CommitFileAsync(
+                            lectureNode.MediaTempKey,
+                            LectureMediaBucket,
+                            LectureMediaFolder
+                        );
+
+                        if (!mediaResult.Success || string.IsNullOrWhiteSpace(mediaResult.Data))
+                        {
+                            _logger.LogError("Failed to commit media for TempId: {TempId}, Error: {Error}",
+                                lectureNode.TempId, mediaResult.Message);
+
+                            // Rollback all previously committed media
+                            foreach (var key in committedMediaKeys)
+                            {
+                                await _minioFileStorage.DeleteFileAsync(key, LectureMediaBucket);
+                            }
+
+                            response.Success = false;
+                            response.Message = $"Không thể lưu media cho lecture '{lectureNode.Title}': {mediaResult.Message}";
+                            response.Data.Errors.Add($"Media upload failed for {lectureNode.TempId}");
+                            return response;
+                        }
+
+                        committedMediaKey = mediaResult.Data;
+                        committedMediaKeys.Add(committedMediaKey);
+                        tempIdToMediaKey[lectureNode.TempId] = committedMediaKey;
+                    }
+
+                    // Create Lecture entity
+                    var lecture = new Lecture
+                    {
+                        ModuleId = bulkCreateDto.ModuleId,
+                        OrderIndex = lectureNode.OrderIndex,
+                        NumberingLabel = lectureNode.NumberingLabel,
+                        Title = lectureNode.Title,
+                        Type = lectureNode.Type,
+                        MarkdownContent = lectureNode.MarkdownContent,
+                        MediaKey = committedMediaKey,
+                        MediaType = lectureNode.MediaType,
+                        MediaSize = lectureNode.MediaSize,
+                        Duration = lectureNode.Duration,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        ParentLectureId = null // Will be set after parents are created
+                    };
+
+                    // Render HTML from Markdown if present
+                    if (!string.IsNullOrEmpty(lecture.MarkdownContent))
+                    {
+                        lecture.RenderedHtml = ConvertMarkdownToHtml(lecture.MarkdownContent);
+                    }
+
+                    tempIdToLecture[lectureNode.TempId] = lecture;
+                }
+
+                // Step 2: Topological sort to create parents before children
+                var sortedLectures = TopologicalSort(bulkCreateDto.Lectures);
+                if (sortedLectures == null)
+                {
+                    // Rollback media
+                    foreach (var key in committedMediaKeys)
+                    {
+                        await _minioFileStorage.DeleteFileAsync(key, LectureMediaBucket);
+                    }
+
+                    response.Success = false;
+                    response.Message = "Phát hiện circular dependency trong cấu trúc cha-con";
+                    response.Data.Errors.Add("Circular dependency detected");
+                    return response;
+                }
+
+                // Step 3: Create lectures in order (parents first) using transaction
+                var tempIdToRealId = new Dictionary<string, int>();
+
+                try
+                {
+                    foreach (var lectureNode in sortedLectures)
+                    {
+                        var lecture = tempIdToLecture[lectureNode.TempId];
+
+                        // Set ParentLectureId if parent exists
+                        if (!string.IsNullOrEmpty(lectureNode.ParentTempId))
+                        {
+                            if (tempIdToRealId.ContainsKey(lectureNode.ParentTempId))
+                            {
+                                lecture.ParentLectureId = tempIdToRealId[lectureNode.ParentTempId];
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException(
+                                    $"Parent lecture with TempId '{lectureNode.ParentTempId}' has not been created yet");
+                            }
+                        }
+
+                        // Save to database
+                        var createdLecture = await _lectureRepository.CreateAsync(lecture);
+                        tempIdToRealId[lectureNode.TempId] = createdLecture.LectureId;
+
+                        // Map to DTO for response
+                        var lectureDto = _mapper.Map<LectureDto>(createdLecture);
+                        if (!string.IsNullOrWhiteSpace(lectureDto.MediaUrl))
+                        {
+                            lectureDto.MediaUrl = BuildPublicUrl.BuildURL(LectureMediaBucket, lectureDto.MediaUrl);
+                        }
+
+                        response.Data.CreatedLectures[lectureNode.TempId] = lectureDto;
+                        response.Data.TotalCreated++;
+
+                        _logger.LogInformation("Created lecture with TempId: {TempId}, RealId: {RealId}",
+                            lectureNode.TempId, createdLecture.LectureId);
+                    }
+
+                    response.Success = true;
+                    response.Message = $"Tạo thành công {response.Data.TotalCreated} lectures";
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error during bulk create");
+
+                    // Rollback: Delete all committed media files
+                    foreach (var key in committedMediaKeys)
+                    {
+                        try
+                        {
+                            await _minioFileStorage.DeleteFileAsync(key, LectureMediaBucket);
+                        }
+                        catch (Exception cleanupEx)
+                        {
+                            _logger.LogWarning(cleanupEx, "Failed to cleanup media file: {Key}", key);
+                        }
+                    }
+
+                    // Note: Database rollback is handled by transaction (if using one)
+                    // If not using explicit transaction, created lectures will remain in DB
+                    response.Success = false;
+                    response.Message = "Lỗi database khi tạo lectures. Đã rollback media files.";
+                    response.Data.Errors.Add($"Database error: {dbEx.Message}");
+                    return response;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in TeacherBulkCreateLectures");
                 response.Success = false;
                 response.Message = "Có lỗi xảy ra khi tạo bulk lectures";
                 response.Data.Errors.Add(ex.Message);
@@ -525,8 +925,10 @@ namespace LearningEnglish.Application.Service
             return sorted;
         }
 
-        // + Cập nhật lecture
-        public async Task<ServiceResponse<LectureDto>> UpdateLectureAsync(int lectureId, UpdateLectureDto updateLectureDto, int updatedByUserId)
+        // Cập nhật lecture
+        // RLS: lectures_policy_* sẽ filter lectures theo role/permission khi UPDATE
+        // Nếu lecture không tồn tại hoặc không có quyền → RLS sẽ filter → lecture == null
+        public async Task<ServiceResponse<LectureDto>> UpdateLecture(int lectureId, UpdateLectureDto updateLectureDto)
         {
             var response = new ServiceResponse<LectureDto>();
 
@@ -656,8 +1058,12 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // + Xóa lecture
-        public async Task<ServiceResponse<bool>> DeleteLectureAsync(int lectureId, int deletedByUserId)
+        // Xóa lecture
+        // RLS: lectures_policy_* sẽ filter lectures theo role/permission khi DELETE
+        // - Admin: Có thể xóa tất cả lectures (có permission)
+        // - Teacher: Chỉ xóa được lectures của own courses
+        // - Student: Không có quyền DELETE
+        public async Task<ServiceResponse<bool>> DeleteLecture(int lectureId)
         {
             var response = new ServiceResponse<bool>();
 
@@ -702,90 +1108,11 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // + Cập nhật lecture với authorization
-        public async Task<ServiceResponse<LectureDto>> UpdateLectureWithAuthorizationAsync(int lectureId, UpdateLectureDto updateLectureDto, int userId, string userRole)
-        {
-            var response = new ServiceResponse<LectureDto>();
-
-            try
-            {
-                // Admin có thể cập nhật tất cả
-                if (userRole == "Admin")
-                {
-                    return await UpdateLectureAsync(lectureId, updateLectureDto, userId);
-                }
-
-                // Teacher chỉ có thể cập nhật lecture của mình
-                if (userRole == "Teacher")
-                {
-                    var hasPermission = await CheckTeacherLecturePermission(lectureId, userId);
-                    if (!hasPermission)
-                    {
-                        response.Success = false;
-                        response.Message = "Bạn không có quyền cập nhật lecture này";
-                        return response;
-                    }
-
-                    return await UpdateLectureAsync(lectureId, updateLectureDto, userId);
-                }
-
-                response.Success = false;
-                response.Message = "Bạn không có quyền cập nhật lecture";
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi cập nhật lecture với authorization: LectureId={LectureId}, UserId={UserId}, Role={UserRole}", lectureId, userId, userRole);
-                response.Success = false;
-                response.Message = "Có lỗi xảy ra khi cập nhật lecture";
-            }
-
-            return response;
-        }
-
-        // + Xóa lecture với authorization
-        public async Task<ServiceResponse<bool>> DeleteLectureWithAuthorizationAsync(int lectureId, int userId, string userRole)
-        {
-            var response = new ServiceResponse<bool>();
-
-            try
-            {
-                // Admin có thể xóa tất cả
-                if (userRole == "Admin")
-                {
-                    return await DeleteLectureAsync(lectureId, userId);
-                }
-
-                // Teacher chỉ có thể xóa lecture của mình
-                if (userRole == "Teacher")
-                {
-                    var hasPermission = await CheckTeacherLecturePermission(lectureId, userId);
-                    if (!hasPermission)
-                    {
-                        response.Success = false;
-                        response.Message = "Bạn không có quyền xóa lecture này";
-                        return response;
-                    }
-
-                    return await DeleteLectureAsync(lectureId, userId);
-                }
-
-                response.Success = false;
-                response.Message = "Bạn không có quyền xóa lecture";
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi xóa lecture với authorization: LectureId={LectureId}, UserId={UserId}, Role={UserRole}", lectureId, userId, userRole);
-                response.Success = false;
-                response.Message = "Có lỗi xảy ra khi xóa lecture";
-            }
-
-            return response;
-        }
-
-        // + Sắp xếp lại lecture
-        public async Task<ServiceResponse<bool>> ReorderLecturesAsync(List<ReorderLectureDto> reorderDtos, int userId, string userRole)
+        // Sắp xếp lại lecture
+        // RLS: lectures_policy_* sẽ filter lectures theo role/permission khi UPDATE
+        // - Admin: Có thể reorder tất cả lectures (có permission)
+        // - Teacher: Chỉ reorder được lectures của own courses
+        public async Task<ServiceResponse<bool>> ReorderLectures(List<ReorderLectureDto> reorderDtos)
         {
             var response = new ServiceResponse<bool>();
 
@@ -793,15 +1120,10 @@ namespace LearningEnglish.Application.Service
             {
                 foreach (var reorderDto in reorderDtos)
                 {
+                    // RLS đã filter lectures theo role/permission
+                    // Nếu lecture không tồn tại hoặc không có quyền → RLS sẽ filter → lecture == null
                     var lecture = await _lectureRepository.GetByIdAsync(reorderDto.LectureId);
                     if (lecture == null) continue;
-
-                    // Kiểm tra quyền nếu là Teacher
-                    if (userRole == "Teacher")
-                    {
-                        var hasPermission = await CheckTeacherLecturePermission(reorderDto.LectureId, userId);
-                        if (!hasPermission) continue;
-                    }
 
                     lecture.OrderIndex = reorderDto.NewOrderIndex;
                     if (reorderDto.NewParentLectureId.HasValue)
@@ -817,7 +1139,7 @@ namespace LearningEnglish.Application.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi sắp xếp lại lecture: UserId={UserId}, Role={UserRole}", userId, userRole);
+                _logger.LogError(ex, "Lỗi khi sắp xếp lại lecture");
                 response.Success = false;
                 response.Message = "Có lỗi xảy ra khi sắp xếp lại lecture";
             }

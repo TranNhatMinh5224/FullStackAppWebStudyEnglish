@@ -1,7 +1,7 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common;
 
-namespace LearningEnglish.Application.Interface
+namespace LearningEnglish.Application.Interface.Auth
 {
     public interface ILoginService
     {

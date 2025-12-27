@@ -11,6 +11,8 @@ using Microsoft.Extensions.Hosting;
 using LearningEnglish.Infrastructure.Data;
 using LearningEnglish.Application.Mappings;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Auth;
+using LearningEnglish.Application.Interface.AdminManagement;
 using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Application.Service;
 using LearningEnglish.Application.Service.Auth;
@@ -24,6 +26,7 @@ using LearningEnglish.Infrastructure.Services.ExternalProviders;
 using LearningEnglish.Application.Cofigurations;
 using LearningEnglish.Application.Configurations;
 using LearningEnglish.Application.Interface.Services;
+using LearningEnglish.Application.Interface.Services.TeacherPackage;
 using LearningEnglish.Application.Service.EssayGrading;
 using Microsoft.Extensions.Options;
 using Minio;
@@ -219,7 +222,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddScoped<ITemplatePathResolver, TemplatePathResolver>();
 builder.Services.AddScoped<IUserCourseService, UserCourseService>();
-builder.Services.AddScoped<IEnrollmentQueryService, EnrollmentQueryService>();
+builder.Services.AddScoped<IManageUserInCourseService, ManageUserInCourseService>();
 builder.Services.AddScoped<IQuizSectionService, QuizSectionService>();
 builder.Services.AddScoped<IQuizGroupService, QuizGroupService>();
 builder.Services.AddScoped<IQuizService, QuizService>();
@@ -230,6 +233,8 @@ builder.Services.AddScoped<IPronunciationAssessmentService, PronunciationAssessm
 builder.Services.AddScoped<IDictionaryService, DictionaryService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IAdminManagementService, AdminManagementService>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<IInformationUserService, InformationUserService>();
 
 // 🎤 Azure Speech Service for Pronunciation Assessment
 builder.Services.Configure<AzureSpeechOptions>(builder.Configuration.GetSection("AzureSpeech"));

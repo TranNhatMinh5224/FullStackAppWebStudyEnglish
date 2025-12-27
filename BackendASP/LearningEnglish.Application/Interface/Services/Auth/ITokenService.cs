@@ -4,7 +4,7 @@ using LearningEnglish.Domain.Entities;
 using System.Security.Claims;
 
 
-namespace LearningEnglish.Application.Interface
+namespace LearningEnglish.Application.Interface.Auth
 {
     public interface ITokenService
     {
