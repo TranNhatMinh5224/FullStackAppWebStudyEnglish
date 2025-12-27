@@ -120,8 +120,6 @@ namespace LearningEnglish.Application.Service
                 _logger.LogInformation("User {UserId} reviewed flashcard {FlashCardId} with quality {Quality}. Next review: {NextReview}",
                     userId, reviewDto.FlashCardId, reviewDto.Quality, review.NextReviewDate);
 
-                // ❌ Removed auto-complete logic - module completion now handled by StartAndCompleteModuleAsync
-                // Frontend should call POST /api/user/modules/{moduleId}/start when entering module
             }
             catch (Exception ex)
             {
