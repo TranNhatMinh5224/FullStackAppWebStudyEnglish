@@ -33,6 +33,7 @@ namespace LearningEnglish.Application.DTOs
         public bool EmailVerified { get; set; }
         public string Status { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }
+        public List<string> Roles { get; set; } = new();  // Danh sách roles: Student, Teacher, Admin, SuperAdmin
 
         // Streak info
         public StreakDto? Streak { get; set; }
