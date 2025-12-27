@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.ILesson;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.API.Extensions;
 using LearningEnglish.API.Authorization;
+
+// Admin quản lý bài học
 
 namespace LearningEnglish.API.Controller.Admin
 {
@@ -12,16 +15,16 @@ namespace LearningEnglish.API.Controller.Admin
     [Authorize(Roles = "SuperAdmin, ContentAdmin, FinanceAdmin")]
     public class AdminLessonController : ControllerBase
     {
-        private readonly ILessonService _lessonService;
+        private readonly IAdminLessonService _lessonService;
         private readonly ILogger<AdminLessonController> _logger;
 
-        public AdminLessonController(ILessonService lessonService, ILogger<AdminLessonController> logger)
+        public AdminLessonController(IAdminLessonService lessonService, ILogger<AdminLessonController> logger)
         {
             _lessonService = lessonService;
             _logger = logger;
         }
 
-        // POST: api/admin/lessons - Admin tạo bài học (System course)
+        // POST: Admin tạo bài học mới (System course only)
         [HttpPost]
         [RequirePermission("Admin.Lesson.Manage")]
         public async Task<IActionResult> AddLesson(AdminCreateLessonDto dto)
@@ -33,8 +36,7 @@ namespace LearningEnglish.API.Controller.Admin
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/admin/lessons/{lessonId} - Admin xem chi tiết bài học
-        // RLS: lessons_policy_admin_all (Admin có quyền xem tất cả lessons)
+        // GET: Admin xem chi tiết bài học
         [HttpGet("{lessonId}")]
         [RequirePermission("Admin.Lesson.Manage")]
         public async Task<IActionResult> GetLessonById(int lessonId)
@@ -42,13 +44,11 @@ namespace LearningEnglish.API.Controller.Admin
             var adminId = User.GetUserId();
             _logger.LogInformation("Admin {AdminId} đang xem lesson {LessonId}", adminId, lessonId);
 
-            // RLS đã filter: Admin có quyền xem tất cả lessons
             var result = await _lessonService.GetLessonById(lessonId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/admin/lessons/course/{courseId} - Admin xem danh sách lessons theo course
-        // RLS: lessons_policy_admin_all (Admin có quyền xem tất cả lessons)
+        // GET: Admin lấy danh sách bài học theo khóa học
         [HttpGet("course/{courseId}")]
         [RequirePermission("Admin.Lesson.Manage")]
         public async Task<IActionResult> GetListLessonByCourseId(int courseId)
@@ -56,14 +56,11 @@ namespace LearningEnglish.API.Controller.Admin
             var adminId = User.GetUserId();
             _logger.LogInformation("Admin {AdminId} đang xem danh sách lessons của course {CourseId}", adminId, courseId);
 
-            // RLS đã filter: Admin có quyền xem tất cả lessons
-            // userId = null vì Admin không cần progress info
-            var result = await _lessonService.GetListLessonByCourseId(courseId, null);
+            var result = await _lessonService.GetListLessonByCourseId(courseId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // PUT: api/admin/lessons/{lessonId} - Admin cập nhật bài học
-        // RLS: lessons_policy_admin_all (Admin có quyền cập nhật tất cả lessons)
+        // PUT: Admin cập nhật bài học
         [HttpPut("{lessonId}")]
         [RequirePermission("Admin.Lesson.Manage")]
         public async Task<IActionResult> UpdateLesson(int lessonId, [FromBody] UpdateLessonDto dto)
@@ -71,13 +68,11 @@ namespace LearningEnglish.API.Controller.Admin
             var adminId = User.GetUserId();
             _logger.LogInformation("Admin {AdminId} đang cập nhật lesson {LessonId}", adminId, lessonId);
 
-            // RLS đã filter: Admin có quyền cập nhật tất cả lessons
             var result = await _lessonService.UpdateLesson(lessonId, dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // DELETE: api/admin/lessons/{lessonId} - Admin xóa bài học
-        // RLS: lessons_policy_admin_all (Admin có quyền xóa tất cả lessons)
+        // DELETE: Admin xóa bài học
         [HttpDelete("{lessonId}")]
         [RequirePermission("Admin.Lesson.Manage")]
         public async Task<IActionResult> DeleteLesson(int lessonId)
@@ -85,7 +80,6 @@ namespace LearningEnglish.API.Controller.Admin
             var adminId = User.GetUserId();
             _logger.LogInformation("Admin {AdminId} đang xóa lesson {LessonId}", adminId, lessonId);
 
-            // RLS đã filter: Admin có quyền xóa tất cả lessons
             var result = await _lessonService.DeleteLesson(lessonId);
             return result.Success ? NoContent() : StatusCode(result.StatusCode, result);
         }
