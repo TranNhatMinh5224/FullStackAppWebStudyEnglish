@@ -210,7 +210,7 @@ builder.Services.AddScoped<IFlashCardReviewService, FlashCardReviewService>();
 builder.Services.AddScoped<IStreakRepository, StreakRepository>();
 builder.Services.AddScoped<IStreakService, StreakService>();
 
-// Assessment Services (refactored by role)
+// Assessment Services =
 builder.Services.AddScoped<IUserAssessmentService, UserAssessmentService>();
 builder.Services.AddScoped<IAdminAssessmentService, AdminAssessmentService>();
 builder.Services.AddScoped<ITeacherAssessmentService, TeacherAssessmentService>();
@@ -219,7 +219,7 @@ builder.Services.AddScoped<IUserEssayService, UserEssayService>();
 builder.Services.AddScoped<IAdminEssayService, AdminEssayService>();
 builder.Services.AddScoped<ITeacherEssayService, TeacherEssayService>();
 
-// Essay Submission Services (refactored by role)
+// Essay Submission Services 
 builder.Services.AddScoped<IUserEssaySubmissionService, UserEssaySubmissionService>();
 builder.Services.AddScoped<IAdminEssaySubmissionService, AdminEssaySubmissionService>();
 builder.Services.AddScoped<ITeacherEssaySubmissionService, TeacherEssaySubmissionService>();
