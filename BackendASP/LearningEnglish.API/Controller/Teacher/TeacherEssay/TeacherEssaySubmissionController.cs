@@ -25,23 +25,14 @@ namespace LearningEnglish.API.Controller.Teacher
             _gradingService = gradingService;
         }
 
-        // GET: api/teacher/essay-submissions/essay/{essayId}/paged
-        [HttpGet("essay/{essayId}/paged")]
-        public async Task<IActionResult> GetSubmissionsByEssayPaged(
+        // GET: api/teacher/essay-submissions/essay/{essayId} - Lấy danh sách submissions với phân trang
+        [HttpGet("essay/{essayId}")]
+        public async Task<IActionResult> GetSubmissionsByEssay(
             int essayId,
             [FromQuery] PageRequest request)
         {
             var teacherId = User.GetUserId();
             var result = await _essaySubmissionService.GetSubmissionsByEssayIdPagedAsync(essayId, teacherId, request);
-            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
-        }
-
-        // GET: api/teacher/essay-submissions/essay/{essayId}
-        [HttpGet("essay/{essayId}")]
-        public async Task<IActionResult> GetSubmissionsByEssay(int essayId)
-        {
-            var teacherId = User.GetUserId();
-            var result = await _essaySubmissionService.GetSubmissionsByEssayIdAsync(essayId, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -79,7 +70,7 @@ namespace LearningEnglish.API.Controller.Teacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/teacher/essay-submissions/{submissionId}/grade
+        // POST: api/teacher/essay-submissions/{submissionId}/grade - Teacher chấm thủ công (lần đầu hoặc cập nhật)
         [HttpPost("{submissionId}/grade")]
         public async Task<IActionResult> GradeManually(int submissionId, [FromBody] TeacherGradingDto dto)
         {
@@ -88,12 +79,12 @@ namespace LearningEnglish.API.Controller.Teacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // POST: api/teacher/essay-submissions/{submissionId}/grade-manual - Teacher chấm thủ công
-        [HttpPost("{submissionId}/grade-manual")]
-        public async Task<IActionResult> GradeSubmissionManual(int submissionId, [FromBody] ManualGradeDto dto)
+        // PUT: api/teacher/essay-submissions/{submissionId}/grade - Teacher cập nhật lại điểm đã chấm
+        [HttpPut("{submissionId}/grade")]
+        public async Task<IActionResult> UpdateGrade(int submissionId, [FromBody] TeacherGradingDto dto)
         {
             var teacherId = User.GetUserId();
-            var result = await _essaySubmissionService.GradeSubmissionAsync(submissionId, teacherId, dto.Score, dto.Feedback);
+            var result = await _gradingService.UpdateGradeAsync(submissionId, dto, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 

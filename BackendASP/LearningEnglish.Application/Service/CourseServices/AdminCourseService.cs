@@ -1,37 +1,35 @@
 using LearningEnglish.Application.DTOs;
-
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
+
     public class AdminCourseService : IAdminCourseService
     {
         private readonly ICourseRepository _courseRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<AdminCourseService> _logger;
-        private readonly IMinioFileStorage _minioFileStorage;
-
-        // Đặt bucket + folder cho ảnh khóa học
-        private const string CourseImageBucket = "courses";
-        private const string CourseImageFolder = "real";
+        private readonly ICourseImageService _courseImageService;
 
         public AdminCourseService(
             ICourseRepository courseRepository,
             IMapper mapper,
             ILogger<AdminCourseService> logger,
-            IMinioFileStorage minioFileStorage)
+            ICourseImageService courseImageService)
         {
             _courseRepository = courseRepository;
             _mapper = mapper;
             _logger = logger;
-            _minioFileStorage = minioFileStorage;
+            _courseImageService = courseImageService;
         }
 
         // Lấy danh sách loại khóa học (System/Teacher) 
@@ -85,7 +83,7 @@ namespace LearningEnglish.Application.Service
 
                     if (!string.IsNullOrWhiteSpace(course.ImageKey))
                     {
-                        dto.ImageUrl = BuildPublicUrl.BuildURL(CourseImageBucket, course.ImageKey);
+                        dto.ImageUrl = _courseImageService.BuildImageUrl(course.ImageKey);
                         dto.ImageType = course.ImageType;
                     }
                     items.Add(dto);
@@ -132,29 +130,25 @@ namespace LearningEnglish.Application.Service
                     EnrollmentCount = 0
                 };
 
-                string? committedImageKey = null; // Biến lưu trữ key của ảnh đã commit  
+                string? committedImageKey = null;
 
                 // Convert temp file → real file nếu có ImageTempKey
-                if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))  // nếu có ảnh tạm
+                if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))
                 {
-                    var commitResult = await _minioFileStorage.CommitFileAsync(
-                        requestDto.ImageTempKey,
-                        CourseImageBucket,
-                        CourseImageFolder
-                    );
-
-                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data)) // nếu commit không thành công or trả về key rỗng
+                    try
                     {
+                        committedImageKey = await _courseImageService.CommitImageAsync(requestDto.ImageTempKey);
+                        course.ImageKey = committedImageKey;
+                        course.ImageType = requestDto.ImageType;
+                    }
+                    catch (Exception imageEx)
+                    {
+                        _logger.LogError(imageEx, "Failed to commit course image");
                         response.Success = false;
                         response.StatusCode = 400;
                         response.Message = "Không thể lưu ảnh khóa học. Vui lòng thử lại.";
                         return response;
                     }
-
-
-                    committedImageKey = commitResult.Data; // Lưu key ảnh đã commit
-                    course.ImageKey = committedImageKey; // Gán key ảnh cho course
-                    course.ImageType = requestDto.ImageType; // Gán kiểu ảnh cho course
                 }
 
                 try
@@ -165,10 +159,10 @@ namespace LearningEnglish.Application.Service
                 {
                     _logger.LogError(dbEx, "Database error while creating course");
 
-                    // Rollback MinIO file
+                    // Rollback image if DB fails
                     if (committedImageKey != null)
                     {
-                        await _minioFileStorage.DeleteFileAsync(committedImageKey, CourseImageBucket);
+                        await _courseImageService.DeleteImageAsync(committedImageKey);
                     }
 
                     response.Success = false;
@@ -185,10 +179,7 @@ namespace LearningEnglish.Application.Service
                 // Generate URL từ key
                 if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
-                    courseResponseDto.ImageUrl = BuildPublicUrl.BuildURL(
-                        CourseImageBucket,
-                        course.ImageKey
-                    );
+                    courseResponseDto.ImageUrl = _courseImageService.BuildImageUrl(course.ImageKey);
                     courseResponseDto.ImageType = course.ImageType;
                 }
 
@@ -252,24 +243,20 @@ namespace LearningEnglish.Application.Service
                 // Xử lý file ảnh: commit new first
                 if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))
                 {
-                    // Commit ảnh mới
-                    var commitResult = await _minioFileStorage.CommitFileAsync(
-                        requestDto.ImageTempKey,
-                        CourseImageBucket,
-                        CourseImageFolder
-                    );
-
-                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    try
                     {
+                        newImageKey = await _courseImageService.CommitImageAsync(requestDto.ImageTempKey);
+                        course.ImageKey = newImageKey;
+                        course.ImageType = requestDto.ImageType;
+                    }
+                    catch (Exception imageEx)
+                    {
+                        _logger.LogError(imageEx, "Failed to commit new course image");
                         response.Success = false;
                         response.StatusCode = 400;
                         response.Message = "Không thể cập nhật ảnh khóa học.";
                         return response;
                     }
-
-                    newImageKey = commitResult.Data;
-                    course.ImageKey = newImageKey;
-                    course.ImageType = requestDto.ImageType;
                 }
 
                 try
@@ -280,10 +267,10 @@ namespace LearningEnglish.Application.Service
                 {
                     _logger.LogError(dbEx, "Database error while updating course");
 
-                    // Rollback new image
+                    // Rollback new image if DB fails
                     if (newImageKey != null)
                     {
-                        await _minioFileStorage.DeleteFileAsync(newImageKey, CourseImageBucket);
+                        await _courseImageService.DeleteImageAsync(newImageKey);
                     }
 
                     response.Success = false;
@@ -292,17 +279,10 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Delete key ảnh cũ 
+                // Delete old image after successful DB update
                 if (oldImageKey != null && newImageKey != null)
                 {
-                    try
-                    {
-                        await _minioFileStorage.DeleteFileAsync(oldImageKey, CourseImageBucket);
-                    }
-                    catch
-                    {
-                        _logger.LogWarning("Failed to delete old course image: {ImageUrl}", oldImageKey);
-                    }
+                    await _courseImageService.DeleteImageAsync(oldImageKey);
                 }
 
                 var courseResponseDto = _mapper.Map<CourseResponseDto>(course);
@@ -314,13 +294,9 @@ namespace LearningEnglish.Application.Service
                 // Generate URL từ key
                 if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
-                    courseResponseDto.ImageUrl = BuildPublicUrl.BuildURL(
-                        CourseImageBucket,
-                        course.ImageKey
-                    );
+                    courseResponseDto.ImageUrl = _courseImageService.BuildImageUrl(course.ImageKey);
                     courseResponseDto.ImageType = course.ImageType;
                 }
-
 
                 response.StatusCode = 200;
                 response.Data = courseResponseDto;
@@ -361,17 +337,7 @@ namespace LearningEnglish.Application.Service
                 // Xóa ảnh khóa học trên MinIO nếu có
                 if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
-                    try
-                    {
-                        await _minioFileStorage.DeleteFileAsync(
-                            course.ImageKey,
-                            CourseImageBucket
-                        );
-                    }
-                    catch (Exception deleteEx)
-                    {
-                        _logger.LogWarning(deleteEx, "Failed to delete course image: {ImageUrl}", course.ImageKey);
-                    }
+                    await _courseImageService.DeleteImageAsync(course.ImageKey);
                 }
 
                 await _courseRepository.DeleteCourse(courseId);

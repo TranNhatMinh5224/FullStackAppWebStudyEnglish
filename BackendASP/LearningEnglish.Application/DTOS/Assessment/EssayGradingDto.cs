@@ -10,7 +10,6 @@ public class EssayGradingResultDto
     public List<string> Improvements { get; set; } = new();
     public DateTime GradedAt { get; set; }
     public bool GradedByTeacher { get; set; }
-    public decimal? FinalScore { get; set; }
 }
 
 public class GradingBreakdown

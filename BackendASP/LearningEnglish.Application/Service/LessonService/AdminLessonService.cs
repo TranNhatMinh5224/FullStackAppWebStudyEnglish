@@ -1,39 +1,38 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.Lesson;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
+
     public class AdminLessonService : IAdminLessonService
     {
         private readonly ILessonRepository _lessonRepository;
         private readonly IMapper _mapper;
         private readonly ICourseRepository _courseRepository;
         private readonly ILogger<AdminLessonService> _logger;
-        private readonly IMinioFileStorage _minioFileStorage;
-
-        // Đặt bucket + folder cho ảnh lesson
-        private const string LessonImageBucket = "lessons";
-        private const string LessonImageFolder = "real";
+        private readonly ILessonImageService _lessonImageService;
 
         public AdminLessonService(
             ILessonRepository lessonRepository,
             IMapper mapper,
             ILogger<AdminLessonService> logger,
             ICourseRepository courseRepository,
-            IMinioFileStorage minioFileStorage)
+            ILessonImageService lessonImageService)
         {
             _lessonRepository = lessonRepository;
             _mapper = mapper;
             _logger = logger;
             _courseRepository = courseRepository;
-            _minioFileStorage = minioFileStorage;
+            _lessonImageService = lessonImageService;
         }
 
         // Admin thêm Lesson vào Course
@@ -84,23 +83,20 @@ namespace LearningEnglish.Application.Service
                 // Convert temp file → real file nếu có ImageTempKey
                 if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                 {
-                    var commitResult = await _minioFileStorage.CommitFileAsync(
-                        dto.ImageTempKey,
-                        LessonImageBucket,
-                        LessonImageFolder
-                    );
-
-                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    try
                     {
+                        committedImageKey = await _lessonImageService.CommitImageAsync(dto.ImageTempKey);
+                        lesson.ImageKey = committedImageKey;
+                        lesson.ImageType = dto.ImageType ?? "real";
+                    }
+                    catch (Exception imageEx)
+                    {
+                        _logger.LogError(imageEx, "Failed to commit lesson image");
                         response.Success = false;
                         response.StatusCode = 400;
-                        response.Message = commitResult.Message ?? "Không thể commit file";
+                        response.Message = "Không thể lưu ảnh bài học. Vui lòng thử lại.";
                         return response;
                     }
-
-                    committedImageKey = commitResult.Data;
-                    lesson.ImageKey = committedImageKey;
-                    lesson.ImageType = dto.ImageType ?? "real";
                 }
 
                 // Admin có full quyền quản lý lessons
@@ -111,10 +107,7 @@ namespace LearningEnglish.Application.Service
                 // Generate URL từ key
                 if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                 {
-                    lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
-                        LessonImageBucket,
-                        lesson.ImageKey
-                    );
+                    lessonDto.ImageUrl = _lessonImageService.BuildImageUrl(lesson.ImageKey);
                 }
 
                 response.StatusCode = 201;
@@ -160,23 +153,20 @@ namespace LearningEnglish.Application.Service
                 // Xử lý ảnh mới (nếu có)
                 if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                 {
-                    var commitResult = await _minioFileStorage.CommitFileAsync(
-                        dto.ImageTempKey,
-                        LessonImageBucket,
-                        LessonImageFolder
-                    );
-
-                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    try
                     {
+                        newImageKey = await _lessonImageService.CommitImageAsync(dto.ImageTempKey);
+                        lesson.ImageKey = newImageKey;
+                        lesson.ImageType = dto.ImageType ?? "real";
+                    }
+                    catch (Exception imageEx)
+                    {
+                        _logger.LogError(imageEx, "Failed to commit new lesson image");
                         response.Success = false;
                         response.StatusCode = 400;
-                        response.Message = commitResult.Message ?? "Không thể commit file mới";
+                        response.Message = "Không thể lưu ảnh mới. Vui lòng thử lại.";
                         return response;
                     }
-
-                    newImageKey = commitResult.Data;
-                    lesson.ImageKey = newImageKey;
-                    lesson.ImageType = dto.ImageType ?? "real";
                 }
 
                 // Admin có full quyền cập nhật lessons
@@ -185,14 +175,7 @@ namespace LearningEnglish.Application.Service
                 // Xóa ảnh cũ nếu có ảnh mới
                 if (!string.IsNullOrWhiteSpace(oldImageKey) && !string.IsNullOrWhiteSpace(newImageKey))
                 {
-                    try
-                    {
-                        await _minioFileStorage.DeleteFileAsync(oldImageKey, LessonImageBucket);
-                    }
-                    catch (Exception deleteEx)
-                    {
-                        _logger.LogWarning(deleteEx, "Failed to delete old lesson image: {ImageUrl}", oldImageKey);
-                    }
+                    await _lessonImageService.DeleteImageAsync(oldImageKey);
                 }
 
                 var lessonDto = _mapper.Map<LessonDto>(lesson);
@@ -200,10 +183,7 @@ namespace LearningEnglish.Application.Service
                 // Generate URL từ key
                 if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                 {
-                    lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
-                        LessonImageBucket,
-                        lesson.ImageKey
-                    );
+                    lessonDto.ImageUrl = _lessonImageService.BuildImageUrl(lesson.ImageKey);
                 }
 
                 response.StatusCode = 200;
@@ -241,17 +221,7 @@ namespace LearningEnglish.Application.Service
                 // Xóa ảnh lesson trên MinIO nếu có
                 if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                 {
-                    try
-                    {
-                        await _minioFileStorage.DeleteFileAsync(
-                            lesson.ImageKey,
-                            LessonImageBucket
-                        );
-                    }
-                    catch (Exception deleteEx)
-                    {
-                        _logger.LogWarning(deleteEx, "Failed to delete lesson image: {ImageUrl}", lesson.ImageKey);
-                    }
+                    await _lessonImageService.DeleteImageAsync(lesson.ImageKey);
                 }
 
                 await _lessonRepository.DeleteLesson(lessonId);
@@ -290,8 +260,7 @@ namespace LearningEnglish.Application.Service
                 // Generate URL từ key
                 if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                 {
-                    lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
-                        LessonImageBucket,
+                    lessonDto.ImageUrl = _lessonImageService.BuildImageUrl(
                         lesson.ImageKey
                     );
                 }
@@ -334,10 +303,7 @@ namespace LearningEnglish.Application.Service
                     // Generate image URL
                     if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                     {
-                        lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
-                            LessonImageBucket,
-                            lesson.ImageKey
-                        );
+                        lessonDto.ImageUrl = _lessonImageService.BuildImageUrl(lesson.ImageKey);
                     }
 
                     lessonDtos.Add(lessonDto);

@@ -1,15 +1,21 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.FlashCard;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service.FlashCardService
 {
+    /// <summary>
+    /// Teacher flashcard command service following SOLID principles
+    /// Uses shared media service to reduce code duplication (DRY)
+    /// </summary>
     public class TeacherFlashCardCommandService : ITeacherFlashCardCommandService
     {
         private readonly IFlashCardRepository _flashCardRepository;
@@ -18,12 +24,7 @@ namespace LearningEnglish.Application.Service.FlashCardService
         private readonly ICourseRepository _courseRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<TeacherFlashCardCommandService> _logger;
-        private readonly IMinioFileStorage? _minioFileStorage;
-
-        // MinIO bucket constants
-        private const string AUDIO_BUCKET_NAME = "flashcard-audio";
-        private const string IMAGE_BUCKET_NAME = "flashcards";
-        private const string FlashCardFolder = "real";
+        private readonly IFlashCardMediaService _flashCardMediaService;
 
         public TeacherFlashCardCommandService(
             IFlashCardRepository flashCardRepository,
@@ -32,7 +33,7 @@ namespace LearningEnglish.Application.Service.FlashCardService
             ICourseRepository courseRepository,
             IMapper mapper,
             ILogger<TeacherFlashCardCommandService> logger,
-            IMinioFileStorage? minioFileStorage = null)
+            IFlashCardMediaService flashCardMediaService)
         {
             _flashCardRepository = flashCardRepository;
             _moduleRepository = moduleRepository;
@@ -40,7 +41,7 @@ namespace LearningEnglish.Application.Service.FlashCardService
             _courseRepository = courseRepository;
             _mapper = mapper;
             _logger = logger;
-            _minioFileStorage = minioFileStorage;
+            _flashCardMediaService = flashCardMediaService;
         }
 
         // Teacher tạo flash card
@@ -86,41 +87,40 @@ namespace LearningEnglish.Application.Service.FlashCardService
                 // Handle image upload
                 if (!string.IsNullOrWhiteSpace(createFlashCardDto.ImageTempKey))
                 {
-                    var imageResult = await _minioFileStorage!.CommitFileAsync(
-                        createFlashCardDto.ImageTempKey,
-                        IMAGE_BUCKET_NAME,
-                        FlashCardFolder
-                    );
-
-                    if (!imageResult.Success || string.IsNullOrWhiteSpace(imageResult.Data))
+                    try
                     {
-                        _logger.LogError("Failed to commit image for flashcard. Error: {Error}", imageResult.Message);
+                        flashCard.ImageKey = await _flashCardMediaService.CommitImageAsync(createFlashCardDto.ImageTempKey);
+                    }
+                    catch (Exception imageEx)
+                    {
+                        _logger.LogError(imageEx, "Failed to commit image for flashcard");
                         response.Success = false;
-                        response.Message = $"Không thể lưu hình ảnh: {imageResult.Message}";
+                        response.Message = "Không thể lưu hình ảnh. Vui lòng thử lại.";
                         return response;
                     }
-
-                    flashCard.ImageKey = imageResult.Data;
                 }
 
                 // Handle audio upload
                 if (!string.IsNullOrWhiteSpace(createFlashCardDto.AudioTempKey))
                 {
-                    var audioResult = await _minioFileStorage!.CommitFileAsync(
-                        createFlashCardDto.AudioTempKey,
-                        AUDIO_BUCKET_NAME,
-                        FlashCardFolder
-                    );
-
-                    if (!audioResult.Success || string.IsNullOrWhiteSpace(audioResult.Data))
+                    try
                     {
-                        _logger.LogError("Failed to commit audio for flashcard. Error: {Error}", audioResult.Message);
+                        flashCard.AudioKey = await _flashCardMediaService.CommitAudioAsync(createFlashCardDto.AudioTempKey);
+                    }
+                    catch (Exception audioEx)
+                    {
+                        _logger.LogError(audioEx, "Failed to commit audio for flashcard");
+                        
+                        // Rollback image if audio fails
+                        if (!string.IsNullOrWhiteSpace(flashCard.ImageKey))
+                        {
+                            await _flashCardMediaService.DeleteImageAsync(flashCard.ImageKey);
+                        }
+                        
                         response.Success = false;
-                        response.Message = $"Không thể lưu audio: {audioResult.Message}";
+                        response.Message = "Không thể lưu audio. Vui lòng thử lại.";
                         return response;
                     }
-
-                    flashCard.AudioKey = audioResult.Data;
                 }
 
                 var createdFlashCard = await _flashCardRepository.CreateAsync(flashCard);
@@ -128,13 +128,13 @@ namespace LearningEnglish.Application.Service.FlashCardService
                 var flashCardDto = _mapper.Map<FlashCardDto>(createdFlashCard);
 
                 // Generate URLs từ keys
-                if (!string.IsNullOrWhiteSpace(flashCardDto.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(createdFlashCard.ImageKey))
                 {
-                    flashCardDto.ImageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, flashCardDto.ImageUrl);
+                    flashCardDto.ImageUrl = _flashCardMediaService.BuildImageUrl(createdFlashCard.ImageKey);
                 }
-                if (!string.IsNullOrWhiteSpace(flashCardDto.AudioUrl))
+                if (!string.IsNullOrWhiteSpace(createdFlashCard.AudioKey))
                 {
-                    flashCardDto.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, flashCardDto.AudioUrl);
+                    flashCardDto.AudioUrl = _flashCardMediaService.BuildAudioUrl(createdFlashCard.AudioKey);
                 }
 
                 response.Success = true;
@@ -195,65 +195,57 @@ namespace LearningEnglish.Application.Service.FlashCardService
                     // Handle image upload
                     if (!string.IsNullOrWhiteSpace(flashCardDto.ImageTempKey))
                     {
-                        var imageResult = await _minioFileStorage!.CommitFileAsync(
-                            flashCardDto.ImageTempKey,
-                            IMAGE_BUCKET_NAME,
-                            FlashCardFolder
-                        );
-
-                        if (!imageResult.Success || string.IsNullOrWhiteSpace(imageResult.Data))
+                        try
                         {
-                            _logger.LogError("Failed to commit image for flashcard {Word}. Error: {Error}", flashCardDto.Word, imageResult.Message);
+                            flashCard.ImageKey = await _flashCardMediaService.CommitImageAsync(flashCardDto.ImageTempKey);
+                            committedImageKeys.Add(flashCard.ImageKey);
+                        }
+                        catch (Exception imageEx)
+                        {
+                            _logger.LogError(imageEx, "Failed to commit image for flashcard {Word}", flashCardDto.Word);
 
                             // Rollback committed images
                             foreach (var key in committedImageKeys)
                             {
-                                await _minioFileStorage.DeleteFileAsync(key, IMAGE_BUCKET_NAME);
+                                await _flashCardMediaService.DeleteImageAsync(key);
                             }
                             foreach (var key in committedAudioKeys)
                             {
-                                await _minioFileStorage.DeleteFileAsync(key, AUDIO_BUCKET_NAME);
+                                await _flashCardMediaService.DeleteAudioAsync(key);
                             }
 
                             response.Success = false;
-                            response.Message = $"Không thể lưu hình ảnh cho '{flashCardDto.Word}': {imageResult.Message}";
+                            response.Message = $"Không thể lưu hình ảnh cho '{flashCardDto.Word}'. Vui lòng thử lại.";
                             return response;
                         }
-
-                        flashCard.ImageKey = imageResult.Data;
-                        committedImageKeys.Add(imageResult.Data);
                     }
 
                     // Handle audio upload
                     if (!string.IsNullOrWhiteSpace(flashCardDto.AudioTempKey))
                     {
-                        var audioResult = await _minioFileStorage!.CommitFileAsync(
-                            flashCardDto.AudioTempKey,
-                            AUDIO_BUCKET_NAME,
-                            FlashCardFolder
-                        );
-
-                        if (!audioResult.Success || string.IsNullOrWhiteSpace(audioResult.Data))
+                        try
                         {
-                            _logger.LogError("Failed to commit audio for flashcard {Word}. Error: {Error}", flashCardDto.Word, audioResult.Message);
+                            flashCard.AudioKey = await _flashCardMediaService.CommitAudioAsync(flashCardDto.AudioTempKey);
+                            committedAudioKeys.Add(flashCard.AudioKey);
+                        }
+                        catch (Exception audioEx)
+                        {
+                            _logger.LogError(audioEx, "Failed to commit audio for flashcard {Word}", flashCardDto.Word);
 
                             // Rollback committed files
                             foreach (var key in committedImageKeys)
                             {
-                                await _minioFileStorage.DeleteFileAsync(key, IMAGE_BUCKET_NAME);
+                                await _flashCardMediaService.DeleteImageAsync(key);
                             }
                             foreach (var key in committedAudioKeys)
                             {
-                                await _minioFileStorage.DeleteFileAsync(key, AUDIO_BUCKET_NAME);
+                                await _flashCardMediaService.DeleteAudioAsync(key);
                             }
 
                             response.Success = false;
-                            response.Message = $"Không thể lưu audio cho '{flashCardDto.Word}': {audioResult.Message}";
+                            response.Message = $"Không thể lưu audio cho '{flashCardDto.Word}'. Vui lòng thử lại.";
                             return response;
                         }
-
-                        flashCard.AudioKey = audioResult.Data;
-                        committedAudioKeys.Add(audioResult.Data);
                     }
 
                     flashCards.Add(flashCard);
@@ -264,13 +256,13 @@ namespace LearningEnglish.Application.Service.FlashCardService
                 var flashCardDtos = createdFlashCards.Select(fc =>
                 {
                     var dto = _mapper.Map<FlashCardDto>(fc);
-                    if (!string.IsNullOrWhiteSpace(dto.ImageUrl))
+                    if (!string.IsNullOrWhiteSpace(fc.ImageKey))
                     {
-                        dto.ImageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, dto.ImageUrl);
+                        dto.ImageUrl = _flashCardMediaService.BuildImageUrl(fc.ImageKey);
                     }
-                    if (!string.IsNullOrWhiteSpace(dto.AudioUrl))
+                    if (!string.IsNullOrWhiteSpace(fc.AudioKey))
                     {
-                        dto.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, dto.AudioUrl);
+                        dto.AudioUrl = _flashCardMediaService.BuildAudioUrl(fc.AudioKey);
                     }
                     return dto;
                 }).ToList();
@@ -336,21 +328,17 @@ namespace LearningEnglish.Application.Service.FlashCardService
                 string? oldImageKey = flashCardToUpdate.ImageKey;
                 if (!string.IsNullOrWhiteSpace(updateFlashCardDto.ImageTempKey))
                 {
-                    var imageResult = await _minioFileStorage!.CommitFileAsync(
-                        updateFlashCardDto.ImageTempKey,
-                        IMAGE_BUCKET_NAME,
-                        FlashCardFolder
-                    );
-
-                    if (!imageResult.Success || string.IsNullOrWhiteSpace(imageResult.Data))
+                    try
                     {
-                        _logger.LogError("Failed to commit image for flashcard update. Error: {Error}", imageResult.Message);
+                        committedImageKey = await _flashCardMediaService.CommitImageAsync(updateFlashCardDto.ImageTempKey);
+                    }
+                    catch (Exception imageEx)
+                    {
+                        _logger.LogError(imageEx, "Failed to commit image for flashcard update");
                         response.Success = false;
-                        response.Message = $"Không thể lưu hình ảnh: {imageResult.Message}";
+                        response.Message = "Không thể lưu hình ảnh. Vui lòng thử lại.";
                         return response;
                     }
-
-                    committedImageKey = imageResult.Data;
                 }
 
                 // Handle audio update
@@ -358,21 +346,24 @@ namespace LearningEnglish.Application.Service.FlashCardService
                 string? oldAudioKey = flashCardToUpdate.AudioKey;
                 if (!string.IsNullOrWhiteSpace(updateFlashCardDto.AudioTempKey))
                 {
-                    var audioResult = await _minioFileStorage!.CommitFileAsync(
-                        updateFlashCardDto.AudioTempKey,
-                        AUDIO_BUCKET_NAME,
-                        FlashCardFolder
-                    );
-
-                    if (!audioResult.Success || string.IsNullOrWhiteSpace(audioResult.Data))
+                    try
                     {
-                        _logger.LogError("Failed to commit audio for flashcard update. Error: {Error}", audioResult.Message);
+                        committedAudioKey = await _flashCardMediaService.CommitAudioAsync(updateFlashCardDto.AudioTempKey);
+                    }
+                    catch (Exception audioEx)
+                    {
+                        _logger.LogError(audioEx, "Failed to commit audio for flashcard update");
+                        
+                        // Rollback new image if audio fails
+                        if (committedImageKey != null && oldImageKey != committedImageKey)
+                        {
+                            await _flashCardMediaService.DeleteImageAsync(committedImageKey);
+                        }
+                        
                         response.Success = false;
-                        response.Message = $"Không thể lưu audio: {audioResult.Message}";
+                        response.Message = "Không thể lưu audio. Vui lòng thử lại.";
                         return response;
                     }
-
-                    committedAudioKey = audioResult.Data;
                 }
 
                 // Update flashcard properties
@@ -385,38 +376,24 @@ namespace LearningEnglish.Application.Service.FlashCardService
                 // Xóa file cũ chỉ sau khi update thành công
                 if (!string.IsNullOrWhiteSpace(oldImageKey) && committedImageKey != null && oldImageKey != committedImageKey)
                 {
-                    try
-                    {
-                        await _minioFileStorage!.DeleteFileAsync(oldImageKey, IMAGE_BUCKET_NAME);
-                    }
-                    catch (Exception deleteEx)
-                    {
-                        _logger.LogWarning(deleteEx, "Failed to delete old flashcard image: {ImageKey}", oldImageKey);
-                    }
+                    await _flashCardMediaService.DeleteImageAsync(oldImageKey);
                 }
 
                 if (!string.IsNullOrWhiteSpace(oldAudioKey) && committedAudioKey != null && oldAudioKey != committedAudioKey)
                 {
-                    try
-                    {
-                        await _minioFileStorage!.DeleteFileAsync(oldAudioKey, AUDIO_BUCKET_NAME);
-                    }
-                    catch (Exception deleteEx)
-                    {
-                        _logger.LogWarning(deleteEx, "Failed to delete old flashcard audio: {AudioKey}", oldAudioKey);
-                    }
+                    await _flashCardMediaService.DeleteAudioAsync(oldAudioKey);
                 }
 
                 var flashCardDto = _mapper.Map<FlashCardDto>(updatedFlashCard);
 
                 // Generate URLs từ keys
-                if (!string.IsNullOrWhiteSpace(flashCardDto.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(updatedFlashCard.ImageKey))
                 {
-                    flashCardDto.ImageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, flashCardDto.ImageUrl);
+                    flashCardDto.ImageUrl = _flashCardMediaService.BuildImageUrl(updatedFlashCard.ImageKey);
                 }
-                if (!string.IsNullOrWhiteSpace(flashCardDto.AudioUrl))
+                if (!string.IsNullOrWhiteSpace(updatedFlashCard.AudioKey))
                 {
-                    flashCardDto.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, flashCardDto.AudioUrl);
+                    flashCardDto.AudioUrl = _flashCardMediaService.BuildAudioUrl(updatedFlashCard.AudioKey);
                 }
 
                 response.Success = true;
@@ -470,21 +447,13 @@ namespace LearningEnglish.Application.Service.FlashCardService
                 // Xóa image từ MinIO nếu có
                 if (!string.IsNullOrWhiteSpace(flashCard.ImageKey))
                 {
-                    var deleteImageResult = await _minioFileStorage!.DeleteFileAsync(flashCard.ImageKey, IMAGE_BUCKET_NAME);
-                    if (!deleteImageResult.Success)
-                    {
-                        _logger.LogWarning("Failed to delete image file {ImageKey} for flashcard {FlashCardId}", flashCard.ImageKey, flashCardId);
-                    }
+                    await _flashCardMediaService.DeleteImageAsync(flashCard.ImageKey);
                 }
 
                 // Xóa audio từ MinIO nếu có
                 if (!string.IsNullOrWhiteSpace(flashCard.AudioKey))
                 {
-                    var deleteAudioResult = await _minioFileStorage!.DeleteFileAsync(flashCard.AudioKey, AUDIO_BUCKET_NAME);
-                    if (!deleteAudioResult.Success)
-                    {
-                        _logger.LogWarning("Failed to delete audio file {AudioKey} for flashcard {FlashCardId}", flashCard.AudioKey, flashCardId);
-                    }
+                    await _flashCardMediaService.DeleteAudioAsync(flashCard.AudioKey);
                 }
 
                 var deleteResult = await _flashCardRepository.DeleteAsync(flashCardId);

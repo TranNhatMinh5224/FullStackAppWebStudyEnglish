@@ -10,5 +10,8 @@ namespace LearningEnglish.Application.Interface
         
         // Admin có thể grade thủ công bất kỳ submission nào
         Task<ServiceResponse<EssayGradingResultDto>> GradeByAdminAsync(int submissionId, TeacherGradingDto dto, CancellationToken cancellationToken = default);
+        
+        // Admin chấm hàng loạt tất cả bài nộp của essay bằng AI
+        Task<ServiceResponse<BatchGradingResultDto>> BatchGradeByAiAsync(int essayId, CancellationToken cancellationToken = default);
     }
 }

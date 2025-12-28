@@ -1,38 +1,43 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.FlashCard;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service.FlashCardService
 {
-        public class TeacherFlashCardQueryService : ITeacherFlashCardQueryService
-        {
-            private readonly IFlashCardRepository _flashCardRepository;
-            private readonly IModuleRepository _moduleRepository;
-            private readonly ICourseRepository _courseRepository;
-            private readonly IMapper _mapper;
-            private readonly ILogger<TeacherFlashCardQueryService> _logger;
-
-        // MinIO bucket constants
-        private const string AUDIO_BUCKET_NAME = "flashcard-audio";
-        private const string IMAGE_BUCKET_NAME = "flashcards";
+    /// <summary>
+    /// Teacher flashcard query service following SOLID principles
+    /// Uses shared media service to reduce code duplication (DRY)
+    /// </summary>
+    public class TeacherFlashCardQueryService : ITeacherFlashCardQueryService
+    {
+        private readonly IFlashCardRepository _flashCardRepository;
+        private readonly IModuleRepository _moduleRepository;
+        private readonly ICourseRepository _courseRepository;
+        private readonly IMapper _mapper;
+        private readonly ILogger<TeacherFlashCardQueryService> _logger;
+        private readonly IFlashCardMediaService _flashCardMediaService;
 
         public TeacherFlashCardQueryService(
             IFlashCardRepository flashCardRepository,
             IModuleRepository moduleRepository,
             ICourseRepository courseRepository,
             IMapper mapper,
-            ILogger<TeacherFlashCardQueryService> logger)
+            ILogger<TeacherFlashCardQueryService> logger,
+            IFlashCardMediaService flashCardMediaService)
         {
             _flashCardRepository = flashCardRepository;
             _moduleRepository = moduleRepository;
             _courseRepository = courseRepository;
             _mapper = mapper;
             _logger = logger;
+            _flashCardMediaService = flashCardMediaService;
         }
 
         // Teacher lấy flashcard theo ID - Teacher có thể xem nếu là owner HOẶC đã enroll
@@ -87,13 +92,13 @@ namespace LearningEnglish.Application.Service.FlashCardService
                 var flashCardDto = _mapper.Map<FlashCardDto>(flashCard);
 
                 // Generate URLs từ keys
-                if (!string.IsNullOrWhiteSpace(flashCardDto.ImageUrl))
+                if (!string.IsNullOrWhiteSpace(flashCard.ImageKey))
                 {
-                    flashCardDto.ImageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, flashCardDto.ImageUrl);
+                    flashCardDto.ImageUrl = _flashCardMediaService.BuildImageUrl(flashCard.ImageKey);
                 }
-                if (!string.IsNullOrWhiteSpace(flashCardDto.AudioUrl))
+                if (!string.IsNullOrWhiteSpace(flashCard.AudioKey))
                 {
-                    flashCardDto.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, flashCardDto.AudioUrl);
+                    flashCardDto.AudioUrl = _flashCardMediaService.BuildAudioUrl(flashCard.AudioKey);
                 }
 
                 response.Success = true;
@@ -169,13 +174,13 @@ namespace LearningEnglish.Application.Service.FlashCardService
                 var flashCardDtos = flashCards.Select(fc =>
                 {
                     var dto = _mapper.Map<ListFlashCardDto>(fc);
-                    if (!string.IsNullOrWhiteSpace(dto.ImageUrl))
+                    if (!string.IsNullOrWhiteSpace(fc.ImageKey))
                     {
-                        dto.ImageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, dto.ImageUrl);
+                        dto.ImageUrl = _flashCardMediaService.BuildImageUrl(fc.ImageKey);
                     }
-                    if (!string.IsNullOrWhiteSpace(dto.AudioUrl))
+                    if (!string.IsNullOrWhiteSpace(fc.AudioKey))
                     {
-                        dto.AudioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, dto.AudioUrl);
+                        dto.AudioUrl = _flashCardMediaService.BuildAudioUrl(fc.AudioKey);
                     }
                     return dto;
                 }).ToList();

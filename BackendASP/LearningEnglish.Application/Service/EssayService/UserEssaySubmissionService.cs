@@ -1,15 +1,19 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
+using LearningEnglish.Application.Common.Prompts;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.Module;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
+  
     public class UserEssaySubmissionService : IUserEssaySubmissionService
     {
         private readonly IEssaySubmissionRepository _essaySubmissionRepository;
@@ -17,16 +21,14 @@ namespace LearningEnglish.Application.Service
         private readonly IAssessmentRepository _assessmentRepository;
         private readonly INotificationRepository _notificationRepository;
         private readonly IModuleProgressService _moduleProgressService;
-        private readonly IMinioFileStorage _minioFileStorage;
+        private readonly IEssayAttachmentService _attachmentService;
         private readonly IGeminiService _geminiService;
+        private readonly IAiResponseParser _responseParser;
         private readonly ICourseRepository _courseRepository;
         private readonly IModuleRepository _moduleRepository;
         private readonly ILessonRepository _lessonRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<UserEssaySubmissionService> _logger;
-
-        private const string AttachmentBucket = "essay-attachments";
-        private const string AttachmentFolder = "real";
 
         public UserEssaySubmissionService(
             IEssaySubmissionRepository essaySubmissionRepository,
@@ -34,8 +36,9 @@ namespace LearningEnglish.Application.Service
             IAssessmentRepository assessmentRepository,
             INotificationRepository notificationRepository,
             IModuleProgressService moduleProgressService,
-            IMinioFileStorage minioFileStorage,
+            IEssayAttachmentService attachmentService,
             IGeminiService geminiService,
+            IAiResponseParser responseParser,
             ICourseRepository courseRepository,
             IModuleRepository moduleRepository,
             ILessonRepository lessonRepository,
@@ -47,8 +50,9 @@ namespace LearningEnglish.Application.Service
             _assessmentRepository = assessmentRepository;
             _notificationRepository = notificationRepository;
             _moduleProgressService = moduleProgressService;
-            _minioFileStorage = minioFileStorage;
+            _attachmentService = attachmentService;
             _geminiService = geminiService;
+            _responseParser = responseParser;
             _courseRepository = courseRepository;
             _moduleRepository = moduleRepository;
             _lessonRepository = lessonRepository;
@@ -159,18 +163,18 @@ namespace LearningEnglish.Application.Service
                 string? attachmentKey = null;
                 if (!string.IsNullOrWhiteSpace(dto.AttachmentTempKey))
                 {
-                    var commit = await _minioFileStorage.CommitFileAsync(
-                        dto.AttachmentTempKey, AttachmentBucket, AttachmentFolder);
-
-                    if (!commit.Success || string.IsNullOrWhiteSpace(commit.Data))
+                    try
                     {
+                        attachmentKey = await _attachmentService.CommitAttachmentAsync(dto.AttachmentTempKey);
+                    }
+                    catch (Exception attachEx)
+                    {
+                        _logger.LogError(attachEx, "Failed to commit essay attachment");
                         response.Success = false;
                         response.StatusCode = 400;
                         response.Message = "Không thể lưu file đính kèm";
                         return response;
                     }
-
-                    attachmentKey = commit.Data;
                 }
 
                 // Tạo submission
@@ -198,8 +202,7 @@ namespace LearningEnglish.Application.Service
                 var dtoResult = _mapper.Map<EssaySubmissionDto>(created);
                 if (!string.IsNullOrWhiteSpace(created.AttachmentKey))
                 {
-                    dtoResult.AttachmentUrl = BuildPublicUrl.BuildURL(
-                        AttachmentBucket, $"{AttachmentFolder}/{created.AttachmentKey}");
+                    dtoResult.AttachmentUrl = _attachmentService.BuildAttachmentUrl(created.AttachmentKey);
                 }
 
                 response.Success = true;
@@ -246,8 +249,7 @@ namespace LearningEnglish.Application.Service
                 var dto = _mapper.Map<EssaySubmissionDto>(submission);
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
-                    dto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                        AttachmentBucket, $"{AttachmentFolder}/{submission.AttachmentKey}");
+                    dto.AttachmentUrl = _attachmentService.BuildAttachmentUrl(submission.AttachmentKey);
                 }
 
                 response.Success = true;
@@ -289,8 +291,7 @@ namespace LearningEnglish.Application.Service
                 var dto = _mapper.Map<EssaySubmissionDto>(submission);
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
-                    dto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                        AttachmentBucket, $"{AttachmentFolder}/{submission.AttachmentKey}");
+                    dto.AttachmentUrl = _attachmentService.BuildAttachmentUrl(submission.AttachmentKey);
                 }
 
                 response.Success = true;
@@ -338,8 +339,7 @@ namespace LearningEnglish.Application.Service
                 // Xóa attachment cũ nếu yêu cầu
                 if (dto.RemoveAttachment && !string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
-                    await _minioFileStorage.DeleteFileAsync(
-                        $"{AttachmentFolder}/{submission.AttachmentKey}", AttachmentBucket);
+                    await _attachmentService.DeleteAttachmentAsync(submission.AttachmentKey);
                     submission.AttachmentKey = null;
                     submission.AttachmentType = null;
                 }
@@ -347,19 +347,20 @@ namespace LearningEnglish.Application.Service
                 // Commit attachment mới
                 if (!string.IsNullOrWhiteSpace(dto.AttachmentTempKey))
                 {
-                    var commit = await _minioFileStorage.CommitFileAsync(
-                        dto.AttachmentTempKey, AttachmentBucket, AttachmentFolder);
-
-                    if (!commit.Success)
+                    try
                     {
+                        var attachmentKey = await _attachmentService.CommitAttachmentAsync(dto.AttachmentTempKey);
+                        submission.AttachmentKey = attachmentKey;
+                        submission.AttachmentType = dto.AttachmentType;
+                    }
+                    catch (Exception attachEx)
+                    {
+                        _logger.LogError(attachEx, "Failed to commit new essay attachment");
                         response.Success = false;
                         response.StatusCode = 400;
                         response.Message = "Không thể lưu file mới";
                         return response;
                     }
-
-                    submission.AttachmentKey = commit.Data;
-                    submission.AttachmentType = dto.AttachmentType;
                 }
 
                 submission.TextContent = dto.TextContent;
@@ -369,8 +370,7 @@ namespace LearningEnglish.Application.Service
                 var result = _mapper.Map<EssaySubmissionDto>(updated);
                 if (!string.IsNullOrWhiteSpace(updated.AttachmentKey))
                 {
-                    result.AttachmentUrl = BuildPublicUrl.BuildURL(
-                        AttachmentBucket, $"{AttachmentFolder}/{updated.AttachmentKey}");
+                    result.AttachmentUrl = _attachmentService.BuildAttachmentUrl(updated.AttachmentKey);
                 }
 
                 response.Success = true;
@@ -418,8 +418,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
-                    await _minioFileStorage.DeleteFileAsync(
-                        $"{AttachmentFolder}/{submission.AttachmentKey}", AttachmentBucket);
+                    await _attachmentService.DeleteAttachmentAsync(submission.AttachmentKey);
                 }
 
                 response.Success = true;
@@ -484,6 +483,25 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // 2.5. Kiểm tra Course Type - CHỈ cho phép System Course
+                var course = essay.Assessment?.Module?.Lesson?.Course;
+                if (course == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy khóa học";
+                    return response;
+                }
+
+                if (course.Type != CourseType.System)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Chỉ khóa học hệ thống mới được yêu cầu AI chấm điểm tự động. Vui lòng liên hệ giáo viên để được chấm điểm.";
+                    _logger.LogWarning("⚠️ User {UserId} attempted to request AI grading for Teacher Course {CourseId}", userId, course.CourseId);
+                    return response;
+                }
+
                 // 3. Validate submission status
                 if (submission.Status == SubmissionStatus.Graded && submission.Score != null)
                 {
@@ -502,9 +520,9 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 6. Build prompt
+                // 6. Build prompt using centralized prompt builder
                 var maxScore = assessment.TotalPoints;
-                var prompt = BuildGradingPrompt(
+                var prompt = EssayGradingPrompt.BuildPrompt(
                     essay.Title,
                     essay.Description ?? string.Empty,
                     submission.TextContent,
@@ -521,8 +539,8 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 8. Parse AI response
-                var aiResult = ParseAiResponse(geminiResponse.Content);
+                // 8. Parse AI response using centralized parser
+                var aiResult = _responseParser.ParseGradingResponse(geminiResponse.Content);
 
                 if (aiResult.Score > maxScore)
                 {
@@ -551,8 +569,7 @@ namespace LearningEnglish.Application.Service
                     Strengths = aiResult.Strengths,
                     Improvements = aiResult.Improvements,
                     GradedAt = DateTime.UtcNow,
-                    GradedByTeacher = false,
-                    FinalScore = aiResult.Score
+                    GradedByTeacher = false
                 };
 
                 response.Success = true;
@@ -571,81 +588,5 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        // Helper: Build grading prompt
-        private string BuildGradingPrompt(string title, string description, string studentAnswer, decimal maxScore)
-        {
-            return $@"
-You are an English teacher grading an essay. Please evaluate the following essay and provide detailed feedback.
-
-Essay Title: {title}
-Essay Instructions: {description}
-Max Score: {maxScore}
-
-Student's Answer:
-{studentAnswer}
-
-Please provide your evaluation in the following JSON format:
-{{
-    ""score"": <number between 0 and {maxScore}>,
-    ""feedback"": ""<overall feedback>"",
-    ""breakdown"": {{
-        ""contentScore"": <number>,
-        ""languageScore"": <number>,
-        ""organizationScore"": <number>,
-        ""mechanicsScore"": <number>
-    }},
-    ""strengths"": [""<strength1>"", ""<strength2>""],
-    ""improvements"": [""<improvement1>"", ""<improvement2>""]
-}}
-
-Focus on:
-- Content relevance and depth
-- Language accuracy and vocabulary
-- Organization and structure
-- Grammar and mechanics
-";
-        }
-
-        // Helper: Parse AI response
-        private AiGradingResult ParseAiResponse(string content)
-        {
-            try
-            {
-                // Extract JSON from markdown code block if present
-                var jsonContent = content.Trim();
-                if (jsonContent.Contains("```json"))
-                {
-                    var startIndex = jsonContent.IndexOf("```json") + 7;
-                    var endIndex = jsonContent.LastIndexOf("```");
-                    jsonContent = jsonContent.Substring(startIndex, endIndex - startIndex).Trim();
-                }
-                else if (jsonContent.Contains("```"))
-                {
-                    var startIndex = jsonContent.IndexOf("```") + 3;
-                    var endIndex = jsonContent.LastIndexOf("```");
-                    jsonContent = jsonContent.Substring(startIndex, endIndex - startIndex).Trim();
-                }
-
-                var result = System.Text.Json.JsonSerializer.Deserialize<AiGradingResult>(jsonContent, new System.Text.Json.JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                return result ?? new AiGradingResult
-                {
-                    Score = 0,
-                    Feedback = "Error parsing AI response"
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error parsing AI response: {Content}", content);
-                return new AiGradingResult
-                {
-                    Score = 0,
-                    Feedback = "Error parsing AI response. Please grade manually."
-                };
-            }
-        }
     }
 }

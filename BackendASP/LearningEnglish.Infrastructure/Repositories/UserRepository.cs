@@ -1,4 +1,5 @@
 using LearningEnglish.Application.Common.Pagination;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
@@ -107,13 +108,13 @@ namespace LearningEnglish.Infrastructure.Repositories
             }
 
             // Check if user already has Teacher role
-            if (user.Roles.Any(r => r.Name == "Teacher"))
+            if (user.Roles.Any(r => r.Name == RoleConstants.Teacher))
             {
                 return true; // Already has Teacher role
             }
 
             // Get Teacher role by name
-            var teacherRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Teacher");
+            var teacherRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == RoleConstants.Teacher);
             if (teacherRole == null)
             {
                 throw new InvalidOperationException("Teacher role not found in database");
@@ -137,9 +138,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             }
 
             // Kiểm tra có role Admin không (SuperAdmin, ContentAdmin, FinanceAdmin)
-            return user.Roles.Any(r => r.Name.Equals("SuperAdmin", StringComparison.CurrentCultureIgnoreCase) ||
-                                      r.Name.Equals("ContentAdmin", StringComparison.CurrentCultureIgnoreCase) ||
-                                      r.Name.Equals("FinanceAdmin", StringComparison.CurrentCultureIgnoreCase));
+            return user.Roles.Any(r => RoleConstants.IsAdminRole(r.Name));
         }
 
         // Kiểm tra user có role Teacher trong database
@@ -155,7 +154,7 @@ namespace LearningEnglish.Infrastructure.Repositories
             }
 
             // Kiểm tra có role Teacher không (check theo tên role để linh hoạt)
-            return user.Roles.Any(r => r.Name.Equals("Teacher", StringComparison.OrdinalIgnoreCase));
+            return user.Roles.Any(r => r.Name.Equals(RoleConstants.Teacher, StringComparison.OrdinalIgnoreCase));
         }
 
         // Lấy danh sách teacher

@@ -1,7 +1,7 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Application.Common;
-using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
@@ -16,23 +16,22 @@ namespace LearningEnglish.Application.Service
         private readonly ICourseRepository _courseRepository;
         private readonly ICourseProgressRepository _courseProgressRepository;
         private readonly ILogger<ManageUserInCourseService> _logger;
-
-        // Bucket + folder cho avatar người dùng
-        private const string AvatarBucket = "avatars";
-        private const string AvatarFolder = "real";
+        private readonly IAvatarService _avatarService;
 
         public ManageUserInCourseService(
             IUserRepository userRepository,
             IMapper mapper,
             ICourseRepository courseRepository,
             ICourseProgressRepository courseProgressRepository,
-            ILogger<ManageUserInCourseService> logger)
+            ILogger<ManageUserInCourseService> logger,
+            IAvatarService avatarService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _courseRepository = courseRepository;
             _courseProgressRepository = courseProgressRepository;
             _logger = logger;
+            _avatarService = avatarService;
         }
 
 
@@ -180,7 +179,7 @@ namespace LearningEnglish.Application.Service
                 // Build avatar URL nếu có
                 if (!string.IsNullOrWhiteSpace(student.AvatarKey))
                 {
-                    studentDetailDto.AvatarUrl = BuildPublicUrl.BuildURL(AvatarBucket, student.AvatarKey);
+                    studentDetailDto.AvatarUrl = _avatarService.BuildAvatarUrl(student.AvatarKey);
                 }
 
                 // Thêm thông tin tiến độ nếu có
@@ -274,7 +273,7 @@ namespace LearningEnglish.Application.Service
                 // Build avatar URL nếu có
                 if (!string.IsNullOrWhiteSpace(student.AvatarKey))
                 {
-                    studentDetailDto.AvatarUrl = BuildPublicUrl.BuildURL(AvatarBucket, student.AvatarKey);
+                    studentDetailDto.AvatarUrl = _avatarService.BuildAvatarUrl(student.AvatarKey);
                 }
 
                 // Thêm thông tin tiến độ nếu có

@@ -1,9 +1,12 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
+using LearningEnglish.Application.Common.Prompts;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
@@ -15,21 +18,21 @@ namespace LearningEnglish.Application.Service
         private readonly IEssayRepository _essayRepository;
         private readonly IAssessmentRepository _assessmentRepository;
         private readonly IGeminiService _geminiService;
-        private readonly IMinioFileStorage _minioFileStorage;
+        private readonly IAiResponseParser _responseParser;
+        private readonly IEssayAttachmentService _attachmentService;
+        private readonly IAvatarService _avatarService;
         private readonly IMapper _mapper;
         private readonly ILogger<TeacherEssaySubmissionService> _logger;
 
-        private const string AttachmentBucket = "essay-attachments";
-        private const string AttachmentFolder = "real";
-        private const string AvatarBucket = "avatars";
-        private const string AvatarFolder = "real";
 
         public TeacherEssaySubmissionService(
             IEssaySubmissionRepository essaySubmissionRepository,
             IEssayRepository essayRepository,
             IAssessmentRepository assessmentRepository,
             IGeminiService geminiService,
-            IMinioFileStorage minioFileStorage,
+            IAiResponseParser responseParser,
+            IEssayAttachmentService attachmentService,
+            IAvatarService avatarService,
             IMapper mapper,
             ILogger<TeacherEssaySubmissionService> logger)
         {
@@ -37,7 +40,9 @@ namespace LearningEnglish.Application.Service
             _essayRepository = essayRepository;
             _assessmentRepository = assessmentRepository;
             _geminiService = geminiService;
-            _minioFileStorage = minioFileStorage;
+            _responseParser = responseParser;
+            _attachmentService = attachmentService;
+            _avatarService = avatarService;
             _mapper = mapper;
             _logger = logger;
         }
@@ -91,9 +96,7 @@ namespace LearningEnglish.Application.Service
                     var submission = submissions.FirstOrDefault(s => s.SubmissionId == submissionDto.SubmissionId);
                     if (submission?.User != null && !string.IsNullOrWhiteSpace(submission.User.AvatarKey))
                     {
-                        submissionDto.UserAvatarUrl = BuildPublicUrl.BuildURL(
-                            AvatarBucket,
-                            $"{AvatarFolder}/{submission.User.AvatarKey}");
+                        submissionDto.UserAvatarUrl = _avatarService.BuildAvatarUrl(submission.User.AvatarKey);
                     }
                 }
 
@@ -107,53 +110,6 @@ namespace LearningEnglish.Application.Service
                     PageNumber = request.PageNumber,
                     PageSize = request.PageSize
                 };
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách submission theo Essay {EssayId}", essayId);
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi hệ thống khi lấy danh sách submission";
-                return response;
-            }
-        }
-
-        public async Task<ServiceResponse<List<EssaySubmissionListDto>>> GetSubmissionsByEssayIdAsync(
-            int essayId,
-            int teacherId)
-        {
-            var response = new ServiceResponse<List<EssaySubmissionListDto>>();
-
-            try
-            {
-                if (!await ValidateEssayOwnershipAsync(essayId, teacherId))
-                {
-                    response.Success = false;
-                    response.StatusCode = 403;
-                    response.Message = "Bạn không có quyền xem submissions của essay này";
-                    return response;
-                }
-
-                var submissions = await _essaySubmissionRepository.GetSubmissionsByEssayIdAsync(essayId);
-                var submissionListDtos = _mapper.Map<List<EssaySubmissionListDto>>(submissions);
-
-                foreach (var submissionDto in submissionListDtos)
-                {
-                    var submission = submissions.FirstOrDefault(s => s.SubmissionId == submissionDto.SubmissionId);
-                    if (submission?.User != null && !string.IsNullOrWhiteSpace(submission.User.AvatarKey))
-                    {
-                        submissionDto.UserAvatarUrl = BuildPublicUrl.BuildURL(
-                            AvatarBucket,
-                            $"{AvatarFolder}/{submission.User.AvatarKey}");
-                    }
-                }
-
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = $"Lấy danh sách {submissionListDtos.Count} submission thành công";
-                response.Data = submissionListDtos;
 
                 return response;
             }
@@ -197,9 +153,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
-                    submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                        AttachmentBucket,
-                        $"{AttachmentFolder}/{submission.AttachmentKey}");
+                    submissionDto.AttachmentUrl = _attachmentService.BuildAttachmentUrl(submission.AttachmentKey);
                 }
 
                 response.Success = true;
@@ -252,7 +206,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                var downloadResult = await _minioFileStorage.DownloadFileAsync(submission.AttachmentKey, AttachmentBucket);
+                var downloadResult = await _attachmentService.DownloadAttachmentAsync(submission.AttachmentKey);
                 if (!downloadResult.Success || downloadResult.Data == null)
                 {
                     response.Success = false;
@@ -334,11 +288,11 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Update score (ghi đè trực tiếp, không dùng TeacherScore)
-                submission.Score = score;
-                submission.Feedback = feedback;
-                submission.GradedAt = DateTime.UtcNow;
+                // Update score (dùng TeacherScore để override AI score)
+                submission.TeacherScore = score;
+                submission.TeacherFeedback = feedback;
                 submission.GradedByTeacherId = teacherId;
+                submission.TeacherGradedAt = DateTime.UtcNow;
                 submission.Status = SubmissionStatus.Graded;
 
                 await _essaySubmissionRepository.UpdateSubmissionAsync(submission);
@@ -416,8 +370,13 @@ namespace LearningEnglish.Application.Service
                 {
                     try
                     {
-                        // Build prompt
-                        var prompt = BuildGradingPrompt(essay.Title, essay.Description ?? "Không có mô tả", submission.TextContent ?? "Không có nội dung", maxScore);
+                        // Use centralized prompt builder
+                        var prompt = EssayGradingPrompt.BuildPrompt(
+                            essay.Title,
+                            essay.Description ?? string.Empty,
+                            submission.TextContent ?? string.Empty,
+                            maxScore
+                        );
 
                         // Call Gemini
                         var geminiResponse = await _geminiService.GenerateContentAsync(prompt);
@@ -435,8 +394,8 @@ namespace LearningEnglish.Application.Service
                             continue;
                         }
 
-                        // Parse response
-                        var aiResult = ParseAiResponse(geminiResponse.Content);
+                        // Use centralized response parser (fixes parsing bug)
+                        var aiResult = _responseParser.ParseGradingResponse(geminiResponse.Content);
 
                         if (aiResult.Score > maxScore)
                         {
@@ -543,67 +502,5 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        private string BuildGradingPrompt(string essayTitle, string essayDescription, string studentAnswer, decimal maxScore)
-        {
-            return $@"Bạn là một giáo viên chuyên nghiệp. Hãy chấm điểm bài làm của học sinh dựa trên đề bài.
-
-**ĐỀ BÀI:**
-Tiêu đề: {essayTitle}
-Mô tả: {essayDescription}
-
-**BÀI LÀM CỦA HỌC SINH:**
-{studentAnswer}
-
-**YÊU CẦU:**
-- Điểm tối đa: {maxScore}
-- Đánh giá theo các tiêu chí: Nội dung, Cấu trúc, Ngữ pháp, Từ vựng
-- Trả về kết quả dưới dạng JSON với format:
-{{
-  ""score"": <điểm số>,
-  ""feedback"": ""<nhận xét tổng quan>"",
-  ""breakdown"": ""<chi tiết điểm từng tiêu chí>"",
-  ""strengths"": ""<điểm mạnh>"",
-  ""improvements"": ""<gợi ý cải thiện>""
-}}";
-        }
-
-        private (decimal Score, string Feedback, string Breakdown, string Strengths, string Improvements) ParseAiResponse(string responseText)
-        {
-            try
-            {
-                // Remove markdown code blocks if present
-                var jsonText = responseText.Trim();
-                if (jsonText.StartsWith("```json"))
-                {
-                    jsonText = jsonText.Substring(7);
-                }
-                else if (jsonText.StartsWith("```"))
-                {
-                    jsonText = jsonText.Substring(3);
-                }
-
-                if (jsonText.EndsWith("```"))
-                {
-                    jsonText = jsonText.Substring(0, jsonText.Length - 3);
-                }
-
-                jsonText = jsonText.Trim();
-
-                var result = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(jsonText);
-
-                return (
-                    Score: result.GetProperty("score").GetDecimal(),
-                    Feedback: result.GetProperty("feedback").GetString() ?? "",
-                    Breakdown: result.TryGetProperty("breakdown", out var b) ? b.GetString() ?? "" : "",
-                    Strengths: result.TryGetProperty("strengths", out var s) ? s.GetString() ?? "" : "",
-                    Improvements: result.TryGetProperty("improvements", out var i) ? i.GetString() ?? "" : ""
-                );
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to parse AI response: {Response}", responseText);
-                throw new Exception($"Không thể parse AI response: {ex.Message}");
-            }
-        }
     }
 }

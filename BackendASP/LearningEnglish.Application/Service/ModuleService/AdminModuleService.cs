@@ -3,35 +3,33 @@ using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.Module;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Domain.Entities;
-using LearningEnglish.Application.Common.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
+   
     public class AdminModuleService : IAdminModuleService
     {
         private readonly IModuleRepository _moduleRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<AdminModuleService> _logger;
         private readonly ILessonRepository _lessonRepository;
-        private readonly IMinioFileStorage _minioFileStorage;
-
-        private const string ModuleImageBucket = "modules";
-        private const string ModuleImageFolder = "real";
+        private readonly IModuleImageService _moduleImageService;
 
         public AdminModuleService(
             IModuleRepository moduleRepository,
             IMapper mapper,
             ILogger<AdminModuleService> logger,
             ILessonRepository lessonRepository,
-            IMinioFileStorage minioFileStorage)
+            IModuleImageService moduleImageService)
         {
             _moduleRepository = moduleRepository;
             _mapper = mapper;
             _logger = logger;
             _lessonRepository = lessonRepository;
-            _minioFileStorage = minioFileStorage;
+            _moduleImageService = moduleImageService;
         }
 
         // Admin tạo module
@@ -59,23 +57,20 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                 {
-                    var commit = await _minioFileStorage.CommitFileAsync(
-                        dto.ImageTempKey,
-                        ModuleImageBucket,
-                        ModuleImageFolder
-                    );
-
-                    if (!commit.Success || string.IsNullOrWhiteSpace(commit.Data))
+                    try
                     {
+                        committedImageKey = await _moduleImageService.CommitImageAsync(dto.ImageTempKey);
+                        module.ImageKey = committedImageKey;
+                        module.ImageType = dto.ImageType;
+                    }
+                    catch (Exception imageEx)
+                    {
+                        _logger.LogError(imageEx, "Failed to commit module image");
                         response.Success = false;
                         response.StatusCode = 400;
-                        response.Message = "Không thể lưu ảnh module";
+                        response.Message = "Không thể lưu ảnh module. Vui lòng thử lại.";
                         return response;
                     }
-
-                    committedImageKey = commit.Data;
-                    module.ImageKey = committedImageKey;
-                    module.ImageType = dto.ImageType;
                 }
 
                 Module created;
@@ -87,7 +82,7 @@ namespace LearningEnglish.Application.Service
                 {
                     if (committedImageKey != null)
                     {
-                        await _minioFileStorage.DeleteFileAsync(committedImageKey, ModuleImageBucket);
+                        await _moduleImageService.DeleteImageAsync(committedImageKey);
                     }
                     throw;
                 }
@@ -97,7 +92,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(fullModule?.ImageKey))
                 {
-                    resultDto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, fullModule.ImageKey);
+                    resultDto.ImageUrl = _moduleImageService.BuildImageUrl(fullModule.ImageKey);
                 }
 
                 response.Data = resultDto;
@@ -134,7 +129,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(module.ImageKey))
                 {
-                    dto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, module.ImageKey);
+                    dto.ImageUrl = _moduleImageService.BuildImageUrl(module.ImageKey);
                 }
 
                 response.Data = dto;
@@ -194,23 +189,20 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                 {
-                    var commit = await _minioFileStorage.CommitFileAsync(
-                        dto.ImageTempKey,
-                        ModuleImageBucket,
-                        ModuleImageFolder
-                    );
-
-                    if (!commit.Success || string.IsNullOrWhiteSpace(commit.Data))
+                    try
                     {
+                        newImageKey = await _moduleImageService.CommitImageAsync(dto.ImageTempKey);
+                        module.ImageKey = newImageKey;
+                        module.ImageType = dto.ImageType;
+                    }
+                    catch (Exception imageEx)
+                    {
+                        _logger.LogError(imageEx, "Failed to commit new module image");
                         response.Success = false;
                         response.StatusCode = 400;
-                        response.Message = "Không thể cập nhật ảnh module";
+                        response.Message = "Không thể cập nhật ảnh module. Vui lòng thử lại.";
                         return response;
                     }
-
-                    newImageKey = commit.Data;
-                    module.ImageKey = newImageKey;
-                    module.ImageType = dto.ImageType;
                 }
 
                 _mapper.Map(dto, module);
@@ -218,7 +210,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(oldImageKey) && newImageKey != null)
                 {
-                    await _minioFileStorage.DeleteFileAsync(oldImageKey, ModuleImageBucket);
+                    await _moduleImageService.DeleteImageAsync(oldImageKey);
                 }
 
                 var fullModule = await _moduleRepository.GetByIdWithDetailsAsync(updated.ModuleId);
@@ -226,7 +218,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(fullModule?.ImageKey))
                 {
-                    resultDto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, fullModule.ImageKey);
+                    resultDto.ImageUrl = _moduleImageService.BuildImageUrl(fullModule.ImageKey);
                 }
 
                 response.Data = resultDto;
@@ -260,7 +252,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(module.ImageKey))
                 {
-                    await _minioFileStorage.DeleteFileAsync(module.ImageKey, ModuleImageBucket);
+                    await _moduleImageService.DeleteImageAsync(module.ImageKey);
                 }
 
                 response.Data = await _moduleRepository.DeleteAsync(moduleId);

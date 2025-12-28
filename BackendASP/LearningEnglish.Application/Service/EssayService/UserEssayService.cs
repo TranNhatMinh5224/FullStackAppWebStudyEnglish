@@ -1,13 +1,16 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.Essay;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service.EssayService
 {
+    
     public class UserEssayService : IUserEssayService
     {
         private readonly IEssayRepository _essayRepository;
@@ -16,9 +19,7 @@ namespace LearningEnglish.Application.Service.EssayService
         private readonly ICourseRepository _courseRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<UserEssayService> _logger;
-
-        private const string EssayAudioBucket = "essays";
-        private const string EssayImageBucket = "essays";
+        private readonly IEssayMediaService _essayMediaService;
 
         public UserEssayService(
             IEssayRepository essayRepository,
@@ -26,7 +27,8 @@ namespace LearningEnglish.Application.Service.EssayService
             IModuleRepository moduleRepository,
             ICourseRepository courseRepository,
             IMapper mapper,
-            ILogger<UserEssayService> logger)
+            ILogger<UserEssayService> logger,
+            IEssayMediaService essayMediaService)
         {
             _essayRepository = essayRepository;
             _assessmentRepository = assessmentRepository;
@@ -34,6 +36,7 @@ namespace LearningEnglish.Application.Service.EssayService
             _courseRepository = courseRepository;
             _mapper = mapper;
             _logger = logger;
+            _essayMediaService = essayMediaService;
         }
 
         public async Task<ServiceResponse<EssayDto>> GetEssayByIdAsync(int essayId, int userId)
@@ -98,13 +101,13 @@ namespace LearningEnglish.Application.Service.EssayService
                 // Generate URLs từ keys
                 if (!string.IsNullOrWhiteSpace(essay.AudioKey))
                 {
-                    essayDto.AudioUrl = BuildPublicUrl.BuildURL(EssayAudioBucket, essay.AudioKey);
+                    essayDto.AudioUrl = _essayMediaService.BuildAudioUrl(essay.AudioKey);
                     essayDto.AudioType = essay.AudioType;
                 }
 
                 if (!string.IsNullOrWhiteSpace(essay.ImageKey))
                 {
-                    essayDto.ImageUrl = BuildPublicUrl.BuildURL(EssayImageBucket, essay.ImageKey);
+                    essayDto.ImageUrl = _essayMediaService.BuildImageUrl(essay.ImageKey);
                     essayDto.ImageType = essay.ImageType;
                 }
 
@@ -184,13 +187,13 @@ namespace LearningEnglish.Application.Service.EssayService
                     // Generate URLs từ keys
                     if (!string.IsNullOrWhiteSpace(essay.AudioKey))
                     {
-                        essayDto.AudioUrl = BuildPublicUrl.BuildURL(EssayAudioBucket, essay.AudioKey);
+                        essayDto.AudioUrl = _essayMediaService.BuildAudioUrl(essay.AudioKey);
                         essayDto.AudioType = essay.AudioType;
                     }
 
                     if (!string.IsNullOrWhiteSpace(essay.ImageKey))
                     {
-                        essayDto.ImageUrl = BuildPublicUrl.BuildURL(EssayImageBucket, essay.ImageKey);
+                        essayDto.ImageUrl = _essayMediaService.BuildImageUrl(essay.ImageKey);
                         essayDto.ImageType = essay.ImageType;
                     }
 

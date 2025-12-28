@@ -1,37 +1,35 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.Essay;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service.EssayService
 {
+    
     public class AdminEssayService : IAdminEssayService
     {
         private readonly IEssayRepository _essayRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<AdminEssayService> _logger;
-        private readonly IMinioFileStorage? _minioFileStorage;
-
-        private const string EssayAudioBucket = "essays";
-        private const string EssayAudioFolder = "audios";
-        private const string EssayImageBucket = "essays";
-        private const string EssayImageFolder = "images";
+        private readonly IEssayMediaService _essayMediaService;
 
         public AdminEssayService(
             IEssayRepository essayRepository,
             IMapper mapper,
             ILogger<AdminEssayService> logger,
-            IMinioFileStorage? minioFileStorage = null)
+            IEssayMediaService essayMediaService)
         {
             _essayRepository = essayRepository;
             _mapper = mapper;
             _logger = logger;
-            _minioFileStorage = minioFileStorage;
+            _essayMediaService = essayMediaService;
         }
 
         public async Task<ServiceResponse<EssayDto>> AdminCreateEssay(CreateEssayDto dto)
@@ -64,42 +62,41 @@ namespace LearningEnglish.Application.Service.EssayService
                 try
                 {
                     // Commit Audio file nếu có
-                    if (!string.IsNullOrWhiteSpace(dto.AudioTempKey) && _minioFileStorage != null)
+                    if (!string.IsNullOrWhiteSpace(dto.AudioTempKey))
                     {
-                        var audioCommitResult = await _minioFileStorage.CommitFileAsync(
-                            dto.AudioTempKey,
-                            EssayAudioBucket,
-                            EssayAudioFolder
-                        );
-
-                        if (!audioCommitResult.Success || string.IsNullOrWhiteSpace(audioCommitResult.Data))
+                        try
                         {
+                            committedAudioKey = await _essayMediaService.CommitAudioAsync(dto.AudioTempKey);
+                            essay.AudioKey = committedAudioKey;
+                            essay.AudioType = dto.AudioType;
+                        }
+                        catch (Exception audioEx)
+                        {
+                            _logger.LogError(audioEx, "Failed to commit essay audio");
                             response.Success = false;
                             response.StatusCode = 400;
                             response.Message = "Không thể lưu file audio. Vui lòng thử lại.";
                             return response;
                         }
-
-                        committedAudioKey = audioCommitResult.Data;
-                        essay.AudioKey = committedAudioKey;
-                        essay.AudioType = dto.AudioType;
                     }
 
                     // Commit Image file nếu có
-                    if (!string.IsNullOrWhiteSpace(dto.ImageTempKey) && _minioFileStorage != null)
+                    if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                     {
-                        var imageCommitResult = await _minioFileStorage.CommitFileAsync(
-                            dto.ImageTempKey,
-                            EssayImageBucket,
-                            EssayImageFolder
-                        );
-
-                        if (!imageCommitResult.Success || string.IsNullOrWhiteSpace(imageCommitResult.Data))
+                        try
                         {
+                            committedImageKey = await _essayMediaService.CommitImageAsync(dto.ImageTempKey);
+                            essay.ImageKey = committedImageKey;
+                            essay.ImageType = dto.ImageType;
+                        }
+                        catch (Exception imageEx)
+                        {
+                            _logger.LogError(imageEx, "Failed to commit essay image");
+                            
                             // Rollback audio nếu đã commit
                             if (committedAudioKey != null)
                             {
-                                await _minioFileStorage.DeleteFileAsync(committedAudioKey, EssayAudioBucket);
+                                await _essayMediaService.DeleteAudioAsync(committedAudioKey);
                             }
 
                             response.Success = false;
@@ -107,10 +104,6 @@ namespace LearningEnglish.Application.Service.EssayService
                             response.Message = "Không thể lưu file hình ảnh. Vui lòng thử lại.";
                             return response;
                         }
-
-                        committedImageKey = imageCommitResult.Data;
-                        essay.ImageKey = committedImageKey;
-                        essay.ImageType = dto.ImageType;
                     }
 
                     // Tạo Essay trong database
@@ -122,13 +115,13 @@ namespace LearningEnglish.Application.Service.EssayService
                     // Generate URLs từ keys
                     if (!string.IsNullOrWhiteSpace(createdEssay.AudioKey))
                     {
-                        essayDto.AudioUrl = BuildPublicUrl.BuildURL(EssayAudioBucket, createdEssay.AudioKey);
+                        essayDto.AudioUrl = _essayMediaService.BuildAudioUrl(createdEssay.AudioKey);
                         essayDto.AudioType = createdEssay.AudioType;
                     }
 
                     if (!string.IsNullOrWhiteSpace(createdEssay.ImageKey))
                     {
-                        essayDto.ImageUrl = BuildPublicUrl.BuildURL(EssayImageBucket, createdEssay.ImageKey);
+                        essayDto.ImageUrl = _essayMediaService.BuildImageUrl(createdEssay.ImageKey);
                         essayDto.ImageType = createdEssay.ImageType;
                     }
 
@@ -148,14 +141,14 @@ namespace LearningEnglish.Application.Service.EssayService
                 {
                     _logger.LogError(dbEx, "Database error while creating Essay");
 
-                    // Rollback files
-                    if (committedAudioKey != null && _minioFileStorage != null)
+                    // Rollback files if DB fails
+                    if (committedAudioKey != null)
                     {
-                        await _minioFileStorage.DeleteFileAsync(committedAudioKey, EssayAudioBucket);
+                        await _essayMediaService.DeleteAudioAsync(committedAudioKey);
                     }
-                    if (committedImageKey != null && _minioFileStorage != null)
+                    if (committedImageKey != null)
                     {
-                        await _minioFileStorage.DeleteFileAsync(committedImageKey, EssayImageBucket);
+                        await _essayMediaService.DeleteImageAsync(committedImageKey);
                     }
 
                     response.Success = false;
@@ -195,13 +188,13 @@ namespace LearningEnglish.Application.Service.EssayService
                 // Generate URLs từ keys
                 if (!string.IsNullOrWhiteSpace(essay.AudioKey))
                 {
-                    essayDto.AudioUrl = BuildPublicUrl.BuildURL(EssayAudioBucket, essay.AudioKey);
+                    essayDto.AudioUrl = _essayMediaService.BuildAudioUrl(essay.AudioKey);
                     essayDto.AudioType = essay.AudioType;
                 }
 
                 if (!string.IsNullOrWhiteSpace(essay.ImageKey))
                 {
-                    essayDto.ImageUrl = BuildPublicUrl.BuildURL(EssayImageBucket, essay.ImageKey);
+                    essayDto.ImageUrl = _essayMediaService.BuildImageUrl(essay.ImageKey);
                     essayDto.ImageType = essay.ImageType;
                 }
 
@@ -238,13 +231,13 @@ namespace LearningEnglish.Application.Service.EssayService
                     // Generate URLs từ keys
                     if (!string.IsNullOrWhiteSpace(essay.AudioKey))
                     {
-                        essayDto.AudioUrl = BuildPublicUrl.BuildURL(EssayAudioBucket, essay.AudioKey);
+                        essayDto.AudioUrl = _essayMediaService.BuildAudioUrl(essay.AudioKey);
                         essayDto.AudioType = essay.AudioType;
                     }
 
                     if (!string.IsNullOrWhiteSpace(essay.ImageKey))
                     {
-                        essayDto.ImageUrl = BuildPublicUrl.BuildURL(EssayImageBucket, essay.ImageKey);
+                        essayDto.ImageUrl = _essayMediaService.BuildImageUrl(essay.ImageKey);
                         essayDto.ImageType = essay.ImageType;
                     }
 
@@ -299,42 +292,41 @@ namespace LearningEnglish.Application.Service.EssayService
                 try
                 {
                     // Xử lý Audio file mới
-                    if (!string.IsNullOrWhiteSpace(dto.AudioTempKey) && _minioFileStorage != null)
+                    if (!string.IsNullOrWhiteSpace(dto.AudioTempKey))
                     {
-                        var audioCommitResult = await _minioFileStorage.CommitFileAsync(
-                            dto.AudioTempKey,
-                            EssayAudioBucket,
-                            EssayAudioFolder
-                        );
-
-                        if (!audioCommitResult.Success || string.IsNullOrWhiteSpace(audioCommitResult.Data))
+                        try
                         {
+                            newAudioKey = await _essayMediaService.CommitAudioAsync(dto.AudioTempKey);
+                            existingEssay.AudioKey = newAudioKey;
+                            existingEssay.AudioType = dto.AudioType;
+                        }
+                        catch (Exception audioEx)
+                        {
+                            _logger.LogError(audioEx, "Failed to commit new essay audio");
                             response.Success = false;
                             response.StatusCode = 400;
                             response.Message = "Không thể lưu file audio mới. Vui lòng thử lại.";
                             return response;
                         }
-
-                        newAudioKey = audioCommitResult.Data;
-                        existingEssay.AudioKey = newAudioKey;
-                        existingEssay.AudioType = dto.AudioType;
                     }
 
                     // Xử lý Image file mới
-                    if (!string.IsNullOrWhiteSpace(dto.ImageTempKey) && _minioFileStorage != null)
+                    if (!string.IsNullOrWhiteSpace(dto.ImageTempKey))
                     {
-                        var imageCommitResult = await _minioFileStorage.CommitFileAsync(
-                            dto.ImageTempKey,
-                            EssayImageBucket,
-                            EssayImageFolder
-                        );
-
-                        if (!imageCommitResult.Success || string.IsNullOrWhiteSpace(imageCommitResult.Data))
+                        try
                         {
+                            newImageKey = await _essayMediaService.CommitImageAsync(dto.ImageTempKey);
+                            existingEssay.ImageKey = newImageKey;
+                            existingEssay.ImageType = dto.ImageType;
+                        }
+                        catch (Exception imageEx)
+                        {
+                            _logger.LogError(imageEx, "Failed to commit new essay image");
+                            
                             // Rollback audio nếu đã commit
-                            if (newAudioKey != null && newAudioKey != oldAudioKey && _minioFileStorage != null)
+                            if (newAudioKey != null && newAudioKey != oldAudioKey)
                             {
-                                await _minioFileStorage.DeleteFileAsync(newAudioKey, EssayAudioBucket);
+                                await _essayMediaService.DeleteAudioAsync(newAudioKey);
                             }
 
                             response.Success = false;
@@ -342,24 +334,20 @@ namespace LearningEnglish.Application.Service.EssayService
                             response.Message = "Không thể lưu file hình ảnh mới. Vui lòng thử lại.";
                             return response;
                         }
-
-                        newImageKey = imageCommitResult.Data;
-                        existingEssay.ImageKey = newImageKey;
-                        existingEssay.ImageType = dto.ImageType;
                     }
 
                     // Update database
                     var updatedEssay = await _essayRepository.UpdateEssayAsync(existingEssay);
 
                     // Xóa file cũ sau khi update thành công
-                    if (newAudioKey != null && oldAudioKey != null && newAudioKey != oldAudioKey && _minioFileStorage != null)
+                    if (newAudioKey != null && oldAudioKey != null && newAudioKey != oldAudioKey)
                     {
-                        await _minioFileStorage.DeleteFileAsync(oldAudioKey, EssayAudioBucket);
+                        await _essayMediaService.DeleteAudioAsync(oldAudioKey);
                     }
 
-                    if (newImageKey != null && oldImageKey != null && newImageKey != oldImageKey && _minioFileStorage != null)
+                    if (newImageKey != null && oldImageKey != null && newImageKey != oldImageKey)
                     {
-                        await _minioFileStorage.DeleteFileAsync(oldImageKey, EssayImageBucket);
+                        await _essayMediaService.DeleteImageAsync(oldImageKey);
                     }
 
                     // Map to DTO và generate URLs
@@ -367,13 +355,13 @@ namespace LearningEnglish.Application.Service.EssayService
 
                     if (!string.IsNullOrWhiteSpace(updatedEssay.AudioKey))
                     {
-                        essayDto.AudioUrl = BuildPublicUrl.BuildURL(EssayAudioBucket, updatedEssay.AudioKey);
+                        essayDto.AudioUrl = _essayMediaService.BuildAudioUrl(updatedEssay.AudioKey);
                         essayDto.AudioType = updatedEssay.AudioType;
                     }
 
                     if (!string.IsNullOrWhiteSpace(updatedEssay.ImageKey))
                     {
-                        essayDto.ImageUrl = BuildPublicUrl.BuildURL(EssayImageBucket, updatedEssay.ImageKey);
+                        essayDto.ImageUrl = _essayMediaService.BuildImageUrl(updatedEssay.ImageKey);
                         essayDto.ImageType = updatedEssay.ImageType;
                     }
 
@@ -390,14 +378,14 @@ namespace LearningEnglish.Application.Service.EssayService
                 {
                     _logger.LogError(dbEx, "Database error while updating Essay");
 
-                    // Rollback new files
-                    if (newAudioKey != null && newAudioKey != oldAudioKey && _minioFileStorage != null)
+                    // Rollback new files if DB fails
+                    if (newAudioKey != null && newAudioKey != oldAudioKey)
                     {
-                        await _minioFileStorage.DeleteFileAsync(newAudioKey, EssayAudioBucket);
+                        await _essayMediaService.DeleteAudioAsync(newAudioKey);
                     }
-                    if (newImageKey != null && newImageKey != oldImageKey && _minioFileStorage != null)
+                    if (newImageKey != null && newImageKey != oldImageKey)
                     {
-                        await _minioFileStorage.DeleteFileAsync(newImageKey, EssayImageBucket);
+                        await _essayMediaService.DeleteImageAsync(newImageKey);
                     }
 
                     response.Success = false;
@@ -436,21 +424,19 @@ namespace LearningEnglish.Application.Service.EssayService
                 string? audioKey = existingEssay.AudioKey;
                 string? imageKey = existingEssay.ImageKey;
 
+                // Xóa files trong MinIO trước khi xóa database
+                if (!string.IsNullOrWhiteSpace(audioKey))
+                {
+                    await _essayMediaService.DeleteAudioAsync(audioKey);
+                }
+
+                if (!string.IsNullOrWhiteSpace(imageKey))
+                {
+                    await _essayMediaService.DeleteImageAsync(imageKey);
+                }
+
                 // Xóa Essay trong database
                 await _essayRepository.DeleteEssayAsync(essayId);
-
-                // Xóa files trong MinIO sau khi xóa database thành công
-                if (!string.IsNullOrWhiteSpace(audioKey) && _minioFileStorage != null)
-                {
-                    await _minioFileStorage.DeleteFileAsync(audioKey, EssayAudioBucket);
-                    _logger.LogInformation("Admin deleted audio file {AudioKey} for Essay {EssayId}", audioKey, essayId);
-                }
-
-                if (!string.IsNullOrWhiteSpace(imageKey) && _minioFileStorage != null)
-                {
-                    await _minioFileStorage.DeleteFileAsync(imageKey, EssayImageBucket);
-                    _logger.LogInformation("Admin deleted image file {ImageKey} for Essay {EssayId}", imageKey, essayId);
-                }
 
                 response.Success = true;
                 response.StatusCode = 200;
