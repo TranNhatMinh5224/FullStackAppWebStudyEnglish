@@ -136,19 +136,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ClockSkew = TimeSpan.FromMinutes(2)
         };
     });
+    // Authorization
 
 builder.Services.AddAuthorization();
 
-// ═══════════════════════════════════════════════════════════════
-// PERMISSION AUTHORIZATION - Đăng ký hệ thống permission
-// ═══════════════════════════════════════════════════════════════
-builder.Services.AddHttpContextAccessor(); // Cần cho AuthorizationHandler
+
+
+builder.Services.AddHttpContextAccessor(); 
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
-// ═══════════════════════════════════════════════════════════════
-// TEACHER ROLE AUTHORIZATION - Đăng ký hệ thống check Teacher role từ DB
-// ═══════════════════════════════════════════════════════════════
+
 builder.Services.AddScoped<IAuthorizationHandler, TeacherRoleAuthorizationHandler>();
 
 // Repository layer
@@ -230,6 +228,7 @@ builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
 builder.Services.AddScoped<ITeacherPackageService, TeacherPackageService>();
+builder.Services.AddScoped<ITeacherSubscriptionService, TeacherSubscriptionService>();
 builder.Services.AddScoped<IUserEnrollmentService, UserEnrollmentService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IRegisterService, RegisterService>();
@@ -243,7 +242,7 @@ builder.Services.AddScoped<IFacebookAuthProvider, FacebookAuthProvider>();
 builder.Services.AddScoped<IGoogleLoginService, GoogleLoginService>();
 builder.Services.AddScoped<IFacebookLoginService, FacebookLoginService>();
 
-builder.Services.AddScoped<ILogoutService, LogoutService>(); // ✅ Logout Service
+builder.Services.AddScoped<ILogoutService, LogoutService>(); // =
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -364,7 +363,6 @@ builder.Services.AddHostedService<LearningEnglish.Application.Service.Background
 builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.TempFileCleanupHostedService>();
 builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.OtpCleanupService>(); // Tự động xóa OTP hết hạn mỗi 30 phút
 builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.PaymentCleanupService>(); // Tự động cleanup payment expired mỗi giờ
-builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.WebhookRetryService>(); // Webhook retry với exponential backoff
 builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.WebhookRetryService>(); // Webhook retry với exponential backoff
 
 //  VOCABULARY REMINDER SYSTEM -
