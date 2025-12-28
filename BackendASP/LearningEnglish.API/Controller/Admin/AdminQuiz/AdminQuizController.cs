@@ -23,7 +23,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuiz
 
         // POST: api/admin/quizzes - tạo mới quiz
         [HttpPost]
-        [RequirePermission("Admin.Quiz.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> CreateQuiz([FromBody] QuizCreateDto quizCreate)
         {
             var userId = User.GetUserId();
@@ -41,7 +41,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuiz
 
         // GET: api/admin/quizzes/{quizId} - lấy quiz theo ID
         [HttpGet("{quizId}")]
-        [RequirePermission("Admin.Quiz.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetQuiz(int quizId)
         {
             var userId = User.GetUserId();
@@ -54,7 +54,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuiz
 
         // GET: api/admin/quizzes/assessment/{assessmentId} - lấy tất cả quiz theo assessment ID
         [HttpGet("assessment/{assessmentId}")]
-        [RequirePermission("Admin.Quiz.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetAllQuizzInAssessment(int assessmentId)
         {
             var userId = User.GetUserId();
@@ -67,7 +67,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuiz
 
         // PUT: api/admin/quizzes/{quizId} - cập nhật quiz
         [HttpPut("{quizId}")]
-        [RequirePermission("Admin.Quiz.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> UpdateQuiz(int quizId, [FromBody] QuizUpdateDto quizUpdate)
         {
             var userId = User.GetUserId();
@@ -81,7 +81,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuiz
 
         // DELETE: api/admin/quizzes/{quizId} - xóa quiz
         [HttpDelete("{quizId}")]
-        [RequirePermission("Admin.Quiz.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> DeleteQuiz(int quizId)
         {
             var userId = User.GetUserId();

@@ -23,7 +23,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuizSection
 
         // POST: api/admin/quiz-sections - tạo mới quiz section
         [HttpPost]
-        [RequirePermission("Admin.QuizSection.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> CreateQuizSection([FromBody] CreateQuizSectionDto createDto)
         {
             var adminId = User.GetUserId();
@@ -43,7 +43,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuizSection
 
         // GET: api/admin/quiz-sections/{id} - lấy quiz section theo ID
         [HttpGet("{id}")]
-        [RequirePermission("Admin.QuizSection.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetQuizSectionById(int id)
         {
             var adminId = User.GetUserId();
@@ -55,7 +55,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuizSection
 
         // GET: api/admin/quiz-sections/by-quiz/{quizId} - lấy danh sách quiz sections theo quiz ID
         [HttpGet("by-quiz/{quizId}")]
-        [RequirePermission("Admin.QuizSection.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetQuizSectionsByQuizId(int quizId)
         {
             var adminId = User.GetUserId();
@@ -67,7 +67,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuizSection
 
         // PUT: api/admin/quiz-sections/{id} - cập nhật quiz section
         [HttpPut("{id}")]
-        [RequirePermission("Admin.QuizSection.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> UpdateQuizSection(int id, [FromBody] UpdateQuizSectionDto updateDto)
         {
             var adminId = User.GetUserId();
@@ -85,7 +85,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuizSection
 
         // DELETE: api/admin/quiz-sections/{id} - xóa quiz section
         [HttpDelete("{id}")]
-        [RequirePermission("Admin.QuizSection.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> DeleteQuizSection(int id)
         {
             var adminId = User.GetUserId();

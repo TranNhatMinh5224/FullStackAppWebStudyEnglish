@@ -23,7 +23,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminAssessment
 
         // POST: api/admin/assessments - tạo assessment mới
         [HttpPost]
-        [RequirePermission("Admin.Assessment.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> CreateAssessment([FromBody] CreateAssessmentDto createAssessmentDto)
         {
             var userId = User.GetUserId();
@@ -37,7 +37,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminAssessment
 
         // GET: api/admin/assessments/module/{moduleId} - lấy danh sách assessment theo module ID
         [HttpGet("module/{moduleId}")]
-        [RequirePermission("Admin.Assessment.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetAssessmentsByModuleId(int moduleId)
         {
             var userId = User.GetUserId();
@@ -51,7 +51,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminAssessment
 
         // GET: api/admin/assessments/{assessmentId} - lấy thông tin assessment theo ID
         [HttpGet("{assessmentId}")]
-        [RequirePermission("Admin.Assessment.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetAssessmentById(int assessmentId)
         {
             var userId = User.GetUserId();
@@ -65,7 +65,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminAssessment
 
         // PUT: api/admin/assessments/{assessmentId} - cập nhật assessment
         [HttpPut("{assessmentId}")]
-        [RequirePermission("Admin.Assessment.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> UpdateAssessment(int assessmentId, [FromBody] UpdateAssessmentDto updateAssessmentDto)
         {
             var userId = User.GetUserId();
@@ -79,7 +79,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminAssessment
 
         // DELETE: api/admin/assessments/{assessmentId} - xóa assessment
         [HttpDelete("{assessmentId}")]
-        [RequirePermission("Admin.Assessment.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> DeleteAssessment(int assessmentId)
         {
             var userId = User.GetUserId();

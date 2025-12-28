@@ -23,7 +23,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuizGroup
 
         // POST: api/admin/quiz-groups - tạo mới quiz group
         [HttpPost]
-        [RequirePermission("Admin.QuizGroup.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> CreateQuizGroup([FromBody] CreateQuizGroupDto createDto)
         {
             var adminId = User.GetUserId();
@@ -41,7 +41,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuizGroup
 
         // GET: api/admin/quiz-groups/{id} - lấy quiz group theo ID
         [HttpGet("{id}")]
-        [RequirePermission("Admin.QuizGroup.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetQuizGroup(int id)
         {
             var adminId = User.GetUserId();
@@ -53,7 +53,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuizGroup
 
         // GET: api/admin/quiz-groups/by-quiz-section/{quizSectionId} - lấy danh sách quiz groups theo quiz section ID
         [HttpGet("by-quiz-section/{quizSectionId}")]
-        [RequirePermission("Admin.QuizGroup.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetQuizGroupsByQuizSectionId(int quizSectionId)
         {
             var adminId = User.GetUserId();
@@ -65,7 +65,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuizGroup
 
         // PUT: api/admin/quiz-groups/{id} - cập nhật quiz group
         [HttpPut("{id}")]
-        [RequirePermission("Admin.QuizGroup.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> UpdateQuizGroup(int id, [FromBody] UpdateQuizGroupDto updateDto)
         {
             var adminId = User.GetUserId();
@@ -83,7 +83,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuizGroup
 
         // DELETE: api/admin/quiz-groups/{id} - xóa quiz group
         [HttpDelete("{id}")]
-        [RequirePermission("Admin.QuizGroup.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> DeleteQuizGroup(int id)
         {
             var adminId = User.GetUserId();

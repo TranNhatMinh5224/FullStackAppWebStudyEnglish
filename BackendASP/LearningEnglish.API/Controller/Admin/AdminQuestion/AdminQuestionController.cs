@@ -29,7 +29,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuestion
 
         // GET: api/admin/questions/{questionId} - lấy question theo ID
         [HttpGet("{questionId}")]
-        [RequirePermission("Admin.Question.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetQuestionById(int questionId)
         {
             var adminId = User.GetUserId();
@@ -41,7 +41,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuestion
 
         // GET: api/admin/questions/quiz-group/{quizGroupId} - lấy questions by quiz group ID
         [HttpGet("quiz-group/{quizGroupId}")]
-        [RequirePermission("Admin.Question.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetQuestionsByQuizGroupId(int quizGroupId)
         {
             var adminId = User.GetUserId();
@@ -53,7 +53,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuestion
 
         // GET: api/admin/questions/quiz-section/{quizSectionId} - lấy questions by quiz section ID
         [HttpGet("quiz-section/{quizSectionId}")]
-        [RequirePermission("Admin.Question.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetQuestionsByQuizSectionId(int quizSectionId)
         {
             var adminId = User.GetUserId();
@@ -65,7 +65,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuestion
 
         // POST: api/admin/questions - tạo mới question
         [HttpPost]
-        [RequirePermission("Admin.Question.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionCreateDto questionCreateDto)
         {
             var adminId = User.GetUserId();
@@ -85,7 +85,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuestion
 
         // POST: api/admin/questions/bulk - tạo nhiều question
         [HttpPost("bulk")]
-        [RequirePermission("Admin.Question.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> CreateBulkQuestions([FromBody] QuestionBulkCreateDto questionBulkCreateDto)
         {
             var adminId = User.GetUserId();
@@ -105,7 +105,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuestion
 
         // PUT: api/admin/questions/{questionId} - cập nhật question
         [HttpPut("{questionId}")]
-        [RequirePermission("Admin.Question.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> UpdateQuestion(int questionId, [FromBody] QuestionUpdateDto questionUpdateDto)
         {
             var adminId = User.GetUserId();
@@ -123,7 +123,7 @@ namespace LearningEnglish.API.Controller.Admin.AdminQuestion
 
         // DELETE: api/admin/questions/{questionId} - xóa question
         [HttpDelete("{questionId}")]
-        [RequirePermission("Admin.Question.Manage")]
+        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> DeleteQuestion(int questionId)
         {
             var adminId = User.GetUserId();
