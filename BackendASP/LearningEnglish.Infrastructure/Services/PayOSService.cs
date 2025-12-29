@@ -200,18 +200,23 @@ namespace LearningEnglish.Infrastructure.Services
                 var code = payosData.GetProperty("code").GetString() ?? "";
                 var data = payosData.GetProperty("data");
 
+                var status = data.TryGetProperty("status", out var statusElement) 
+                    ? statusElement.GetString() ?? "" 
+                    : "";
+
                 response.Data = new PayOSWebhookDto
                 {
                     Code = code,
                     OrderCode = data.GetProperty("orderCode").GetInt64(),
                     Desc = payosData.TryGetProperty("desc", out var desc) ? desc.GetString() ?? "" : "",
                     Data = responseContent,
-                    Signature = ""
+                    Signature = "",
+                    Status = status
                 };
                 response.Success = true;
 
-                _logger.LogInformation("PayOS payment information retrieved: Code={Code}, OrderCode={OrderCode}",
-                    code, orderCode);
+                _logger.LogInformation("PayOS payment information retrieved: Code={Code}, OrderCode={OrderCode}, Status={Status}",
+                    code, orderCode, status);
             }
             catch (Exception ex)
             {

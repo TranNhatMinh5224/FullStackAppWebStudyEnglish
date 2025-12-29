@@ -628,6 +628,41 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                string? paymentStatus = webhookData.Status;
+                if (string.IsNullOrEmpty(paymentStatus) && !string.IsNullOrEmpty(webhookData.Data))
+                {
+                    try
+                    {
+                        var dataJson = JsonSerializer.Deserialize<JsonElement>(webhookData.Data);
+                        if (dataJson.TryGetProperty("status", out var statusElement))
+                        {
+                            paymentStatus = statusElement.GetString();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Could not parse status from webhook data");
+                    }
+                }
+
+                if (string.IsNullOrEmpty(paymentStatus))
+                {
+                    var payosInfo = await _payOSService.GetPaymentInformationAsync(webhookData.OrderCode);
+                    if (payosInfo.Success && payosInfo.Data != null)
+                    {
+                        paymentStatus = payosInfo.Data.Status;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(paymentStatus) || !string.Equals(paymentStatus, "PAID", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("Payment {PaymentId} status is not PAID: Status={Status}", payment.PaymentId, paymentStatus ?? "null");
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = $"Payment status is {paymentStatus ?? "unknown"}, not PAID";
+                    return response;
+                }
+
                 var confirmDto = new CompletePayment
                 {
                     PaymentId = payment.PaymentId,
@@ -729,6 +764,16 @@ namespace LearningEnglish.Application.Service
                         response.Message = "Payment not completed on PayOS";
                         return response;
                     }
+
+                    if (string.IsNullOrEmpty(payosInfo.Data.Status) || !string.Equals(payosInfo.Data.Status, "PAID", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogWarning("Payment {PaymentId} status is not PAID on PayOS. OrderCode: {OrderCode}, Status: {Status}", 
+                            paymentId, orderCode, payosInfo.Data.Status ?? "null");
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = $"Payment status is {payosInfo.Data.Status ?? "unknown"}, not PAID";
+                        return response;
+                    }
                 }
 
                 // Create CompletePayment DTO and confirm
@@ -754,7 +799,7 @@ namespace LearningEnglish.Application.Service
         }
 
         // Xử lý PayOS return URL
-        public async Task<ServiceResponse<PayOSReturnResult>> ProcessPayOSReturnAsync(string code, string desc, string data, string? orderCode = null)
+        public async Task<ServiceResponse<PayOSReturnResult>> ProcessPayOSReturnAsync(string code, string desc, string data, string? orderCode = null, string? status = null)
         {
             var response = new ServiceResponse<PayOSReturnResult>();
             var result = new PayOSReturnResult();
@@ -838,10 +883,30 @@ namespace LearningEnglish.Application.Service
                 result.PaymentId = payment.PaymentId;
                 result.OrderCode = finalOrderCode ?? payment.OrderCode.ToString();
 
-                // Auto-confirm payment if still pending
+                string? paymentStatus = status;
+                if (string.IsNullOrEmpty(paymentStatus) && !string.IsNullOrEmpty(finalOrderCode) && long.TryParse(finalOrderCode, out var orderCodeForStatus))
+                {
+                    var payosInfo = await _payOSService.GetPaymentInformationAsync(orderCodeForStatus);
+                    if (payosInfo.Success && payosInfo.Data != null)
+                    {
+                        paymentStatus = payosInfo.Data.Status;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(paymentStatus) || !string.Equals(paymentStatus, "PAID", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("Payment {PaymentId} status is not PAID: Status={Status}", payment.PaymentId, paymentStatus ?? "null");
+                    result.Success = false;
+                    result.RedirectUrl = $"{GetFrontendUrl()}/payment-pending?orderCode={finalOrderCode}&status={Uri.EscapeDataString(paymentStatus ?? "")}";
+                    result.Message = $"Payment status: {paymentStatus ?? "unknown"}";
+                    response.Data = result;
+                    return response;
+                }
+
+                // Auto-confirm payment if still pending and status is PAID
                 if (payment.Status == PaymentStatus.Pending)
                 {
-                    _logger.LogInformation("Auto-confirming Payment {PaymentId} via Return URL", payment.PaymentId);
+                    _logger.LogInformation("Auto-confirming Payment {PaymentId} via Return URL (Status=PAID)", payment.PaymentId);
 
                     var confirmDto = new CompletePayment
                     {

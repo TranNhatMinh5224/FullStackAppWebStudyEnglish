@@ -98,22 +98,49 @@ namespace LearningEnglish.API.Controller.User
             [FromQuery] string? code,
             [FromQuery] string? desc,
             [FromQuery] string? data,
-            [FromQuery] string? orderCode)
+            [FromQuery] long? orderCode,
+            [FromQuery] bool? cancel,
+            [FromQuery] string? status,
+            [FromQuery] string? signature)
         {
+            var frontendUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+
+            if (cancel == true || string.Equals(status, "CANCELLED", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("Payment cancelled: OrderCode={OrderCode}, Cancel={Cancel}, Status={Status}", 
+                    orderCode, cancel, status);
+                return Redirect($"{frontendUrl}/payment-failed?reason=cancelled&orderCode={orderCode}");
+            }
+
+            if (!string.IsNullOrEmpty(status) && !string.Equals(status, "PAID", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Payment not yet paid: OrderCode={OrderCode}, Status={Status}", orderCode, status);
+                return Redirect($"{frontendUrl}/payment-pending?orderCode={orderCode}&status={Uri.EscapeDataString(status ?? "")}");
+            }
+
             var result = await _paymentService.ProcessPayOSReturnAsync(
                 code ?? string.Empty, 
                 desc ?? string.Empty, 
                 data ?? string.Empty,
-                orderCode);
+                orderCode?.ToString(),
+                status);
             
             if (result.Success && result.Data != null && !string.IsNullOrEmpty(result.Data.RedirectUrl))
             {
                 return Redirect(result.Data.RedirectUrl);
             }
             
-            // Fallback nếu có lỗi
-            var frontendUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
             return Redirect($"{frontendUrl}/payment-failed?reason={Uri.EscapeDataString(result.Message ?? "Server error")}");
+        }
+
+        // endpoint PayOS cancel URL (xử lý khi user hủy thanh toán)
+        [HttpGet("payos/cancel")]
+        [AllowAnonymous]
+        public IActionResult PayOSCancel([FromQuery] long? orderCode)
+        {
+            var frontendUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+            _logger.LogInformation("Payment cancelled by user: OrderCode={OrderCode}", orderCode);
+            return Redirect($"{frontendUrl}/payment-failed?reason=cancelled&orderCode={orderCode}");
         }
 
         // endpoint PayOS webhook (xử lý callback từ PayOS)
