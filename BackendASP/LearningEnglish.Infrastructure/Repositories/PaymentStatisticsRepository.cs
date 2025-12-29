@@ -102,7 +102,7 @@ namespace LearningEnglish.Infrastructure.Repositories
 
             return payments
                 .GroupBy(p => p.Date)
-                .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
+                .ToDictionary(g => DateTime.SpecifyKind(g.Key, DateTimeKind.Utc), g => g.Sum(p => p.Amount));
         }
 
         public async Task<Dictionary<DateTime, decimal>> GetDailyRevenueByProductTypeAsync(ProductType productType, DateTime fromDate, DateTime toDate)
@@ -117,13 +117,13 @@ namespace LearningEnglish.Infrastructure.Repositories
 
             return payments
                 .GroupBy(p => p.Date)
-                .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
+                .ToDictionary(g => DateTime.SpecifyKind(g.Key, DateTimeKind.Utc), g => g.Sum(p => p.Amount));
         }
 
         public async Task<Dictionary<DateTime, decimal>> GetMonthlyRevenueAsync(int year)
         {
-            var startDate = new DateTime(year, 1, 1);
-            var endDate = new DateTime(year, 12, 31, 23, 59, 59);
+            var startDate = DateTime.SpecifyKind(new DateTime(year, 1, 1), DateTimeKind.Utc);
+            var endDate = DateTime.SpecifyKind(new DateTime(year, 12, 31, 23, 59, 59), DateTimeKind.Utc);
 
             var payments = await _context.Payments
                 .Where(p => p.Status == PaymentStatus.Completed && 
@@ -137,7 +137,7 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
 
             return payments
-                .GroupBy(p => new DateTime(p.Year, p.Month, 1))
+                .GroupBy(p => DateTime.SpecifyKind(new DateTime(p.Year, p.Month, 1), DateTimeKind.Utc))
                 .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
         }
     }
