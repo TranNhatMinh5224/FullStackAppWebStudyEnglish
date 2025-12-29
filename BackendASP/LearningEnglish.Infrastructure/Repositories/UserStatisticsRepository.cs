@@ -24,7 +24,6 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<int> GetUserCountByRoleAsync(string roleName)
         {
             return await _context.Users
-                .Include(u => u.Roles)
                 .Where(u => u.Roles.Any(r => r.Name == roleName))
                 .CountAsync();
         }

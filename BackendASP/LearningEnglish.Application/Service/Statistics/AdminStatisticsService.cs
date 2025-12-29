@@ -33,22 +33,13 @@ namespace LearningEnglish.Application.Service
 
                 var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
 
-                // Parallel execution để tối ưu performance - chỉ lấy User và Revenue
-                var totalUsersTask = _userStatisticsRepository.GetTotalUsersCountAsync();
-                var totalStudentsTask = _userStatisticsRepository.GetUserCountByRoleAsync("Student");
-                var totalTeachersTask = _userStatisticsRepository.GetUserCountByRoleAsync("Teacher");
-                var totalAdminsTask = _userStatisticsRepository.GetUserCountByRoleAsync("Admin");
-                var newUsersTask = _userStatisticsRepository.GetNewUsersCountAsync(thirtyDaysAgo);
-                var totalRevenueTask = _paymentStatisticsRepository.GetTotalRevenueAsync();
-
-                await Task.WhenAll(totalUsersTask, totalStudentsTask, totalTeachersTask, totalAdminsTask, newUsersTask, totalRevenueTask);
-
-                var totalUsers = await totalUsersTask;
-                var totalStudents = await totalStudentsTask;
-                var totalTeachers = await totalTeachersTask;
-                var totalAdmins = await totalAdminsTask;
-                var newUsers = await newUsersTask;
-                var totalRevenue = await totalRevenueTask;
+                // Sequential execution to avoid DbContext concurrency issues
+                var totalUsers = await _userStatisticsRepository.GetTotalUsersCountAsync();
+                var totalStudents = await _userStatisticsRepository.GetUserCountByRoleAsync("Student");
+                var totalTeachers = await _userStatisticsRepository.GetUserCountByRoleAsync("Teacher");
+                var totalAdmins = await _userStatisticsRepository.GetUserCountByRoleAsync("Admin");
+                var newUsers = await _userStatisticsRepository.GetNewUsersCountAsync(thirtyDaysAgo);
+                var totalRevenue = await _paymentStatisticsRepository.GetTotalRevenueAsync();
 
                 var statistics = new AdminOverviewStatisticsDto
                 {
@@ -88,37 +79,32 @@ namespace LearningEnglish.Application.Service
                 _logger.LogInformation("Fetching user statistics");
 
                 var now = DateTime.UtcNow;
-                var today = now.Date;
+                var today = DateTime.SpecifyKind(now.Date, DateTimeKind.Utc);
                 var weekAgo = now.AddDays(-7);
                 var monthAgo = now.AddMonths(-1);
 
-                // Parallel execution
-                var tasks = new[]
-                {
-                    _userStatisticsRepository.GetTotalUsersCountAsync(),
-                    _userStatisticsRepository.GetUserCountByRoleAsync("Student"),
-                    _userStatisticsRepository.GetUserCountByRoleAsync("Teacher"),
-                    _userStatisticsRepository.GetUserCountByRoleAsync("Admin"),
-                    _userStatisticsRepository.GetActiveUsersCountAsync(),
-                    _userStatisticsRepository.GetBlockedUsersCountAsync(),
-                    _userStatisticsRepository.GetNewUsersCountAsync(today),
-                    _userStatisticsRepository.GetNewUsersCountAsync(weekAgo),
-                    _userStatisticsRepository.GetNewUsersCountAsync(monthAgo)
-                };
-
-                var results = await Task.WhenAll(tasks);
+                // Sequential execution to avoid DbContext concurrency issues
+                var totalUsers = await _userStatisticsRepository.GetTotalUsersCountAsync();
+                var totalStudents = await _userStatisticsRepository.GetUserCountByRoleAsync("Student");
+                var totalTeachers = await _userStatisticsRepository.GetUserCountByRoleAsync("Teacher");
+                var totalAdmins = await _userStatisticsRepository.GetUserCountByRoleAsync("Admin");
+                var activeUsers = await _userStatisticsRepository.GetActiveUsersCountAsync();
+                var blockedUsers = await _userStatisticsRepository.GetBlockedUsersCountAsync();
+                var newUsersToday = await _userStatisticsRepository.GetNewUsersCountAsync(today);
+                var newUsersThisWeek = await _userStatisticsRepository.GetNewUsersCountAsync(weekAgo);
+                var newUsersThisMonth = await _userStatisticsRepository.GetNewUsersCountAsync(monthAgo);
 
                 var statistics = new UserStatisticsDto
                 {
-                    TotalUsers = results[0],
-                    TotalStudents = results[1],
-                    TotalTeachers = results[2],
-                    TotalAdmins = results[3],
-                    ActiveUsers = results[4],
-                    BlockedUsers = results[5],
-                    NewUsersToday = results[6],
-                    NewUsersThisWeek = results[7],
-                    NewUsersThisMonth = results[8]
+                    TotalUsers = totalUsers,
+                    TotalStudents = totalStudents,
+                    TotalTeachers = totalTeachers,
+                    TotalAdmins = totalAdmins,
+                    ActiveUsers = activeUsers,
+                    BlockedUsers = blockedUsers,
+                    NewUsersToday = newUsersToday,
+                    NewUsersThisWeek = newUsersThisWeek,
+                    NewUsersThisMonth = newUsersThisMonth
                 };
 
                 response.Data = statistics;
@@ -149,63 +135,53 @@ namespace LearningEnglish.Application.Service
                 _logger.LogInformation("Fetching revenue statistics");
 
                 var now = DateTime.UtcNow;
-                var today = now.Date;
-                var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
-                var startOfMonth = new DateTime(now.Year, now.Month, 1);
-                var startOfYear = new DateTime(now.Year, 1, 1);
+                var today = DateTime.SpecifyKind(now.Date, DateTimeKind.Utc);
+                var startOfWeek = DateTime.SpecifyKind(today.AddDays(-(int)today.DayOfWeek), DateTimeKind.Utc);
+                var startOfMonth = DateTime.SpecifyKind(new DateTime(now.Year, now.Month, 1), DateTimeKind.Utc);
+                var startOfYear = DateTime.SpecifyKind(new DateTime(now.Year, 1, 1), DateTimeKind.Utc);
 
-                // Parallel execution
-                var revenueTask = _paymentStatisticsRepository.GetTotalRevenueAsync();
-                var completedRevenueTask = _paymentStatisticsRepository.GetRevenueByStatusAsync(PaymentStatus.Completed);
-                var pendingRevenueTask = _paymentStatisticsRepository.GetRevenueByStatusAsync(PaymentStatus.Pending);
+                // Sequential execution to avoid DbContext concurrency issues
+                var totalRevenue = await _paymentStatisticsRepository.GetTotalRevenueAsync();
+                var completedRevenue = await _paymentStatisticsRepository.GetRevenueByStatusAsync(PaymentStatus.Completed);
+                var pendingRevenue = await _paymentStatisticsRepository.GetRevenueByStatusAsync(PaymentStatus.Pending);
                 
-                var revenueTodayTask = _paymentStatisticsRepository.GetRevenueByDateRangeAsync(today);
-                var revenueWeekTask = _paymentStatisticsRepository.GetRevenueByDateRangeAsync(startOfWeek);
-                var revenueMonthTask = _paymentStatisticsRepository.GetRevenueByDateRangeAsync(startOfMonth);
-                var revenueYearTask = _paymentStatisticsRepository.GetRevenueByDateRangeAsync(startOfYear);
+                var revenueToday = await _paymentStatisticsRepository.GetRevenueByDateRangeAsync(today);
+                var revenueWeek = await _paymentStatisticsRepository.GetRevenueByDateRangeAsync(startOfWeek);
+                var revenueMonth = await _paymentStatisticsRepository.GetRevenueByDateRangeAsync(startOfMonth);
+                var revenueYear = await _paymentStatisticsRepository.GetRevenueByDateRangeAsync(startOfYear);
                 
-                var totalTransactionsTask = _paymentStatisticsRepository.GetTotalTransactionsCountAsync(); // Get all transactions (all statuses)
-                var completedTransactionsTask = _paymentStatisticsRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Completed);
-                var pendingTransactionsTask = _paymentStatisticsRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Pending);
-                var failedTransactionsTask = _paymentStatisticsRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Failed);
+                var totalTransactions = await _paymentStatisticsRepository.GetTotalTransactionsCountAsync();
+                var completedTransactions = await _paymentStatisticsRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Completed);
+                var pendingTransactions = await _paymentStatisticsRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Pending);
+                var failedTransactions = await _paymentStatisticsRepository.GetTransactionsCountByStatusAsync(PaymentStatus.Failed);
                 
-                var transactionsTodayTask = _paymentStatisticsRepository.GetTransactionsCountByDateRangeAsync(today);
-                var transactionsWeekTask = _paymentStatisticsRepository.GetTransactionsCountByDateRangeAsync(startOfWeek);
-                var transactionsMonthTask = _paymentStatisticsRepository.GetTransactionsCountByDateRangeAsync(startOfMonth);
-
-                await Task.WhenAll(
-                    revenueTask, completedRevenueTask, pendingRevenueTask,
-                    revenueTodayTask, revenueWeekTask, revenueMonthTask, revenueYearTask,
-                    totalTransactionsTask, completedTransactionsTask, pendingTransactionsTask, failedTransactionsTask,
-                    transactionsTodayTask, transactionsWeekTask, transactionsMonthTask
-                );
-
-                var totalRevenue = await revenueTask;
-                var completedTransactions = await completedTransactionsTask;
+                var transactionsToday = await _paymentStatisticsRepository.GetTransactionsCountByDateRangeAsync(today);
+                var transactionsWeek = await _paymentStatisticsRepository.GetTransactionsCountByDateRangeAsync(startOfWeek);
+                var transactionsMonth = await _paymentStatisticsRepository.GetTransactionsCountByDateRangeAsync(startOfMonth);
 
                 var statistics = new RevenueStatisticsDto
                 {
                     TotalRevenue = totalRevenue,
-                    CompletedRevenue = await completedRevenueTask,
-                    PendingRevenue = await pendingRevenueTask,
+                    CompletedRevenue = completedRevenue,
+                    PendingRevenue = pendingRevenue,
                     
-                    RevenueToday = await revenueTodayTask,
-                    RevenueThisWeek = await revenueWeekTask,
-                    RevenueThisMonth = await revenueMonthTask,
-                    RevenueThisYear = await revenueYearTask,
+                    RevenueToday = revenueToday,
+                    RevenueThisWeek = revenueWeek,
+                    RevenueThisMonth = revenueMonth,
+                    RevenueThisYear = revenueYear,
                     
-                    TotalTransactions = await totalTransactionsTask,
+                    TotalTransactions = totalTransactions,
                     CompletedTransactions = completedTransactions,
-                    PendingTransactions = await pendingTransactionsTask,
-                    FailedTransactions = await failedTransactionsTask,
+                    PendingTransactions = pendingTransactions,
+                    FailedTransactions = failedTransactions,
                     
                     AverageTransactionValue = completedTransactions > 0 
                         ? totalRevenue / completedTransactions 
                         : 0,
                     
-                    TransactionsToday = await transactionsTodayTask,
-                    TransactionsThisWeek = await transactionsWeekTask,
-                    TransactionsThisMonth = await transactionsMonthTask
+                    TransactionsToday = transactionsToday,
+                    TransactionsThisWeek = transactionsWeek,
+                    TransactionsThisMonth = transactionsMonth
                 };
 
                 response.Data = statistics;
@@ -237,43 +213,27 @@ namespace LearningEnglish.Application.Service
                 _logger.LogInformation("📊 Fetching revenue chart data for last {Days} days", days);
 
                 var now = DateTime.UtcNow;
-                var fromDate = now.AddDays(-days).Date;
-                var toDate = now.Date;
+                var fromDate = DateTime.SpecifyKind(now.AddDays(-days).Date, DateTimeKind.Utc);
+                var toDate = DateTime.SpecifyKind(now.Date, DateTimeKind.Utc);
                 var currentYear = now.Year;
 
-                // Parallel execution để tối ưu performance
-                var totalRevenueTask = _paymentStatisticsRepository.GetTotalRevenueAsync();
-                var courseRevenueTask = _paymentStatisticsRepository.GetRevenueByProductTypeAsync(ProductType.Course);
-                var teacherPackageRevenueTask = _paymentStatisticsRepository.GetRevenueByProductTypeAsync(ProductType.TeacherPackage);
-                var dailyRevenueTask = _paymentStatisticsRepository.GetDailyRevenueAsync(fromDate, toDate);
-                var monthlyRevenueTask = _paymentStatisticsRepository.GetMonthlyRevenueAsync(currentYear);
+                // Sequential execution to avoid DbContext concurrency issues
+                var totalRevenue = await _paymentStatisticsRepository.GetTotalRevenueAsync();
+                var courseRevenue = await _paymentStatisticsRepository.GetRevenueByProductTypeAsync(ProductType.Course);
+                var teacherPackageRevenue = await _paymentStatisticsRepository.GetRevenueByProductTypeAsync(ProductType.TeacherPackage);
+                var dailyRevenue = await _paymentStatisticsRepository.GetDailyRevenueAsync(fromDate, toDate);
+                var monthlyRevenue = await _paymentStatisticsRepository.GetMonthlyRevenueAsync(currentYear);
 
-                await Task.WhenAll(
-                    totalRevenueTask, courseRevenueTask, teacherPackageRevenueTask,
-                    dailyRevenueTask, monthlyRevenueTask
-                );
-
-                // Get daily revenue breakdown by ProductType in parallel
-                var dailyCourseRevenueTask = _paymentStatisticsRepository.GetDailyRevenueByProductTypeAsync(ProductType.Course, fromDate, toDate);
-                var dailyTeacherPackageRevenueTask = _paymentStatisticsRepository.GetDailyRevenueByProductTypeAsync(ProductType.TeacherPackage, fromDate, toDate);
-
-                await Task.WhenAll(
-                    totalRevenueTask, courseRevenueTask, teacherPackageRevenueTask,
-                    dailyRevenueTask, monthlyRevenueTask,
-                    dailyCourseRevenueTask, dailyTeacherPackageRevenueTask
-                );
-
-                var dailyRevenue = await dailyRevenueTask;
-                var monthlyRevenue = await monthlyRevenueTask;
-                var dailyCourseRevenue = await dailyCourseRevenueTask;
-                var dailyTeacherPackageRevenue = await dailyTeacherPackageRevenueTask;
+                // Get daily revenue breakdown by ProductType
+                var dailyCourseRevenue = await _paymentStatisticsRepository.GetDailyRevenueByProductTypeAsync(ProductType.Course, fromDate, toDate);
+                var dailyTeacherPackageRevenue = await _paymentStatisticsRepository.GetDailyRevenueByProductTypeAsync(ProductType.TeacherPackage, fromDate, toDate);
 
                 // Format data for chart
                 var chartData = new RevenueChartDto
                 {
-                    TotalRevenue = await totalRevenueTask,
-                    CourseRevenue = await courseRevenueTask,
-                    TeacherPackageRevenue = await teacherPackageRevenueTask,
+                    TotalRevenue = totalRevenue,
+                    CourseRevenue = courseRevenue,
+                    TeacherPackageRevenue = teacherPackageRevenue,
                     
                     // Daily revenue timeline (fill missing dates with 0)
                     DailyRevenue = Enumerable.Range(0, days + 1)
@@ -287,7 +247,7 @@ namespace LearningEnglish.Application.Service
                     
                     // Monthly revenue timeline for current year
                     MonthlyRevenue = Enumerable.Range(1, 12)
-                        .Select(month => new DateTime(currentYear, month, 1))
+                        .Select(month => DateTime.SpecifyKind(new DateTime(currentYear, month, 1), DateTimeKind.Utc))
                         .Select(date => new RevenueTimelineItem
                         {
                             Date = date,
