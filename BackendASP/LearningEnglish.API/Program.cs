@@ -49,6 +49,7 @@ using LearningEnglish.Domain.Domain;
 using LearningEnglish.Domain.Entities;
 
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Load configuration (appsettings + environment)
@@ -376,7 +377,7 @@ builder.Services.AddScoped<IScoringStrategy, MatchingScoringStrategy>();
 builder.Services.AddScoped<IScoringStrategy, OrderingScoringStrategy>();
 
 // Background services - All cleanup and scheduled jobs
-builder.Services.AddHostedService<QuizAutoSubmitService>();
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.QuizAutoSubmitService>(); // Tự động nộp bài quiz chưa hoàn thành mỗi 5 phút
 builder.Services.AddHostedService<TempFileCleanupHostedService>();
 builder.Services.AddHostedService<OtpCleanupService>(); // Tự động xóa OTP hết hạn mỗi 30 phút
 builder.Services.AddHostedService<PaymentCleanupService>(); // Tự động cleanup payment expired mỗi giờ
