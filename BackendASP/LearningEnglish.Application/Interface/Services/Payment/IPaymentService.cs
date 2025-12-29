@@ -28,7 +28,7 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<bool>> ProcessPayOSWebhookAsync(PayOSWebhookDto webhookData);
         
         // Xử lý PayOS return URL
-        Task<ServiceResponse<PayOSReturnResult>> ProcessPayOSReturnAsync(string code, string desc, string data);
+        Task<ServiceResponse<PayOSReturnResult>> ProcessPayOSReturnAsync(string code, string desc, string data, string? orderCode = null, string? status = null);
         
         // Xác nhận thanh toán PayOS (với validation PayOS status)
         Task<ServiceResponse<bool>> ConfirmPayOSPaymentAsync(int paymentId, int userId);

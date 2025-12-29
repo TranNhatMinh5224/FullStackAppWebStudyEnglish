@@ -43,7 +43,7 @@ namespace LearningEnglish.Application.Service
                 var notification = new Notification
                 {
                     UserId = userId,
-                    Title = "🎉 Đăng ký khóa học thành công",
+                    Title = "Đăng ký khóa học thành công",
                     Message = $"Bạn đã đăng ký thành công khóa học '{courseTitle}'. Hãy bắt đầu học ngay!",
                     Type = NotificationType.CourseEnrollment,
                     IsRead = false,
@@ -97,14 +97,23 @@ namespace LearningEnglish.Application.Service
                 // Chỉ course MIỄN PHÍ (Price = 0 hoặc null) mới skip payment check
                 if (course.Price > 0)
                 {
-                    var payment = await _paymentRepository.GetSuccessfulPaymentByUserAndCourseAsync(userId, enrollDto.CourseId);
+                    _logger.LogInformation("Checking payment: UserId={UserId}, CourseId={CourseId}, Price={Price}", 
+                        userId, enrollDto.CourseId, course.Price);
+                    
+                    var payment = await _paymentRepository.GetSuccessfulPaymentByUserAndProductAsync(userId, enrollDto.CourseId, ProductType.Course);
+                    
                     if (payment == null)
                     {
+                        _logger.LogWarning("Payment NOT FOUND: UserId={UserId}, CourseId={CourseId}. Payment may not be committed yet or query failed.", 
+                            userId, enrollDto.CourseId);
                         response.Success = false;
                         response.StatusCode = 402;
                         response.Message = "Hãy thanh toán khóa học trước khi đăng ký";
                         return response;
                     }
+                    
+                    _logger.LogInformation("Payment FOUND: PaymentId={PaymentId}, UserId={UserId}, CourseId={CourseId}, Status={Status}", 
+                        payment.PaymentId, userId, enrollDto.CourseId, payment.Status);
                 }
 
                 // Kiểm tra course có còn chỗ không (sử dụng business logic từ Entity)

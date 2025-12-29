@@ -137,7 +137,7 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                         var notification = new Notification
                         {
                             UserId = userId,
-                            Title = "🎓 Chúc mừng! Bạn đã trở thành giáo viên",
+                            Title = "Chúc mừng! Bạn đã trở thành giáo viên",
                             Message = $"Bạn đã đăng ký thành công gói '{teacherPackage.PackageName}'. Giá trị {teacherPackage.Price:N0} VNĐ, hết hạn {endDate:dd/MM/yyyy}.",
                             Type = NotificationType.PaymentSuccess,
                             RelatedEntityType = "TeacherPackage",

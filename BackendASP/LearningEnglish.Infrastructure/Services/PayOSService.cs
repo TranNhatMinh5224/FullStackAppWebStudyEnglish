@@ -42,33 +42,61 @@ namespace LearningEnglish.Infrastructure.Services
                 _logger.LogInformation("Creating PayOS payment link for Payment {PaymentId}, OrderCode: {OrderCode}, Amount: {Amount}",
                     request.PaymentId, orderCode, amount);
 
-                // Tạo request body cho PayOS
+                if (amount <= 0 || amount > 100000000) // Max 100 triệu VND
+                {
+                    _logger.LogError("Invalid amount: {Amount}", amount);
+                    response.Success = false;
+                    response.Message = "Số tiền không hợp lệ";
+                    return response;
+                }
+
+                var amountInt = (int)Math.Round(amount, MidpointRounding.AwayFromZero);
+
+                // Description: dùng tên dịch vụ đang định mua (PayOS giới hạn <= 9 ký tự)
+                var safeDescription = (description ?? "THANHTOAN").Trim();
+                if (safeDescription.Length > 9)
+                {
+                    safeDescription = safeDescription.Substring(0, 9);
+                }
+
+                var baseReturnUrl = _options.ReturnUrl?.Trim() ?? "";
+                var baseCancelUrl = _options.CancelUrl?.Trim() ?? "";
+                
+                var returnUrl = string.IsNullOrEmpty(baseReturnUrl) 
+                    ? baseReturnUrl 
+                    : $"{baseReturnUrl}{(baseReturnUrl.Contains("?") ? "&" : "?")}orderCode={orderCode}";
+                var cancelUrl = string.IsNullOrEmpty(baseCancelUrl) 
+                    ? baseCancelUrl 
+                    : $"{baseCancelUrl}{(baseCancelUrl.Contains("?") ? "&" : "?")}orderCode={orderCode}";
+
+                
+                var signData = $"amount={amountInt}&cancelUrl={cancelUrl}&description={safeDescription}&orderCode={orderCode}&returnUrl={returnUrl}";
+                var signature = HmacSha256(signData, _options.ChecksumKey);
+
                 var requestBody = new
                 {
                     orderCode = orderCode,
-                    amount = (int)amount, // PayOS yêu cầu int (VND)
-                    description = description,
-                    items = new[]
-                    {
-                        new
-                        {
-                            name = productName,
-                            quantity = 1,
-                            price = (int)amount
-                        }
-                    },
-                    returnUrl = _options.ReturnUrl,
-                    cancelUrl = _options.CancelUrl
+                    amount = amountInt,
+                    description = safeDescription,
+                    returnUrl = returnUrl,
+                    cancelUrl = cancelUrl,
+                    signature = signature
                 };
 
                 var jsonContent = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                _logger.LogInformation("PayOS request: {Request}", jsonContent);
+                _logger.LogInformation("PayOS request body: {Body}", jsonContent);
+                _logger.LogInformation("PayOS signData: {SignData}", signData);
+                _logger.LogInformation("PayOS signature: {Signature}", signature);
 
                 // Gọi PayOS API
                 var httpResponse = await _httpClient.PostAsync("/v2/payment-requests", content);
                 var responseContent = await httpResponse.Content.ReadAsStringAsync();
+
+              
+                _logger.LogInformation("PayOS API response: StatusCode={StatusCode}, Response={Response}", 
+                    httpResponse.StatusCode, responseContent);
 
                 if (!httpResponse.IsSuccessStatusCode)
                 {
@@ -81,13 +109,57 @@ namespace LearningEnglish.Infrastructure.Services
 
                 var payosResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
                 
-                // Parse response
-                var data = payosResponse.GetProperty("data");
-                var checkoutUrl = data.GetProperty("checkoutUrl").GetString();
+                
+                if (payosResponse.TryGetProperty("code", out var codeElement))
+                {
+                    var code = codeElement.GetString();
+                    if (code != "00")
+                    {
+                        var desc = payosResponse.TryGetProperty("desc", out var descElement)
+                            ? descElement.GetString()
+                            : "Unknown PayOS error";
+
+                        _logger.LogError("PayOS error: Code={Code}, Desc={Desc}, Response={Response}", 
+                            code, desc, responseContent);
+                        response.Success = false;
+                        response.Message = $"PayOS error: {desc}";
+                        return response;
+                    }
+                }
+
+               
+                if (!payosResponse.TryGetProperty("data", out var dataElement) || 
+                    dataElement.ValueKind == JsonValueKind.Null)
+                {
+                    _logger.LogError("PayOS response missing or null 'data' property. Response: {Response}", responseContent);
+                    response.Success = false;
+                    response.Message = "PayOS response không hợp lệ: thiếu dữ liệu";
+                    return response;
+                }
+
+                
+                if (!dataElement.TryGetProperty("checkoutUrl", out var checkoutUrlElement))
+                {
+                    _logger.LogError("PayOS response missing 'checkoutUrl' property. Response: {Response}", responseContent);
+                    response.Success = false;
+                    response.Message = "PayOS response không hợp lệ: thiếu checkoutUrl";
+                    return response;
+                }
+
+                var checkoutUrl = checkoutUrlElement.GetString();
+
+            
+                if (string.IsNullOrWhiteSpace(checkoutUrl))
+                {
+                    _logger.LogError("PayOS returned empty checkoutUrl. Response: {Response}", responseContent);
+                    response.Success = false;
+                    response.Message = "PayOS trả checkoutUrl rỗng";
+                    return response;
+                }
 
                 response.Data = new PayOSLinkResponse
                 {
-                    CheckoutUrl = checkoutUrl ?? string.Empty,
+                    CheckoutUrl = checkoutUrl,
                     OrderCode = orderCode.ToString(),
                     PaymentId = request.PaymentId
                 };
@@ -128,18 +200,23 @@ namespace LearningEnglish.Infrastructure.Services
                 var code = payosData.GetProperty("code").GetString() ?? "";
                 var data = payosData.GetProperty("data");
 
+                var status = data.TryGetProperty("status", out var statusElement) 
+                    ? statusElement.GetString() ?? "" 
+                    : "";
+
                 response.Data = new PayOSWebhookDto
                 {
                     Code = code,
                     OrderCode = data.GetProperty("orderCode").GetInt64(),
                     Desc = payosData.TryGetProperty("desc", out var desc) ? desc.GetString() ?? "" : "",
                     Data = responseContent,
-                    Signature = ""
+                    Signature = "",
+                    Status = status
                 };
                 response.Success = true;
 
-                _logger.LogInformation("PayOS payment information retrieved: Code={Code}, OrderCode={OrderCode}",
-                    code, orderCode);
+                _logger.LogInformation("PayOS payment information retrieved: Code={Code}, OrderCode={OrderCode}, Status={Status}",
+                    code, orderCode, status);
             }
             catch (Exception ex)
             {
@@ -151,17 +228,23 @@ namespace LearningEnglish.Infrastructure.Services
             return response;
         }
 
+        // ✅ Helper method để tạo HMAC SHA256
+        private string HmacSha256(string data, string key)
+        {
+            var keyBytes = Encoding.UTF8.GetBytes(key);
+            var dataBytes = Encoding.UTF8.GetBytes(data);
+            
+            using var hmac = new HMACSHA256(keyBytes);
+            var hashBytes = hmac.ComputeHash(dataBytes);
+            return Convert.ToHexString(hashBytes).ToLower();
+        }
+
         public Task<bool> VerifyWebhookSignature(string data, string signature)
         {
             try
             {
                 // PayOS sử dụng HMAC SHA256 để verify signature
-                var keyBytes = Encoding.UTF8.GetBytes(_options.ChecksumKey);
-                var dataBytes = Encoding.UTF8.GetBytes(data);
-                
-                using var hmac = new HMACSHA256(keyBytes);
-                var computedSignature = Convert.ToHexString(hmac.ComputeHash(dataBytes)).ToLower();
-                
+                var computedSignature = HmacSha256(data, _options.ChecksumKey);
                 var isValid = computedSignature == signature.ToLower();
                 
                 if (!isValid)

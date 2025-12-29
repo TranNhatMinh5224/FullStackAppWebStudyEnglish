@@ -53,6 +53,7 @@ namespace LearningEnglish.Application.DTOs
         public string Desc { get; set; } = string.Empty;
         public string Data { get; set; } = string.Empty;
         public string Signature { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty; // "PAID", "PENDING", "PROCESSING", "CANCELLED"
     }
 }
 
