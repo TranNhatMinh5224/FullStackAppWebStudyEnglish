@@ -32,6 +32,7 @@ public class StreakService : IStreakService
         _mapper = mapper;
     }
 
+    // Lấy streak hiện tại của user
     public async Task<ServiceResponse<StreakDto>> GetCurrentStreakAsync(int userId)
     {
         try
@@ -73,6 +74,7 @@ public class StreakService : IStreakService
         }
     }
 
+    // Cập nhật streak khi user online
     public async Task<ServiceResponse<StreakUpdateResultDto>> UpdateStreakAsync(int userId)
     {
         var response = new ServiceResponse<StreakUpdateResultDto>();
@@ -182,6 +184,7 @@ public class StreakService : IStreakService
         return response;
     }
 
+    // Gửi reminder cho users sắp đứt streak (Admin/Cron job)
     public async Task<ServiceResponse<object>> SendStreakRemindersAsync()
     {
         try

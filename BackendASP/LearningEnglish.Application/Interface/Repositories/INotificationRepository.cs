@@ -9,6 +9,9 @@ namespace LearningEnglish.Application.Interface
         // Tạo thông báo
         Task AddAsync(Notification notification);
         
+        // Lấy thông báo theo ID
+        Task<Notification?> GetByIdAsync(int notificationId);
+        
         // Lấy danh sách thông báo
         Task<IEnumerable<Notification>> GetUserNotificationsAsync(int userId);
         

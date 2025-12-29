@@ -15,8 +15,10 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
+      
         public async Task<Streak?> GetByUserIdAsync(int userId)
         {
+           
             return await _context.Streaks
                 .FirstOrDefaultAsync(s => s.UserId == userId);
         }
@@ -36,13 +38,16 @@ namespace LearningEnglish.Infrastructure.Repositories
 
         public async Task<bool> ExistsAsync(int userId)
         {
+            
             return await _context.Streaks.AnyAsync(s => s.UserId == userId);
         }
 
+       
         public async Task<List<Streak>> GetUsersAtRiskOfLosingStreakAsync(int minStreak = 3)
         {
             var yesterday = DateTime.UtcNow.Date.AddDays(-1);
             
+           
             return await _context.Streaks
                 .Include(s => s.User)
                 .Where(s => s.CurrentStreak >= minStreak 

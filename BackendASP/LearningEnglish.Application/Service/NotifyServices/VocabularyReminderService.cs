@@ -6,10 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service;
 
-/// <summary>
-/// Service chuyên biệt CHỈ NHẮC HỌC LẠI TỪ VỰNG qua App + Email
-/// Mục đích duy nhất: Nhắc user ôn tập từ vựng đã học theo lịch trình SRS
-/// </summary>
+// Service chuyên biệt CHỈ NHẮC HỌC LẠI TỪ VỰNG qua App + Email
+// Mục đích duy nhất: Nhắc user ôn tập từ vựng đã học theo lịch trình SRS
 public class VocabularyReminderService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
@@ -78,9 +76,7 @@ public class VocabularyReminderService : BackgroundService
         _logger.LogInformation("✅ VocabularyReminderService đã dừng");
     }
 
-    /// <summary>
-    /// GỬI NHẮC NHỞ HỌC TỪ VỰNG qua App + Email
-    /// </summary>
+    // GỬỈ NHẮC NHỞ HỌC TỪ VỰNG qua App + Email
     private async Task SendVocabularyReminders()
     {
         _logger.LogInformation("📚 Bắt đầu gửi nhắc nhở học từ vựng...");
@@ -95,9 +91,8 @@ public class VocabularyReminderService : BackgroundService
         {
             var currentDate = DateTime.UtcNow.Date;
             
-            // Lấy tất cả users và filter students
-            var allUsers = await userRepository.GetAllUsersAsync();
-            var students = allUsers.Where(u => u.Roles.Any(r => r.Name == "Student")).ToList();
+            // Lấy students từ repository
+            var students = await userRepository.GetUsersByRoleAsync("Student");
             
             int sentAppNotifications = 0;
             int sentEmails = 0;

@@ -2,15 +2,18 @@ using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Utils;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using AutoMapper;
+using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
 
 namespace LearningEnglish.Application.Service
 {
+    
     public class TeacherCourseService : ITeacherCourseService
     {
         private readonly ICourseRepository _courseRepository;
@@ -18,11 +21,7 @@ namespace LearningEnglish.Application.Service
         private readonly IMapper _mapper;
         private readonly ILogger<TeacherCourseService> _logger;
         private readonly ITeacherPackageRepository _teacherPackageRepository;
-        private readonly IMinioFileStorage _minioFileStorage;
-
-        // Đặt bucket + folder cho ảnh khóa học 
-        private const string CourseImageBucket = "courses";   // vd: bucket "images"
-        private const string CourseImageFolder = "real";  // folder real "courses"
+        private readonly ICourseImageService _courseImageService;
 
         public TeacherCourseService(
             ICourseRepository courseRepository,
@@ -30,15 +29,16 @@ namespace LearningEnglish.Application.Service
             IMapper mapper,
             ILogger<TeacherCourseService> logger,
             ITeacherPackageRepository teacherPackageRepository,
-            IMinioFileStorage minioFileStorage)
+            ICourseImageService courseImageService)
         {
             _courseRepository = courseRepository;
             _userRepository = userRepository;
             _mapper = mapper;
             _logger = logger;
             _teacherPackageRepository = teacherPackageRepository;
-            _minioFileStorage = minioFileStorage;
+            _courseImageService = courseImageService;
         }
+        // Tạo Khóa học 
 
         public async Task<ServiceResponse<CourseResponseDto>> CreateCourseAsync(
             TeacherCreateCourseRequestDto requestDto,
@@ -67,7 +67,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra số lượng course hiện tại
+                // Kiểm tra số lượng course hiện tại của teacher này
                 var teacherCourses = await _courseRepository.GetCoursesByTeacher(teacherId);
                 int currentCourseCount = teacherCourses.Count();
                 int maxCourses = teacherPackage.MaxCourses;
@@ -108,22 +108,20 @@ namespace LearningEnglish.Application.Service
                 // Convert temp file → real file nếu có ImageTempKey
                 if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))
                 {
-                    var commitResult = await _minioFileStorage.CommitFileAsync(
-                        requestDto.ImageTempKey,
-                        CourseImageBucket,
-                        CourseImageFolder
-                    );
-
-                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    try
                     {
+                        committedImageKey = await _courseImageService.CommitImageAsync(requestDto.ImageTempKey);
+                        course.ImageKey = committedImageKey;
+                        course.ImageType = requestDto.ImageType;
+                    }
+                    catch (Exception imageEx)
+                    {
+                        _logger.LogError(imageEx, "Failed to commit course image");
                         response.Success = false;
+                        response.StatusCode = 400;
                         response.Message = "Không thể lưu ảnh khóa học. Vui lòng thử lại.";
                         return response;
                     }
-
-                    committedImageKey = commitResult.Data;
-                    course.ImageKey = committedImageKey;
-                    course.ImageType = requestDto.ImageType;
                 }
 
                 try
@@ -134,10 +132,10 @@ namespace LearningEnglish.Application.Service
                 {
                     _logger.LogError(dbEx, "Database error while creating course");
 
-                    // Rollback MinIO file
+                    // Rollback image if DB fails
                     if (committedImageKey != null)
                     {
-                        await _minioFileStorage.DeleteFileAsync(committedImageKey, CourseImageBucket);
+                        await _courseImageService.DeleteImageAsync(committedImageKey);
                     }
 
                     response.Success = false;
@@ -153,10 +151,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
-                    courseResponseDto.ImageUrl = BuildPublicUrl.BuildURL(
-                        CourseImageBucket,
-                        course.ImageKey
-                    );
+                    courseResponseDto.ImageUrl = _courseImageService.BuildImageUrl(course.ImageKey);
                     courseResponseDto.ImageType = course.ImageType;
                 }
 
@@ -191,9 +186,7 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // RLS đã tự động filter courses theo TeacherId
-                // Nếu course == null → teacher không có quyền hoặc course không tồn tại
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                var course = await _courseRepository.GetCourseByIdForTeacher(courseId, teacherId);
                 if (course == null)
                 {
                     response.Success = false;
@@ -202,14 +195,12 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 🔒 Explicit ownership check (defense in depth)
-                if (!course.TeacherId.HasValue || course.TeacherId.Value != teacherId)
+                // Không cho phép teacher cập nhật course System
+                if (course.Type ==  CourseType.System)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
-                    response.Message = "Bạn không có quyền chỉnh sửa khóa học này";
-                    _logger.LogWarning("Teacher {TeacherId} attempted to update course {CourseId} owned by {OwnerId}",
-                        teacherId, courseId, course.TeacherId);
+                    response.Message = "Không thể cập nhật khóa học System";
                     return response;
                 }
 
@@ -223,29 +214,41 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra MaxStudent không vượt quá package limit
-                if (requestDto.MaxStudent > 0 && requestDto.MaxStudent > teacherPackage.MaxStudents)
+                // Cập nhật Title nếu có
+                if (!string.IsNullOrWhiteSpace(requestDto.Title))
                 {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = $"Số học sinh tối đa ({requestDto.MaxStudent}) không được vượt quá giới hạn gói ({teacherPackage.MaxStudents})";
-                    return response;
+                    course.Title = requestDto.Title;
                 }
 
-                // Nếu đã có students enrolled, không cho phép giảm MaxStudent xuống dưới EnrollmentCount
-                if (requestDto.MaxStudent > 0 && requestDto.MaxStudent < course.EnrollmentCount)
+                // Cập nhật Description nếu có
+                if (!string.IsNullOrWhiteSpace(requestDto.Description))
                 {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = $"Không thể đặt số học sinh tối đa ({requestDto.MaxStudent}) thấp hơn số lượng đã đăng ký ({course.EnrollmentCount})";
-                    return response;
+                    course.DescriptionMarkdown = requestDto.Description;
                 }
 
-                // Cập nhật course basic info
-                course.Title = requestDto.Title;
-                course.DescriptionMarkdown = requestDto.Description;
-                course.Type = requestDto.Type;
-                course.MaxStudent = requestDto.MaxStudent > 0 ? requestDto.MaxStudent : teacherPackage.MaxStudents;
+                // Cập nhật MaxStudent nếu có
+                if (requestDto.MaxStudent.HasValue && requestDto.MaxStudent.Value > 0)
+                {
+                    // Kiểm tra MaxStudent không vượt quá package limit
+                    if (requestDto.MaxStudent.Value > teacherPackage.MaxStudents)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = $"Số học sinh tối đa ({requestDto.MaxStudent.Value}) không được vượt quá giới hạn gói ({teacherPackage.MaxStudents})";
+                        return response;
+                    }
+
+                    // Nếu đã có students enrolled, không cho phép giảm MaxStudent xuống dưới EnrollmentCount
+                    if (requestDto.MaxStudent.Value < course.EnrollmentCount)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = $"Không thể đặt số học sinh tối đa ({requestDto.MaxStudent.Value}) thấp hơn số lượng đã đăng ký ({course.EnrollmentCount})";
+                        return response;
+                    }
+
+                    course.MaxStudent = requestDto.MaxStudent.Value;
+                }
 
                 string? newImageKey = null;
                 string? oldImageKey = !string.IsNullOrWhiteSpace(course.ImageKey) ? course.ImageKey : null;
@@ -253,24 +256,20 @@ namespace LearningEnglish.Application.Service
                 // Xử lý file ảnh: commit new first
                 if (!string.IsNullOrWhiteSpace(requestDto.ImageTempKey))
                 {
-                    // Commit ảnh mới
-                    var commitResult = await _minioFileStorage.CommitFileAsync(
-                        requestDto.ImageTempKey,
-                        CourseImageBucket,
-                        CourseImageFolder
-                    );
-
-                    if (!commitResult.Success || string.IsNullOrWhiteSpace(commitResult.Data))
+                    try
                     {
+                        newImageKey = await _courseImageService.CommitImageAsync(requestDto.ImageTempKey);
+                        course.ImageKey = newImageKey;
+                        course.ImageType = requestDto.ImageType;
+                    }
+                    catch (Exception imageEx)
+                    {
+                        _logger.LogError(imageEx, "Failed to commit new course image");
                         response.Success = false;
                         response.StatusCode = 400;
                         response.Message = "Không thể cập nhật ảnh khóa học.";
                         return response;
                     }
-
-                    newImageKey = commitResult.Data;
-                    course.ImageKey = newImageKey;
-                    course.ImageType = requestDto.ImageType;
                 }
 
                 try
@@ -281,10 +280,10 @@ namespace LearningEnglish.Application.Service
                 {
                     _logger.LogError(dbEx, "Database error while updating course");
 
-                    // Rollback new image
+                    // Rollback new image if DB fails
                     if (newImageKey != null)
                     {
-                        await _minioFileStorage.DeleteFileAsync(newImageKey, CourseImageBucket);
+                        await _courseImageService.DeleteImageAsync(newImageKey);
                     }
 
                     response.Success = false;
@@ -296,14 +295,7 @@ namespace LearningEnglish.Application.Service
                 // Delete old image only after successful DB update
                 if (oldImageKey != null && newImageKey != null)
                 {
-                    try
-                    {
-                        await _minioFileStorage.DeleteFileAsync(oldImageKey, CourseImageBucket);
-                    }
-                    catch
-                    {
-                        _logger.LogWarning("Failed to delete old course image: {ImageUrl}", oldImageKey);
-                    }
+                    await _courseImageService.DeleteImageAsync(oldImageKey);
                 }
 
                 // Map response và generate URL từ key
@@ -313,10 +305,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
-                    courseResponseDto.ImageUrl = BuildPublicUrl.BuildURL(
-                        CourseImageBucket,
-                        course.ImageKey
-                    );
+                    courseResponseDto.ImageUrl = _courseImageService.BuildImageUrl(course.ImageKey);
                     courseResponseDto.ImageType = course.ImageType;
                 }
 
@@ -355,7 +344,7 @@ namespace LearningEnglish.Application.Service
 
                     if (!string.IsNullOrWhiteSpace(course.ImageKey))
                     {
-                        dto.ImageUrl = BuildPublicUrl.BuildURL(CourseImageBucket, course.ImageKey);
+                        dto.ImageUrl = _courseImageService.BuildImageUrl(course.ImageKey);
                         dto.ImageType = course.ImageType;
                     }
                     items.Add(dto);
@@ -374,62 +363,49 @@ namespace LearningEnglish.Application.Service
             {
                 response.Success = false;
                 response.Message = $"Error: {ex.Message}";
-                _logger.LogError(ex, "Error for TeacherId: {TeacherId}", teacherId);
+                _logger.LogError(ex, "Error in GetMyCoursesPagedAsync");
             }
             return response;
         }
 
-        // Xóa khóa học
+      
         public async Task<ServiceResponse<CourseResponseDto>> DeleteCourseAsync(int courseId, int teacherId)
         {
             var response = new ServiceResponse<CourseResponseDto>();
 
             try
             {
-                // RLS đã tự động filter courses theo TeacherId
-                // Nếu course == null → teacher không có quyền hoặc course không tồn tại
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                var course = await _courseRepository.GetCourseByIdForTeacher(courseId, teacherId);
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Course not found or you do not have permission to access it";
+                    response.Message = "Không tìm thấy khóa học hoặc bạn không có quyền truy cập";
                     return response;
                 }
 
-                // 🔒 Explicit ownership check (defense in depth)
-                if (!course.TeacherId.HasValue || course.TeacherId.Value != teacherId)
+                // Không cho phép teacher xóa course System
+                if (course.Type == CourseType.System)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
-                    response.Message = "Bạn không có quyền xóa khóa học này";
-                    _logger.LogWarning("Teacher {TeacherId} attempted to delete course {CourseId} owned by {OwnerId}",
-                        teacherId, courseId, course.TeacherId);
+                    response.Message = "Không thể xóa khóa học System";
                     return response;
                 }
 
-                await _courseRepository.DeleteCourse(courseId);
-                // xóa ảnh khóa học trên MinIO nếu có
+                // Xóa ảnh khóa học trên MinIO nếu có (trước khi xóa course)
                 if (!string.IsNullOrWhiteSpace(course.ImageKey))
                 {
-                    try
-                    {
-                        await _minioFileStorage.DeleteFileAsync(
-                            course.ImageKey,
-                            CourseImageBucket
-                        );
-                    }
-                    catch (Exception deleteEx)
-                    {
-                        _logger.LogWarning(deleteEx, "Failed to delete course image: {ImageUrl}", course.ImageKey);
-                    }
+                    await _courseImageService.DeleteImageAsync(course.ImageKey);
                 }
+
+                await _courseRepository.DeleteCourse(courseId);
 
                 response.Success = true;
                 response.StatusCode = 200;
                 response.Message = "Course deleted successfully";
 
-                _logger.LogInformation("Course {CourseId} deleted by Teacher {TeacherId}", courseId, teacherId);
+                _logger.LogInformation("Course {CourseId} deleted", courseId);
             }
             catch (Exception ex)
             {
@@ -441,6 +417,9 @@ namespace LearningEnglish.Application.Service
 
             return response;
         }
+        
+
+        // Lấy chi tiết 1 khóa học
 
         public async Task<ServiceResponse<TeacherCourseDetailDto>> GetCourseDetailAsync(int courseId, int teacherId)
         {
@@ -448,27 +427,31 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // Lấy course với đầy đủ thông tin lessons và teacher
                 var course = await _courseRepository.GetCourseById(courseId);
 
                 if (course == null)
                 {
                     response.Success = false;
                     response.StatusCode = 404;
-                    response.Message = "Course not found";
+                    response.Message = "Không tìm thấy khóa học";
                     return response;
                 }
 
-                // Kiểm tra ownership: Teacher chỉ được xem khóa học của mình
+                // Kiểm tra course phải thuộc về teacher hiện tại
                 if (course.TeacherId != teacherId)
                 {
                     response.Success = false;
                     response.StatusCode = 403;
-                    response.Message = "You do not have permission to view this course";
-                    _logger.LogWarning(
-                        "Teacher {TeacherId} attempted to access Course {CourseId} owned by Teacher {OwnerId}",
-                        teacherId, courseId, course.TeacherId
-                    );
+                    response.Message = "Bạn không có quyền xem khóa học này";
+                    return response;
+                }
+
+                // Không cho phép teacher xem course System (optional - tùy business logic)
+                if (course.Type == CourseType.System)
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Không thể xem chi tiết khóa học System";
                     return response;
                 }
 
@@ -480,18 +463,14 @@ namespace LearningEnglish.Application.Service
                 response.Data = courseDetailDto;
                 response.Message = "Course details retrieved successfully";
 
-                _logger.LogInformation(
-                    "Teacher {TeacherId} retrieved details for Course {CourseId}",
-                    teacherId, courseId
-                );
+                _logger.LogInformation("Retrieved details for Course {CourseId}", courseId);
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.StatusCode = 500;
                 response.Message = "An error occurred while retrieving course details";
-                _logger.LogError(ex, "Error in GetCourseDetailAsync for CourseId: {CourseId}, TeacherId: {TeacherId}", 
-                    courseId, teacherId);
+                _logger.LogError(ex, "Error in GetCourseDetailAsync for CourseId: {CourseId}", courseId);
             }
 
             return response;

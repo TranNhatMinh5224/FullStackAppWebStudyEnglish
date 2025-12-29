@@ -1,37 +1,39 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
+using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
+   
     public class UserCourseService : IUserCourseService
     {
         private readonly ICourseRepository _courseRepository;
-        private readonly ICourseRepository _userCourseRepository;
         private readonly ICourseProgressRepository _courseProgressRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<UserCourseService> _logger;
-
-
-        private const string CourseImageBucket = "courses";
+        private readonly ICourseImageService _courseImageService;
 
         public UserCourseService(
             ICourseRepository courseRepository,
-            ICourseRepository userCourseRepository,
             ICourseProgressRepository courseProgressRepository,
             IMapper mapper,
-            ILogger<UserCourseService> logger)
+            ILogger<UserCourseService> logger,
+            ICourseImageService courseImageService)
         {
             _courseRepository = courseRepository;
-            _userCourseRepository = userCourseRepository;
             _courseProgressRepository = courseProgressRepository;
             _mapper = mapper;
             _logger = logger;
+            _courseImageService = courseImageService;
         }
-        // GET /api/user/courses/system-courses
+        //  Lấy danh sách Khóa học System 
+        
         public async Task<ServiceResponse<IEnumerable<SystemCoursesListResponseDto>>> GetSystemCoursesAsync(int? userId = null)
         {
             var response = new ServiceResponse<IEnumerable<SystemCoursesListResponseDto>>();
@@ -47,10 +49,7 @@ namespace LearningEnglish.Application.Service
                 {
                     if (!string.IsNullOrWhiteSpace(courseDto.ImageUrl))
                     {
-                        courseDto.ImageUrl = BuildPublicUrl.BuildURL(
-                            CourseImageBucket,
-                            courseDto.ImageUrl
-                        );
+                        courseDto.ImageUrl = _courseImageService.BuildImageUrl(courseDto.ImageUrl);
                     }
 
                     // Check enrollment status nếu user đã login
@@ -82,14 +81,14 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // GET /api/user/courses/{courseId}
+        // lấy Thông tin chi tiết 1 Course 
         public async Task<ServiceResponse<CourseDetailWithEnrollmentDto>> GetCourseByIdAsync(int courseId, int? userId = null)
         {
             var response = new ServiceResponse<CourseDetailWithEnrollmentDto>();
 
             try
             {
-                var course = await _courseRepository.GetByIdAsync(courseId);
+                var course = await _courseRepository.GetCourseById(courseId);
 
                 if (course == null)
                 {
@@ -104,7 +103,7 @@ namespace LearningEnglish.Application.Service
                 // Generate URL từ key
                 if (!string.IsNullOrWhiteSpace(courseDto.ImageUrl))
                 {
-                    courseDto.ImageUrl = BuildPublicUrl.BuildURL(CourseImageBucket, courseDto.ImageUrl);
+                    courseDto.ImageUrl = _courseImageService.BuildImageUrl(courseDto.ImageUrl);
                 }
 
                 // Check enrollment status nếu user đã login
@@ -164,10 +163,7 @@ namespace LearningEnglish.Application.Service
                 {
                     if (!string.IsNullOrWhiteSpace(courseDto.ImageUrl))
                     {
-                        courseDto.ImageUrl = BuildPublicUrl.BuildURL(
-                            CourseImageBucket,
-                            courseDto.ImageUrl
-                        );
+                        courseDto.ImageUrl = _courseImageService.BuildImageUrl(courseDto.ImageUrl);
                     }
                 }
 
@@ -189,5 +185,104 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
+
+
+
+
+
+        // Lấy danh sách khóa học đã đăng ký của user với phân trang
+
+
+
+
+
+
+        
+         public async Task<ServiceResponse<PagedResult<EnrolledCourseWithProgressDto>>> GetMyEnrolledCoursesPagedAsync(int userId, PageRequest request)
+        {
+            var response = new ServiceResponse<PagedResult<EnrolledCourseWithProgressDto>>();
+
+            try
+            {
+                var pagedCourses = await _courseRepository.GetEnrolledCoursesByUserPagedAsync(userId, request);
+
+                if (pagedCourses.Items == null || !pagedCourses.Items.Any())
+                {
+                    response.Data = new PagedResult<EnrolledCourseWithProgressDto>
+                    {
+                        Items = new List<EnrolledCourseWithProgressDto>(),
+                        TotalCount = 0,
+                        PageNumber = request.PageNumber,
+                        PageSize = request.PageSize
+                    };
+                    response.Message = "No enrolled courses found";
+                    return response;
+                }
+
+                // Map to EnrolledCourseWithProgressDto and populate progress data
+                var courseDtos = new List<EnrolledCourseWithProgressDto>();
+
+                foreach (var course in pagedCourses.Items)
+                {
+                    var courseDto = _mapper.Map<EnrolledCourseWithProgressDto>(course);
+
+                    // Get progress information for this course
+                    var courseProgress = await _courseProgressRepository.GetByUserAndCourseAsync(userId, course.CourseId);
+
+                    if (courseProgress != null)
+                    {
+                        courseDto.ProgressPercentage = courseProgress.ProgressPercentage;
+                        courseDto.CompletedLessons = courseProgress.CompletedLessons;
+                        courseDto.TotalLessons = courseProgress.TotalLessons;
+                        courseDto.IsCompleted = courseProgress.IsCompleted;
+                        courseDto.EnrolledAt = courseProgress.EnrolledAt;
+                        courseDto.CompletedAt = courseProgress.CompletedAt;
+                    }
+                    else
+                    {
+                        // No progress yet, set default values
+                        courseDto.ProgressPercentage = 0;
+                        courseDto.CompletedLessons = 0;
+                        courseDto.TotalLessons = course.Lessons?.Count ?? 0;
+                        courseDto.IsCompleted = false;
+                        courseDto.EnrolledAt = DateTime.UtcNow;
+                        courseDto.CompletedAt = null;
+                    }
+
+                    // Generate image URL
+                    if (!string.IsNullOrWhiteSpace(courseDto.ImageUrl))
+                    {
+                        courseDto.ImageUrl = _courseImageService.BuildImageUrl(courseDto.ImageUrl);
+                    }
+
+                    courseDtos.Add(courseDto);
+                }
+
+                response.Success = true;
+                response.Data = new PagedResult<EnrolledCourseWithProgressDto>
+                {
+                    Items = courseDtos,
+                    TotalCount = pagedCourses.TotalCount,
+                    PageNumber = pagedCourses.PageNumber,
+                    PageSize = pagedCourses.PageSize
+                };
+                response.Message = $"Retrieved {courseDtos.Count} of {pagedCourses.TotalCount} enrolled courses";
+
+                _logger.LogInformation("User {UserId} has {Count}/{Total} enrolled courses on page {Page}", 
+                    userId, courseDtos.Count, pagedCourses.TotalCount, request.PageNumber);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = $"Error retrieving enrolled courses: {ex.Message}";
+                _logger.LogError(ex, "Error in GetMyEnrolledCoursesPagedAsync for UserId: {UserId}", userId);
+            }
+
+            return response;
+        }
     }
 }
+
+    
+

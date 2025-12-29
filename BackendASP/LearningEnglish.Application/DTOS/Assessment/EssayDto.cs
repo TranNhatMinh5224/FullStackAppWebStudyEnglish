@@ -18,8 +18,6 @@ namespace LearningEnglish.Application.DTOs
         public string? ImageUrl { get; set; }
         public string? ImageType { get; set; }
 
-        public string Type { get; set; } = "Essay";
-
         // Submission count (thay vì full list để tránh circular reference)
         public int TotalSubmissions { get; set; }
     }
@@ -75,9 +73,40 @@ namespace LearningEnglish.Application.DTOs
         public DateTime SubmittedAt { get; set; }
         public string Status { get; set; } = string.Empty;
 
-        // User info (không include full UserDto để tránh circular reference)
+        // � Grading Information (1 điểm duy nhất - AI hoặc Teacher ghi đè)
+        // ═══════════════════════════════════════════════
+        // AI GRADING (có thể null nếu chưa dùng AI)
+        // ═══════════════════════════════════════════════
+        public decimal? AiScore { get; set; }
+        public string? AiFeedback { get; set; }
+        public DateTime? AiGradedAt { get; set; }
+
+        // ═══════════════════════════════════════════════
+        // TEACHER/ADMIN GRADING (có thể null nếu chưa chấm)
+        // ═══════════════════════════════════════════════
+        public decimal? TeacherScore { get; set; }
+        public string? TeacherFeedback { get; set; }
+        public DateTime? TeacherGradedAt { get; set; }
+        public int? GradedByTeacherId { get; set; }
+        public string? GradedByTeacherName { get; set; }
+
+        // ═══════════════════════════════════════════════
+        // FINAL SCORE (ưu tiên Teacher, nếu không có thì AI)
+        // ═══════════════════════════════════════════════
+        public decimal? Score { get; set; }
+        public string? Feedback { get; set; }
+        public DateTime? GradedAt { get; set; }
+        
+        // Max score từ assessment
+        public decimal? MaxScore { get; set; }
+
+        // User info
         public string? UserName { get; set; }
         public string? UserEmail { get; set; }
+        
+        // Essay info (để student review)
+        public string? EssayTitle { get; set; }
+        public string? EssayDescription { get; set; }
     }
 
 

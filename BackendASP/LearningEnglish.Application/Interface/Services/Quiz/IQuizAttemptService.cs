@@ -9,15 +9,15 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<QuizAttemptWithQuestionsDto>> StartQuizAttemptAsync(int quizId, int userId);
 
         // Cập nhật câu trả lời và chấm điểm
-        Task<ServiceResponse<decimal>> UpdateAnswerAndScoreAsync(int attemptId, UpdateAnswerRequestDto request);
+        Task<ServiceResponse<decimal>> UpdateAnswerAndScoreAsync(int attemptId, UpdateAnswerRequestDto request, int userId);
 
         // Nộp bài quiz
-        Task<ServiceResponse<QuizAttemptResultDto>> SubmitQuizAttemptAsync(int attemptId);
+        Task<ServiceResponse<QuizAttemptResultDto>> SubmitQuizAttemptAsync(int attemptId, int userId);
 
         // Tự động nộp bài hết giờ
         Task<ServiceResponse<bool>> CheckAndAutoSubmitExpiredAttemptsAsync();
 
         // Tiếp tục làm bài
-        Task<ServiceResponse<QuizAttemptWithQuestionsDto>> ResumeQuizAttemptAsync(int attemptId);
+        Task<ServiceResponse<QuizAttemptWithQuestionsDto>> ResumeQuizAttemptAsync(int attemptId, int userId);
     }
 }

@@ -23,10 +23,10 @@ namespace LearningEnglish.Application.Interface
         Task<ServiceResponse<object>> GetQuizAttemptStatsAsync(int quizId);
         
         // Lấy điểm số quiz
-        Task<ServiceResponse<List<object>>> GetQuizScoresAsync(int quizId);
+        Task<ServiceResponse<List<QuizScoreDto>>> GetQuizScoresAsync(int quizId);
         
         // Lấy điểm số quiz phân trang
-        Task<ServiceResponse<PagedResult<object>>> GetQuizScoresPagedAsync(int quizId, PageRequest request);
+        Task<ServiceResponse<PagedResult<QuizScoreDto>>> GetQuizScoresPagedAsync(int quizId, PageRequest request);
         
         // Lấy bài làm của người dùng
         Task<ServiceResponse<List<QuizAttemptDto>>> GetUserQuizAttemptsAsync(int userId, int quizId);

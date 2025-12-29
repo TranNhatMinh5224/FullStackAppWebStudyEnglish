@@ -1,6 +1,7 @@
 using AutoMapper;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.DTOs;
+using LearningEnglish.Application.DTOs.Admin;
 using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Application.Mappings
@@ -9,9 +10,58 @@ namespace LearningEnglish.Application.Mappings
     {
         public MappingProfile()
         {
+            // Essay Grading mappings
+            CreateMap<EssaySubmission, EssayGradingResultDto>()
+                .ForMember(dest => dest.SubmissionId, opt => opt.MapFrom(src => src.SubmissionId))
+                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.TeacherScore ?? src.Score ?? 0))
+                .ForMember(dest => dest.MaxScore, opt => opt.MapFrom(src => src.Essay != null && src.Essay.Assessment != null ? src.Essay.Assessment.TotalPoints : 0))
+                .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.TeacherFeedback ?? src.Feedback ?? string.Empty))
+                .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt ?? src.GradedAt ?? DateTime.UtcNow))
+                .ForMember(dest => dest.GradedByTeacher, opt => opt.MapFrom(src => src.TeacherScore.HasValue))
+                .ForMember(dest => dest.Breakdown, opt => opt.Ignore()) // Only from AI
+                .ForMember(dest => dest.Strengths, opt => opt.Ignore()) // Only from AI
+                .ForMember(dest => dest.Improvements, opt => opt.Ignore()); // Only from AI
+
+            // Pronunciation mappings
+            CreateMap<FlashCard, FlashCardWithPronunciationDto>()
+                .ForMember(dest => dest.Word, opt => opt.MapFrom(src => src.Word))
+                .ForMember(dest => dest.Definition, opt => opt.MapFrom(src => src.Meaning))
+                .ForMember(dest => dest.Example, opt => opt.MapFrom(src => src.Example))
+                .ForMember(dest => dest.Phonetic, opt => opt.MapFrom(src => src.Pronunciation))
+                .ForMember(dest => dest.ImageUrl, opt => opt.Ignore()) // Set in service with BuildPublicUrl
+                .ForMember(dest => dest.AudioUrl, opt => opt.Ignore()) // Set in service with BuildPublicUrl
+                .ForMember(dest => dest.Progress, opt => opt.Ignore()); // Set in service from PronunciationProgress
+
+            CreateMap<PronunciationProgress, PronunciationProgressSummary>()
+                .ForMember(dest => dest.Status, opt => opt.Ignore()) // Calculated in service
+                .ForMember(dest => dest.StatusColor, opt => opt.Ignore()); // Calculated in service
+
             // Streak mapping
             CreateMap<Streak, StreakDto>()
                 .ForMember(dest => dest.IsActiveToday, opt => opt.MapFrom<IsActiveTodayResolver>());
+
+            // Notification mapping
+            CreateMap<Notification, NotificationDto>();
+
+            // ===== ADMIN PERMISSION SYSTEM MAPPINGS =====
+            // Permission mappings
+            CreateMap<Permission, PermissionDto>();
+            
+            // Admin mappings
+            CreateMap<User, AdminDto>()
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}".Trim()))
+                .ForMember(dest => dest.Permissions, opt => opt.Ignore()); // Set in service
+
+            // Payment mappings
+            CreateMap<Payment, TransactionHistoryDto>()
+                .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.Gateway.ToString()))
+                .ForMember(dest => dest.ProductName, opt => opt.Ignore()); // Set in service after mapping
+
+            CreateMap<Payment, TransactionDetailDto>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : "N/A"))
+                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : "N/A"))
+                .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.Gateway.ToString()))
+                .ForMember(dest => dest.ProductName, opt => opt.Ignore()); // Set in service after mapping
 
             // Course mappings - DTO sang Entity
             CreateMap<AdminCreateCourseRequestDto, Course>()
@@ -31,7 +81,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
-                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
+                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? src.Teacher.FullName : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
 
@@ -39,7 +89,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
-                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
+                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? src.Teacher.FullName : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count));
 
@@ -75,7 +125,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.DescriptionMarkdown))
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageKey))
                 .ForMember(dest => dest.ImageType, opt => opt.MapFrom(src => src.ImageType))
-                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}" : string.Empty))
+                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? src.Teacher.FullName : string.Empty))
                 .ForMember(dest => dest.LessonCount, opt => opt.MapFrom(src => src.Lessons.Count))
                 .ForMember(dest => dest.StudentCount, opt => opt.MapFrom(src => src.UserCourses.Count))
                 .ForMember(dest => dest.ProgressPercentage, opt => opt.Ignore()) // Set in service
@@ -173,6 +223,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.DisplayName))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
+                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.Roles.Select(r => r.Name).ToList()))
                 .ForMember(dest => dest.AvatarUrl, opt => opt.Ignore()); // Handled in service layer
 
             CreateMap<RegisterUserDto, User>()
@@ -230,7 +281,7 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<TeacherSubscription, ResPurchaseTeacherPackageDto>()
             .ForMember(dest => dest.IdTeacherPackage, opt => opt.MapFrom(src => src.TeacherSubscriptionId))
             .ForMember(dest => dest.IdUser, opt => opt.MapFrom(src => src.UserId))
-            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? $"{src.User.FirstName} {src.User.LastName}" : string.Empty))
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
             .ForMember(dest => dest.PackageName, opt => opt.MapFrom(src => src.TeacherPackage != null ? src.TeacherPackage.PackageName : string.Empty))
             .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.TeacherPackage != null ? src.TeacherPackage.Price : 0))
             .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate))
@@ -284,8 +335,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.TimeLimit, opt => opt.MapFrom(src => ParseTimeSpan(src.TimeLimit)));
 
             // Essay mappings
-            CreateMap<Essay, EssayDto>()
-                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()));
+            CreateMap<Essay, EssayDto>();
 
             CreateMap<CreateEssayDto, Essay>()
                 .ForMember(dest => dest.EssayId, opt => opt.Ignore())
@@ -296,13 +346,45 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.AttachmentUrl, opt => opt.MapFrom(src => src.AttachmentKey)) // Will be replaced with URL in service
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : null))
-                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
+                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+                // AI Grading fields (có thể null)
+                .ForMember(dest => dest.AiScore, opt => opt.MapFrom(src => src.Score))
+                .ForMember(dest => dest.AiFeedback, opt => opt.MapFrom(src => src.Feedback))
+                .ForMember(dest => dest.AiGradedAt, opt => opt.MapFrom(src => src.GradedAt))
+                // Teacher/Admin Grading fields (có thể null)
+                .ForMember(dest => dest.TeacherScore, opt => opt.MapFrom(src => src.TeacherScore))
+                .ForMember(dest => dest.TeacherFeedback, opt => opt.MapFrom(src => src.TeacherFeedback))
+                .ForMember(dest => dest.TeacherGradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt))
+                .ForMember(dest => dest.GradedByTeacherId, opt => opt.MapFrom(src => src.GradedByTeacherId))
+                .ForMember(dest => dest.GradedByTeacherName, opt => opt.MapFrom(src => src.GradedByTeacher != null ? src.GradedByTeacher.FullName : null))
+                // Final Score (ưu tiên Teacher, nếu không có thì AI)
+                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.FinalScore))
+                .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.TeacherFeedback ?? src.Feedback))
+                .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt ?? src.GradedAt))
+                .ForMember(dest => dest.MaxScore, opt => opt.MapFrom(src => src.Essay != null && src.Essay.Assessment != null ? src.Essay.Assessment.TotalPoints : (decimal?)null))
+                // Essay info
+                .ForMember(dest => dest.EssayTitle, opt => opt.MapFrom(src => src.Essay != null ? src.Essay.Title : null))
+                .ForMember(dest => dest.EssayDescription, opt => opt.MapFrom(src => src.Essay != null ? src.Essay.Description : null));
 
             // EssaySubmission to List DTO (basic info for listing)
             CreateMap<EssaySubmission, EssaySubmissionListDto>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FullName))
                 .ForMember(dest => dest.UserAvatarUrl, opt => opt.Ignore()) // Will be built in service
-                .ForMember(dest => dest.HasAttachment, opt => opt.MapFrom(src => !string.IsNullOrWhiteSpace(src.AttachmentKey)));
+                .ForMember(dest => dest.HasAttachment, opt => opt.MapFrom(src => !string.IsNullOrWhiteSpace(src.AttachmentKey)))
+                // AI Grading fields
+                .ForMember(dest => dest.AiScore, opt => opt.MapFrom(src => src.Score))
+                .ForMember(dest => dest.AiGradedAt, opt => opt.MapFrom(src => src.GradedAt))
+                // Teacher/Admin Grading fields
+                .ForMember(dest => dest.TeacherScore, opt => opt.MapFrom(src => src.TeacherScore))
+                .ForMember(dest => dest.TeacherGradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt))
+                .ForMember(dest => dest.GradedByTeacherId, opt => opt.MapFrom(src => src.GradedByTeacherId))
+                // Final Score (ưu tiên Teacher)
+                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.FinalScore))
+                .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt ?? src.GradedAt))
+                .ForMember(dest => dest.FeedbackPreview, opt => opt.MapFrom(src => 
+                    (src.TeacherFeedback ?? src.Feedback) != null && (src.TeacherFeedback ?? src.Feedback)!.Length > 100 
+                        ? (src.TeacherFeedback ?? src.Feedback)!.Substring(0, 100) + "..." 
+                        : (src.TeacherFeedback ?? src.Feedback)));
 
             CreateMap<CreateEssaySubmissionDto, EssaySubmission>()
                 .ForMember(dest => dest.SubmissionId, opt => opt.Ignore())
@@ -395,6 +477,47 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.ScoresByQuestion, opt => opt.Ignore())
                 .ForMember(dest => dest.CorrectAnswers, opt => opt.Ignore());
 
+            CreateMap<QuizAttempt, QuizScoreDto>()
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.User.FirstName))
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.User.LastName))
+                .ForMember(dest => dest.Percentage, opt => opt.Ignore())
+                .ForMember(dest => dest.IsPassed, opt => opt.Ignore());
+
+            // ===== ASSET FRONTEND MAPPINGS =====
+            // AssetFrontend Entity -> AssetFrontendDto (string to enum conversion for AssetType, add ImageUrl from KeyImage in service)
+            CreateMap<AssetFrontend, AssetFrontendDto>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.KeyImage)) // Will be converted to public URL in service
+                .ForMember(dest => dest.AssetType, opt => opt.ConvertUsing<AssetTypeStringToEnumConverter, string?>(src => src.AssetType));
+
+            // AssetFrontendDto -> AssetFrontend Entity (enum to string conversion for AssetType, ignore ImageUrl as it's computed field)  
+            CreateMap<AssetFrontendDto, AssetFrontend>()
+                .ForMember(dest => dest.KeyImage, opt => opt.MapFrom(src => src.KeyImage)) // Keep KeyImage as is, ignore ImageUrl
+                .ForMember(dest => dest.AssetType, opt => opt.ConvertUsing<AssetTypeEnumToStringConverter, AssetType>(src => src.AssetType))
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Preserve existing CreatedAt
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)); // Update timestamp on mapping back to entity
+
+            // CreateAssetFrontendDto -> AssetFrontend Entity (enum to string conversion for AssetType, set timestamps and KeyImage from temp key in service) 
+            CreateMap<CreateAssetFrontendDto, AssetFrontend>()
+                .ForMember(dest => dest.KeyImage, opt => opt.MapFrom(src => src.ImageTempKey)) // Will be committed in service
+                .ForMember(dest => dest.AssetType, opt => opt.ConvertUsing<AssetTypeEnumToStringConverter, AssetType>(src => src.AssetType)) 
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)) 
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)); // Set both timestamps on create
+
+            // UpdateAssetFrontendDto -> AssetFrontend Entity (enum to string conversion for AssetType, set timestamps and KeyImage from temp key in service) 
+            CreateMap<UpdateAssetFrontendDto, AssetFrontend>()
+                .ForMember(dest => dest.NameImage, opt => opt.Condition(src => src.NameImage != null))
+                .ForMember(dest => dest.KeyImage, opt => opt.MapFrom(src => src.ImageTempKey ?? string.Empty)) // Use temp key if provided, otherwise keep existing (handled in service) 
+                .ForMember(dest => dest.DescriptionImage, opt => opt.Condition(src => src.DescriptionImage != null))
+                .ForMember(dest => dest.AssetType, opt => {
+                    opt.Condition(src => src.AssetType.HasValue);
+                    opt.ConvertUsing<AssetTypeNullableEnumToStringConverter, AssetType?>(src => src.AssetType);
+                })
+                .ForMember(dest => dest.Order, opt => opt.Condition(src => src.Order.HasValue))
+                .ForMember(dest => dest.IsActive, opt => opt.Condition(src => src.IsActive.HasValue))
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Preserve existing CreatedAt on update 
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)); // Update timestamp on update
+
 
 
         }
@@ -420,6 +543,40 @@ namespace LearningEnglish.Application.Mappings
             var today = DateTime.UtcNow.Date;
             var lastActivity = source.LastActivityDate?.Date;
             return lastActivity == today;
+        }
+    }
+
+    // Custom converter for AssetType string to enum
+    public class AssetTypeStringToEnumConverter : IValueConverter<string?, AssetType>
+    {
+        public AssetType Convert(string? sourceMember, ResolutionContext context)
+        {
+            if (string.IsNullOrEmpty(sourceMember))
+                return AssetType.Other;
+
+            // Try to parse the string to enum, fallback to Other if invalid
+            if (Enum.TryParse<AssetType>(sourceMember, true, out var result))
+                return result;
+
+            return AssetType.Other;
+        }
+    }
+
+    // Custom converter for AssetType enum to string (non-nullable)
+    public class AssetTypeEnumToStringConverter : IValueConverter<AssetType, string?>
+    {
+        public string? Convert(AssetType sourceMember, ResolutionContext context)
+        {
+            return sourceMember.ToString();
+        }
+    }
+
+    // Custom converter for AssetType enum to string (nullable)
+    public class AssetTypeNullableEnumToStringConverter : IValueConverter<AssetType?, string?>
+    {
+        public string? Convert(AssetType? sourceMember, ResolutionContext context)
+        {
+            return sourceMember?.ToString();
         }
     }
 }

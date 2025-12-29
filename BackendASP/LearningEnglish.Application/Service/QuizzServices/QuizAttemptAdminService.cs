@@ -55,7 +55,12 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                var pagedResult = await _quizAttemptRepository.GetQuizAttemptsPagedAsync(quizId, request);
+                var quizParams = new QuizAttemptQueryParameters
+                {
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize
+                };
+                var pagedResult = await _quizAttemptRepository.GetQuizAttemptsPagedAsync(quizId, quizParams);
 
                 // Map entities to DTOs
                 var attemptDtos = _mapper.Map<List<QuizAttemptDto>>(pagedResult.Items);
@@ -115,7 +120,30 @@ namespace LearningEnglish.Application.Service
 
         public async Task<ServiceResponse<QuizAttemptResultDto>> ForceSubmitAttemptAsync(int attemptId)
         {
-            return await _quizAttemptService.SubmitQuizAttemptAsync(attemptId);
+            var response = new ServiceResponse<QuizAttemptResultDto>();
+
+            try
+            {
+                // Get the attempt to retrieve the user ID
+                var attempt = await _quizAttemptRepository.GetByIdAsync(attemptId);
+                if (attempt == null)
+                {
+                    response.Success = false;
+                    response.Message = "Attempt not found";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                // Force submit using the attempt's user ID
+                return await _quizAttemptService.SubmitQuizAttemptAsync(attemptId, attempt.UserId);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+                response.StatusCode = 500;
+                return response;
+            }
         }
 
         public async Task<ServiceResponse<object>> GetQuizAttemptStatsAsync(int quizId)
@@ -125,13 +153,13 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var attempts = await _quizAttemptRepository.GetByQuizIdAsync(quizId);
-                var submittedAttempts = attempts.Where(a => a.Status == QuizAttemptStatus.Submitted).ToList();
+                var submittedAttempts = await _quizAttemptRepository.GetSubmittedAttemptsByQuizIdAsync(quizId);
 
                 var stats = new
                 {
                     TotalAttempts = attempts.Count,
                     CompletedAttempts = submittedAttempts.Count,
-                    InProgressAttempts = attempts.Count(a => a.Status == QuizAttemptStatus.InProgress),
+                    InProgressAttempts = attempts.Count - submittedAttempts.Count,
                     AverageScore = submittedAttempts.Any() ? submittedAttempts.Average(a => a.TotalScore) : 0,
                     HighestScore = submittedAttempts.Any() ? submittedAttempts.Max(a => a.TotalScore) : 0,
                     LowestScore = submittedAttempts.Any() ? submittedAttempts.Min(a => a.TotalScore) : 0
@@ -151,35 +179,27 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        public async Task<ServiceResponse<List<object>>> GetQuizScoresAsync(int quizId)
+        public async Task<ServiceResponse<List<QuizScoreDto>>> GetQuizScoresAsync(int quizId)
         {
-            var response = new ServiceResponse<List<object>>();
+            var response = new ServiceResponse<List<QuizScoreDto>>();
 
             try
             {
-                var attempts = await _quizAttemptRepository.GetByQuizIdAsync(quizId);
+                var attempts = await _quizAttemptRepository.GetQuizScoresAsync(quizId);
 
-                // Chỉ lấy các attempt đã submit
-                var submittedAttempts = attempts
-                    .Where(a => a.Status == QuizAttemptStatus.Submitted)
-                    .OrderByDescending(a => a.TotalScore)
-                    .Select(a => new
-                    {
-                        AttemptId = a.AttemptId,
-                        UserId = a.UserId,
-                        UserName = $"{a.User?.FirstName} {a.User?.LastName}".Trim(),
-                        AttemptNumber = a.AttemptNumber,
-                        TotalScore = a.TotalScore,
-                        Percentage = CalculatePercentage(a, a.Quiz),
-                        IsPassed = a.Quiz?.PassingScore.HasValue == true ? a.TotalScore >= a.Quiz.PassingScore.Value : false,
-                        SubmittedAt = a.SubmittedAt,
-                        TimeSpentSeconds = a.TimeSpentSeconds
-                    })
-                    .ToList<object>();
+                var mappedItems = _mapper.Map<List<QuizScoreDto>>(attempts);
+                
+                // Calculate Percentage and IsPassed for each item
+                foreach (var item in mappedItems)
+                {
+                    var attempt = attempts.First(a => a.AttemptId == item.AttemptId);
+                    item.Percentage = (decimal)CalculatePercentage(attempt, attempt.Quiz);
+                    item.IsPassed = attempt.Quiz?.PassingScore.HasValue == true ? attempt.TotalScore >= attempt.Quiz.PassingScore.Value : false;
+                }
 
                 response.Success = true;
-                response.Data = submittedAttempts;
-                response.Message = $"Found {submittedAttempts.Count} completed attempts for quiz {quizId}";
+                response.Data = mappedItems;
+                response.Message = $"Found {mappedItems.Count} completed attempts for quiz {quizId}";
                 response.StatusCode = 200;
             }
             catch (Exception ex)
@@ -193,28 +213,30 @@ namespace LearningEnglish.Application.Service
         }
 
         // Lấy điểm của học sinh với phân trang
-        public async Task<ServiceResponse<PagedResult<object>>> GetQuizScoresPagedAsync(int quizId, PageRequest request)
+        public async Task<ServiceResponse<PagedResult<QuizScoreDto>>> GetQuizScoresPagedAsync(int quizId, PageRequest request)
         {
-            var response = new ServiceResponse<PagedResult<object>>();
+            var response = new ServiceResponse<PagedResult<QuizScoreDto>>();
 
             try
             {
-                var pagedResult = await _quizAttemptRepository.GetQuizScoresPagedAsync(quizId, request);
-
-                var mappedItems = pagedResult.Items.Select(a => new
+                var quizParams = new QuizAttemptQueryParameters
                 {
-                    AttemptId = a.AttemptId,
-                    UserId = a.UserId,
-                    UserName = $"{a.User?.FirstName} {a.User?.LastName}".Trim(),
-                    AttemptNumber = a.AttemptNumber,
-                    TotalScore = a.TotalScore,
-                    Percentage = CalculatePercentage(a, a.Quiz),
-                    IsPassed = a.Quiz?.PassingScore.HasValue == true ? a.TotalScore >= a.Quiz.PassingScore.Value : false,
-                    SubmittedAt = a.SubmittedAt,
-                    TimeSpentSeconds = a.TimeSpentSeconds
-                }).ToList<object>();
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize
+                };
+                var pagedResult = await _quizAttemptRepository.GetQuizScoresPagedAsync(quizId, quizParams);
 
-                var result = new PagedResult<object>
+                var mappedItems = _mapper.Map<List<QuizScoreDto>>(pagedResult.Items);
+                
+                // Calculate Percentage and IsPassed for each item
+                foreach (var item in mappedItems)
+                {
+                    var attempt = pagedResult.Items.First(a => a.AttemptId == item.AttemptId);
+                    item.Percentage = (decimal)CalculatePercentage(attempt, attempt.Quiz);
+                    item.IsPassed = attempt.Quiz?.PassingScore.HasValue == true ? attempt.TotalScore >= attempt.Quiz.PassingScore.Value : false;
+                }
+
+                var result = new PagedResult<QuizScoreDto>
                 {
                     Items = mappedItems,
                     TotalCount = pagedResult.TotalCount,
@@ -244,7 +266,7 @@ namespace LearningEnglish.Application.Service
             try
             {
                 var attempts = await _quizAttemptRepository.GetByUserAndQuizAsync(userId, quizId);
-                var attemptDtos = _mapper.Map<List<QuizAttemptDto>>(attempts.OrderByDescending(a => a.StartedAt).ToList());
+                var attemptDtos = _mapper.Map<List<QuizAttemptDto>>(attempts);
                 response.Success = true;
                 response.Data = attemptDtos;
                 response.Message = $"Found {attempts.Count} attempts for user {userId} on quiz {quizId}";

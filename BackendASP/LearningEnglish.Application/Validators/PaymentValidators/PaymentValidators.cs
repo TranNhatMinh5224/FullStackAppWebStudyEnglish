@@ -12,6 +12,10 @@ namespace LearningEnglish.Application.Validators.Payment
 
             RuleFor(x => x.typeproduct)
                 .IsInEnum().WithMessage("Invalid TypeProduct");
+
+            RuleFor(x => x.IdempotencyKey)
+                .MaximumLength(100).WithMessage("IdempotencyKey cannot exceed 100 characters")
+                .When(x => !string.IsNullOrEmpty(x.IdempotencyKey));
         }
     }
 

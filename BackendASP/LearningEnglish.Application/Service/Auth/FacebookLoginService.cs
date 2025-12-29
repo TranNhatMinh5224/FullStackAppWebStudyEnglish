@@ -2,6 +2,7 @@ using AutoMapper;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
+using LearningEnglish.Application.Interface.Auth;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using Microsoft.Extensions.Logging;
@@ -9,11 +10,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace LearningEnglish.Application.Service.Auth
 {
-    /// <summary>
-    /// Service xử lý đăng nhập bằng Facebook OAuth2 - Application Layer
-    /// Chứa business logic: tạo user, validate, generate JWT
-    /// Delegate HTTP calls cho IFacebookAuthProvider (Infrastructure layer)
-    /// </summary>
+    // Service xử lý đăng nhập bằng Facebook OAuth2
+    // Chứa business logic: tạo user, validate, generate JWT
+    // Delegate HTTP calls cho IFacebookAuthProvider (Infrastructure layer)
     public class FacebookLoginService : IFacebookLoginService
     {
         private readonly IUserRepository _userRepository;
@@ -134,9 +133,7 @@ namespace LearningEnglish.Application.Service.Auth
             return response;
         }
 
-        /// <summary>
-        /// Business Logic: Tạo hoặc lấy user từ thông tin Facebook
-        /// </summary>
+        // Business Logic: Tạo hoặc lấy user từ thông tin Facebook
         private async Task<User?> GetOrCreateUserAsync(FacebookUserInfo facebookUser)
         {
             // Tìm external login đã tồn tại
@@ -188,9 +185,7 @@ namespace LearningEnglish.Application.Service.Auth
             return newUser;
         }
 
-        /// <summary>
-        /// Tạo user mới từ thông tin Facebook
-        /// </summary>
+        // Tạo user mới từ thông tin Facebook
         private async Task<User> CreateNewUserFromFacebookAsync(FacebookUserInfo facebookUser)
         {
             var email = facebookUser.Email ?? $"facebook_{facebookUser.Id}@noemail.local";
@@ -227,9 +222,7 @@ namespace LearningEnglish.Application.Service.Auth
             return user;
         }
 
-        /// <summary>
-        /// Download avatar từ Facebook và upload lên MinIO
-        /// </summary>
+        // Download avatar từ Facebook và upload lên MinIO
         private async Task<string?> DownloadAndUploadAvatarAsync(string avatarUrl, string userEmail)
         {
             try

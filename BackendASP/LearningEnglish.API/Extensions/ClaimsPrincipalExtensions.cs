@@ -1,15 +1,12 @@
 using System.Security.Claims;
+using LearningEnglish.Application.Common.Constants;
 
 namespace LearningEnglish.API.Extensions
 {
     public static class ClaimsPrincipalExtensions
     {
-        /// <summary>
-        /// Gets the highest priority role for the user.
-        /// Priority: Admin > Teacher > Student
-        /// </summary>
-        /// <param name="principal">The ClaimsPrincipal</param>
-        /// <returns>The highest priority role name, or empty string if no role found</returns>
+        // Lấy role có độ ưu tiên cao nhất của user
+        // Độ ưu tiên: SuperAdmin > ContentAdmin > FinanceAdmin > Teacher > Student
         public static string GetPrimaryRole(this ClaimsPrincipal principal)
         {
             var roles = principal.FindAll(ClaimTypes.Role)
@@ -19,66 +16,95 @@ namespace LearningEnglish.API.Extensions
             if (!roles.Any())
                 return string.Empty;
 
-            // Priority order: Admin > Teacher > Student
-            if (roles.Contains("Admin", StringComparer.OrdinalIgnoreCase))
-                return "Admin";
+            // Priority order: SuperAdmin > ContentAdmin > FinanceAdmin > Teacher > Student
+            if (roles.Any(r => RoleConstants.IsSuperAdmin(r)))
+                return RoleConstants.SuperAdmin;
             
-            if (roles.Contains("Teacher", StringComparer.OrdinalIgnoreCase))
-                return "Teacher";
+            if (roles.Any(r => r.Equals(RoleConstants.ContentAdmin, StringComparison.OrdinalIgnoreCase)))
+                return RoleConstants.ContentAdmin;
             
-            if (roles.Contains("Student", StringComparer.OrdinalIgnoreCase))
-                return "Student";
+            if (roles.Any(r => r.Equals(RoleConstants.FinanceAdmin, StringComparison.OrdinalIgnoreCase)))
+                return RoleConstants.FinanceAdmin;
+            
+            if (roles.Any(r => r.Equals(RoleConstants.Teacher, StringComparison.OrdinalIgnoreCase)))
+                return RoleConstants.Teacher;
+            
+            if (roles.Any(r => r.Equals(RoleConstants.Student, StringComparison.OrdinalIgnoreCase)))
+                return RoleConstants.Student;
 
             // Return first role if none of the standard roles found
             return roles.First();
         }
 
-        /// <summary>
-        /// Gets all roles for the user
-        /// </summary>
-        /// <param name="principal">The ClaimsPrincipal</param>
-        /// <returns>List of role names</returns>
+        // Lấy tất cả các role của user
         public static List<string> GetAllRoles(this ClaimsPrincipal principal)
         {
             return principal.FindAll(ClaimTypes.Role)
-                .Select(c => c.Value)
+.Select(c => c.Value)
                 .ToList();
         }
 
-        /// <summary>
-        /// Checks if user has a specific role
-        /// </summary>
-        /// <param name="principal">The ClaimsPrincipal</param>
-        /// <param name="roleName">Role name to check</param>
-        /// <returns>True if user has the role, false otherwise</returns>
+        // Kiểm tra xem user có role cụ thể hay không
         public static bool HasRole(this ClaimsPrincipal principal, string roleName)
         {
             return principal.FindAll(ClaimTypes.Role)
                 .Any(c => c.Value.Equals(roleName, StringComparison.OrdinalIgnoreCase));
         }
 
-        /// <summary>
-        /// Checks if user is an Admin
-        /// </summary>
+        // Kiểm tra xem user có phải là Admin không (SuperAdmin, ContentAdmin, hoặc FinanceAdmin)
         public static bool IsAdmin(this ClaimsPrincipal principal)
         {
-            return principal.HasRole("Admin");
+            var roles = principal.FindAll(ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList();
+            
+            return roles.Any(r => RoleConstants.IsAdminRole(r));
         }
 
-        /// <summary>
-        /// Checks if user is a Teacher (may also be Student)
-        /// </summary>
+        // Kiểm tra xem user có phải là SuperAdmin không
+        public static bool IsSuperAdmin(this ClaimsPrincipal principal)
+        {
+            return principal.HasRole(RoleConstants.SuperAdmin);
+        }
+
+        // Kiểm tra xem user có phải là Teacher không (có thể đồng thời là Student)
         public static bool IsTeacher(this ClaimsPrincipal principal)
         {
-            return principal.HasRole("Teacher");
+            return principal.HasRole(RoleConstants.Teacher);
         }
 
-        /// <summary>
-        /// Checks if user is a Student
-        /// </summary>
+        // Kiểm tra xem user có phải là Student không
         public static bool IsStudent(this ClaimsPrincipal principal)
         {
-            return principal.HasRole("Student");
+            return principal.HasRole(RoleConstants.Student);
+        }
+
+        // Lấy userId từ claims - Throw exception nếu không có
+        public static int GetUserId(this ClaimsPrincipal principal)
+        {
+            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? principal.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                throw new UnauthorizedAccessException("User ID not found in claims. User is not authenticated.");
+            }
+
+            return userId;
+        }
+
+        // Lấy userId từ claims - Trả về 0 nếu không có (safe cho AllowAnonymous endpoints)
+        public static int GetUserIdSafe(this ClaimsPrincipal principal)
+        {
+            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? principal.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return 0;
+            }
+
+            return userId;
         }
     }
 }

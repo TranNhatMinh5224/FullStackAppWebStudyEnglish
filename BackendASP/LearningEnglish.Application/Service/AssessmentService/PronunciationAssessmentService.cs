@@ -8,18 +8,17 @@ using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
-    /// <summary>
-    /// AGGRESSIVE STRATEGY: Realtime-only pronunciation assessment
-    /// - NO PronunciationAssessment entities stored in DB
-    /// - ONLY PronunciationProgress (aggregated metrics) persisted
-    /// - Minimizes DB storage for scalability
-    /// </summary>
+    // CHIẾN LƯỢC TỐI ƯU: Chỉ đánh giá phát âm realtime
+    // - KHÔNG lưu PronunciationAssessment entities vào DB
+    // - CHỈ lưu PronunciationProgress (aggregated metrics)
+    // - Tối thiểu hóa lưu trữ DB để scale tốt hơn
     public class PronunciationAssessmentService : IPronunciationAssessmentService
     {
         private readonly IFlashCardRepository _flashCardRepository;
         private readonly IMinioFileStorage _minioFileStorage;
         private readonly IAzureSpeechService _azureSpeechService;
         private readonly IPronunciationProgressRepository _progressRepository;
+        private readonly IMapper _mapper;
         private readonly ILogger<PronunciationAssessmentService> _logger;
         private const string BUCKET_NAME = "pronunciations";
         private const string AUDIO_BUCKET_NAME = "flashcard-audio";
@@ -30,18 +29,18 @@ namespace LearningEnglish.Application.Service
             IMinioFileStorage minioFileStorage,
             IAzureSpeechService azureSpeechService,
             IPronunciationProgressRepository progressRepository,
+            IMapper mapper,
             ILogger<PronunciationAssessmentService> logger)
         {
             _flashCardRepository = flashCardRepository;
             _minioFileStorage = minioFileStorage;
             _azureSpeechService = azureSpeechService;
             _progressRepository = progressRepository;
+            _mapper = mapper;
             _logger = logger;
         }
 
-        /// <summary>
-        /// Create realtime pronunciation assessment - NO persistence, only progress tracking
-        /// </summary>
+        // Create realtime pronunciation assessment - NO persistence, only progress tracking
         public async Task<ServiceResponse<PronunciationAssessmentDto>> CreateAssessmentAsync(
             CreatePronunciationAssessmentDto dto,
             int userId)
@@ -158,9 +157,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        /// <summary>
-        /// Get flashcards with pronunciation progress for a module
-        /// </summary>
+        // Get flashcards with pronunciation progress for a module
         public async Task<ServiceResponse<List<FlashCardWithPronunciationDto>>> GetFlashCardsWithPronunciationProgressAsync(
             int moduleId,
             int userId)
@@ -176,59 +173,46 @@ namespace LearningEnglish.Application.Service
                 var progresses = await _progressRepository.GetByModuleIdAsync(userId, moduleId);
                 var progressDict = progresses.ToDictionary(p => p.FlashCardId);
 
-                // Map flashcards with progress
+                // Map flashcards with progress using AutoMapper
                 var result = flashCards.Select(fc =>
                 {
-                    var hasProgress = progressDict.TryGetValue(fc.FlashCardId, out var progress);
+                    // Map FlashCard to DTO using AutoMapper
+                    var dto = _mapper.Map<FlashCardWithPronunciationDto>(fc);
+                    
+                    // Add URLs manually (not in mapping)
+                    dto.ImageUrl = !string.IsNullOrWhiteSpace(fc.ImageKey)
+                        ? BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, fc.ImageKey)
+                        : null;
+                    dto.AudioUrl = !string.IsNullOrWhiteSpace(fc.AudioKey)
+                        ? BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, fc.AudioKey)
+                        : null;
 
-                    PronunciationProgressSummary? progressSummary = null;
-                    if (hasProgress && progress != null)
+                    // Map progress if exists
+                    if (progressDict.TryGetValue(fc.FlashCardId, out var progress) && progress != null)
                     {
-                        string status = "Practicing";
-                        string statusColor = "yellow";
-
+                        var progressSummary = _mapper.Map<PronunciationProgressSummary>(progress);
+                        
+                        // Calculate status
                         if (progress.IsMastered)
                         {
-                            status = "Mastered";
-                            statusColor = "green";
+                            progressSummary.Status = "Mastered";
+                            progressSummary.StatusColor = "green";
                         }
                         else if (progress.TotalAttempts == 0)
                         {
-                            status = "Not Started";
-                            statusColor = "gray";
+                            progressSummary.Status = "Not Started";
+                            progressSummary.StatusColor = "gray";
                         }
-
-                        progressSummary = new PronunciationProgressSummary
+                        else
                         {
-                            TotalAttempts = progress.TotalAttempts,
-                            BestScore = progress.BestScore,
-                            BestScoreDate = progress.BestScoreDate,
-                            LastPracticedAt = progress.LastPracticedAt,
-                            AvgPronunciationScore = progress.AvgPronunciationScore,
-                            LastPronunciationScore = progress.LastPronunciationScore,
-                            ConsecutiveDaysStreak = progress.ConsecutiveDaysStreak,
-                            IsMastered = progress.IsMastered,
-                            MasteredAt = progress.MasteredAt,
-                            Status = status,
-                            StatusColor = statusColor
-                        };
+                            progressSummary.Status = "Practicing";
+                            progressSummary.StatusColor = "yellow";
+                        }
+                        
+                        dto.Progress = progressSummary;
                     }
 
-                    return new FlashCardWithPronunciationDto
-                    {
-                        FlashCardId = fc.FlashCardId,
-                        Word = fc.Word,
-                        Definition = fc.Meaning,
-                        Example = fc.Example,
-                        ImageUrl = !string.IsNullOrWhiteSpace(fc.ImageKey)
-                            ? BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, fc.ImageKey)
-                            : null,
-                        AudioUrl = !string.IsNullOrWhiteSpace(fc.AudioKey)
-                            ? BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, fc.AudioKey)
-                            : null,
-                        Phonetic = fc.Pronunciation,
-                        Progress = progressSummary
-                    };
+                    return dto;
                 }).ToList();
 
                 response.Success = true;
@@ -245,9 +229,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        /// <summary>
-        /// Get pronunciation summary/statistics for a module
-        /// </summary>
+        // Get pronunciation summary/statistics for a module
         public async Task<ServiceResponse<ModulePronunciationSummaryDto>> GetModulePronunciationSummaryAsync(
             int moduleId,
             int userId)

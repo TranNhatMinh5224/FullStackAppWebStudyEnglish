@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
+using LearningEnglish.Infrastructure.Data;
 
 namespace LearningEnglish.Infrastructure.Data
 {
@@ -11,6 +12,8 @@ namespace LearningEnglish.Infrastructure.Data
         // DbSets
         public DbSet<User> Users => Set<User>();
         public DbSet<Role> Roles => Set<Role>();
+        public DbSet<Permission> Permissions => Set<Permission>();
+        public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
 
         public DbSet<Course> Courses => Set<Course>();
         public DbSet<Lesson> Lessons => Set<Lesson>();
@@ -29,6 +32,7 @@ namespace LearningEnglish.Infrastructure.Data
         public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
         public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
         public DbSet<Payment> Payments => Set<Payment>();
+        public DbSet<PaymentWebhookQueue> PaymentWebhookQueues => Set<PaymentWebhookQueue>();
         public DbSet<ModuleCompletion> ModuleCompletions => Set<ModuleCompletion>();
         public DbSet<LessonCompletion> LessonCompletions => Set<LessonCompletion>();
         public DbSet<CourseProgress> CourseProgresses => Set<CourseProgress>();
@@ -45,70 +49,6 @@ namespace LearningEnglish.Infrastructure.Data
         
         // Frontend Management
         public DbSet<AssetFrontend> AssetsFrontend => Set<AssetFrontend>();
-
-
-
-        // ============================================================================
-        // ROW-LEVEL SECURITY (RLS) - BẢO MẬT CẤP HÀNG (ROW) TRONG DATABASE
-        // ============================================================================
-        
-        // Method này thiết lập context cho RLS trong PostgreSQL
-        // Được gọi TỰ ĐỘNG bởi RlsMiddleware ở đầu mỗi HTTP request
-        //
-        // CÁCH HOẠT ĐỘNG:
-        // 1. RlsMiddleware extract userId + role từ JWT token
-        // 2. Gọi method này để set 2 session variables trong PostgreSQL:
-        //    - app.current_user_id: Lưu ID của user hiện tại (VD: 123)
-        //    - app.current_user_role: Lưu role (Admin, Teacher, hoặc Student)
-        // 3. RLS policies trong database sẽ dùng 2 variables này để filter data tự động
-        //
-        // VÍ DỤ FLOW:
-        // Request 1 (Teacher userId=5):
-        //   → BEGIN TRANSACTION
-        //   → SET LOCAL app.current_user_id = '5'
-        //   → SET LOCAL app.current_user_role = 'Teacher'
-        //   → Query: SELECT * FROM "Courses"
-        //   → RLS tự động filter: WHERE "TeacherId" = 5
-        //   → COMMIT → Variables bị xóa tự động ✓
-        //
-        // Request 2 (Student userId=10) - reuse cùng connection:
-        //   → BEGIN NEW TRANSACTION
-        //   → SET LOCAL app.current_user_id = '10'
-        //   → SET LOCAL app.current_user_role = 'Student'
-        //   → Query: SELECT * FROM "Courses"
-        //   → RLS tự động filter: WHERE EXISTS (SELECT 1 FROM "UserCourses"...)
-        //   → COMMIT → Variables bị xóa tự động ✓
-        //
-        // TẠI SAO AN TOÀN VỚI CONNECTION POOLING:
-        // - Parameter thứ 3 (true) trong set_config() = LOCAL scope
-        // - Variables CHỈ tồn tại trong transaction hiện tại
-        // - Tự động cleared sau COMMIT/ROLLBACK
-        // - Connection có thể reuse an toàn cho user khác
-        public async Task SetUserContextAsync(int userId, string role)
-        {
-            // ExecuteSqlRawAsync: Thực thi raw SQL command trên database
-            //
-            // set_config(name, value, is_local):
-            //   - name: Tên variable cần set
-            //   - value: Giá trị
-            //   - is_local: true = LOCAL (chỉ trong transaction), false = SESSION (toàn bộ session)
-            //
-            // ⚠️ QUAN TRỌNG: PHẢI dùng is_local=true để an toàn với connection pooling!
-            // Nếu dùng false, variable sẽ tồn tại suốt session → nguy hiểm khi reuse connection
-            await Database.ExecuteSqlRawAsync(
-                "SELECT set_config('app.current_user_id', {0}, true), set_config('app.current_user_role', {1}, true)",
-                userId.ToString(),  // {0} - Convert userId sang string
-                role                // {1} - Role name (Admin, Teacher, Student)
-            );
-            
-            // Sau khi execute xong:
-            // PostgreSQL session hiện tại có 2 variables:
-            //   - current_setting('app.current_user_id', true) → trả về "123"
-            //   - current_setting('app.current_user_role', true) → trả về "Teacher"
-            //
-            // RLS policies sẽ dùng current_setting() để lấy giá trị và filter data
-            // VD: WHERE "TeacherId" = current_setting('app.current_user_id', true)::integer
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -199,6 +139,53 @@ namespace LearningEnglish.Infrastructure.Data
                  .HasMaxLength(50);
 
                 e.HasIndex(r => r.Name).IsUnique();
+            });
+
+            // ===== Permission =====
+            modelBuilder.Entity<Permission>(e =>
+            {
+                e.ToTable("Permissions");
+
+                e.HasKey(p => p.PermissionId);
+
+                e.Property(p => p.Name)
+                 .IsRequired()
+                 .HasMaxLength(100);
+
+                e.Property(p => p.DisplayName)
+                 .IsRequired()
+                 .HasMaxLength(200);
+
+                e.Property(p => p.Description)
+                 .HasMaxLength(500);
+
+                e.Property(p => p.Category)
+                 .IsRequired()
+                 .HasMaxLength(50);
+
+                e.HasIndex(p => p.Name).IsUnique();
+                e.HasIndex(p => p.Category);
+            });
+
+            // ===== RolePermission (Many-to-Many between Role and Permission) =====
+            modelBuilder.Entity<RolePermission>(e =>
+            {
+                e.ToTable("RolePermissions");
+
+                e.HasKey(rp => new { rp.RoleId, rp.PermissionId });
+
+                e.HasOne(rp => rp.Role)
+                 .WithMany(r => r.RolePermissions)
+                 .HasForeignKey(rp => rp.RoleId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(rp => rp.Permission)
+                 .WithMany(p => p.RolePermissions)
+                 .HasForeignKey(rp => rp.PermissionId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(rp => rp.RoleId);
+                e.HasIndex(rp => rp.PermissionId);
             });
 
             // ===== User-Role Many-to-Many =====
@@ -870,14 +857,28 @@ namespace LearningEnglish.Infrastructure.Data
                 e.Property(es => es.AttachmentType)
                  .HasMaxLength(100);
 
+                e.Property(es => es.Feedback)
+                 .HasMaxLength(5000);
+
+                e.Property(es => es.TeacherFeedback)
+                 .HasMaxLength(5000);
+
                 e.HasOne(es => es.Essay)
                  .WithMany(e => e.EssaySubmissions)
                  .HasForeignKey(es => es.EssayId)
                  .OnDelete(DeleteBehavior.Cascade);
+                
                 e.HasOne(es => es.User)
                  .WithMany(u => u.EssaySubmissions)
                  .HasForeignKey(es => es.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(es => es.GradedByTeacher)
+                 .WithMany()
+                 .HasForeignKey(es => es.GradedByTeacherId)
+                 .OnDelete(DeleteBehavior.SetNull);
+
+                e.Ignore(es => es.FinalScore);
             });
 
             // ModuleCompletion
@@ -1034,23 +1035,112 @@ namespace LearningEnglish.Infrastructure.Data
                 e.ToTable("Payments");
 
                 // Column constraints
-                e.Property(p => p.PaymentMethod)
-                 .HasMaxLength(50);
+                e.Property(p => p.OrderCode)
+                 .IsRequired();
+
+                e.Property(p => p.IdempotencyKey)
+                 .HasMaxLength(100);
+
+                e.Property(p => p.Gateway)
+                 .IsRequired();
 
                 e.Property(p => p.Amount)
                  .HasPrecision(18, 2);
 
+                e.Property(p => p.Description)
+                 .HasMaxLength(500);
+
                 e.Property(p => p.ProviderTransactionId)
                  .HasMaxLength(255);
+
+                e.Property(p => p.CheckoutUrl)
+                 .HasMaxLength(1000);
+
+                e.Property(p => p.QrCode)
+                 .HasMaxLength(1000);
+
+                e.Property(p => p.AccountNumber)
+                 .HasMaxLength(50);
+
+                e.Property(p => p.AccountName)
+                 .HasMaxLength(200);
+
+                e.Property(p => p.ErrorCode)
+                 .HasMaxLength(50);
+
+                e.Property(p => p.ErrorMessage)
+                 .HasMaxLength(500);
+
+                e.Property(p => p.CreatedAt)
+                 .IsRequired();
 
                 e.HasOne(p => p.User)
                  .WithMany(u => u.Payments)
                  .HasForeignKey(p => p.UserId)
                  .OnDelete(DeleteBehavior.Cascade);
 
-                // Indexes - Essential for filtering
+                // Indexes - Essential for filtering and queries
+                e.HasIndex(p => p.OrderCode).IsUnique();
                 e.HasIndex(p => new { p.UserId, p.Status });
                 e.HasIndex(p => new { p.ProductType, p.ProductId });
+                e.HasIndex(p => p.CreatedAt);
+                e.HasIndex(p => p.Gateway);
+                
+                // Unique index for IdempotencyKey - Prevents duplicate payments (Race condition protection)
+                // Partial index: Only applies when IdempotencyKey IS NOT NULL
+                e.HasIndex(p => new { p.UserId, p.IdempotencyKey })
+                 .IsUnique()
+                 .HasFilter("\"IdempotencyKey\" IS NOT NULL");
+            });
+
+            // PaymentWebhookQueue entity configuration
+            modelBuilder.Entity<PaymentWebhookQueue>(e =>
+            {
+                e.ToTable("PaymentWebhookQueues");
+                e.HasKey(w => w.WebhookId);
+
+                e.Property(w => w.OrderCode)
+                 .IsRequired();
+
+                e.Property(w => w.WebhookData)
+                 .IsRequired()
+                 .HasColumnType("text");
+
+                e.Property(w => w.Signature)
+                 .HasMaxLength(500);
+
+                e.Property(w => w.Status)
+                 .IsRequired();
+
+                e.Property(w => w.RetryCount)
+                 .IsRequired()
+                 .HasDefaultValue(0);
+
+                e.Property(w => w.MaxRetries)
+                 .IsRequired()
+                 .HasDefaultValue(5);
+
+                e.Property(w => w.CreatedAt)
+                 .IsRequired();
+
+                e.Property(w => w.LastError)
+                 .HasMaxLength(1000);
+
+                e.Property(w => w.ErrorStackTrace)
+                 .HasColumnType("text");
+
+                // Foreign key relationship
+                e.HasOne(w => w.Payment)
+                 .WithMany()
+                 .HasForeignKey(w => w.PaymentId)
+                 .OnDelete(DeleteBehavior.SetNull);
+
+                // Indexes for efficient querying
+                e.HasIndex(w => w.OrderCode);
+                e.HasIndex(w => w.Status);
+                e.HasIndex(w => w.NextRetryAt);
+                e.HasIndex(w => new { w.Status, w.NextRetryAt }); // Composite for retry queries
+                e.HasIndex(w => w.CreatedAt);
             });
 
 
@@ -1060,11 +1150,13 @@ namespace LearningEnglish.Infrastructure.Data
 
         private static void SeedData(ModelBuilder modelBuilder)
         {
-            // Roles
+            // Roles - Seed data cho tất cả roles
             modelBuilder.Entity<Role>().HasData(
-                new Role { RoleId = 1, Name = "Admin" },
-                new Role { RoleId = 2, Name = "Teacher" },
-                new Role { RoleId = 3, Name = "Student" }
+                new Role { RoleId = 1, Name = "SuperAdmin" },
+                new Role { RoleId = 2, Name = "ContentAdmin" },
+                new Role { RoleId = 3, Name = "FinanceAdmin" },
+                new Role { RoleId = 4, Name = "Teacher" },
+                new Role { RoleId = 5, Name = "Student" }
             );
 
             // Dùng thời gian cố định để tránh thay đổi snapshot migration mỗi lần build
@@ -1096,6 +1188,15 @@ namespace LearningEnglish.Infrastructure.Data
             // Gán role Admin cho user 1 (sử dụng junction table)
             modelBuilder.Entity("UserRoles").HasData(
                 new { UserId = 1, RoleId = 1 }
+            );
+
+            // ===== PERMISSIONS & ROLE PERMISSIONS =====
+            modelBuilder.Entity<Permission>().HasData(
+                AdminPermissionSeeder.GetAdminPermissions()
+            );
+
+            modelBuilder.Entity<RolePermission>().HasData(
+                AdminPermissionSeeder.GetDefaultRolePermissions()
             );
         }
     }

@@ -35,16 +35,34 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        
         public async Task<Payment?> GetSuccessfulPaymentByUserAndCourseAsync(int userId, int courseId)
         {
             return await _context.Payments
-                .FirstOrDefaultAsync(p => p.UserId == userId && p.ProductId == courseId && p.ProductType == ProductType.Course && p.Status == PaymentStatus.Completed);
+                .FirstOrDefaultAsync(p => p.ProductId == courseId && p.ProductType == ProductType.Course && p.Status == PaymentStatus.Completed);
         }
 
+        
         public async Task<Payment?> GetSuccessfulPaymentByUserAndProductAsync(int userId, int productId, ProductType productType)
         {
             return await _context.Payments
-                .FirstOrDefaultAsync(p => p.UserId == userId && p.ProductId == productId && p.ProductType == productType && p.Status == PaymentStatus.Completed);
+                .FirstOrDefaultAsync(p => p.UserId == userId 
+                                       && p.ProductId == productId 
+                                       && p.ProductType == productType 
+                                       && p.Status == PaymentStatus.Completed);
+        }
+
+        
+        public async Task<Payment?> GetPaymentByIdempotencyKeyAsync(int userId, string idempotencyKey)
+        {
+            return await _context.Payments
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.IdempotencyKey == idempotencyKey);
+        }
+
+        public async Task<Payment?> GetPaymentByOrderCodeAsync(long orderCode)
+        {
+            return await _context.Payments
+                .FirstOrDefaultAsync(p => p.OrderCode == orderCode);
         }
 
         public async Task UpdatePaymentStatusAsync(Payment payment)
@@ -59,25 +77,19 @@ namespace LearningEnglish.Infrastructure.Repositories
             return await _context.SaveChangesAsync();
         }
 
-        // Transaction History
+       
         public async Task<IEnumerable<Payment>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
         {
             return await _context.Payments
                 .Where(p => p.UserId == userId)
-                .OrderByDescending(p => p.PaymentId)
+                .OrderByDescending(p => p.PaidAt ?? DateTime.MinValue)  // Sort by PaidAt DESC (mới nhất lên đầu)
+                .ThenByDescending(p => p.PaymentId)  // Nếu PaidAt null thì sort theo PaymentId
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Payment>> GetAllTransactionHistoryAsync(int userId)
-        {
-            return await _context.Payments
-                .Where(p => p.UserId == userId)
-                .OrderByDescending(p => p.PaymentId)
-                .ToListAsync();
-        }
-
+       
         public async Task<int> GetTransactionCountAsync(int userId)
         {
             return await _context.Payments
@@ -85,6 +97,7 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .CountAsync();
         }
 
+       
         public async Task<Payment?> GetTransactionDetailAsync(int paymentId, int userId)
         {
             return await _context.Payments
@@ -99,6 +112,14 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.ProviderTransactionId == transactionId);
         }
 
+        public async Task<IEnumerable<Payment>> GetExpiredPendingPaymentsAsync(DateTime cutoffTime)
+        {
+            return await _context.Payments
+                .Where(p => p.Status == PaymentStatus.Pending && 
+                           p.ExpiredAt.HasValue && 
+                           p.ExpiredAt.Value < cutoffTime)
+                .ToListAsync();
+        }
     }
 }
 

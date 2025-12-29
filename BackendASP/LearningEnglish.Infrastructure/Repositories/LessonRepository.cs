@@ -18,16 +18,45 @@ namespace LearningEnglish.Infrastructure.Repositories
 
 
         // Lấy danh sách bài học của CourseId
-
+        
         public async Task<List<Lesson>> GetListLessonByCourseId(int CourseId)
         {
-            return await _context.Lessons.Where(c => c.CourseId == CourseId).ToListAsync();
+            return await _context.Lessons
+                .Where(c => c.CourseId == CourseId) 
+                .ToListAsync();
         }
-        // Lấy chi tiết 1 bài học
 
+        // Lấy danh sách lesson theo course cho Teacher (kiểm tra ownership)
+        public async Task<List<Lesson>> GetListLessonByCourseIdForTeacher(int courseId, int teacherId)
+        {
+            return await _context.Lessons
+                .Join(_context.Courses,
+                    l => l.CourseId,
+                    c => c.CourseId,
+                    (l, c) => new { Lesson = l, Course = c })
+                .Where(x => x.Lesson.CourseId == courseId && x.Course.TeacherId == teacherId)
+                .Select(x => x.Lesson)
+                .ToListAsync();
+        }
+
+        // Lấy chi tiết 1 bài học
+       
         public async Task<Lesson?> GetLessonById(int lessonId)
         {
             return await _context.Lessons.FindAsync(lessonId);
+        }
+
+        // Lấy lesson theo ID cho Teacher (kiểm tra ownership qua course)
+        public async Task<Lesson?> GetLessonByIdForTeacher(int lessonId, int teacherId)
+        {
+            return await _context.Lessons
+                .Join(_context.Courses,
+                    l => l.CourseId,
+                    c => c.CourseId,
+                    (l, c) => new { Lesson = l, Course = c })
+                .Where(x => x.Lesson.LessonId == lessonId && x.Course.TeacherId == teacherId)
+                .Select(x => x.Lesson)
+                .FirstOrDefaultAsync();
         }
         // Thêm bài học
 

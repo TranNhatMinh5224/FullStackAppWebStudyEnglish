@@ -25,12 +25,11 @@ namespace LearningEnglish.Infrastructure.Repositories
             if (questions == null || questions.Count == 0)
                 return;
 
-            // EF Core sẽ tự động insert cả Options vì có navigation property
-            // và Options được thêm vào Questions.Options collection
+            
             await _context.Questions.AddRangeAsync(questions);
             await _context.SaveChangesAsync();
 
-            // Sau khi SaveChanges, QuestionId và AnswerOptionId sẽ được auto-generate
+           
         }
 
         public async Task<List<int>> AddBulkQuestionsWithTransactionAsync(List<Question> questions)
@@ -40,29 +39,16 @@ namespace LearningEnglish.Infrastructure.Repositories
 
             var createdQuestionIds = new List<int>();
 
-            // Sử dụng transaction để đảm bảo tất cả câu hỏi được insert hoặc rollback nếu có lỗi
             using var transaction = await _context.Database.BeginTransactionAsync();
 
-            try
-            {
-                // Batch insert tất cả câu hỏi và options
-                await _context.Questions.AddRangeAsync(questions);
-                await _context.SaveChangesAsync();
+            await _context.Questions.AddRangeAsync(questions);
+            await _context.SaveChangesAsync();
 
-                // Lấy danh sách ID đã tạo
-                createdQuestionIds = questions.Select(q => q.QuestionId).ToList();
+            createdQuestionIds = questions.Select(q => q.QuestionId).ToList();
 
-                // Commit transaction
-                await transaction.CommitAsync();
+            await transaction.CommitAsync();
 
-                return createdQuestionIds;
-            }
-            catch (Exception)
-            {
-                // Rollback nếu có lỗi
-                await transaction.RollbackAsync();
-                throw;
-            }
+            return createdQuestionIds;
         }
 
         public async Task<Question?> GetQuestionByIdAsync(int questionId)

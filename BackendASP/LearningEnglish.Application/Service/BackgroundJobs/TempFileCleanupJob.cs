@@ -27,9 +27,7 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
             _logger = logger;
         }
 
-        /// <summary>
-        /// Xóa tất cả temp files cũ hơn 24 giờ trong tất cả buckets
-        /// </summary>
+        // Xóa tất cả temp files cũ hơn 24 giờ trong tất cả buckets
         public async Task CleanupOldTempFilesAsync()
         {
             _logger.LogInformation("Starting temp file cleanup job at {Time}", DateTime.UtcNow);
@@ -111,9 +109,7 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
             );
         }
 
-        /// <summary>
-        /// Cleanup temp files theo bucket cụ thể
-        /// </summary>
+        // Cleanup temp files theo bucket cụ thể
         public async Task CleanupTempFilesByBucketAsync(string bucketName, int hoursOld = 24)
         {
             _logger.LogInformation("Starting temp file cleanup for bucket {BucketName}", bucketName);

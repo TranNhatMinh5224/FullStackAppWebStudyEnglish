@@ -4,9 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service.BackgroundJobs
 {
-    /// <summary>
-    /// Background service chạy cleanup temp files định kỳ
-    /// </summary>
+    // Background service chạy cleanup temp files định kỳ mỗi 6 giờ
     public class TempFileCleanupHostedService : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;

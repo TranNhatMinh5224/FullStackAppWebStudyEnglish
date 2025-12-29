@@ -2,220 +2,206 @@ using LearningEnglish.Application.Interface;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Infrastructure.Repositories
 {
     public class FlashCardRepository : IFlashCardRepository
     {
         private readonly AppDbContext _context;
-        private readonly ILogger<FlashCardRepository> _logger;
 
-        public FlashCardRepository(AppDbContext context, ILogger<FlashCardRepository> logger)
+        public FlashCardRepository(AppDbContext context)
         {
             _context = context;
-            _logger = logger;
         }
 
-        // + Lấy flashcard theo ID
         public async Task<FlashCard?> GetByIdAsync(int flashCardId)
         {
-            try
-            {
-                return await _context.FlashCards
-                    .FirstOrDefaultAsync(fc => fc.FlashCardId == flashCardId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy FlashCard với ID: {FlashCardId}", flashCardId);
-                throw;
-            }
+            return await _context.FlashCards
+                .FirstOrDefaultAsync(fc => fc.FlashCardId == flashCardId);
         }
 
-        // + Lấy flashcard với thông tin chi tiết
         public async Task<FlashCard?> GetByIdWithDetailsAsync(int flashCardId)
         {
-            try
-            {
-                return await _context.FlashCards
-                    .Include(fc => fc.Module)
-                        .ThenInclude(m => m!.Lesson)
-                            .ThenInclude(l => l!.Course)
-                    .Include(fc => fc.Reviews)
-                    .FirstOrDefaultAsync(fc => fc.FlashCardId == flashCardId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy FlashCard chi tiết với ID: {FlashCardId}", flashCardId);
-                throw;
-            }
+            return await _context.FlashCards
+                .Include(fc => fc.Module)
+                    .ThenInclude(m => m!.Lesson)
+                        .ThenInclude(l => l!.Course)
+                .Include(fc => fc.Reviews)
+                .FirstOrDefaultAsync(fc => fc.FlashCardId == flashCardId);
         }
 
-        // + Lấy danh sách flashcard theo module
         public async Task<List<FlashCard>> GetByModuleIdAsync(int moduleId)
         {
-            try
-            {
-                return await _context.FlashCards
-                    .Where(fc => fc.ModuleId == moduleId)
-                    .OrderBy(fc => fc.Word)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách FlashCard theo ModuleId: {ModuleId}", moduleId);
-                throw;
-            }
+            return await _context.FlashCards
+                .Where(fc => fc.ModuleId == moduleId)
+                .OrderBy(fc => fc.Word)
+                .ToListAsync();
         }
 
-        // + Lấy danh sách flashcard với thông tin chi tiết
         public async Task<List<FlashCard>> GetByModuleIdWithDetailsAsync(int moduleId)
         {
-            try
-            {
-                return await _context.FlashCards
-                    .Include(fc => fc.Module)
-                    .Include(fc => fc.Reviews)
-                    .Where(fc => fc.ModuleId == moduleId)
-                    .OrderBy(fc => fc.Word)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách FlashCard chi tiết theo ModuleId: {ModuleId}", moduleId);
-                throw;
-            }
+            return await _context.FlashCards
+                .Include(fc => fc.Module)
+                .Include(fc => fc.Reviews)
+                .Where(fc => fc.ModuleId == moduleId)
+                .OrderBy(fc => fc.Word)
+                .ToListAsync();
         }
 
 
-        // + Đếm tổng số flashcard trong module
         public async Task<int> GetFlashCardCountByModuleAsync(int moduleId)
         {
-            try
-            {
-                return await _context.FlashCards
-                    .Where(fc => fc.ModuleId == moduleId)
-                    .CountAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi đếm FlashCard theo ModuleId: {ModuleId}", moduleId);
-                throw;
-            }
+            return await _context.FlashCards
+                .Where(fc => fc.ModuleId == moduleId)
+                .CountAsync();
         }
 
-        // + Tạo flashcard mới
         public async Task<FlashCard> CreateAsync(FlashCard flashCard)
         {
-            try
+            flashCard.CreatedAt = DateTime.UtcNow;
+            flashCard.UpdatedAt = DateTime.UtcNow;
+
+            _context.FlashCards.Add(flashCard);
+            await _context.SaveChangesAsync();
+
+            return flashCard;
+        }
+
+        public async Task<FlashCard> UpdateAsync(FlashCard flashCard)
+        {
+            flashCard.UpdatedAt = DateTime.UtcNow;
+            _context.FlashCards.Update(flashCard);
+            await _context.SaveChangesAsync();
+
+            return flashCard;
+        }
+
+        public async Task<bool> DeleteAsync(int flashCardId)
+        {
+            var flashCard = await GetByIdAsync(flashCardId);
+            if (flashCard == null) return false;
+
+            _context.FlashCards.Remove(flashCard);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ExistsAsync(int flashCardId)
+        {
+            return await _context.FlashCards.AnyAsync(fc => fc.FlashCardId == flashCardId);
+        }
+
+        public async Task<List<FlashCard>> CreateBulkAsync(List<FlashCard> flashCards)
+        {
+            foreach (var flashCard in flashCards)
             {
                 flashCard.CreatedAt = DateTime.UtcNow;
                 flashCard.UpdatedAt = DateTime.UtcNow;
-
-                _context.FlashCards.Add(flashCard);
-                await _context.SaveChangesAsync();
-
-                return flashCard;
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi tạo FlashCard mới: {Word}", flashCard.Word);
-                throw;
-            }
-        }
 
-        // + Cập nhật flashcard
-        public async Task<FlashCard> UpdateAsync(FlashCard flashCard)
-        {
-            try
-            {
-                flashCard.UpdatedAt = DateTime.UtcNow;
-                _context.FlashCards.Update(flashCard);
-                await _context.SaveChangesAsync();
+            _context.FlashCards.AddRange(flashCards);
+            await _context.SaveChangesAsync();
 
-                return flashCard;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi cập nhật FlashCard với ID: {FlashCardId}", flashCard.FlashCardId);
-                throw;
-            }
-        }
-
-        // + Xóa flashcard
-        public async Task<bool> DeleteAsync(int flashCardId)
-        {
-            try
-            {
-                var flashCard = await GetByIdAsync(flashCardId);
-                if (flashCard == null) return false;
-
-                _context.FlashCards.Remove(flashCard);
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi xóa FlashCard với ID: {FlashCardId}", flashCardId);
-                throw;
-            }
-        }
-
-        // + Kiểm tra flashcard có tồn tại
-        public async Task<bool> ExistsAsync(int flashCardId)
-        {
-            try
-            {
-                return await _context.FlashCards.AnyAsync(fc => fc.FlashCardId == flashCardId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi kiểm tra tồn tại FlashCard với ID: {FlashCardId}", flashCardId);
-                throw;
-            }
-        }
-
-        // + Tạo nhiều flashcard cùng lúc
-        public async Task<List<FlashCard>> CreateBulkAsync(List<FlashCard> flashCards)
-        {
-            try
-            {
-                foreach (var flashCard in flashCards)
-                {
-                    flashCard.CreatedAt = DateTime.UtcNow;
-                    flashCard.UpdatedAt = DateTime.UtcNow;
-                }
-
-                _context.FlashCards.AddRange(flashCards);
-                await _context.SaveChangesAsync();
-
-                return flashCards;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi tạo bulk FlashCard: {Count} cards", flashCards.Count);
-                throw;
-            }
+            return flashCards;
         }
 
 
 
-        // + Lấy flashcard với module và course để kiểm tra quyền
         public async Task<FlashCard?> GetFlashCardWithModuleCourseAsync(int flashCardId)
         {
-            try
-            {
-                return await _context.FlashCards
-                    .Include(fc => fc.Module)
-                        .ThenInclude(m => m!.Lesson)
-                            .ThenInclude(l => l!.Course)
-                    .FirstOrDefaultAsync(fc => fc.FlashCardId == flashCardId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy FlashCard với Module Course để kiểm tra quyền: {FlashCardId}", flashCardId);
-                throw;
-            }
+            return await _context.FlashCards
+                .Include(fc => fc.Module)
+                    .ThenInclude(m => m!.Lesson)
+                        .ThenInclude(l => l!.Course)
+                .FirstOrDefaultAsync(fc => fc.FlashCardId == flashCardId);
+        }
+
+        public async Task<FlashCard?> GetByIdForTeacherAsync(int flashCardId, int teacherId)
+        {
+            return await _context.FlashCards
+                .Join(_context.Modules,
+                    fc => fc.ModuleId,
+                    m => m.ModuleId,
+                    (fc, m) => new { FlashCard = fc, Module = m })
+                .Join(_context.Lessons,
+                    fm => fm.Module.LessonId,
+                    l => l.LessonId,
+                    (fm, l) => new { fm.FlashCard, fm.Module, Lesson = l })
+                .Join(_context.Courses,
+                    fml => fml.Lesson.CourseId,
+                    c => c.CourseId,
+                    (fml, c) => new { fml.FlashCard, fml.Module, fml.Lesson, Course = c })
+                .Where(x => x.FlashCard.FlashCardId == flashCardId && x.Course.TeacherId == teacherId)
+                .Select(x => x.FlashCard)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<FlashCard?> GetByIdWithDetailsForTeacherAsync(int flashCardId, int teacherId)
+        {
+            return await _context.FlashCards
+                .Include(fc => fc.Module)
+                    .ThenInclude(m => m!.Lesson)
+                        .ThenInclude(l => l!.Course)
+                .Include(fc => fc.Reviews)
+                .Join(_context.Modules,
+                    fc => fc.ModuleId,
+                    m => m.ModuleId,
+                    (fc, m) => new { FlashCard = fc, Module = m })
+                .Join(_context.Lessons,
+                    fm => fm.Module.LessonId,
+                    l => l.LessonId,
+                    (fm, l) => new { fm.FlashCard, fm.Module, Lesson = l })
+                .Join(_context.Courses,
+                    fml => fml.Lesson.CourseId,
+                    c => c.CourseId,
+                    (fml, c) => new { fml.FlashCard, fml.Module, fml.Lesson, Course = c })
+                .Where(x => x.FlashCard.FlashCardId == flashCardId && x.Course.TeacherId == teacherId)
+                .Select(x => x.FlashCard)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<FlashCard>> GetByModuleIdForTeacherAsync(int moduleId, int teacherId)
+        {
+            return await _context.FlashCards
+                .Join(_context.Modules,
+                    fc => fc.ModuleId,
+                    m => m.ModuleId,
+                    (fc, m) => new { FlashCard = fc, Module = m })
+                .Join(_context.Lessons,
+                    fm => fm.Module.LessonId,
+                    l => l.LessonId,
+                    (fm, l) => new { fm.FlashCard, fm.Module, Lesson = l })
+                .Join(_context.Courses,
+                    fml => fml.Lesson.CourseId,
+                    c => c.CourseId,
+                    (fml, c) => new { fml.FlashCard, fml.Module, fml.Lesson, Course = c })
+                .Where(x => x.FlashCard.ModuleId == moduleId && x.Course.TeacherId == teacherId)
+                .Select(x => x.FlashCard)
+                .OrderBy(fc => fc.Word)
+                .ToListAsync();
+        }
+
+        public async Task<List<FlashCard>> GetByModuleIdWithDetailsForTeacherAsync(int moduleId, int teacherId)
+        {
+            return await _context.FlashCards
+                .Include(fc => fc.Module)
+                .Include(fc => fc.Reviews)
+                .Join(_context.Modules,
+                    fc => fc.ModuleId,
+                    m => m.ModuleId,
+                    (fc, m) => new { FlashCard = fc, Module = m })
+                .Join(_context.Lessons,
+                    fm => fm.Module.LessonId,
+                    l => l.LessonId,
+                    (fm, l) => new { fm.FlashCard, fm.Module, Lesson = l })
+                .Join(_context.Courses,
+                    fml => fml.Lesson.CourseId,
+                    c => c.CourseId,
+                    (fml, c) => new { fml.FlashCard, fml.Module, fml.Lesson, Course = c })
+                .Where(x => x.FlashCard.ModuleId == moduleId && x.Course.TeacherId == teacherId)
+                .Select(x => x.FlashCard)
+                .OrderBy(fc => fc.Word)
+                .ToListAsync();
         }
     }
 }

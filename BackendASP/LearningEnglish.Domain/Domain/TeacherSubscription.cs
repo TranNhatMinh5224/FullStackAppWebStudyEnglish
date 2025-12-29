@@ -11,6 +11,7 @@ public class TeacherSubscription
     public DateTime EndDate { get; set; }
     public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Pending;
     public bool? AutoRenew { get; set; } = false;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
 
     public int? PaymentId { get; set; }

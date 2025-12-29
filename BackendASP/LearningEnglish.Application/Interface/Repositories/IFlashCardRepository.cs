@@ -34,7 +34,16 @@ namespace LearningEnglish.Application.Interface
         // Tạo nhiều flashcard
         Task<List<FlashCard>> CreateBulkAsync(List<FlashCard> flashCards);
 
-        // Lấy flashcard với module và course
-        Task<FlashCard?> GetFlashCardWithModuleCourseAsync(int flashCardId);
+        // Lấy flashcard theo ID cho Teacher (kiểm tra ownership qua course)
+        Task<FlashCard?> GetByIdForTeacherAsync(int flashCardId, int teacherId);
+        
+        // Lấy flashcard với chi tiết cho Teacher (kiểm tra ownership)
+        Task<FlashCard?> GetByIdWithDetailsForTeacherAsync(int flashCardId, int teacherId);
+        
+        // Lấy flashcard theo module cho Teacher (kiểm tra ownership)
+        Task<List<FlashCard>> GetByModuleIdForTeacherAsync(int moduleId, int teacherId);
+        
+        // Lấy flashcard theo module với chi tiết cho Teacher (kiểm tra ownership)
+        Task<List<FlashCard>> GetByModuleIdWithDetailsForTeacherAsync(int moduleId, int teacherId);
     }
 }

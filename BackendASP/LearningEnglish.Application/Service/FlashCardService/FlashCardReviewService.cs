@@ -1,15 +1,21 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Configurations;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace LearningEnglish.Application.Service
 {
+    /// <summary>
+    /// FlashCard review service following SOLID principles
+    /// Uses shared media service to reduce code duplication (DRY)
+    /// </summary>
     public class FlashCardReviewService : IFlashCardReviewService
     {
         private readonly IFlashCardReviewRepository _reviewRepository;
@@ -18,23 +24,22 @@ namespace LearningEnglish.Application.Service
         private readonly ILogger<FlashCardReviewService> _logger;
         private readonly IStreakService _streakService;
         private readonly SpacedRepetitionOptions _spacedRepetitionOptions;
-
-        // MinIO bucket constants
-        private const string AUDIO_BUCKET_NAME = "flashcard-audio";
-        private const string IMAGE_BUCKET_NAME = "flashcards";
+        private readonly IFlashCardMediaService _flashCardMediaService;
 
         public FlashCardReviewService(
             IFlashCardReviewRepository reviewRepository,
             IFlashCardRepository flashCardRepository,
             IMapper mapper,
             ILogger<FlashCardReviewService> logger,
-            IStreakService streakService)
+            IStreakService streakService,
+            IFlashCardMediaService flashCardMediaService)
         {
             _reviewRepository = reviewRepository;
             _flashCardRepository = flashCardRepository;
             _mapper = mapper;
             _logger = logger;
             _streakService = streakService;
+            _flashCardMediaService = flashCardMediaService;
             _spacedRepetitionOptions = new SpacedRepetitionOptions(); // Dùng giá trị mặc định thấp để test
         }
 
@@ -120,8 +125,6 @@ namespace LearningEnglish.Application.Service
                 _logger.LogInformation("User {UserId} reviewed flashcard {FlashCardId} with quality {Quality}. Next review: {NextReview}",
                     userId, reviewDto.FlashCardId, reviewDto.Quality, review.NextReviewDate);
 
-                // ❌ Removed auto-complete logic - module completion now handled by StartAndCompleteModuleAsync
-                // Frontend should call POST /api/user/modules/{moduleId}/start when entering module
             }
             catch (Exception ex)
             {
@@ -153,18 +156,8 @@ namespace LearningEnglish.Application.Service
                     var flashCard = review.FlashCard;
 
                     // Generate URLs from keys
-                    string? imageUrl = null;
-                    string? audioUrl = null;
-
-                    if (!string.IsNullOrEmpty(flashCard.ImageKey))
-                    {
-                        imageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, flashCard.ImageKey);
-                    }
-
-                    if (!string.IsNullOrEmpty(flashCard.AudioKey))
-                    {
-                        audioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, flashCard.AudioKey);
-                    }
+                    string? imageUrl = _flashCardMediaService.BuildImageUrl(flashCard.ImageKey);
+                    string? audioUrl = _flashCardMediaService.BuildAudioUrl(flashCard.AudioKey);
 
                     var daysOverdue = (currentDate - review.NextReviewDate.Date).Days;
 
@@ -446,18 +439,8 @@ namespace LearningEnglish.Application.Service
                     var flashCard = review.FlashCard;
 
                     // Generate URLs from keys
-                    string? imageUrl = null;
-                    string? audioUrl = null;
-
-                    if (!string.IsNullOrEmpty(flashCard.ImageKey))
-                    {
-                        imageUrl = BuildPublicUrl.BuildURL(IMAGE_BUCKET_NAME, flashCard.ImageKey);
-                    }
-
-                    if (!string.IsNullOrEmpty(flashCard.AudioKey))
-                    {
-                        audioUrl = BuildPublicUrl.BuildURL(AUDIO_BUCKET_NAME, flashCard.AudioKey);
-                    }
+                    string? imageUrl = _flashCardMediaService.BuildImageUrl(flashCard.ImageKey);
+                    string? audioUrl = _flashCardMediaService.BuildAudioUrl(flashCard.AudioKey);
 
                     masteredFlashCards.Add(new DueFlashCardDto
                     {
@@ -506,10 +489,8 @@ namespace LearningEnglish.Application.Service
 
         #region Private Helper Methods
 
-        /// <summary>
-        /// SM-2 Spaced Repetition Algorithm with configurable mastery criteria
-        /// Reference: https://en.wikipedia.org/wiki/SuperMemo#SM-2_algorithm
-        /// </summary>
+        // SM-2 Spaced Repetition Algorithm with configurable mastery criteria
+        // Reference: https://en.wikipedia.org/wiki/SuperMemo#SM-2_algorithm
         private void CalculateNextReview(FlashCardReview review)
         {
             var quality = review.Quality;
@@ -639,14 +620,6 @@ namespace LearningEnglish.Application.Service
             return longestStreak;
         }
 
-        // ❌ Removed CheckAndCompleteModuleAsync method
-        // Module completion is now handled by StartAndCompleteModuleAsync when user enters module
-        // FlashCard reviews no longer auto-complete modules
-
-        /// <summary>
-        /// Get count of flashcards due for review today
-        /// Used by background services and notifications
-        /// </summary>
         public async Task<int> GetDueCountAsync(int userId)
         {
             var currentDate = DateTime.UtcNow.Date;

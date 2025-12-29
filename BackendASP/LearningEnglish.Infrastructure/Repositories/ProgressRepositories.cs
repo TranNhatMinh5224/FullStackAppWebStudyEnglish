@@ -17,16 +17,20 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
+        
         public async Task<CourseProgress?> GetByUserAndCourseAsync(int userId, int courseId)
         {
+           
             return await _context.CourseProgresses
                 .Include(cp => cp.Course)
                     .ThenInclude(c => c.Lessons)
                 .FirstOrDefaultAsync(cp => cp.UserId == userId && cp.CourseId == courseId);
         }
 
+        
         public async Task<List<CourseProgress>> GetByUserIdAsync(int userId)
         {
+          
             return await _context.CourseProgresses
                 .Include(cp => cp.Course)
                 .Where(cp => cp.UserId == userId)
@@ -62,11 +66,13 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<LessonCompletion?> GetByUserAndLessonAsync(int userId, int lessonId)
+             public async Task<LessonCompletion?> GetByUserAndLessonAsync(int userId, int lessonId)
         {
+           
             return await _context.LessonCompletions
                 .FirstOrDefaultAsync(lc => lc.UserId == userId && lc.LessonId == lessonId);
         }
+
 
         public async Task<List<LessonCompletion>> GetByUserIdAsync(int userId)
         {
@@ -75,8 +81,10 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+       
         public async Task<List<LessonCompletion>> GetByUserAndLessonIdsAsync(int userId, List<int> lessonIds)
         {
+            
             return await _context.LessonCompletions
                 .Where(lc => lc.UserId == userId && lessonIds.Contains(lc.LessonId))
                 .ToListAsync();
@@ -111,8 +119,10 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
+        
         public async Task<ModuleCompletion?> GetByUserAndModuleAsync(int userId, int moduleId)
         {
+           
             return await _context.ModuleCompletions
                 .FirstOrDefaultAsync(mc => mc.UserId == userId && mc.ModuleId == moduleId);
         }

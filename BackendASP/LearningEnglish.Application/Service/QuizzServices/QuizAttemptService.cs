@@ -2,10 +2,12 @@ using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.Module;
 using LearningEnglish.Application.Interface.Strategies;
 using AutoMapper;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Common.Helpers;
+using Microsoft.Extensions.Logging;
 
 
 namespace LearningEnglish.Application.Service
@@ -16,12 +18,15 @@ namespace LearningEnglish.Application.Service
         private readonly IQuizAttemptRepository _quizAttemptRepository;
         private readonly IMapper _mapper;
         private readonly IAssessmentRepository _assessmentRepository;
+        private readonly IModuleRepository _moduleRepository;
+        private readonly ICourseRepository _courseRepository;
         private readonly IUserRepository _userRepository;
         private readonly IEnumerable<IScoringStrategy> _scoringStrategies;
         private readonly IQuestionRepository _questionRepository;
         private readonly IModuleProgressService _moduleProgressService;
         private readonly IStreakService _streakService;
         private readonly INotificationRepository _notificationRepository;
+        private readonly ILogger<QuizAttemptService> _logger;
 
         // MinIO bucket constant
         private const string QuestionBucket = "questions";
@@ -33,23 +38,29 @@ namespace LearningEnglish.Application.Service
             IQuizAttemptRepository quizAttemptRepository,
             IMapper mapper,
             IAssessmentRepository assessmentRepository,
+            IModuleRepository moduleRepository,
+            ICourseRepository courseRepository,
             IUserRepository userRepository,
             IEnumerable<IScoringStrategy> scoringStrategies,
             IQuestionRepository questionRepository,
             IModuleProgressService moduleProgressService,
             IStreakService streakService,
-            INotificationRepository notificationRepository)
+            INotificationRepository notificationRepository,
+            ILogger<QuizAttemptService> logger)
         {
             _quizRepository = quizRepository;
             _quizAttemptRepository = quizAttemptRepository;
             _mapper = mapper;
             _assessmentRepository = assessmentRepository;
+            _moduleRepository = moduleRepository;
+            _courseRepository = courseRepository;
             _userRepository = userRepository;
             _scoringStrategies = scoringStrategies;
             _questionRepository = questionRepository;
             _moduleProgressService = moduleProgressService;
             _streakService = streakService;
             _notificationRepository = notificationRepository;
+            _logger = logger;
 
             // Debug: kiểm tra strategies được inject
 
@@ -92,14 +103,48 @@ namespace LearningEnglish.Application.Service
                 if (quiz.AssessmentId > 0)
                 {
                     var assessment = await _assessmentRepository.GetAssessmentById(quiz.AssessmentId);
-                    if (assessment != null && assessment.DueAt.HasValue)
+                    if (assessment != null)
                     {
-                        if (DateTime.UtcNow > assessment.DueAt.Value)
+                        // Check enrollment: User phải enroll vào course để làm quiz
+                        var module = await _moduleRepository.GetModuleWithCourseAsync(assessment.ModuleId);
+                        if (module == null)
                         {
                             response.Success = false;
-                            response.Message = "Assessment đã quá hạn nộp bài";
-                            response.StatusCode = 403;
+                            response.Message = "Không tìm thấy Module";
+                            response.StatusCode = 404;
                             return response;
+                        }
+
+                        var courseId = module.Lesson?.CourseId;
+                        if (!courseId.HasValue)
+                        {
+                            response.Success = false;
+                            response.Message = "Không tìm thấy khóa học";
+                            response.StatusCode = 404;
+                            return response;
+                        }
+
+                        var isEnrolled = await _courseRepository.IsUserEnrolled(courseId.Value, userId);
+                        if (!isEnrolled)
+                        {
+                            response.Success = false;
+                            response.StatusCode = 403;
+                            response.Message = "Bạn cần đăng ký khóa học để làm Quiz này";
+                            _logger.LogWarning("User {UserId} attempted to start quiz {QuizId} without enrollment", 
+                                userId, quizId);
+                            return response;
+                        }
+
+                        // Check deadline
+                        if (assessment.DueAt.HasValue)
+                        {
+                            if (DateTime.UtcNow > assessment.DueAt.Value)
+                            {
+                                response.Success = false;
+                                response.Message = "Assessment đã quá hạn nộp bài";
+                                response.StatusCode = 403;
+                                return response;
+                            }
                         }
                     }
                 }
@@ -278,19 +323,29 @@ namespace LearningEnglish.Application.Service
         // Update câu trả lời và tính điểm ngay lập tức (real-time scoring)
         // Khi user làm câu nào, sẽ update answer và chấm điểm luôn
         // Nếu làm đúng rồi sửa lại sai thì điểm sẽ từ có điểm thành 0 điểm
-        public async Task<ServiceResponse<decimal>> UpdateAnswerAndScoreAsync(int attemptId, UpdateAnswerRequestDto request)
+        public async Task<ServiceResponse<decimal>> UpdateAnswerAndScoreAsync(int attemptId, UpdateAnswerRequestDto request, int userId)
         {
             var response = new ServiceResponse<decimal>();
 
             try
             {
-                // 1. Lấy attempt
-                var attempt = await _quizAttemptRepository.GetByIdAsync(attemptId);
-                if (attempt == null || attempt.Status != QuizAttemptStatus.InProgress)
+                // 1. Lấy attempt và check ownership
+                var attempt = await _quizAttemptRepository.GetByIdAndUserIdAsync(attemptId, userId);
+                if (attempt == null)
+                {
+                    _logger.LogWarning("User {UserId} attempted to update answer for attempt {AttemptId} that doesn't exist or doesn't belong to them", 
+                        userId, attemptId);
+                    response.Success = false;
+                    response.Message = "Attempt not found or you don't have permission";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                if (attempt.Status != QuizAttemptStatus.InProgress)
                 {
                     response.Success = false;
-                    response.Message = "Attempt not found or not in progress";
-                    response.StatusCode = 404;
+                    response.Message = "Attempt is not in progress";
+                    response.StatusCode = 400;
                     return response;
                 }
 
@@ -352,19 +407,29 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        public async Task<ServiceResponse<QuizAttemptResultDto>> SubmitQuizAttemptAsync(int attemptId)
+        public async Task<ServiceResponse<QuizAttemptResultDto>> SubmitQuizAttemptAsync(int attemptId, int userId)
         {
             var response = new ServiceResponse<QuizAttemptResultDto>();
 
             try
             {
-                // 1. Lấy attempt
-                var attempt = await _quizAttemptRepository.GetByIdAsync(attemptId);
-                if (attempt == null || attempt.Status != QuizAttemptStatus.InProgress)
+                // 1. Lấy attempt và check ownership
+                var attempt = await _quizAttemptRepository.GetByIdAndUserIdAsync(attemptId, userId);
+                if (attempt == null)
+                {
+                    _logger.LogWarning("User {UserId} attempted to submit attempt {AttemptId} that doesn't exist or doesn't belong to them", 
+                        userId, attemptId);
+                    response.Success = false;
+                    response.Message = "Attempt not found or you don't have permission";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                if (attempt.Status != QuizAttemptStatus.InProgress)
                 {
                     response.Success = false;
-                    response.Message = "Attempt not found or not in progress";
-                    response.StatusCode = 404;
+                    response.Message = "Attempt is not in progress";
+                    response.StatusCode = 400;
                     return response;
                 }
 
@@ -455,7 +520,7 @@ namespace LearningEnglish.Application.Service
                 catch (Exception notifEx)
                 {
                     // Không làm ảnh hưởng đến việc submit quiz
-                    Console.WriteLine($"Failed to create quiz notification: {notifEx.Message}");
+                    _logger.LogWarning(notifEx, "Failed to create quiz notification for attempt {AttemptId}", attempt.AttemptId);
                 }
 
                 response.Success = true;
@@ -480,37 +545,78 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // Lấy tất cả attempts đang InProgress
-                var inProgressAttempts = await _quizAttemptRepository.GetInProgressAttemptsAsync();
+                // BATCH PROCESSING: Load attempts từng batch để tránh memory overflow
+                const int BATCH_SIZE = 200; // 200 attempts/batch
+                int totalSubmitted = 0;
+                int skip = 0;
+                bool hasMore = true;
 
-                int submittedCount = 0;
-
-                foreach (var attempt in inProgressAttempts)
+                while (hasMore)
                 {
-                    // Lấy thông tin quiz để kiểm tra duration
-                    var quiz = await _quizRepository.GetQuizByIdAsync(attempt.QuizId);
-                    if (quiz == null || !quiz.Duration.HasValue) continue;
+                    // Lấy batch InProgress attempts với Quiz included (tránh N+1 query)
+                    var inProgressAttempts = await _quizAttemptRepository.GetInProgressAttemptsAsync();
+                    var batch = inProgressAttempts.Skip(skip).Take(BATCH_SIZE).ToList();
 
-                    // Tính thời gian kết thúc
-                    var endTime = attempt.StartedAt.AddMinutes(quiz.Duration.Value);
-                    var now = DateTime.UtcNow;
-
-                    // Nếu đã hết thời gian
-                    if (now >= endTime)
+                    if (batch.Count == 0)
                     {
-                        // Auto-submit
-                        attempt.Status = QuizAttemptStatus.Submitted;
-                        attempt.SubmittedAt = endTime; // Thời gian hết hạn
-                        attempt.TimeSpentSeconds = quiz.Duration.Value * 60; // Thời gian tối đa
-
-                        await _quizAttemptRepository.UpdateQuizAttemptAsync(attempt);
-                        submittedCount++;
+                        hasMore = false;
+                        break;
                     }
+
+                    try
+                    {
+                        var now = DateTime.UtcNow;
+                        int batchSubmitted = 0;
+
+                        foreach (var attempt in batch)
+                        {
+                            // Quiz đã được Include trong GetInProgressAttemptsAsync → không cần query lại
+                            var quiz = attempt.Quiz;
+                            if (quiz == null || !quiz.Duration.HasValue) continue;
+
+                            // Tính thời gian kết thúc
+                            var endTime = attempt.StartedAt.AddMinutes(quiz.Duration.Value);
+
+                            // Nếu đã hết thời gian
+                            if (now >= endTime)
+                            {
+                                // Auto-submit
+                                attempt.Status = QuizAttemptStatus.Submitted;
+                                attempt.SubmittedAt = endTime; // Thời gian hết hạn
+                                attempt.TimeSpentSeconds = quiz.Duration.Value * 60; // Thời gian tối đa
+
+                                await _quizAttemptRepository.UpdateQuizAttemptAsync(attempt);
+                                batchSubmitted++;
+                            }
+                        }
+
+                        totalSubmitted += batchSubmitted;
+
+                        if (batchSubmitted > 0)
+                        {
+                            Console.WriteLine($"✅ Auto-submitted batch: {batchSubmitted} attempts");
+                        }
+                    }
+                    catch (Exception batchEx)
+                    {
+                        Console.WriteLine($"❌ Error in batch processing: {batchEx.Message}. Continuing...");
+                    }
+
+                    skip += BATCH_SIZE;
+
+                    // Nếu batch nhỏ hơn BATCH_SIZE → đây là batch cuối
+                    if (batch.Count < BATCH_SIZE)
+                    {
+                        hasMore = false;
+                    }
+
+                    // Throttle để tránh quá tải DB
+                    await Task.Delay(100);
                 }
 
                 response.Success = true;
                 response.Data = true;
-                response.Message = $"Auto-submitted {submittedCount} expired attempts";
+                response.Message = $"Auto-submitted {totalSubmitted} expired attempts";
 
                 return response;
             }
@@ -523,18 +629,20 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        public async Task<ServiceResponse<QuizAttemptWithQuestionsDto>> ResumeQuizAttemptAsync(int attemptId)
+        public async Task<ServiceResponse<QuizAttemptWithQuestionsDto>> ResumeQuizAttemptAsync(int attemptId, int userId)
         {
             var response = new ServiceResponse<QuizAttemptWithQuestionsDto>();
 
             try
             {
-                // 1. Lấy attempt
-                var attempt = await _quizAttemptRepository.GetByIdAsync(attemptId);
+                // 1. Lấy attempt và check ownership
+                var attempt = await _quizAttemptRepository.GetByIdAndUserIdAsync(attemptId, userId);
                 if (attempt == null)
                 {
+                    _logger.LogWarning("User {UserId} attempted to resume attempt {AttemptId} that doesn't exist or doesn't belong to them", 
+                        userId, attemptId);
                     response.Success = false;
-                    response.Message = "Attempt not found";
+                    response.Message = "Attempt not found or you don't have permission";
                     response.StatusCode = 404;
                     return response;
                 }

@@ -20,6 +20,12 @@ namespace LearningEnglish.Application.Interface
         // Lấy thanh toán thành công cho sản phẩm
         Task<Payment?> GetSuccessfulPaymentByUserAndProductAsync(int userId, int productId, ProductType productType);
         
+        // Lấy thanh toán theo IdempotencyKey (để prevent duplicate)
+        Task<Payment?> GetPaymentByIdempotencyKeyAsync(int userId, string idempotencyKey);
+        
+        // Lấy thanh toán theo OrderCode (cho webhook processing)
+        Task<Payment?> GetPaymentByOrderCodeAsync(long orderCode);
+        
         // Cập nhật trạng thái thanh toán
         Task UpdatePaymentStatusAsync(Payment payment);
         
@@ -30,7 +36,7 @@ namespace LearningEnglish.Application.Interface
         Task<IEnumerable<Payment>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize);
         
         // Lấy tất cả lịch sử giao dịch
-        Task<IEnumerable<Payment>> GetAllTransactionHistoryAsync(int userId);
+
         
         // Đếm số giao dịch
         Task<int> GetTransactionCountAsync(int userId);
@@ -40,5 +46,8 @@ namespace LearningEnglish.Application.Interface
         
         // Lấy thanh toán theo transaction ID
         Task<Payment?> GetPaymentByTransactionIdAsync(string transactionId);
+        
+        // Lấy các payment Pending đã hết hạn (ExpiredAt < cutoffTime)
+        Task<IEnumerable<Payment>> GetExpiredPendingPaymentsAsync(DateTime cutoffTime);
     }
 }

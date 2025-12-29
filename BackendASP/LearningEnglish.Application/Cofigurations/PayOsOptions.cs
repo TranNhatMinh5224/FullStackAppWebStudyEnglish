@@ -8,5 +8,7 @@ namespace LearningEnglish.Application.Cofigurations
         public string ApiUrl { get; set; } = "https://api-merchant.payos.vn";
         public string ReturnUrl { get; set; } = string.Empty;
         public string CancelUrl { get; set; } = string.Empty;
+      
+        public string WebhookUrl { get; set; } = string.Empty;
     }
 }

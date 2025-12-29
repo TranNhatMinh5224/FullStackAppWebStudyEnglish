@@ -7,6 +7,9 @@ namespace LearningEnglish.Application.Interface
         // Lấy module theo ID
         Task<Module?> GetByIdAsync(int moduleId);
         
+        // Lấy module theo ID cho Teacher (kiểm tra ownership qua course)
+        Task<Module?> GetByIdForTeacherAsync(int moduleId, int teacherId);
+        
         // Lấy module với chi tiết
         Task<Module?> GetByIdWithDetailsAsync(int moduleId);
         
@@ -15,6 +18,9 @@ namespace LearningEnglish.Application.Interface
         
         // Lấy module theo lesson với chi tiết
         Task<List<Module>> GetByLessonIdWithDetailsAsync(int lessonId);
+        
+        // Lấy module theo lesson cho Teacher (kiểm tra ownership)
+        Task<List<Module>> GetByLessonIdForTeacherAsync(int lessonId, int teacherId);
         
         // Tạo module
         Task<Module> CreateAsync(Module module);
@@ -36,5 +42,8 @@ namespace LearningEnglish.Application.Interface
 
         // Lấy module với course
         Task<Module?> GetModuleWithCourseAsync(int moduleId);
+
+        // Lấy module với course cho Teacher (kiểm tra ownership)
+        Task<Module?> GetModuleWithCourseForTeacherAsync(int moduleId, int teacherId);
     }
 }

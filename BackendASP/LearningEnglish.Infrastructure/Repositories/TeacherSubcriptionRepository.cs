@@ -14,11 +14,15 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             _context = context;
         }
+
+      
         public async Task AddTeacherSubscriptionAsync(TeacherSubscription teacherSubscription)
         {
             _context.TeacherSubscriptions.Add(teacherSubscription);
             await _context.SaveChangesAsync();
         }
+
+       
         public async Task DeleteTeacherSubscriptionAsync(TeacherSubscription IdSubcription)
         {
             _context.TeacherSubscriptions.Remove(IdSubcription);
@@ -28,6 +32,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<TeacherSubscription?> GetActiveSubscriptionAsync(int userId)
         {
             var now = DateTime.UtcNow;
+            
             return await _context.TeacherSubscriptions
                 .Include(ts => ts.TeacherPackage)
                 .Where(ts => ts.UserId == userId
@@ -35,6 +40,40 @@ namespace LearningEnglish.Infrastructure.Repositories
                           && ts.EndDate > now)
                 .OrderByDescending(ts => ts.EndDate)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<TeacherSubscription>> GetAllTeacherSubscriptionsAsync()
+        {
+            return await _context.TeacherSubscriptions
+                .Include(ts => ts.TeacherPackage)
+                .Include(ts => ts.User)
+                .OrderByDescending(ts => ts.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<TeacherSubscription?> GetTeacherSubscriptionByIdAsync(int subscriptionId)
+        {
+            return await _context.TeacherSubscriptions
+                .Include(ts => ts.TeacherPackage)
+                .Include(ts => ts.User)
+                .FirstOrDefaultAsync(ts => ts.TeacherSubscriptionId == subscriptionId);
+        }
+
+        public async Task<TeacherSubscription?> GetTeacherSubscriptionByIdAndUserIdAsync(int subscriptionId, int userId)
+        {
+            return await _context.TeacherSubscriptions
+                .Include(ts => ts.TeacherPackage)
+                .Include(ts => ts.User)
+                .FirstOrDefaultAsync(ts => ts.TeacherSubscriptionId == subscriptionId && ts.UserId == userId);
+        }
+
+        public async Task<List<TeacherSubscription>> GetTeacherSubscriptionsByUserIdAsync(int userId)
+        {
+            return await _context.TeacherSubscriptions
+                .Include(ts => ts.TeacherPackage)
+                .Where(ts => ts.UserId == userId)
+                .OrderByDescending(ts => ts.CreatedAt)
+                .ToListAsync();
         }
     }
 }

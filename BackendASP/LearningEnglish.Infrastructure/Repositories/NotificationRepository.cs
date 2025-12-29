@@ -14,16 +14,24 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
-        // ✅ TẠO THÔNG BÁO - Chức năng chính
+        //  TẠO THÔNG BÁO - Chức năng chính
         public async Task AddAsync(Notification notification)
         {
             await _context.Notifications.AddAsync(notification);
             await _context.SaveChangesAsync();
         }
 
-        // ✅ LẤY DANH SÁCH THÔNG BÁO - Đơn giản nhất
+        // Lấy thông báo theo ID
+        public async Task<Notification?> GetByIdAsync(int notificationId)
+        {
+            return await _context.Notifications
+                .FirstOrDefaultAsync(n => n.Id == notificationId);
+        }
+
+        
         public async Task<IEnumerable<Notification>> GetUserNotificationsAsync(int userId)
         {
+          
             return await _context.Notifications
                 .Where(n => n.UserId == userId)
                 .OrderByDescending(n => n.CreatedAt)
@@ -33,13 +41,16 @@ namespace LearningEnglish.Infrastructure.Repositories
 
         public async Task<int> GetUnreadCountAsync(int userId)
         {
+            
             return await _context.Notifications
                 .Where(n => n.UserId == userId && !n.IsRead)
                 .CountAsync();
         }
 
+       
         public async Task MarkAsReadAsync(int notificationId, int userId)
         {
+            
             var notification = await _context.Notifications
                 .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId);
 
@@ -51,8 +62,10 @@ namespace LearningEnglish.Infrastructure.Repositories
             }
         }
 
+   
         public async Task MarkAllAsReadAsync(int userId)
         {
+            
             var unreadNotifications = await _context.Notifications
                 .Where(n => n.UserId == userId && !n.IsRead)
                 .ToListAsync();

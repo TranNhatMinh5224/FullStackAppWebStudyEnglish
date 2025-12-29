@@ -33,16 +33,14 @@ namespace LearningEnglish.Infrastructure.Services
             CreatePayOSLinkRequest request, 
             decimal amount, 
             string productName, 
-            string description)
+            string description,
+            long orderCode)
         {
             var response = new ServiceResponse<PayOSLinkResponse>();
             try
             {
-                _logger.LogInformation("Creating PayOS payment link for Payment {PaymentId}, Amount: {Amount}",
-                    request.PaymentId, amount);
-
-                // Tạo orderCode từ PaymentId và timestamp
-                var orderCode = long.Parse($"{DateTime.UtcNow:yyyyMMddHHmmss}{request.PaymentId:D6}");
+                _logger.LogInformation("Creating PayOS payment link for Payment {PaymentId}, OrderCode: {OrderCode}, Amount: {Amount}",
+                    request.PaymentId, orderCode, amount);
 
                 // Tạo request body cho PayOS
                 var requestBody = new

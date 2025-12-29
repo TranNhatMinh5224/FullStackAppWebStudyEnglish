@@ -21,6 +21,23 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .FirstOrDefaultAsync(m => m.ModuleId == moduleId);
         }
 
+        public async Task<Module?> GetByIdForTeacherAsync(int moduleId, int teacherId)
+        {
+            return await _context.Modules
+                .AsNoTracking()
+                .Join(_context.Lessons,
+                    m => m.LessonId,
+                    l => l.LessonId,
+                    (m, l) => new { Module = m, Lesson = l })
+                .Join(_context.Courses,
+                    ml => ml.Lesson.CourseId,
+                    c => c.CourseId,
+                    (ml, c) => new { ml.Module, ml.Lesson, Course = c })
+                .Where(x => x.Module.ModuleId == moduleId && x.Course.TeacherId == teacherId)
+                .Select(x => x.Module)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<Module?> GetByIdWithDetailsAsync(int moduleId)
         {
             return await _context.Modules
@@ -50,6 +67,24 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .Include(m => m.FlashCards)
                 .Include(m => m.Assessments)
                 .Where(m => m.LessonId == lessonId)
+                .OrderBy(m => m.OrderIndex)
+                .ToListAsync();
+        }
+
+        public async Task<List<Module>> GetByLessonIdForTeacherAsync(int lessonId, int teacherId)
+        {
+            return await _context.Modules
+                .AsNoTracking()
+                .Join(_context.Lessons,
+                    m => m.LessonId,
+                    l => l.LessonId,
+                    (m, l) => new { Module = m, Lesson = l })
+                .Join(_context.Courses,
+                    ml => ml.Lesson.CourseId,
+                    c => c.CourseId,
+                    (ml, c) => new { ml.Module, ml.Lesson, Course = c })
+                .Where(x => x.Module.LessonId == lessonId && x.Course.TeacherId == teacherId)
+                .Select(x => x.Module)
                 .OrderBy(m => m.OrderIndex)
                 .ToListAsync();
         }
@@ -109,6 +144,16 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .Include(m => m.Lesson)
                 .ThenInclude(l => l!.Course)
                 .FirstOrDefaultAsync(m => m.ModuleId == moduleId);
+        }
+
+        public async Task<Module?> GetModuleWithCourseForTeacherAsync(int moduleId, int teacherId)
+        {
+            return await _context.Modules
+                .AsNoTracking()
+                .Include(m => m.Lesson)
+                .ThenInclude(l => l!.Course)
+                .Where(m => m.ModuleId == moduleId && m.Lesson!.Course!.TeacherId == teacherId)
+                .FirstOrDefaultAsync();
         }
     }
 }

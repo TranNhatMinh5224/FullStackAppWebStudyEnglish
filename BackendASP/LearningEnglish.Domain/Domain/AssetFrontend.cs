@@ -1,8 +1,6 @@
 namespace LearningEnglish.Domain.Entities
 {
-    /// <summary>
-    /// Entity cho quản lý hình ảnh/tài nguyên frontend (banner, hero images, etc.)
-    /// </summary>
+    // Entity cho quản lý hình ảnh/tài nguyên frontend (banner, hero images, etc.)
     public class AssetFrontend
     {
         public int Id { get; set; }

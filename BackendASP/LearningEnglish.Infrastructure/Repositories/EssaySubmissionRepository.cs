@@ -32,6 +32,13 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<EssaySubmission?> GetSubmissionByIdAsync(int submissionId)
         {
             return await _context.EssaySubmissions
+                .Include(s => s.User)
+                .Include(s => s.Essay)
+                    .ThenInclude(e => e.Assessment)
+                        .ThenInclude(a => a!.Module)
+                            .ThenInclude(m => m!.Lesson)
+                                .ThenInclude(l => l!.Course)
+                .Include(s => s.GradedByTeacher)
                 .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
         }
 
@@ -80,8 +87,22 @@ namespace LearningEnglish.Infrastructure.Repositories
                 throw new ArgumentException("Submission không tồn tại");
             }
 
+            // Update content
             existingSubmission.TextContent = submission.TextContent;
+            existingSubmission.AttachmentKey = submission.AttachmentKey;
+            existingSubmission.AttachmentType = submission.AttachmentType;
             existingSubmission.Status = submission.Status;
+
+            // Update AI grading
+            existingSubmission.Score = submission.Score;
+            existingSubmission.Feedback = submission.Feedback;
+            existingSubmission.GradedAt = submission.GradedAt;
+
+            // Update Teacher grading
+            existingSubmission.TeacherScore = submission.TeacherScore;
+            existingSubmission.TeacherFeedback = submission.TeacherFeedback;
+            existingSubmission.GradedByTeacherId = submission.GradedByTeacherId;
+            existingSubmission.TeacherGradedAt = submission.TeacherGradedAt;
 
             await _context.SaveChangesAsync();
             return existingSubmission;

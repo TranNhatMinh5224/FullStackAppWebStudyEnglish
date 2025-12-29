@@ -1,6 +1,8 @@
 using LearningEnglish.Application.DTOs;
-using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services.TeacherPackage;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Interface;
+
 using LearningEnglish.Domain.Entities;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
@@ -21,6 +23,7 @@ namespace LearningEnglish.Application.Service
             _logger = logger;
         }
 
+        // Chỉ Admin mới có thể CRUD (đã có Permission check ở controller)
         public async Task<ServiceResponse<List<TeacherPackageDto>>> GetAllTeacherPackagesAsync()
         {
             var response = new ServiceResponse<List<TeacherPackageDto>>();
@@ -40,6 +43,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Lấy TeacherPackage theo ID 
         public async Task<ServiceResponse<TeacherPackageDto>> GetTeacherPackageByIdAsync(int id)
         {
             var response = new ServiceResponse<TeacherPackageDto>();
@@ -68,6 +72,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Tạo TeacherPackage mới 
         public async Task<ServiceResponse<TeacherPackageDto>> CreateTeacherPackageAsync(CreateTeacherPackageDto dto)
         {
             var response = new ServiceResponse<TeacherPackageDto>();
@@ -98,7 +103,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // cập nhật gói teacher chỉ admin mới dược cập nhật 
+        // Cập nhật TeacherPackage theo ID
         public async Task<ServiceResponse<TeacherPackageDto>> UpdateTeacherPackageAsync(int id, UpdateTeacherPackageDto dto)
         {
             var response = new ServiceResponse<TeacherPackageDto>();
@@ -111,6 +116,19 @@ namespace LearningEnglish.Application.Service
                     response.StatusCode = 404;
                     response.Message = "Không tìm thấy gói giáo viên";
                     return response;
+                }
+
+                // Check duplicate package name nếu có thay đổi tên
+                if (!string.IsNullOrWhiteSpace(dto.PackageName) && dto.PackageName != existingPackage.PackageName)
+                {
+                    var allPackages = await _teacherPackageRepository.GetAllTeacherPackagesAsync();
+                    if (allPackages.Any(p => p.PackageName == dto.PackageName && p.TeacherPackageId != id))
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Gói giáo viên với tên này đã tồn tại";
+                        return response;
+                    }
                 }
 
                 // Partial update - chỉ cập nhật những trường không null
@@ -152,6 +170,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+        // Xóa TeacherPackage theo ID
         public async Task<ServiceResponse<bool>> DeleteTeacherPackageAsync(int id)
         {
             var response = new ServiceResponse<bool>();
@@ -164,6 +183,19 @@ namespace LearningEnglish.Application.Service
                     response.Success = false;
                     response.StatusCode = 404;
                     response.Message = "Không tìm thấy gói giáo viên";
+                    response.Data = false;
+                    return response;
+                }
+
+                // Kiểm tra xem package có đang được sử dụng bởi subscriptions không
+                var hasSubscriptions = await _teacherPackageRepository.HasActiveSubscriptionsAsync(id);
+                if (hasSubscriptions)
+                {
+                    _logger.LogWarning("Attempted to delete teacher package {PackageId} that has active subscriptions", id);
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Data = false;
+                    response.Message = "Không thể xóa gói giáo viên đang được sử dụng. Vui lòng xóa các subscription liên quan trước";
                     return response;
                 }
 

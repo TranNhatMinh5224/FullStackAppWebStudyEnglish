@@ -6,6 +6,7 @@ namespace LearningEnglish.Application.Interface
     public interface IStreakRepository
     {
         // Lấy streak của user
+       
         Task<Streak?> GetByUserIdAsync(int userId);
         
         // Tạo streak
@@ -15,9 +16,11 @@ namespace LearningEnglish.Application.Interface
         Task UpdateAsync(Streak streak);
         
         // Kiểm tra streak tồn tại
+      
         Task<bool> ExistsAsync(int userId);
         
         // Lấy danh sách users có streak >= minStreak và LastActivityDate = yesterday (sắp đứt)
+        
         Task<List<Streak>> GetUsersAtRiskOfLosingStreakAsync(int minStreak = 3);
     }
 }

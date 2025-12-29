@@ -22,6 +22,7 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.PronunciationProgressId == id);
         }
 
+       
         public async Task<PronunciationProgress?> GetByUserAndFlashCardAsync(int userId, int flashCardId)
         {
             return await _context.PronunciationProgresses
@@ -29,8 +30,9 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .FirstOrDefaultAsync(p => p.UserId == userId && p.FlashCardId == flashCardId);
         }
 
-        public async Task<List<PronunciationProgress>> GetByUserIdAsync(int userId)
+              public async Task<List<PronunciationProgress>> GetByUserIdAsync(int userId)
         {
+            
             return await _context.PronunciationProgresses
                 .Include(p => p.FlashCard)
                 .Where(p => p.UserId == userId)
@@ -47,8 +49,10 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+     
         public async Task<List<PronunciationProgress>> GetByModuleIdAsync(int userId, int moduleId)
         {
+            
             return await _context.PronunciationProgresses
                 .Include(p => p.FlashCard)
                 .Where(p => p.UserId == userId && p.FlashCard!.ModuleId == moduleId)

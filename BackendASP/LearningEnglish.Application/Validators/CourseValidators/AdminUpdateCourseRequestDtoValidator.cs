@@ -20,8 +20,6 @@ namespace LearningEnglish.Application.Validators.CourseValidators
                 .MaximumLength(2000).WithMessage("Course description must not exceed 2000 characters")
                 .When(x => x.Description != null);
 
-            
-
             // Price: Chỉ validate khi có giá trị
             RuleFor(x => x.Price)
                 .GreaterThanOrEqualTo(0).WithMessage("Price must be greater than or equal to 0")
@@ -31,11 +29,6 @@ namespace LearningEnglish.Application.Validators.CourseValidators
             RuleFor(x => x.MaxStudent)
                 .GreaterThan(0).WithMessage("MaxStudent must be greater than 0 if provided")
                 .When(x => x.MaxStudent.HasValue);
-
-            // Type: Chỉ validate khi có giá trị
-            RuleFor(x => x.Type)
-                .IsInEnum().WithMessage("Invalid course type")
-                .When(x => x.Type.HasValue);
         }
     }
 }

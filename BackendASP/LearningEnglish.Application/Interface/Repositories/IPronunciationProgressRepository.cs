@@ -5,15 +5,18 @@ namespace LearningEnglish.Application.Interface
     public interface IPronunciationProgressRepository
     {
         // Lấy tiến độ theo ID
+    
         Task<PronunciationProgress?> GetByIdAsync(int id);
         
         // Lấy tiến độ của user cho flashcard
+
         Task<PronunciationProgress?> GetByUserAndFlashCardAsync(int userId, int flashCardId);
         
         // Lấy tiến độ của user
+       
         Task<List<PronunciationProgress>> GetByUserIdAsync(int userId);
         
-        // Lấy tiến độ theo flashcard
+        // Lấy tiến độ theo flashcard (public - leaderboard)
         Task<List<PronunciationProgress>> GetByFlashCardIdAsync(int flashCardId);
         
         // Lấy tiến độ theo module

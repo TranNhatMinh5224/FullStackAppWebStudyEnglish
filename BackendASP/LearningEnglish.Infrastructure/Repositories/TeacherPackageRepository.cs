@@ -14,11 +14,13 @@ namespace LearningEnglish.Infrastructure.Repositories
             _context = context;
         }
 
+       
         public async Task<List<TeacherPackage>> GetAllTeacherPackagesAsync()
         {
             return await _context.TeacherPackages.ToListAsync();
         }
 
+        // TeacherPackages là public catalog 
         public async Task<TeacherPackage?> GetTeacherPackageByIdAsync(int id)
         {
             return await _context.TeacherPackages.FindAsync(id);
@@ -46,19 +48,24 @@ namespace LearningEnglish.Infrastructure.Repositories
             }
         }
 
+        public async Task<bool> HasActiveSubscriptionsAsync(int packageId)
+        {
+            return await _context.TeacherSubscriptions
+                .AnyAsync(ts => ts.TeacherPackageId == packageId);
+        }
+
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
         }
 
         // Lấy TeacherPackage của teacher tại thời điểm date
-        // Tự động lấy subscription đang valid (Active hoặc Pending đã đến ngày)
+        
         public async Task<TeacherPackage?> GetInformationTeacherpackageAsync(int teacherId, DateTime date)
         {
             var result = await (from tp in _context.TeacherPackages
                                 join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
-                                where ts.UserId == teacherId
-                                      && ts.StartDate <= date
+                                where ts.StartDate <= date
                                       && ts.EndDate >= date
                                       && (ts.Status == SubscriptionStatus.Active || ts.Status == SubscriptionStatus.Pending)
                                 orderby ts.EndDate descending
@@ -66,16 +73,12 @@ namespace LearningEnglish.Infrastructure.Repositories
 
             return result;
         }
-
-        // Lấy TeacherPackage hiện tại của teacher
-        // Tự động lấy subscription đang valid (Active hoặc Pending đã đến ngày)
         public async Task<TeacherPackage?> GetInformationTeacherpackage(int teacherId)
         {
             var now = DateTime.UtcNow;
             var result = await (from tp in _context.TeacherPackages
                                 join ts in _context.TeacherSubscriptions on tp.TeacherPackageId equals ts.TeacherPackageId
-                                where ts.UserId == teacherId
-                                      && ts.StartDate <= now
+                                where ts.StartDate <= now
                                       && ts.EndDate >= now
                                       && (ts.Status == SubscriptionStatus.Active || ts.Status == SubscriptionStatus.Pending)
                                 orderby ts.EndDate descending

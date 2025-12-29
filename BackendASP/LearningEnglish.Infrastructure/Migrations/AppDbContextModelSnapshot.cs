@@ -149,7 +149,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool?>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<string>("KeyImage")
@@ -160,7 +160,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Order")
+                    b.Property<int?>("Order")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -403,11 +403,34 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Property<int>("EssayId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Feedback")
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<DateTime?>("GradedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("GradedByTeacherId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("Score")
+                        .HasColumnType("numeric");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TeacherFeedback")
+                        .HasMaxLength(5000)
+                        .HasColumnType("character varying(5000)");
+
+                    b.Property<DateTime?>("TeacherGradedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("TeacherScore")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("TextContent")
                         .HasMaxLength(20000)
@@ -419,6 +442,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.HasKey("SubmissionId");
 
                     b.HasIndex("EssayId");
+
+                    b.HasIndex("GradedByTeacherId");
 
                     b.HasIndex("UserId");
 
@@ -942,16 +967,52 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PaymentId"));
 
+                    b.Property<string>("AccountName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("AccountNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<DateTime?>("PaidAt")
+                    b.Property<string>("CheckoutUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("PaymentMethod")
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ErrorCode")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("ExpiredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Gateway")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<long>("OrderCode")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("integer");
@@ -963,19 +1024,231 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("QrCode")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("PaymentId");
 
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("Gateway");
+
+                    b.HasIndex("OrderCode")
+                        .IsUnique();
+
                     b.HasIndex("ProductType", "ProductId");
+
+                    b.HasIndex("UserId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("\"IdempotencyKey\" IS NOT NULL");
 
                     b.HasIndex("UserId", "Status");
 
                     b.ToTable("Payments", (string)null);
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.PaymentWebhookQueue", b =>
+                {
+                    b.Property<int>("WebhookId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("WebhookId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorStackTrace")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("MaxRetries")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(5);
+
+                    b.Property<DateTime?>("NextRetryAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("OrderCode")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("PaymentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RetryCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Signature")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("WebhookData")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("WebhookId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("NextRetryAt");
+
+                    b.HasIndex("OrderCode");
+
+                    b.HasIndex("PaymentId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("Status", "NextRetryAt");
+
+                    b.ToTable("PaymentWebhookQueues", (string)null);
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.Permission", b =>
+                {
+                    b.Property<int>("PermissionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PermissionId"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("PermissionId");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Permissions", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            PermissionId = 1,
+                            Category = "Content",
+                            CreatedAt = new DateTime(2025, 12, 27, 23, 3, 0, 900, DateTimeKind.Utc).AddTicks(1696),
+                            Description = "Tạo, sửa, xóa, publish khóa học",
+                            DisplayName = "Quản lý khóa học",
+                            Name = "Admin.Course.Manage"
+                        },
+                        new
+                        {
+                            PermissionId = 9,
+                            Category = "Finance",
+                            CreatedAt = new DateTime(2025, 12, 27, 23, 3, 0, 900, DateTimeKind.Utc).AddTicks(1711),
+                            Description = "Thêm/xóa học viên vào khóa học (dùng khi thanh toán lỗi, nâng cấp user)",
+                            DisplayName = "Quản lý học viên trong khóa học",
+                            Name = "Admin.Course.Enroll"
+                        },
+                        new
+                        {
+                            PermissionId = 2,
+                            Category = "Content",
+                            CreatedAt = new DateTime(2025, 12, 27, 23, 3, 0, 900, DateTimeKind.Utc).AddTicks(1712),
+                            Description = "Tạo, sửa, xóa lessons và modules",
+                            DisplayName = "Quản lý bài học",
+                            Name = "Admin.Lesson.Manage"
+                        },
+                        new
+                        {
+                            PermissionId = 3,
+                            Category = "Content",
+                            CreatedAt = new DateTime(2025, 12, 27, 23, 3, 0, 900, DateTimeKind.Utc).AddTicks(1714),
+                            Description = "Quản lý flashcards, quizzes, essays, assets frontend",
+                            DisplayName = "Quản lý nội dung",
+                            Name = "Admin.Content.Manage"
+                        },
+                        new
+                        {
+                            PermissionId = 4,
+                            Category = "Finance",
+                            CreatedAt = new DateTime(2025, 12, 27, 23, 3, 0, 900, DateTimeKind.Utc).AddTicks(1715),
+                            Description = "Xem, block/unblock, xóa users, gán roles",
+                            DisplayName = "Quản lý người dùng",
+                            Name = "Admin.User.Manage"
+                        },
+                        new
+                        {
+                            PermissionId = 5,
+                            Category = "Finance",
+                            CreatedAt = new DateTime(2025, 12, 27, 23, 3, 0, 900, DateTimeKind.Utc).AddTicks(1721),
+                            Description = "Xem payments, hoàn tiền, fix lỗi thanh toán",
+                            DisplayName = "Quản lý thanh toán",
+                            Name = "Admin.Payment.Manage"
+                        },
+                        new
+                        {
+                            PermissionId = 6,
+                            Category = "Finance",
+                            CreatedAt = new DateTime(2025, 12, 27, 23, 3, 0, 900, DateTimeKind.Utc).AddTicks(1722),
+                            Description = "Xem báo cáo doanh thu và thống kê tài chính",
+                            DisplayName = "Xem doanh thu",
+                            Name = "Admin.Revenue.View"
+                        },
+                        new
+                        {
+                            PermissionId = 7,
+                            Category = "Finance",
+                            CreatedAt = new DateTime(2025, 12, 27, 23, 3, 0, 900, DateTimeKind.Utc).AddTicks(1723),
+                            Description = "Tạo, sửa, xóa teacher packages",
+                            DisplayName = "Quản lý gói giáo viên",
+                            Name = "Admin.Package.Manage"
+                        },
+                        new
+                        {
+                            PermissionId = 8,
+                            Category = "System",
+                            CreatedAt = new DateTime(2025, 12, 27, 23, 3, 0, 900, DateTimeKind.Utc).AddTicks(1724),
+                            Description = "Super Admin - full permissions",
+                            DisplayName = "Toàn quyền hệ thống",
+                            Name = "Admin.System.FullAccess"
+                        });
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.PronunciationProgress", b =>
@@ -1404,17 +1677,151 @@ namespace LearningEnglish.Infrastructure.Migrations
                         new
                         {
                             RoleId = 1,
-                            Name = "Admin"
+                            Name = "SuperAdmin"
                         },
                         new
                         {
                             RoleId = 2,
-                            Name = "Teacher"
+                            Name = "ContentAdmin"
                         },
                         new
                         {
                             RoleId = 3,
+                            Name = "FinanceAdmin"
+                        },
+                        new
+                        {
+                            RoleId = 4,
+                            Name = "Teacher"
+                        },
+                        new
+                        {
+                            RoleId = 5,
                             Name = "Student"
+                        });
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.RolePermission", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("RolePermissions", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 1,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 2,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 3,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 4,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 5,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 6,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 7,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 8,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 9,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 1,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 2,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 3,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 9,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 4,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 5,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 6,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionId = 7,
+                            AssignedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -1504,6 +1911,9 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<bool?>("AutoRenew")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
@@ -1636,7 +2046,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             IsMale = true,
                             LastName = "System",
                             NormalizedEmail = "MINHXOANDEV@GMAIL.COM",
-                            PasswordHash = "$2a$11$AmQ6X00tuKWUGAGz7YLFfuteRdOHwq876zDZfZmBk37PPNWuURwh2",
+                            PasswordHash = "$2a$11$2FuqXJMADpSoyPIdqOJKPu8QsXVK70zRVMUyd2jQ.Ad3g8tNfTuyy",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -1789,6 +2199,11 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("LearningEnglish.Domain.Entities.User", "GradedByTeacher")
+                        .WithMany()
+                        .HasForeignKey("GradedByTeacherId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("LearningEnglish.Domain.Entities.User", "User")
                         .WithMany("EssaySubmissions")
                         .HasForeignKey("UserId")
@@ -1796,6 +2211,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Essay");
+
+                    b.Navigation("GradedByTeacher");
 
                     b.Navigation("User");
                 });
@@ -1951,6 +2368,16 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.PaymentWebhookQueue", b =>
+                {
+                    b.HasOne("LearningEnglish.Domain.Entities.Payment", "Payment")
+                        .WithMany()
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Payment");
+                });
+
             modelBuilder.Entity("LearningEnglish.Domain.Entities.PronunciationProgress", b =>
                 {
                     b.HasOne("LearningEnglish.Domain.Entities.FlashCard", "FlashCard")
@@ -2048,6 +2475,25 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.RolePermission", b =>
+                {
+                    b.HasOne("LearningEnglish.Domain.Entities.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LearningEnglish.Domain.Entities.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Streak", b =>
@@ -2189,6 +2635,11 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("ModuleCompletions");
                 });
 
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
             modelBuilder.Entity("LearningEnglish.Domain.Entities.Question", b =>
                 {
                     b.Navigation("Options");
@@ -2211,6 +2662,11 @@ namespace LearningEnglish.Infrastructure.Migrations
                     b.Navigation("Questions");
 
                     b.Navigation("QuizGroups");
+                });
+
+            modelBuilder.Entity("LearningEnglish.Domain.Entities.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
                 });
 
             modelBuilder.Entity("LearningEnglish.Domain.Entities.TeacherPackage", b =>
