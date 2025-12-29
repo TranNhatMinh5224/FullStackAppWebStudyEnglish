@@ -376,11 +376,11 @@ builder.Services.AddScoped<IScoringStrategy, MatchingScoringStrategy>();
 builder.Services.AddScoped<IScoringStrategy, OrderingScoringStrategy>();
 
 // Background services - All cleanup and scheduled jobs
-builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.QuizAutoSubmitService>();
-builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.TempFileCleanupHostedService>();
-builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.OtpCleanupService>(); // Tự động xóa OTP hết hạn mỗi 30 phút
-builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.PaymentCleanupService>(); // Tự động cleanup payment expired mỗi giờ
-builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.WebhookRetryService>(); // Webhook retry với exponential backoff
+builder.Services.AddHostedService<QuizAutoSubmitService>();
+builder.Services.AddHostedService<TempFileCleanupHostedService>();
+builder.Services.AddHostedService<OtpCleanupService>(); // Tự động xóa OTP hết hạn mỗi 30 phút
+builder.Services.AddHostedService<PaymentCleanupService>(); // Tự động cleanup payment expired mỗi giờ
+builder.Services.AddHostedService<WebhookRetryService>(); // Webhook retry với exponential backoff
 
 //  VOCABULARY REMINDER SYSTEM -
 builder.Services.AddScoped<SimpleNotificationService>();
