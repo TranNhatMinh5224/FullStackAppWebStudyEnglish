@@ -1,13 +1,14 @@
 using AutoMapper;
+using LearningEnglish.Application.Common.Prompts;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace LearningEnglish.Application.Service.EssayGrading;
+
 
 public class AdminEssayGradingService : IAdminEssayGradingService
 {
@@ -15,6 +16,7 @@ public class AdminEssayGradingService : IAdminEssayGradingService
     private readonly IEssayRepository _essayRepository;
     private readonly IAssessmentRepository _assessmentRepository;
     private readonly IGeminiService _geminiService;
+    private readonly IAiResponseParser _responseParser;
     private readonly IMapper _mapper;
     private readonly ILogger<AdminEssayGradingService> _logger;
 
@@ -23,6 +25,7 @@ public class AdminEssayGradingService : IAdminEssayGradingService
         IEssayRepository essayRepository,
         IAssessmentRepository assessmentRepository,
         IGeminiService geminiService,
+        IAiResponseParser responseParser,
         IMapper mapper,
         ILogger<AdminEssayGradingService> logger)
     {
@@ -30,6 +33,7 @@ public class AdminEssayGradingService : IAdminEssayGradingService
         _essayRepository = essayRepository;
         _assessmentRepository = assessmentRepository;
         _geminiService = geminiService;
+        _responseParser = responseParser;
         _mapper = mapper;
         _logger = logger;
     }
@@ -79,7 +83,8 @@ public class AdminEssayGradingService : IAdminEssayGradingService
 
             var maxScore = assessment.TotalPoints;
 
-            var prompt = BuildGradingPrompt(
+            // Use centralized prompt builder
+            var prompt = EssayGradingPrompt.BuildPrompt(
                 essay.Title,
                 essay.Description ?? string.Empty,
                 submission.TextContent,
@@ -97,7 +102,8 @@ public class AdminEssayGradingService : IAdminEssayGradingService
                 };
             }
 
-            var aiResult = ParseAiResponse(geminiResponse.Content);
+            // Use centralized response parser
+            var aiResult = _responseParser.ParseGradingResponse(geminiResponse.Content);
 
             if (aiResult.Score > maxScore)
             {
@@ -223,98 +229,141 @@ public class AdminEssayGradingService : IAdminEssayGradingService
         }
     }
 
-    private string BuildGradingPrompt(string question, string description, string studentEssay, decimal maxScore)
+    public async Task<ServiceResponse<BatchGradingResultDto>> BatchGradeByAiAsync(int essayId, CancellationToken cancellationToken = default)
     {
-        return $@"You are an expert English essay grader. Grade the following student essay according to the rubric below.
+            var response = new ServiceResponse<BatchGradingResultDto>();
 
-ESSAY QUESTION:
-{question}
-
-{(string.IsNullOrWhiteSpace(description) ? "" : $"DESCRIPTION:\n{description}\n")}
-MAX SCORE: {maxScore} points
-
-STUDENT ESSAY:
-{studentEssay}
-
-GRADING RUBRIC:
-1. Content & Ideas (40%):
-   - Thesis statement (10%)
-   - Supporting arguments (15%)
-   - Examples and evidence (10%)
-   - Conclusion (5%)
-
-2. Language Use (30%):
-   - Vocabulary range and accuracy (15%)
-   - Grammar and sentence structure (15%)
-
-3. Organization (20%):
-   - Essay structure and flow (10%)
-   - Coherence and cohesion (10%)
-
-4. Mechanics (10%):
-   - Spelling, punctuation, capitalization
-
-INSTRUCTIONS:
-- Provide a score out of {maxScore} points
-- Give detailed feedback on each rubric category
-- List specific strengths (at least 2)
-- List specific areas for improvement (at least 2)
-- Be constructive and encouraging
-
-OUTPUT FORMAT (JSON only, no other text):
-{{
-    ""score"": <numeric score>,
-    ""feedback"": ""<overall feedback>"",
-    ""breakdown"": {{
-        ""contentScore"": <score for content>,
-        ""languageScore"": <score for language>,
-        ""organizationScore"": <score for organization>,
-        ""mechanicsScore"": <score for mechanics>
-    }},
-    ""strengths"": [""<strength 1>"", ""<strength 2>""],
-    ""improvements"": [""<improvement 1>"", ""<improvement 2>""]
-}}";
-    }
-
-    private AiGradingResult ParseAiResponse(string content)
-    {
-        try
-        {
-            var jsonStart = content.IndexOf('{');
-            var jsonEnd = content.LastIndexOf('}');
-            
-            if (jsonStart == -1 || jsonEnd == -1)
+            try
             {
-                throw new Exception("No JSON found in AI response");
+                _logger.LogInformation("👨‍💼 Admin requesting batch AI grading for essay {EssayId}", essayId);
+
+                // Get essay and assessment
+                var essay = await _essayRepository.GetEssayByIdAsync(essayId);
+                if (essay == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài essay";
+                    return response;
+                }
+
+                var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy assessment";
+                    return response;
+                }
+
+                var maxScore = assessment.TotalPoints;
+
+                // Get all submissions chưa chấm (hoặc chỉ có AI score, chưa có teacher score)
+                var allSubmissions = await _submissionRepository.GetSubmissionsByEssayIdAsync(essayId);
+                var pendingSubmissions = allSubmissions
+                    .Where(s => s.Status != SubmissionStatus.Graded || s.Score == null)
+                    .Where(s => !string.IsNullOrWhiteSpace(s.TextContent)) // Only grade submissions with text
+                    .ToList();
+
+                _logger.LogInformation("Found {Count} submissions to grade", pendingSubmissions.Count);
+
+                var results = new List<GradingResult>();
+                int successCount = 0;
+                int failCount = 0;
+
+                foreach (var submission in pendingSubmissions)
+                {
+                    try
+                    {
+                        // Use centralized prompt builder
+                        var prompt = EssayGradingPrompt.BuildPrompt(
+                            essay.Title,
+                            essay.Description ?? string.Empty,
+                            submission.TextContent ?? string.Empty,
+                            maxScore
+                        );
+
+                        // Call Gemini
+                        var geminiResponse = await _geminiService.GenerateContentAsync(prompt, cancellationToken);
+
+                        if (!geminiResponse.Success)
+                        {
+                            failCount++;
+                            results.Add(new GradingResult
+                            {
+                                SubmissionId = submission.SubmissionId,
+                                UserName = submission.User?.FullName ?? "Unknown",
+                                Success = false,
+                                Error = geminiResponse.ErrorMessage
+                            });
+                            continue;
+                        }
+
+                        // Use centralized response parser
+                        var aiResult = _responseParser.ParseGradingResponse(geminiResponse.Content);
+
+                        if (aiResult.Score > maxScore)
+                        {
+                            aiResult.Score = maxScore;
+                        }
+
+                        // Save result (AI score, NOT teacher score)
+                        submission.Score = aiResult.Score;
+                        submission.Feedback = aiResult.Feedback;
+                        submission.GradedAt = DateTime.UtcNow;
+                        submission.Status = SubmissionStatus.Graded;
+
+                        await _submissionRepository.UpdateSubmissionAsync(submission);
+
+                        successCount++;
+                        results.Add(new GradingResult
+                        {
+                            SubmissionId = submission.SubmissionId,
+                            UserName = submission.User?.FullName ?? "Unknown",
+                            Score = aiResult.Score,
+                            Success = true
+                        });
+
+                        _logger.LogInformation("✅ Graded submission {SubmissionId}: {Score}/{MaxScore}", submission.SubmissionId, aiResult.Score, maxScore);
+                    }
+                    catch (Exception ex)
+                    {
+                        failCount++;
+                        _logger.LogError(ex, "❌ Error grading submission {SubmissionId}", submission.SubmissionId);
+                        results.Add(new GradingResult
+                        {
+                            SubmissionId = submission.SubmissionId,
+                            UserName = submission.User?.FullName ?? "Unknown",
+                            Success = false,
+                            Error = ex.Message
+                        });
+                    }
+                }
+
+                var batchResult = new BatchGradingResultDto
+                {
+                    TotalProcessed = pendingSubmissions.Count,
+                    SuccessCount = successCount,
+                    FailCount = failCount,
+                    Results = results
+                };
+
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = $"Chấm điểm AI hàng loạt hoàn tất: {successCount} thành công, {failCount} thất bại";
+                response.Data = batchResult;
+
+                _logger.LogInformation("✅ Batch AI grading completed for essay {EssayId}: {Success}/{Total}", essayId, successCount, pendingSubmissions.Count);
+
+                return response;
             }
-
-            var jsonContent = content.Substring(jsonStart, jsonEnd - jsonStart + 1);
-
-            var options = new JsonSerializerOptions
+            catch (Exception ex)
             {
-                PropertyNameCaseInsensitive = true
-            };
-
-            var result = JsonSerializer.Deserialize<AiGradingResult>(jsonContent, options);
-
-            if (result == null)
-            {
-                throw new Exception("Failed to deserialize AI response");
+                _logger.LogError(ex, "❌ Error in batch AI grading for essay {EssayId}", essayId);
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Có lỗi xảy ra khi chấm điểm hàng loạt";
+                return response;
             }
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to parse AI response: {Content}", content);
-            
-            return new AiGradingResult
-            {
-                Score = 0,
-                Feedback = "Error parsing AI response. Please grade manually.",
-                Strengths = new List<string> { "Unable to analyze" },
-                Improvements = new List<string> { "Unable to analyze" }
-            };
         }
     }
-}

@@ -1,32 +1,36 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
+   
     public class UserCourseService : IUserCourseService
     {
         private readonly ICourseRepository _courseRepository;
         private readonly ICourseProgressRepository _courseProgressRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<UserCourseService> _logger;
-
-        private const string CourseImageBucket = "courses";
+        private readonly ICourseImageService _courseImageService;
 
         public UserCourseService(
             ICourseRepository courseRepository,
             ICourseProgressRepository courseProgressRepository,
             IMapper mapper,
-            ILogger<UserCourseService> logger)
+            ILogger<UserCourseService> logger,
+            ICourseImageService courseImageService)
         {
             _courseRepository = courseRepository;
             _courseProgressRepository = courseProgressRepository;
             _mapper = mapper;
             _logger = logger;
+            _courseImageService = courseImageService;
         }
         //  Lấy danh sách Khóa học System 
         
@@ -45,10 +49,7 @@ namespace LearningEnglish.Application.Service
                 {
                     if (!string.IsNullOrWhiteSpace(courseDto.ImageUrl))
                     {
-                        courseDto.ImageUrl = BuildPublicUrl.BuildURL(
-                            CourseImageBucket,
-                            courseDto.ImageUrl
-                        );
+                        courseDto.ImageUrl = _courseImageService.BuildImageUrl(courseDto.ImageUrl);
                     }
 
                     // Check enrollment status nếu user đã login
@@ -102,7 +103,7 @@ namespace LearningEnglish.Application.Service
                 // Generate URL từ key
                 if (!string.IsNullOrWhiteSpace(courseDto.ImageUrl))
                 {
-                    courseDto.ImageUrl = BuildPublicUrl.BuildURL(CourseImageBucket, courseDto.ImageUrl);
+                    courseDto.ImageUrl = _courseImageService.BuildImageUrl(courseDto.ImageUrl);
                 }
 
                 // Check enrollment status nếu user đã login
@@ -162,10 +163,7 @@ namespace LearningEnglish.Application.Service
                 {
                     if (!string.IsNullOrWhiteSpace(courseDto.ImageUrl))
                     {
-                        courseDto.ImageUrl = BuildPublicUrl.BuildURL(
-                            CourseImageBucket,
-                            courseDto.ImageUrl
-                        );
+                        courseDto.ImageUrl = _courseImageService.BuildImageUrl(courseDto.ImageUrl);
                     }
                 }
 
@@ -254,10 +252,7 @@ namespace LearningEnglish.Application.Service
                     // Generate image URL
                     if (!string.IsNullOrWhiteSpace(courseDto.ImageUrl))
                     {
-                        courseDto.ImageUrl = BuildPublicUrl.BuildURL(
-                            CourseImageBucket,
-                            courseDto.ImageUrl
-                        );
+                        courseDto.ImageUrl = _courseImageService.BuildImageUrl(courseDto.ImageUrl);
                     }
 
                     courseDtos.Add(courseDto);

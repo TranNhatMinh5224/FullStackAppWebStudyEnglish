@@ -1,14 +1,14 @@
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.Lesson;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Application.Common;
-using LearningEnglish.Application.Common.Helpers;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
-   
+    
     public class LessonService : ILessonService
     {
         private readonly ILessonRepository _lessonRepository;
@@ -16,23 +16,22 @@ namespace LearningEnglish.Application.Service
         private readonly ICourseRepository _courseRepository;
         private readonly ILogger<LessonService> _logger;
         private readonly ILessonCompletionRepository _lessonCompletionRepository;
-
-        // Đặt bucket + folder cho ảnh lesson
-        private const string LessonImageBucket = "lessons";
-        private const string LessonImageFolder = "real";
+        private readonly ILessonImageService _lessonImageService;
 
         public LessonService(
             ILessonRepository lessonRepository,
             IMapper mapper,
             ILogger<LessonService> logger,
             ICourseRepository courseRepository,
-            ILessonCompletionRepository lessonCompletionRepository)
+            ILessonCompletionRepository lessonCompletionRepository,
+            ILessonImageService lessonImageService)
         {
             _lessonRepository = lessonRepository;
             _mapper = mapper;
             _logger = logger;
             _courseRepository = courseRepository;
             _lessonCompletionRepository = lessonCompletionRepository;
+            _lessonImageService = lessonImageService;
         }
 
         // Get lessons với progress 
@@ -70,10 +69,7 @@ namespace LearningEnglish.Application.Service
                   
                     if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                     {
-                        lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
-                            LessonImageBucket,
-                            lesson.ImageKey
-                        );
+                        lessonDto.ImageUrl = _lessonImageService.BuildImageUrl(lesson.ImageKey);
                     }
 
                     // ✅ Load progress for logged-in user
@@ -133,10 +129,7 @@ namespace LearningEnglish.Application.Service
                 // Generate image URL
                 if (!string.IsNullOrWhiteSpace(lesson.ImageKey))
                 {
-                    lessonDto.ImageUrl = BuildPublicUrl.BuildURL(
-                        LessonImageBucket,
-                        lesson.ImageKey
-                    );
+                    lessonDto.ImageUrl = _lessonImageService.BuildImageUrl(lesson.ImageKey);
                 }
 
                 // Load progress for logged-in user

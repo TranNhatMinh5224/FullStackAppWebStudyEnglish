@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using LearningEnglish.Application.Common.Constants;
 
 namespace LearningEnglish.API.Extensions
 {
@@ -16,20 +17,20 @@ namespace LearningEnglish.API.Extensions
                 return string.Empty;
 
             // Priority order: SuperAdmin > ContentAdmin > FinanceAdmin > Teacher > Student
-            if (roles.Contains("SuperAdmin", StringComparer.OrdinalIgnoreCase))
-                return "SuperAdmin";
+            if (roles.Any(r => RoleConstants.IsSuperAdmin(r)))
+                return RoleConstants.SuperAdmin;
             
-            if (roles.Contains("ContentAdmin", StringComparer.OrdinalIgnoreCase))
-                return "ContentAdmin";
+            if (roles.Any(r => r.Equals(RoleConstants.ContentAdmin, StringComparison.OrdinalIgnoreCase)))
+                return RoleConstants.ContentAdmin;
             
-            if (roles.Contains("FinanceAdmin", StringComparer.OrdinalIgnoreCase))
-                return "FinanceAdmin";
+            if (roles.Any(r => r.Equals(RoleConstants.FinanceAdmin, StringComparison.OrdinalIgnoreCase)))
+                return RoleConstants.FinanceAdmin;
             
-            if (roles.Contains("Teacher", StringComparer.OrdinalIgnoreCase))
-                return "Teacher";
+            if (roles.Any(r => r.Equals(RoleConstants.Teacher, StringComparison.OrdinalIgnoreCase)))
+                return RoleConstants.Teacher;
             
-            if (roles.Contains("Student", StringComparer.OrdinalIgnoreCase))
-                return "Student";
+            if (roles.Any(r => r.Equals(RoleConstants.Student, StringComparison.OrdinalIgnoreCase)))
+                return RoleConstants.Student;
 
             // Return first role if none of the standard roles found
             return roles.First();
@@ -39,7 +40,7 @@ namespace LearningEnglish.API.Extensions
         public static List<string> GetAllRoles(this ClaimsPrincipal principal)
         {
             return principal.FindAll(ClaimTypes.Role)
-                .Select(c => c.Value)
+.Select(c => c.Value)
                 .ToList();
         }
 
@@ -53,27 +54,29 @@ namespace LearningEnglish.API.Extensions
         // Kiểm tra xem user có phải là Admin không (SuperAdmin, ContentAdmin, hoặc FinanceAdmin)
         public static bool IsAdmin(this ClaimsPrincipal principal)
         {
-            return principal.HasRole("SuperAdmin") || 
-                   principal.HasRole("ContentAdmin") || 
-                   principal.HasRole("FinanceAdmin");
+            var roles = principal.FindAll(ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList();
+            
+            return roles.Any(r => RoleConstants.IsAdminRole(r));
         }
 
         // Kiểm tra xem user có phải là SuperAdmin không
         public static bool IsSuperAdmin(this ClaimsPrincipal principal)
         {
-            return principal.HasRole("SuperAdmin");
+            return principal.HasRole(RoleConstants.SuperAdmin);
         }
 
         // Kiểm tra xem user có phải là Teacher không (có thể đồng thời là Student)
         public static bool IsTeacher(this ClaimsPrincipal principal)
         {
-            return principal.HasRole("Teacher");
+            return principal.HasRole(RoleConstants.Teacher);
         }
 
         // Kiểm tra xem user có phải là Student không
         public static bool IsStudent(this ClaimsPrincipal principal)
         {
-            return principal.HasRole("Student");
+            return principal.HasRole(RoleConstants.Student);
         }
 
         // Lấy userId từ claims - Throw exception nếu không có

@@ -9,9 +9,6 @@ namespace LearningEnglish.Application.Interface
         // Lấy danh sách submissions theo essay ID với phân trang
         Task<ServiceResponse<PagedResult<EssaySubmissionListDto>>> GetSubmissionsByEssayIdPagedAsync(int essayId, PageRequest request);
         
-        // Lấy tất cả submissions của một essay
-        Task<ServiceResponse<List<EssaySubmissionListDto>>> GetSubmissionsByEssayIdAsync(int essayId);
-        
         // Lấy chi tiết submission bất kỳ (không check ownership)
         Task<ServiceResponse<EssaySubmissionDto>> GetSubmissionDetailAsync(int submissionId);
         

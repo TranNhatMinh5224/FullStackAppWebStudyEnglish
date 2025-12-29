@@ -1,13 +1,14 @@
 using AutoMapper;
+using LearningEnglish.Application.Common.Prompts;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace LearningEnglish.Application.Service.EssayGrading;
+
 
 public class TeacherEssayGradingService : ITeacherEssayGradingService
 {
@@ -15,6 +16,7 @@ public class TeacherEssayGradingService : ITeacherEssayGradingService
     private readonly IEssayRepository _essayRepository;
     private readonly IAssessmentRepository _assessmentRepository;
     private readonly IGeminiService _geminiService;
+    private readonly IAiResponseParser _responseParser;
     private readonly IMapper _mapper;
     private readonly ILogger<TeacherEssayGradingService> _logger;
 
@@ -23,6 +25,7 @@ public class TeacherEssayGradingService : ITeacherEssayGradingService
         IEssayRepository essayRepository,
         IAssessmentRepository assessmentRepository,
         IGeminiService geminiService,
+        IAiResponseParser responseParser,
         IMapper mapper,
         ILogger<TeacherEssayGradingService> logger)
     {
@@ -30,6 +33,7 @@ public class TeacherEssayGradingService : ITeacherEssayGradingService
         _essayRepository = essayRepository;
         _assessmentRepository = assessmentRepository;
         _geminiService = geminiService;
+        _responseParser = responseParser;
         _mapper = mapper;
         _logger = logger;
     }
@@ -104,7 +108,8 @@ public class TeacherEssayGradingService : ITeacherEssayGradingService
 
             var maxScore = assessment.TotalPoints;
 
-            var prompt = BuildGradingPrompt(
+            // Use centralized prompt builder
+            var prompt = EssayGradingPrompt.BuildPrompt(
                 essay.Title,
                 essay.Description ?? string.Empty,
                 submission.TextContent,
@@ -122,7 +127,8 @@ public class TeacherEssayGradingService : ITeacherEssayGradingService
                 };
             }
 
-            var aiResult = ParseAiResponse(geminiResponse.Content);
+            // Use centralized response parser
+            var aiResult = _responseParser.ParseGradingResponse(geminiResponse.Content);
 
             if (aiResult.Score > maxScore)
             {
@@ -257,98 +263,108 @@ public class TeacherEssayGradingService : ITeacherEssayGradingService
         }
     }
 
-    private string BuildGradingPrompt(string question, string description, string studentEssay, decimal maxScore)
-    {
-        return $@"You are an expert English essay grader. Grade the following student essay according to the rubric below.
-
-ESSAY QUESTION:
-{question}
-
-{(string.IsNullOrWhiteSpace(description) ? "" : $"DESCRIPTION:\n{description}\n")}
-MAX SCORE: {maxScore} points
-
-STUDENT ESSAY:
-{studentEssay}
-
-GRADING RUBRIC:
-1. Content & Ideas (40%):
-   - Thesis statement (10%)
-   - Supporting arguments (15%)
-   - Examples and evidence (10%)
-   - Conclusion (5%)
-
-2. Language Use (30%):
-   - Vocabulary range and accuracy (15%)
-   - Grammar and sentence structure (15%)
-
-3. Organization (20%):
-   - Essay structure and flow (10%)
-   - Coherence and cohesion (10%)
-
-4. Mechanics (10%):
-   - Spelling, punctuation, capitalization
-
-INSTRUCTIONS:
-- Provide a score out of {maxScore} points
-- Give detailed feedback on each rubric category
-- List specific strengths (at least 2)
-- List specific areas for improvement (at least 2)
-- Be constructive and encouraging
-
-OUTPUT FORMAT (JSON only, no other text):
-{{
-    ""score"": <numeric score>,
-    ""feedback"": ""<overall feedback>"",
-    ""breakdown"": {{
-        ""contentScore"": <score for content>,
-        ""languageScore"": <score for language>,
-        ""organizationScore"": <score for organization>,
-        ""mechanicsScore"": <score for mechanics>
-    }},
-    ""strengths"": [""<strength 1>"", ""<strength 2>""],
-    ""improvements"": [""<improvement 1>"", ""<improvement 2>""]
-}}";
-    }
-
-    private AiGradingResult ParseAiResponse(string content)
-    {
-        try
+    public async Task<ServiceResponse<EssayGradingResultDto>> UpdateGradeAsync(
+            int submissionId, 
+            TeacherGradingDto dto, 
+            int teacherId, 
+            CancellationToken cancellationToken = default)
         {
-            var jsonStart = content.IndexOf('{');
-            var jsonEnd = content.LastIndexOf('}');
+            var response = new ServiceResponse<EssayGradingResultDto>();
             
-            if (jsonStart == -1 || jsonEnd == -1)
+            try
             {
-                throw new Exception("No JSON found in AI response");
+                _logger.LogInformation("👨‍🏫 Teacher {TeacherId} updating grade for submission {SubmissionId}", teacherId, submissionId);
+
+                if (!await ValidateSubmissionOwnershipAsync(submissionId, teacherId))
+                {
+                    response.Success = false;
+                    response.StatusCode = 403;
+                    response.Message = "Bạn không có quyền cập nhật điểm bài nộp này";
+                    return response;
+                }
+
+                var submission = await _submissionRepository.GetSubmissionByIdAsync(submissionId);
+                if (submission == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = $"Không tìm thấy bài nộp với ID {submissionId}";
+                    return response;
+                }
+
+                // Kiểm tra xem đã có điểm Teacher chưa (chỉ update khi đã chấm rồi)
+                if (submission.TeacherScore == null && submission.GradedByTeacherId != teacherId)
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "Bài nộp này chưa được chấm điểm. Vui lòng sử dụng API chấm điểm thay vì cập nhật.";
+                    return response;
+                }
+
+                var essay = await _essayRepository.GetEssayByIdAsync(submission.EssayId);
+                if (essay == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy đề bài essay";
+                    return response;
+                }
+
+                var assessment = await _assessmentRepository.GetAssessmentById(essay.AssessmentId);
+                if (assessment == null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 404;
+                    response.Message = "Không tìm thấy bài kiểm tra";
+                    return response;
+                }
+
+                var maxScore = assessment.TotalPoints;
+
+                if (dto.Score > maxScore)
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = $"Điểm ({dto.Score}) vượt quá điểm tối đa ({maxScore})";
+                    return response;
+                }
+
+                if (dto.Score < 0)
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "Điểm không thể âm";
+                    return response;
+                }
+
+                // Cập nhật điểm Teacher (giữ nguyên AI score)
+                submission.TeacherScore = dto.Score;
+                submission.TeacherFeedback = dto.Feedback;
+                submission.GradedByTeacherId = teacherId; // Đảm bảo set teacherId
+                submission.TeacherGradedAt = DateTime.UtcNow; // Cập nhật thời gian
+                submission.Status = SubmissionStatus.Graded;
+
+                await _submissionRepository.UpdateSubmissionAsync(submission);
+
+                _logger.LogInformation("✅ Teacher {TeacherId} updated grade for submission {SubmissionId}. New Score: {Score}/{MaxScore}", 
+                    teacherId, submissionId, dto.Score, maxScore);
+
+                var result = _mapper.Map<EssayGradingResultDto>(submission);
+                result.MaxScore = maxScore;
+
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Cập nhật điểm thành công";
+                response.Data = result;
+                return response;
             }
-
-            var jsonContent = content.Substring(jsonStart, jsonEnd - jsonStart + 1);
-
-            var options = new JsonSerializerOptions
+            catch (Exception ex)
             {
-                PropertyNameCaseInsensitive = true
-            };
-
-            var result = JsonSerializer.Deserialize<AiGradingResult>(jsonContent, options);
-
-            if (result == null)
-            {
-                throw new Exception("Failed to deserialize AI response");
+                _logger.LogError(ex, "❌ Error updating grade for submission {SubmissionId}", submissionId);
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Có lỗi xảy ra khi cập nhật điểm";
+                return response;
             }
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to parse AI response: {Content}", content);
-            
-            return new AiGradingResult
-            {
-                Score = 0,
-                Feedback = "Error parsing AI response. Please grade manually.",
-                Strengths = new List<string> { "Unable to analyze" },
-                Improvements = new List<string> { "Unable to analyze" }
-            };
         }
     }
-}

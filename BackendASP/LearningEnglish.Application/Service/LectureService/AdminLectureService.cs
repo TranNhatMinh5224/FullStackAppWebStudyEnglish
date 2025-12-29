@@ -1,9 +1,11 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.Lecture;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -14,22 +16,18 @@ namespace LearningEnglish.Application.Service
         private readonly ILectureRepository _lectureRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<AdminLectureService> _logger;
-        private readonly IMinioFileStorage _minioFileStorage;
-
-        // Đặt bucket + folder cho media lecture (video, audio, etc.)
-        private const string LectureMediaBucket = "lectures";
-        private const string LectureMediaFolder = "real";
+        private readonly ILectureMediaService _lectureMediaService;
 
         public AdminLectureService(
             ILectureRepository lectureRepository,
             IMapper mapper,
             ILogger<AdminLectureService> logger,
-            IMinioFileStorage minioFileStorage)
+            ILectureMediaService lectureMediaService)
         {
             _lectureRepository = lectureRepository;
             _mapper = mapper;
             _logger = logger;
-            _minioFileStorage = minioFileStorage;
+            _lectureMediaService = lectureMediaService;
         }
 
         // Admin tạo lecture
@@ -89,22 +87,19 @@ namespace LearningEnglish.Application.Service
                 // Commit MediaTempKey nếu có
                 if (!string.IsNullOrWhiteSpace(createLectureDto.MediaTempKey))
                 {
-                    var mediaResult = await _minioFileStorage.CommitFileAsync(
-                        createLectureDto.MediaTempKey,
-                        LectureMediaBucket,
-                        LectureMediaFolder
-                    );
-
-                    if (!mediaResult.Success || string.IsNullOrWhiteSpace(mediaResult.Data))
+                    try
                     {
-                        _logger.LogError("Failed to commit lecture media: {Error}", mediaResult.Message);
+                        committedMediaKey = await _lectureMediaService.CommitMediaAsync(createLectureDto.MediaTempKey);
+                        lecture.MediaKey = committedMediaKey;
+                    }
+                    catch (Exception mediaEx)
+                    {
+                        _logger.LogError(mediaEx, "Failed to commit lecture media");
                         response.Success = false;
-                        response.Message = $"Không thể lưu media: {mediaResult.Message}";
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu media. Vui lòng thử lại.";
                         return response;
                     }
-
-                    committedMediaKey = mediaResult.Data;
-                    lecture.MediaKey = committedMediaKey;
                 }
 
                 Lecture createdLecture;
@@ -116,13 +111,14 @@ namespace LearningEnglish.Application.Service
                 {
                     _logger.LogError(dbEx, "Database error while creating lecture");
 
-                    // Rollback MinIO file
+                    // Rollback media if DB fails
                     if (committedMediaKey != null)
                     {
-                        await _minioFileStorage.DeleteFileAsync(committedMediaKey, LectureMediaBucket);
+                        await _lectureMediaService.DeleteMediaAsync(committedMediaKey);
                     }
 
                     response.Success = false;
+                    response.StatusCode = 500;
                     response.Message = "Lỗi database khi tạo lecture";
                     return response;
                 }
@@ -132,7 +128,7 @@ namespace LearningEnglish.Application.Service
                 // Generate URL cho response
                 if (!string.IsNullOrWhiteSpace(lectureDto.MediaUrl))
                 {
-                    lectureDto.MediaUrl = BuildPublicUrl.BuildURL(LectureMediaBucket, lectureDto.MediaUrl);
+                    lectureDto.MediaUrl = _lectureMediaService.BuildMediaUrl(lectureDto.MediaUrl);
                 }
 
                 response.Data = lectureDto;
@@ -206,32 +202,28 @@ namespace LearningEnglish.Application.Service
 
                     if (!string.IsNullOrWhiteSpace(lectureNode.MediaTempKey))
                     {
-                        var mediaResult = await _minioFileStorage.CommitFileAsync(
-                            lectureNode.MediaTempKey,
-                            LectureMediaBucket,
-                            LectureMediaFolder
-                        );
-
-                        if (!mediaResult.Success || string.IsNullOrWhiteSpace(mediaResult.Data))
+                        try
                         {
-                            _logger.LogError("Failed to commit media for TempId: {TempId}, Error: {Error}",
-                                lectureNode.TempId, mediaResult.Message);
+                            committedMediaKey = await _lectureMediaService.CommitMediaAsync(lectureNode.MediaTempKey);
+                            committedMediaKeys.Add(committedMediaKey);
+                            tempIdToMediaKey[lectureNode.TempId] = committedMediaKey;
+                        }
+                        catch (Exception mediaEx)
+                        {
+                            _logger.LogError(mediaEx, "Failed to commit media for TempId: {TempId}", lectureNode.TempId);
 
                             // Rollback all previously committed media
                             foreach (var key in committedMediaKeys)
                             {
-                                await _minioFileStorage.DeleteFileAsync(key, LectureMediaBucket);
+                                await _lectureMediaService.DeleteMediaAsync(key);
                             }
 
                             response.Success = false;
-                            response.Message = $"Không thể lưu media cho lecture '{lectureNode.Title}': {mediaResult.Message}";
+                            response.StatusCode = 400;
+                            response.Message = $"Không thể lưu media cho lecture '{lectureNode.Title}'";
                             response.Data.Errors.Add($"Media upload failed for {lectureNode.TempId}");
                             return response;
                         }
-
-                        committedMediaKey = mediaResult.Data;
-                        committedMediaKeys.Add(committedMediaKey);
-                        tempIdToMediaKey[lectureNode.TempId] = committedMediaKey;
                     }
 
                     // Create Lecture entity
@@ -262,7 +254,7 @@ namespace LearningEnglish.Application.Service
                     // Rollback media
                     foreach (var key in committedMediaKeys)
                     {
-                        await _minioFileStorage.DeleteFileAsync(key, LectureMediaBucket);
+                        await _lectureMediaService.DeleteMediaAsync(key);
                     }
 
                     response.Success = false;
@@ -302,7 +294,7 @@ namespace LearningEnglish.Application.Service
                         var lectureDto = _mapper.Map<LectureDto>(createdLecture);
                         if (!string.IsNullOrWhiteSpace(lectureDto.MediaUrl))
                         {
-                            lectureDto.MediaUrl = BuildPublicUrl.BuildURL(LectureMediaBucket, lectureDto.MediaUrl);
+                            lectureDto.MediaUrl = _lectureMediaService.BuildMediaUrl(lectureDto.MediaUrl);
                         }
 
                         response.Data.CreatedLectures[lectureNode.TempId] = lectureDto;
@@ -322,14 +314,7 @@ namespace LearningEnglish.Application.Service
                     // Rollback: Delete all committed media files
                     foreach (var key in committedMediaKeys)
                     {
-                        try
-                        {
-                            await _minioFileStorage.DeleteFileAsync(key, LectureMediaBucket);
-                        }
-                        catch (Exception cleanupEx)
-                        {
-                            _logger.LogWarning(cleanupEx, "Failed to cleanup media file: {Key}", key);
-                        }
+                        await _lectureMediaService.DeleteMediaAsync(key);
                     }
 
                     // Note: Database rollback is handled by transaction (if using one)
@@ -404,23 +389,19 @@ namespace LearningEnglish.Application.Service
                 // Xử lý cập nhật MediaUrl
                 if (!string.IsNullOrWhiteSpace(updateLectureDto.MediaTempKey))
                 {
-                    // Commit media mới
-                    var mediaResult = await _minioFileStorage.CommitFileAsync(
-                        updateLectureDto.MediaTempKey,
-                        LectureMediaBucket,
-                        LectureMediaFolder
-                    );
-
-                    if (!mediaResult.Success || string.IsNullOrWhiteSpace(mediaResult.Data))
+                    try
                     {
-                        _logger.LogError("Failed to commit lecture media: {Error}", mediaResult.Message);
+                        newMediaKey = await _lectureMediaService.CommitMediaAsync(updateLectureDto.MediaTempKey);
+                        existingLecture.MediaKey = newMediaKey;
+                    }
+                    catch (Exception mediaEx)
+                    {
+                        _logger.LogError(mediaEx, "Failed to commit new lecture media");
                         response.Success = false;
-                        response.Message = $"Không thể lưu media: {mediaResult.Message}";
+                        response.StatusCode = 400;
+                        response.Message = "Không thể lưu media. Vui lòng thử lại.";
                         return response;
                     }
-
-                    newMediaKey = mediaResult.Data;
-                    existingLecture.MediaKey = newMediaKey;
                 }
 
                 Lecture updatedLecture;
@@ -432,13 +413,14 @@ namespace LearningEnglish.Application.Service
                 {
                     _logger.LogError(dbEx, "Database error while updating lecture");
 
-                    // Rollback new media
+                    // Rollback new media if DB fails
                     if (newMediaKey != null)
                     {
-                        await _minioFileStorage.DeleteFileAsync(newMediaKey, LectureMediaBucket);
+                        await _lectureMediaService.DeleteMediaAsync(newMediaKey);
                     }
 
                     response.Success = false;
+                    response.StatusCode = 500;
                     response.Message = "Lỗi database khi cập nhật lecture";
                     return response;
                 }
@@ -446,14 +428,7 @@ namespace LearningEnglish.Application.Service
                 // Delete old media only after successful DB update
                 if (oldMediaKey != null && newMediaKey != null)
                 {
-                    try
-                    {
-                        await _minioFileStorage.DeleteFileAsync(oldMediaKey, LectureMediaBucket);
-                    }
-                    catch
-                    {
-                        _logger.LogWarning("Failed to delete old lecture media: {MediaUrl}", oldMediaKey);
-                    }
+                    await _lectureMediaService.DeleteMediaAsync(oldMediaKey);
                 }
                 
                 var lectureDto = _mapper.Map<LectureDto>(updatedLecture);
@@ -461,7 +436,7 @@ namespace LearningEnglish.Application.Service
                 // Generate URL cho response
                 if (!string.IsNullOrWhiteSpace(lectureDto.MediaUrl))
                 {
-                    lectureDto.MediaUrl = BuildPublicUrl.BuildURL(LectureMediaBucket, lectureDto.MediaUrl);
+                    lectureDto.MediaUrl = _lectureMediaService.BuildMediaUrl(lectureDto.MediaUrl);
                 }
 
                 response.Data = lectureDto;
@@ -507,7 +482,7 @@ namespace LearningEnglish.Application.Service
                 // Xóa media từ MinIO nếu có
                 if (!string.IsNullOrWhiteSpace(lecture.MediaKey))
                 {
-                    await _minioFileStorage.DeleteFileAsync(lecture.MediaKey, LectureMediaBucket);
+                    await _lectureMediaService.DeleteMediaAsync(lecture.MediaKey);
                 }
 
                 var deleted = await _lectureRepository.DeleteAsync(lectureId);
@@ -583,8 +558,7 @@ namespace LearningEnglish.Application.Service
                 // Generate URL từ key cho MediaUrl
                 if (!string.IsNullOrWhiteSpace(lectureDto.MediaUrl))
                 {
-                    lectureDto.MediaUrl = BuildPublicUrl.BuildURL(
-                        LectureMediaBucket,
+                    lectureDto.MediaUrl = _lectureMediaService.BuildMediaUrl(
                         lectureDto.MediaUrl
                     );
                 }
@@ -617,7 +591,7 @@ namespace LearningEnglish.Application.Service
                 {
                     if (!string.IsNullOrWhiteSpace(dto.MediaUrl))
                     {
-                        dto.MediaUrl = BuildPublicUrl.BuildURL(LectureMediaBucket, dto.MediaUrl);
+                        dto.MediaUrl = _lectureMediaService.BuildMediaUrl(dto.MediaUrl);
                     }
                 }
 

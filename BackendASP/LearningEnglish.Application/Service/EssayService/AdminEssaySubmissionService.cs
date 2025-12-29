@@ -1,33 +1,34 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.Common.Pagination;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
+    
     public class AdminEssaySubmissionService : IAdminEssaySubmissionService
     {
         private readonly IEssaySubmissionRepository _essaySubmissionRepository;
-        private readonly IMinioFileStorage _minioFileStorage;
+        private readonly IEssayAttachmentService _attachmentService;
+        private readonly IAvatarService _avatarService;
         private readonly IMapper _mapper;
         private readonly ILogger<AdminEssaySubmissionService> _logger;
 
-        private const string AttachmentBucket = "essay-attachments";
-        private const string AttachmentFolder = "real";
-        private const string AvatarBucket = "avatars";
-        private const string AvatarFolder = "real";
-
         public AdminEssaySubmissionService(
             IEssaySubmissionRepository essaySubmissionRepository,
-            IMinioFileStorage minioFileStorage,
+            IEssayAttachmentService attachmentService,
+            IAvatarService avatarService,
             IMapper mapper,
             ILogger<AdminEssaySubmissionService> logger)
         {
             _essaySubmissionRepository = essaySubmissionRepository;
-            _minioFileStorage = minioFileStorage;
+            _attachmentService = attachmentService;
+            _avatarService = avatarService;
             _mapper = mapper;
             _logger = logger;
         }
@@ -53,9 +54,7 @@ namespace LearningEnglish.Application.Service
                     var submission = submissions.FirstOrDefault(s => s.SubmissionId == submissionDto.SubmissionId);
                     if (submission?.User != null && !string.IsNullOrWhiteSpace(submission.User.AvatarKey))
                     {
-                        submissionDto.UserAvatarUrl = BuildPublicUrl.BuildURL(
-                            AvatarBucket,
-                            $"{AvatarFolder}/{submission.User.AvatarKey}");
+                        submissionDto.UserAvatarUrl = _avatarService.BuildAvatarUrl(submission.User.AvatarKey);
                     }
                 }
 
@@ -69,43 +68,6 @@ namespace LearningEnglish.Application.Service
                     PageNumber = request.PageNumber,
                     PageSize = request.PageSize
                 };
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách submission theo Essay {EssayId}", essayId);
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi hệ thống khi lấy danh sách submission";
-                return response;
-            }
-        }
-
-        public async Task<ServiceResponse<List<EssaySubmissionListDto>>> GetSubmissionsByEssayIdAsync(int essayId)
-        {
-            var response = new ServiceResponse<List<EssaySubmissionListDto>>();
-
-            try
-            {
-                var submissions = await _essaySubmissionRepository.GetSubmissionsByEssayIdAsync(essayId);
-                var submissionListDtos = _mapper.Map<List<EssaySubmissionListDto>>(submissions);
-
-                foreach (var submissionDto in submissionListDtos)
-                {
-                    var submission = submissions.FirstOrDefault(s => s.SubmissionId == submissionDto.SubmissionId);
-                    if (submission?.User != null && !string.IsNullOrWhiteSpace(submission.User.AvatarKey))
-                    {
-                        submissionDto.UserAvatarUrl = BuildPublicUrl.BuildURL(
-                            AvatarBucket,
-                            $"{AvatarFolder}/{submission.User.AvatarKey}");
-                    }
-                }
-
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = $"Lấy danh sách {submissionListDtos.Count} submission thành công";
-                response.Data = submissionListDtos;
 
                 return response;
             }
@@ -139,9 +101,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(submission.AttachmentKey))
                 {
-                    submissionDto.AttachmentUrl = BuildPublicUrl.BuildURL(
-                        AttachmentBucket,
-                        $"{AttachmentFolder}/{submission.AttachmentKey}");
+                    submissionDto.AttachmentUrl = _attachmentService.BuildAttachmentUrl(submission.AttachmentKey);
                 }
 
                 response.Success = true;
@@ -183,15 +143,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(attachmentKey))
                 {
-                    try
-                    {
-                        await _minioFileStorage.DeleteFileAsync($"{AttachmentFolder}/{attachmentKey}", AttachmentBucket);
-                        _logger.LogInformation("Đã xóa attachment file sau khi xóa submission thành công");
-                    }
-                    catch (Exception deleteEx)
-                    {
-                        _logger.LogError(deleteEx, "Lỗi khi xóa attachment file (không ảnh hưởng đến xóa submission)");
-                    }
+                    await _attachmentService.DeleteAttachmentAsync(attachmentKey);
                 }
 
                 response.Success = true;
@@ -234,7 +186,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                var downloadResult = await _minioFileStorage.DownloadFileAsync(submission.AttachmentKey, AttachmentBucket);
+                var downloadResult = await _attachmentService.DownloadAttachmentAsync(submission.AttachmentKey);
                 if (!downloadResult.Success || downloadResult.Data == null)
                 {
                     response.Success = false;

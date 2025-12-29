@@ -18,7 +18,6 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.TeacherFeedback ?? src.Feedback ?? string.Empty))
                 .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt ?? src.GradedAt ?? DateTime.UtcNow))
                 .ForMember(dest => dest.GradedByTeacher, opt => opt.MapFrom(src => src.TeacherScore.HasValue))
-                .ForMember(dest => dest.FinalScore, opt => opt.MapFrom(src => src.FinalScore))
                 .ForMember(dest => dest.Breakdown, opt => opt.Ignore()) // Only from AI
                 .ForMember(dest => dest.Strengths, opt => opt.Ignore()) // Only from AI
                 .ForMember(dest => dest.Improvements, opt => opt.Ignore()); // Only from AI
@@ -336,8 +335,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.TimeLimit, opt => opt.MapFrom(src => ParseTimeSpan(src.TimeLimit)));
 
             // Essay mappings
-            CreateMap<Essay, EssayDto>()
-                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()));
+            CreateMap<Essay, EssayDto>();
 
             CreateMap<CreateEssayDto, Essay>()
                 .ForMember(dest => dest.EssayId, opt => opt.Ignore())
@@ -349,23 +347,44 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.AttachmentUrl, opt => opt.MapFrom(src => src.AttachmentKey)) // Will be replaced with URL in service
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : null))
                 .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
-                // Grading fields (1 điểm duy nhất)
-                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
-                .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.Feedback))
-                .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.GradedAt))
+                // AI Grading fields (có thể null)
+                .ForMember(dest => dest.AiScore, opt => opt.MapFrom(src => src.Score))
+                .ForMember(dest => dest.AiFeedback, opt => opt.MapFrom(src => src.Feedback))
+                .ForMember(dest => dest.AiGradedAt, opt => opt.MapFrom(src => src.GradedAt))
+                // Teacher/Admin Grading fields (có thể null)
+                .ForMember(dest => dest.TeacherScore, opt => opt.MapFrom(src => src.TeacherScore))
+                .ForMember(dest => dest.TeacherFeedback, opt => opt.MapFrom(src => src.TeacherFeedback))
+                .ForMember(dest => dest.TeacherGradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt))
                 .ForMember(dest => dest.GradedByTeacherId, opt => opt.MapFrom(src => src.GradedByTeacherId))
                 .ForMember(dest => dest.GradedByTeacherName, opt => opt.MapFrom(src => src.GradedByTeacher != null ? src.GradedByTeacher.FullName : null))
-                .ForMember(dest => dest.MaxScore, opt => opt.MapFrom(src => src.Essay != null && src.Essay.Assessment != null ? src.Essay.Assessment.TotalPoints : (decimal?)null));
+                // Final Score (ưu tiên Teacher, nếu không có thì AI)
+                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.FinalScore))
+                .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.TeacherFeedback ?? src.Feedback))
+                .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt ?? src.GradedAt))
+                .ForMember(dest => dest.MaxScore, opt => opt.MapFrom(src => src.Essay != null && src.Essay.Assessment != null ? src.Essay.Assessment.TotalPoints : (decimal?)null))
+                // Essay info
+                .ForMember(dest => dest.EssayTitle, opt => opt.MapFrom(src => src.Essay != null ? src.Essay.Title : null))
+                .ForMember(dest => dest.EssayDescription, opt => opt.MapFrom(src => src.Essay != null ? src.Essay.Description : null));
 
             // EssaySubmission to List DTO (basic info for listing)
             CreateMap<EssaySubmission, EssaySubmissionListDto>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FullName))
                 .ForMember(dest => dest.UserAvatarUrl, opt => opt.Ignore()) // Will be built in service
                 .ForMember(dest => dest.HasAttachment, opt => opt.MapFrom(src => !string.IsNullOrWhiteSpace(src.AttachmentKey)))
-                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
-                .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.GradedAt))
+                // AI Grading fields
+                .ForMember(dest => dest.AiScore, opt => opt.MapFrom(src => src.Score))
+                .ForMember(dest => dest.AiGradedAt, opt => opt.MapFrom(src => src.GradedAt))
+                // Teacher/Admin Grading fields
+                .ForMember(dest => dest.TeacherScore, opt => opt.MapFrom(src => src.TeacherScore))
+                .ForMember(dest => dest.TeacherGradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt))
                 .ForMember(dest => dest.GradedByTeacherId, opt => opt.MapFrom(src => src.GradedByTeacherId))
-                .ForMember(dest => dest.FeedbackPreview, opt => opt.MapFrom(src => src.Feedback != null && src.Feedback.Length > 100 ? src.Feedback.Substring(0, 100) + "..." : src.Feedback));
+                // Final Score (ưu tiên Teacher)
+                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.FinalScore))
+                .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt ?? src.GradedAt))
+                .ForMember(dest => dest.FeedbackPreview, opt => opt.MapFrom(src => 
+                    (src.TeacherFeedback ?? src.Feedback) != null && (src.TeacherFeedback ?? src.Feedback)!.Length > 100 
+                        ? (src.TeacherFeedback ?? src.Feedback)!.Substring(0, 100) + "..." 
+                        : (src.TeacherFeedback ?? src.Feedback)));
 
             CreateMap<CreateEssaySubmissionDto, EssaySubmission>()
                 .ForMember(dest => dest.SubmissionId, opt => opt.Ignore())

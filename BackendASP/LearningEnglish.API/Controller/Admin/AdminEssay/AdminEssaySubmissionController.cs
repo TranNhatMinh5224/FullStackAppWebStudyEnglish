@@ -24,21 +24,13 @@ namespace LearningEnglish.API.Controller.Admin
             _gradingService = gradingService;
         }
 
-        // GET: api/admin/essay-submissions/essay/{essayId}/paged
-        [HttpGet("essay/{essayId}/paged")]
-        public async Task<IActionResult> GetSubmissionsByEssayPaged(
+        // GET: api/admin/essay-submissions/essay/{essayId} - Lấy danh sách submissions với phân trang
+        [HttpGet("essay/{essayId}")]
+        public async Task<IActionResult> GetSubmissionsByEssay(
             int essayId,
             [FromQuery] PageRequest request)
         {
             var result = await _essaySubmissionService.GetSubmissionsByEssayIdPagedAsync(essayId, request);
-            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
-        }
-
-        // GET: api/admin/essay-submissions/essay/{essayId}
-        [HttpGet("essay/{essayId}")]
-        public async Task<IActionResult> GetSubmissionsByEssay(int essayId)
-        {
-            var result = await _essaySubmissionService.GetSubmissionsByEssayIdAsync(essayId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -86,6 +78,14 @@ namespace LearningEnglish.API.Controller.Admin
         public async Task<IActionResult> GradeManually(int submissionId, [FromBody] TeacherGradingDto dto)
         {
             var result = await _gradingService.GradeByAdminAsync(submissionId, dto);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/admin/essay-submissions/essay/{essayId}/batch-grade-ai - Admin chấm hàng loạt bằng AI
+        [HttpPost("essay/{essayId}/batch-grade-ai")]
+        public async Task<IActionResult> BatchGradeByAi(int essayId)
+        {
+            var result = await _gradingService.BatchGradeByAiAsync(essayId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }

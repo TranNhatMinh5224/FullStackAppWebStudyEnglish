@@ -1,33 +1,36 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.Module;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Application.Common.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
+  
     public class UserModuleService : IUserModuleService
     {
         private readonly IModuleRepository _moduleRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<UserModuleService> _logger;
         private readonly IModuleCompletionRepository _moduleCompletionRepository;
-
-        private const string ModuleImageBucket = "modules";
-        private const string ModuleImageFolder = "real";
+        private readonly IModuleImageService _moduleImageService;
 
         public UserModuleService(
             IModuleRepository moduleRepository,
             IMapper mapper,
             ILogger<UserModuleService> logger,
-            IModuleCompletionRepository moduleCompletionRepository)
+            IModuleCompletionRepository moduleCompletionRepository,
+            IModuleImageService moduleImageService)
         {
             _moduleRepository = moduleRepository;
             _mapper = mapper;
             _logger = logger;
             _moduleCompletionRepository = moduleCompletionRepository;
+            _moduleImageService = moduleImageService;
         }
 
         // Lấy module với tiến độ học tập
@@ -49,7 +52,7 @@ namespace LearningEnglish.Application.Service
 
                 if (!string.IsNullOrWhiteSpace(module.ImageKey))
                 {
-                    dto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, module.ImageKey);
+                    dto.ImageUrl = _moduleImageService.BuildImageUrl(module.ImageKey);
                 }
 
                 var completion = await _moduleCompletionRepository
@@ -95,7 +98,7 @@ namespace LearningEnglish.Application.Service
 
                     if (!string.IsNullOrWhiteSpace(module.ImageKey))
                     {
-                        dto.ImageUrl = BuildPublicUrl.BuildURL(ModuleImageBucket, module.ImageKey);
+                        dto.ImageUrl = _moduleImageService.BuildImageUrl(module.ImageKey);
                     }
 
                     var completion = completions.FirstOrDefault(x => x.ModuleId == module.ModuleId);

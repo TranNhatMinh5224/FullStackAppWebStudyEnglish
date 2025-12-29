@@ -1,14 +1,17 @@
 using AutoMapper;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Constants;
 using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.Interface.Services.Lecture;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.Application.Service
 {
+    
     public class UserLectureService : IUserLectureService
     {
         private readonly ILectureRepository _lectureRepository;
@@ -16,23 +19,22 @@ namespace LearningEnglish.Application.Service
         private readonly ICourseRepository _courseRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<UserLectureService> _logger;
-
-        // Đặt bucket + folder cho media lecture (video, audio, etc.)
-        private const string LectureMediaBucket = "lectures";
-        private const string LectureMediaFolder = "real";
+        private readonly ILectureMediaService _lectureMediaService;
 
         public UserLectureService(
             ILectureRepository lectureRepository,
             IModuleRepository moduleRepository,
             ICourseRepository courseRepository,
             IMapper mapper,
-            ILogger<UserLectureService> logger)
+            ILogger<UserLectureService> logger,
+            ILectureMediaService lectureMediaService)
         {
             _lectureRepository = lectureRepository;
             _moduleRepository = moduleRepository;
             _courseRepository = courseRepository;
             _mapper = mapper;
             _logger = logger;
+            _lectureMediaService = lectureMediaService;
         }
 
         // Lấy thông tin lecture với progress của user (chỉ xem được nếu đã đăng ký course)
@@ -77,10 +79,7 @@ namespace LearningEnglish.Application.Service
                 // Generate URL từ key cho MediaUrl
                 if (!string.IsNullOrWhiteSpace(lectureDto.MediaUrl))
                 {
-                    lectureDto.MediaUrl = BuildPublicUrl.BuildURL(
-                        LectureMediaBucket,
-                        lectureDto.MediaUrl
-                    );
+                    lectureDto.MediaUrl = _lectureMediaService.BuildMediaUrl(lectureDto.MediaUrl);
                 }
 
                 
@@ -146,7 +145,7 @@ namespace LearningEnglish.Application.Service
                 {
                     if (!string.IsNullOrWhiteSpace(dto.MediaUrl))
                     {
-                        dto.MediaUrl = BuildPublicUrl.BuildURL(LectureMediaBucket, dto.MediaUrl);
+                        dto.MediaUrl = _lectureMediaService.BuildMediaUrl(dto.MediaUrl);
                     }
 
                    

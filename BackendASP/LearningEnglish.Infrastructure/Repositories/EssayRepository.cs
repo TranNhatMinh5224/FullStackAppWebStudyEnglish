@@ -26,6 +26,10 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<Essay?> GetEssayByIdAsync(int essayId)
         {
             return await _context.Essays
+                .Include(e => e.Assessment)
+                    .ThenInclude(a => a!.Module)
+                        .ThenInclude(m => m!.Lesson)
+                            .ThenInclude(l => l!.Course)
                 .FirstOrDefaultAsync(e => e.EssayId == essayId);
         }
 
