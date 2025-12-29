@@ -92,24 +92,24 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
 
             try
             {
-                _logger.LogInformation("Thanh toán hoàn tất cho khóa học {CourseId}. Tự động đăng ký User {UserId}", productId, userId);
-
+                _logger.LogInformation("=== Starting enrollment: PaymentId={PaymentId}, UserId={UserId}, CourseId={CourseId} ===", 
+                    paymentId, userId, productId);
 
                 var enrollDto = new EnrollCourseDto { CourseId = productId };
                 var enrollResult = await _userEnrollmentService.EnrollInCourseAsync(enrollDto, userId);
 
+                _logger.LogInformation("=== Enrollment result: Success={Success}, StatusCode={StatusCode}, Message={Message} ===", 
+                    enrollResult.Success, enrollResult.StatusCode, enrollResult.Message);
+
                 if (!enrollResult.Success)
                 {
-                    _logger.LogWarning("Tự động đăng ký thất bại cho thanh toán {PaymentId}: {Message}", paymentId, enrollResult.Message);
-                    _logger.LogError("Thanh toán {PaymentId} hoàn tất nhưng tự động đăng ký thất bại. User {UserId} có thể đăng ký thủ công vào khóa học {CourseId}",
-                        paymentId, userId, productId);
-
+                    _logger.LogError("Enrollment failed for Payment {PaymentId}: {Message}", paymentId, enrollResult.Message);
                     response.Success = false;
                     response.Message = "Thanh toán thành công nhưng đăng ký khóa học thất bại: " + enrollResult.Message;
                     return response;
                 }
 
-                _logger.LogInformation("User {UserId} đã được tự động đăng ký vào khóa học {CourseId} sau thanh toán {PaymentId}",
+                _logger.LogInformation("=== Enrollment successful: User {UserId} enrolled in course {CourseId} after payment {PaymentId} ===",
                     userId, productId, paymentId);
 
                 // Tạo notification thanh toán thành công
@@ -121,7 +121,7 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                         var notification = new Notification
                         {
                             UserId = userId,
-                            Title = "💳 Thanh toán thành công",
+                            Title = "Thanh toán thành công",
                             Message = $"Bạn đã thanh toán thành công khóa học '{course.Title}'. Chúc bạn học tốt!",
                             Type = NotificationType.PaymentSuccess,
                             RelatedEntityType = "Course",

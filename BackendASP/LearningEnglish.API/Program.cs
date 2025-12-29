@@ -24,10 +24,6 @@ using LearningEnglish.Application.Validators;
 using LearningEnglish.Infrastructure.Repositories;
 using LearningEnglish.Infrastructure.Services;
 using LearningEnglish.Infrastructure.Services.ExternalProviders;
-using LearningEnglish.Infrastructure.Services.ImageService;
-using LearningEnglish.Application.Interface.Infrastructure.ImageService;
-using AppHelpers = LearningEnglish.Application.Common.Helpers;
-using InfraHelpers = LearningEnglish.Infrastructure.Common.Helpers;
 using LearningEnglish.Application.Cofigurations;
 using LearningEnglish.Application.Configurations;
 using LearningEnglish.Application.Interface.Services;
@@ -38,12 +34,15 @@ using LearningEnglish.Application.Interface.Services.FlashCard;
 using LearningEnglish.Application.Interface.Services.Essay;
 using LearningEnglish.Application.Interface.Services.Module;
 using LearningEnglish.Application.Service.EssayGrading;
-using LearningEnglish.Application.Service.AssessmentService;
 using LearningEnglish.Application.Service.LectureService;
 using LearningEnglish.Application.Service.FlashCardService;
+using LearningEnglish.Application.Service.AssessmentService;
+using LearningEnglish.Application.Interface.Infrastructure.ImageService;
+using LearningEnglish.Infrastructure.Common.Helpers;
 using Microsoft.Extensions.Options;
 using Minio;
 using LearningEnglish.Infrastructure.MinioFileStorage;
+using LearningEnglish.Infrastructure.Services.ImageService;
 using LearningEnglish.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Domain.Domain;
@@ -193,17 +192,6 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ISortingService<Course>, CourseSortingService>();
 builder.Services.AddScoped<ISortingService<User>, UserSortingService>();
 
-
-// Shared Services (Cross-cutting concerns) - Infrastructure layer
-builder.Services.AddScoped<ICourseImageService, CourseImageService>();
-builder.Services.AddScoped<IEssayMediaService, EssayMediaService>();
-builder.Services.AddScoped<IEssayAttachmentService, EssayAttachmentService>();
-builder.Services.AddScoped<IAvatarService, AvatarService>();
-builder.Services.AddScoped<ILectureMediaService, LectureMediaService>();
-builder.Services.AddScoped<ILessonImageService, LessonImageService>();
-builder.Services.AddScoped<IModuleImageService, ModuleImageService>();
-builder.Services.AddScoped<IFlashCardMediaService, FlashCardMediaService>();
-
 // Service layer
 builder.Services.AddScoped<IAdminCourseService, AdminCourseService>();
 builder.Services.AddScoped<IAdminStatisticsService, AdminStatisticsService>();
@@ -332,9 +320,6 @@ builder.Services.AddScoped<IPayOSService, PayOSService>();
 builder.Services.AddHttpClient<IGeminiService, GeminiService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
-// AI Response Parser (centralized, follows SRP)
-builder.Services.AddScoped<IAiResponseParser, AiResponseParser>();
-
 // Essay Grading Services (refactored by role)
 builder.Services.AddScoped<IAdminEssayGradingService, AdminEssayGradingService>();
 builder.Services.AddScoped<ITeacherEssayGradingService, TeacherEssayGradingService>();
@@ -355,6 +340,19 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
 
 // File Storage Service
 builder.Services.AddScoped<IMinioFileStorage, MinioFileStorageService>();
+
+// Image Services
+builder.Services.AddScoped<ICourseImageService, CourseImageService>();
+builder.Services.AddScoped<ILessonImageService, LessonImageService>();
+builder.Services.AddScoped<IModuleImageService, ModuleImageService>();
+builder.Services.AddScoped<ILectureMediaService, LectureMediaService>();
+builder.Services.AddScoped<IFlashCardMediaService, FlashCardMediaService>();
+builder.Services.AddScoped<IEssayMediaService, EssayMediaService>();
+builder.Services.AddScoped<IEssayAttachmentService, EssayAttachmentService>();
+builder.Services.AddScoped<IAvatarService, AvatarService>();
+
+// AI Response Parser
+builder.Services.AddScoped<IAiResponseParser, AiResponseParser>();
 
 // Background Jobs
 builder.Services.AddScoped<TempFileCleanupJob>();
@@ -379,10 +377,10 @@ builder.Services.AddScoped<IScoringStrategy, OrderingScoringStrategy>();
 
 // Background services - All cleanup and scheduled jobs
 builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.QuizAutoSubmitService>();
-builder.Services.AddHostedService<TempFileCleanupHostedService>();
-builder.Services.AddHostedService<OtpCleanupService>(); // Tự động xóa OTP hết hạn mỗi 30 phút
-builder.Services.AddHostedService<PaymentCleanupService>(); // Tự động cleanup payment expired mỗi giờ
-builder.Services.AddHostedService<WebhookRetryService>(); // Webhook retry với exponential backoff
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.TempFileCleanupHostedService>();
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.OtpCleanupService>(); // Tự động xóa OTP hết hạn mỗi 30 phút
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.PaymentCleanupService>(); // Tự động cleanup payment expired mỗi giờ
+builder.Services.AddHostedService<LearningEnglish.Application.Service.BackgroundJobs.WebhookRetryService>(); // Webhook retry với exponential backoff
 
 //  VOCABULARY REMINDER SYSTEM -
 builder.Services.AddScoped<SimpleNotificationService>();
@@ -390,12 +388,14 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<VocabularyReminderService>(); // 12:00 UTC = 19:00 VN
 
+// Configure BuildPublicUrl helpers for MinIO public URLs (must be before app.Build())
+// Application-level helper
+LearningEnglish.Application.Common.Helpers.BuildPublicUrl.Configure(builder.Configuration);
+// Infrastructure-level helper (used by ImageServices)
+BuildPublicUrl.Configure(builder.Configuration);
+
 // Build app
 var app = builder.Build();
-
-// Configure BuildPublicUrl helper for MinIO public URLs (both Application and Infrastructure)
-AppHelpers.BuildPublicUrl.Configure(builder.Configuration);
-InfraHelpers.BuildPublicUrl.Configure(builder.Configuration);
 
 // Middleware pipeline
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")

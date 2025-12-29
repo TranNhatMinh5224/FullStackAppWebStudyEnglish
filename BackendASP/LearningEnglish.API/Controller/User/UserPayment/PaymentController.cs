@@ -5,6 +5,7 @@ using LearningEnglish.Application.DTOs;
 using LearningEnglish.API.Extensions;
 using Microsoft.Extensions.Configuration;
 using LearningEnglish.Application.Common.Pagination;
+using Microsoft.Extensions.Logging;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -15,13 +16,16 @@ namespace LearningEnglish.API.Controller.User
     {
         private readonly IPaymentService _paymentService;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<PaymentController> _logger;
 
         public PaymentController(
             IPaymentService paymentService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ILogger<PaymentController> logger)
         {
             _paymentService = paymentService;
             _configuration = configuration;
+            _logger = logger;
         }
 
        
@@ -67,7 +71,24 @@ namespace LearningEnglish.API.Controller.User
         {
             var userId = User.GetUserId();
             var result = await _paymentService.CreatePayOSPaymentLinkAsync(paymentId, userId);
-            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+            
+            // ✅ FIX 6: PayOS lỗi thì trả 400, không trả 500
+            if (!result.Success)
+            {
+                // Nếu là lỗi từ PayOS (thường là 400 Bad Request)
+                if (result.Message?.Contains("PayOS error") == true || 
+                    result.Message?.Contains("PayOS") == true)
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = result.Message,
+                        statusCode = 400 
+                    });
+                }
+                return StatusCode(result.StatusCode, result);
+            }
+            
+            return Ok(result);
         }
 
         // endpoint PayOS return URL (xử lý redirect từ PayOS sau khi thanh toán)
@@ -76,9 +97,14 @@ namespace LearningEnglish.API.Controller.User
         public async Task<IActionResult> PayOSReturn(
             [FromQuery] string? code,
             [FromQuery] string? desc,
-            [FromQuery] string? data)
+            [FromQuery] string? data,
+            [FromQuery] string? orderCode)
         {
-            var result = await _paymentService.ProcessPayOSReturnAsync(code ?? string.Empty, desc ?? string.Empty, data ?? string.Empty);
+            var result = await _paymentService.ProcessPayOSReturnAsync(
+                code ?? string.Empty, 
+                desc ?? string.Empty, 
+                data ?? string.Empty,
+                orderCode);
             
             if (result.Success && result.Data != null && !string.IsNullOrEmpty(result.Data.RedirectUrl))
             {
@@ -95,7 +121,11 @@ namespace LearningEnglish.API.Controller.User
         [AllowAnonymous]
         public async Task<IActionResult> PayOSWebhook([FromBody] PayOSWebhookDto webhookData)
         {
+            _logger.LogInformation("PayOS Webhook: OrderCode={OrderCode}, Code={Code}", 
+                webhookData.OrderCode, webhookData.Code);
+            
             var result = await _paymentService.ProcessPayOSWebhookAsync(webhookData);
+            
             return result.Success 
                 ? Ok(new { message = "Success", orderCode = webhookData.OrderCode }) 
                 : StatusCode(result.StatusCode, new { message = result.Message });
