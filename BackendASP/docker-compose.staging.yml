@@ -1,11 +1,5 @@
 version: '3.8'
 
-# ============================================================================
-# STAGING ENVIRONMENT - Docker Compose
-# ============================================================================
-# For staging/testing environment (pre-production)
-# Usage: docker-compose -f docker-compose.staging.yml up -d
-# ============================================================================
 
 services:
   # PostgreSQL Database

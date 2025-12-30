@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using MediatR;
+using LearningEnglish.Application.Features.Payments.Commands.ProcessWebhook;
 
 namespace LearningEnglish.Application.Service.BackgroundJobs;
 
@@ -63,7 +65,7 @@ public class WebhookRetryService : BackgroundService
     {
         using var scope = _serviceScopeFactory.CreateScope();
         var webhookRepository = scope.ServiceProvider.GetRequiredService<IPaymentWebhookQueueRepository>();
-        var paymentService = scope.ServiceProvider.GetRequiredService<IPaymentService>();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
         try
         {
@@ -88,13 +90,13 @@ public class WebhookRetryService : BackgroundService
             // 3. Process pending webhooks trước
             foreach (var webhook in pendingWebhooks)
             {
-                await ProcessWebhookAsync(webhook, webhookRepository, paymentService);
+                await ProcessWebhookAsync(webhook, webhookRepository, mediator);
             }
 
             // 4. Process failed webhooks (retry)
             foreach (var webhook in failedWebhooks)
             {
-                await ProcessWebhookAsync(webhook, webhookRepository, paymentService);
+                await ProcessWebhookAsync(webhook, webhookRepository, mediator);
             }
 
             _logger.LogInformation("✅ Completed processing {Total} webhooks", totalWebhooks);
@@ -108,7 +110,7 @@ public class WebhookRetryService : BackgroundService
     private async Task ProcessWebhookAsync(
         LearningEnglish.Domain.Entities.PaymentWebhookQueue webhook,
         IPaymentWebhookQueueRepository webhookRepository,
-        IPaymentService paymentService)
+        IMediator mediator)
     {
         try
         {
@@ -130,8 +132,8 @@ public class WebhookRetryService : BackgroundService
                 throw new Exception("Failed to deserialize webhook data");
             }
 
-            // Process webhook using PaymentService
-            var result = await paymentService.ProcessWebhookFromQueueAsync(webhookData);
+            // Process webhook using Mediator (Skip Signature Check)
+            var result = await mediator.Send(new ProcessPayOSWebhookCommand(webhookData, true));
 
             if (!result.Success)
             {
