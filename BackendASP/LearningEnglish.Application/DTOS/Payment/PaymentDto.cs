@@ -1,5 +1,4 @@
 
-
 using LearningEnglish.Domain.Enums;
 namespace LearningEnglish.Application.DTOs
 {
@@ -56,4 +55,3 @@ namespace LearningEnglish.Application.DTOs
         public string Status { get; set; } = string.Empty; // "PAID", "PENDING", "PROCESSING", "CANCELLED"
     }
 }
-

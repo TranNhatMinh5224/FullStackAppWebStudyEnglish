@@ -47,6 +47,7 @@ using LearningEnglish.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Domain.Domain;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Application.Features.Payments.Commands.CreatePayment;
 
 
 
@@ -114,6 +115,9 @@ builder.Services.AddValidatorsFromAssembly(typeof(MappingProfile).Assembly);
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+// MediatR
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ProcessPaymentCommand).Assembly));
 
 // Database (PostgreSQL)
 if (string.IsNullOrWhiteSpace(conn))
@@ -230,7 +234,7 @@ builder.Services.AddScoped<IAdminEssaySubmissionService, AdminEssaySubmissionSer
 builder.Services.AddScoped<ITeacherEssaySubmissionService, TeacherEssaySubmissionService>();
 
 builder.Services.AddScoped<IPasswordService, PasswordService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
+// builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<ITeacherCourseService, TeacherCourseService>();
 builder.Services.AddScoped<ITeacherPackageService, TeacherPackageService>();
 builder.Services.AddScoped<ITeacherSubscriptionService, TeacherSubscriptionService>();

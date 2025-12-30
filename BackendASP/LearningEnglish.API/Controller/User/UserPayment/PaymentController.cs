@@ -1,11 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using LearningEnglish.Application.Interface;
+using MediatR;
+using LearningEnglish.Application.Common;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.API.Extensions;
 using Microsoft.Extensions.Configuration;
 using LearningEnglish.Application.Common.Pagination;
 using Microsoft.Extensions.Logging;
+using LearningEnglish.Application.Features.Payments.Commands.CreatePayment;
+using LearningEnglish.Application.Features.Payments.Commands.ConfirmPayment;
+using LearningEnglish.Application.Features.Payments.Queries.GetTransactionHistory;
+using LearningEnglish.Application.Features.Payments.Queries.GetTransactionDetail;
+using LearningEnglish.Application.Features.Payments.Commands.CreatePayOSLink;
+using LearningEnglish.Application.Features.Payments.Commands.ProcessPayOSReturn;
+using LearningEnglish.Application.Features.Payments.Commands.ProcessWebhook;
+using LearningEnglish.Application.Features.Payments.Commands.ConfirmPayOSPayment;
 
 namespace LearningEnglish.API.Controller.User
 {
@@ -14,16 +23,16 @@ namespace LearningEnglish.API.Controller.User
     [Authorize(Roles = "Student,Teacher")]
     public class PaymentController : ControllerBase
     {
-        private readonly IPaymentService _paymentService;
+        private readonly IMediator _mediator;
         private readonly IConfiguration _configuration;
         private readonly ILogger<PaymentController> _logger;
 
         public PaymentController(
-            IPaymentService paymentService,
+            IMediator mediator,
             IConfiguration configuration,
             ILogger<PaymentController> logger)
         {
-            _paymentService = paymentService;
+            _mediator = mediator;
             _configuration = configuration;
             _logger = logger;
         }
@@ -33,17 +42,18 @@ namespace LearningEnglish.API.Controller.User
         public async Task<IActionResult> ProcessPayment([FromBody] requestPayment request)
         {
             var userId = User.GetUserId();
-            var result = await _paymentService.ProcessPaymentAsync(userId, request);
+            var command = new ProcessPaymentCommand(userId, request);
+            var result = await _mediator.Send(command);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
         // endpoint Student xác nhận thanh toán
-        // FluentValidation: CompletePaymentValidator sẽ tự động validate
         [HttpPost("confirm")]
         public async Task<IActionResult> ConfirmPayment([FromBody] CompletePayment paymentDto)
         {
             var userId = User.GetUserId();
-            var result = await _paymentService.ConfirmPaymentAsync(paymentDto, userId);
+            var command = new ConfirmPaymentCommand(paymentDto, userId);
+            var result = await _mediator.Send(command);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -52,7 +62,8 @@ namespace LearningEnglish.API.Controller.User
         public async Task<IActionResult> GetTransactionHistory([FromQuery] PageRequest request)
         {
             var userId = User.GetUserId();
-            var result = await _paymentService.GetTransactionHistoryAsync(userId, request);
+            var query = new GetTransactionHistoryQuery(userId, request);
+            var result = await _mediator.Send(query);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -61,7 +72,8 @@ namespace LearningEnglish.API.Controller.User
         public async Task<IActionResult> GetTransactionDetail(int paymentId)
         {
             var userId = User.GetUserId();
-            var result = await _paymentService.GetTransactionDetailAsync(paymentId, userId);
+            var query = new GetTransactionDetailQuery(paymentId, userId);
+            var result = await _mediator.Send(query);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
@@ -70,12 +82,11 @@ namespace LearningEnglish.API.Controller.User
         public async Task<IActionResult> CreatePayOSLink(int paymentId)
         {
             var userId = User.GetUserId();
-            var result = await _paymentService.CreatePayOSPaymentLinkAsync(paymentId, userId);
+            var command = new CreatePayOSLinkCommand(paymentId, userId);
+            var result = await _mediator.Send(command);
             
-            // ✅ FIX 6: PayOS lỗi thì trả 400, không trả 500
             if (!result.Success)
             {
-                // Nếu là lỗi từ PayOS (thường là 400 Bad Request)
                 if (result.Message?.Contains("PayOS error") == true || 
                     result.Message?.Contains("PayOS") == true)
                 {
@@ -91,7 +102,7 @@ namespace LearningEnglish.API.Controller.User
             return Ok(result);
         }
 
-        // endpoint PayOS return URL (xử lý redirect từ PayOS sau khi thanh toán)
+        // endpoint PayOS return URL
         [HttpGet("payos/return")]
         [AllowAnonymous]
         public async Task<IActionResult> PayOSReturn(
@@ -107,23 +118,24 @@ namespace LearningEnglish.API.Controller.User
 
             if (cancel == true || string.Equals(status, "CANCELLED", StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogWarning("Payment cancelled: OrderCode={OrderCode}, Cancel={Cancel}, Status={Status}", 
-                    orderCode, cancel, status);
+                _logger.LogWarning("Payment cancelled: OrderCode={OrderCode}", orderCode);
                 return Redirect($"{frontendUrl}/payment-failed?reason=cancelled&orderCode={orderCode}");
             }
 
             if (!string.IsNullOrEmpty(status) && !string.Equals(status, "PAID", StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogInformation("Payment not yet paid: OrderCode={OrderCode}, Status={Status}", orderCode, status);
+                _logger.LogInformation("Payment not yet paid: OrderCode={OrderCode}", orderCode);
                 return Redirect($"{frontendUrl}/payment-pending?orderCode={orderCode}&status={Uri.EscapeDataString(status ?? "")}");
             }
 
-            var result = await _paymentService.ProcessPayOSReturnAsync(
+            var command = new ProcessPayOSReturnCommand(
                 code ?? string.Empty, 
                 desc ?? string.Empty, 
-                data ?? string.Empty,
-                orderCode?.ToString(),
+                data ?? string.Empty, 
+                orderCode?.ToString(), 
                 status);
+
+            var result = await _mediator.Send(command);
             
             if (result.Success && result.Data != null && !string.IsNullOrEmpty(result.Data.RedirectUrl))
             {
@@ -133,7 +145,7 @@ namespace LearningEnglish.API.Controller.User
             return Redirect($"{frontendUrl}/payment-failed?reason={Uri.EscapeDataString(result.Message ?? "Server error")}");
         }
 
-        // endpoint PayOS cancel URL (xử lý khi user hủy thanh toán)
+        // endpoint PayOS cancel URL
         [HttpGet("payos/cancel")]
         [AllowAnonymous]
         public IActionResult PayOSCancel([FromQuery] long? orderCode)
@@ -143,15 +155,15 @@ namespace LearningEnglish.API.Controller.User
             return Redirect($"{frontendUrl}/payment-failed?reason=cancelled&orderCode={orderCode}");
         }
 
-        // endpoint PayOS webhook (xử lý callback từ PayOS)
+        // endpoint PayOS webhook
         [HttpPost("payos/webhook")]
         [AllowAnonymous]
         public async Task<IActionResult> PayOSWebhook([FromBody] PayOSWebhookDto webhookData)
         {
-            _logger.LogInformation("PayOS Webhook: OrderCode={OrderCode}, Code={Code}", 
-                webhookData.OrderCode, webhookData.Code);
+            _logger.LogInformation("PayOS Webhook: OrderCode={OrderCode}", webhookData.OrderCode);
             
-            var result = await _paymentService.ProcessPayOSWebhookAsync(webhookData);
+            var command = new ProcessPayOSWebhookCommand(webhookData);
+            var result = await _mediator.Send(command);
             
             return result.Success 
                 ? Ok(new { message = "Success", orderCode = webhookData.OrderCode }) 
@@ -163,7 +175,8 @@ namespace LearningEnglish.API.Controller.User
         public async Task<IActionResult> ConfirmPayOSPayment(int paymentId)
         {
             var userId = User.GetUserId();
-            var result = await _paymentService.ConfirmPayOSPaymentAsync(paymentId, userId);
+            var command = new ConfirmPayOSPaymentCommand(paymentId, userId);
+            var result = await _mediator.Send(command);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
     }
