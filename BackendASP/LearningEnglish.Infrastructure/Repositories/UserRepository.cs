@@ -218,15 +218,33 @@ namespace LearningEnglish.Infrastructure.Repositories
         // Lấy user theo khóa học với phân trang cho Teacher (kiểm tra ownership)
         public async Task<PagedResult<User>> GetUsersByCourseIdPagedForTeacherAsync(int courseId, int teacherId, UserQueryParameters request)
         {
-            var query = _context.UserCourses
+            // Kiểm tra course ownership trước
+            var course = await _context.Courses
+                .FirstOrDefaultAsync(c => c.CourseId == courseId && c.TeacherId == teacherId);
+            
+            if (course == null)
+            {
+                // Trả về empty result nếu course không tồn tại hoặc không thuộc về teacher
+                return new PagedResult<User>
+                {
+                    Items = new List<User>(),
+                    TotalCount = 0,
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize
+                };
+            }
+
+            // Query users từ UserCourses với Include Roles
+            // Include phải được gọi trước khi Select
+            var userCourseQuery = _context.UserCourses
                 .Where(uc => uc.CourseId == courseId && uc.User != null)
-                .Join(_context.Courses,
-                    uc => uc.CourseId,
-                    c => c.CourseId,
-                    (uc, c) => new { UserCourse = uc, Course = c })
-                .Where(x => x.Course.TeacherId == teacherId)
-                .Select(x => x.UserCourse.User!)
-                .Include(u => u.Roles)
+                .Include(uc => uc.User!)
+                    .ThenInclude(u => u.Roles)
+                .AsQueryable();
+
+            // Select users sau khi đã Include
+            var query = userCourseQuery
+                .Select(uc => uc.User!)
                 .OrderBy(u => u.FirstName)
                 .AsQueryable();
 
