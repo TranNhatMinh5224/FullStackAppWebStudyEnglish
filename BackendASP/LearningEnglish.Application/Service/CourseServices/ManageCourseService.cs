@@ -81,7 +81,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // Teacher lấy danh sách học viên trong course của mình
+        // Teacher lấy danh sách học viên trong course của 
         public async Task<ServiceResponse<PagedResult<UserDto>>> GetUsersByCourseIdPagedAsync(int courseId, int teacherId, PageRequest request)
         {
             var response = new ServiceResponse<PagedResult<UserDto>>();
