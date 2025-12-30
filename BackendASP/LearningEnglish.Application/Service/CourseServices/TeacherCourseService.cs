@@ -458,6 +458,11 @@ namespace LearningEnglish.Application.Service
                 // Map course entity to detailed DTO using AutoMapper
                 var courseDetailDto = _mapper.Map<TeacherCourseDetailDto>(course);
 
+                if (!string.IsNullOrWhiteSpace(course.ImageKey))
+                {
+                    courseDetailDto.ImageUrl = _courseImageService.BuildImageUrl(course.ImageKey);
+                }
+
                 response.Success = true;
                 response.StatusCode = 200;
                 response.Data = courseDetailDto;
