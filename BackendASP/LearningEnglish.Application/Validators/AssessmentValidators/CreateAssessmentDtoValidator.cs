@@ -24,13 +24,7 @@ namespace LearningEnglish.Application.Validators.AssessmentValidators
 
 
 
-            RuleFor(x => x.TotalPoints)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage("Tổng điểm phải lớn hơn hoặc bằng 0");
 
-            RuleFor(x => x.PassingScore)
-                .InclusiveBetween(0, 100)
-                .WithMessage("Điểm đạt phải nằm trong khoảng từ 0 đến 100");
 
             RuleFor(x => x.OpenAt)
                 .LessThan(x => x.DueAt)

@@ -18,6 +18,8 @@ namespace LearningEnglish.Application.DTOs
         public string? ImageUrl { get; set; }
         public string? ImageType { get; set; }
 
+        public decimal TotalPoints { get; set; }
+
         // Submission count (thay vì full list để tránh circular reference)
         public int TotalSubmissions { get; set; }
     }
@@ -30,6 +32,8 @@ namespace LearningEnglish.Application.DTOs
         public int AssessmentId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
+        
+        public decimal TotalPoints { get; set; } = 100;
 
         // Audio attachment (temp key from MinIO)
         public string? AudioTempKey { get; set; }

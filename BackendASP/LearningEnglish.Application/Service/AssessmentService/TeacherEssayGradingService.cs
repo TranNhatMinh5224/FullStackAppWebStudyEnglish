@@ -106,9 +106,7 @@ public class TeacherEssayGradingService : ITeacherEssayGradingService
                 return response;
             }
 
-            var maxScore = assessment.TotalPoints;
-
-            // Use centralized prompt builder
+            var maxScore = essay.TotalPoints;
             var prompt = EssayGradingPrompt.BuildPrompt(
                 essay.Title,
                 essay.Description ?? string.Empty,
@@ -215,7 +213,7 @@ public class TeacherEssayGradingService : ITeacherEssayGradingService
                 return response;
             }
 
-            var maxScore = assessment.TotalPoints;
+            var maxScore = essay.TotalPoints;
 
             if (dto.Score > maxScore)
             {
@@ -319,7 +317,7 @@ public class TeacherEssayGradingService : ITeacherEssayGradingService
                     return response;
                 }
 
-                var maxScore = assessment.TotalPoints;
+                var maxScore = essay.TotalPoints;
 
                 if (dto.Score > maxScore)
                 {

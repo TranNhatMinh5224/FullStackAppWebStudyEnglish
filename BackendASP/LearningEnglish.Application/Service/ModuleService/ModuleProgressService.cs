@@ -197,12 +197,10 @@ public class ModuleProgressService : IModuleProgressService
             // Start module
             await StartModuleAsync(userId, moduleId);
 
-            // Auto-complete cho các module types: FlashCard, Lecture, Video, Reading
+            // Auto-complete cho các module types: FlashCard, Lecture
             // Quiz và Assignment phải submit mới complete
             if (module.ContentType == ModuleType.FlashCard || 
-                module.ContentType == ModuleType.Lecture || 
-                module.ContentType == ModuleType.Video || 
-                module.ContentType == ModuleType.Reading)
+                module.ContentType == ModuleType.Lecture)
             {
                 await CompleteModuleAsync(userId, moduleId);
                 _logger.LogInformation(

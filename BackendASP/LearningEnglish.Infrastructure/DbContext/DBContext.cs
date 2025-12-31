@@ -450,9 +450,6 @@ namespace LearningEnglish.Infrastructure.Data
                 e.Property(a => a.Description)
                  .HasMaxLength(2000);
 
-                e.Property(a => a.TotalPoints)
-                 .HasPrecision(18, 2);
-
                 e.HasOne(a => a.Module)
                  .WithMany(m => m.Assessments)
                  .HasForeignKey(a => a.ModuleId)

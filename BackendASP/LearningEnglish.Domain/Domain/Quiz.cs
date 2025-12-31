@@ -13,8 +13,8 @@ namespace LearningEnglish.Domain.Entities
 
         public QuizType Type { get; set; } = QuizType.Practice;
         public QuizStatus Status { get; set; } = QuizStatus.Open;
-        public int TotalQuestions { get; set; }
-        public int? PassingScore { get; set; }
+        public int TotalQuestions { get; set; } // Tong so cau hoi trong bai thi
+        public int? PassingScore { get; set; } // Diem dat yeu cau
         public decimal TotalPossibleScore { get; set; } // Tổng điểm tối đa của bài quiz
 
 

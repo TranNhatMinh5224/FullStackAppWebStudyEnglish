@@ -280,11 +280,11 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // Validate score
-                if (score < 0 || score > assessment.TotalPoints)
+                if (score < 0 || score > essay.TotalPoints)
                 {
                     response.Success = false;
                     response.StatusCode = 400;
-                    response.Message = $"Điểm không hợp lệ. Phải từ 0 đến {assessment.TotalPoints}";
+                    response.Message = $"Điểm không hợp lệ. Phải từ 0 đến {essay.TotalPoints}";
                     return response;
                 }
 
@@ -351,7 +351,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                var maxScore = assessment.TotalPoints;
+                var maxScore = essay.TotalPoints;
 
                 // Get all submissions chưa chấm (hoặc chỉ có AI score, chưa có teacher score)
                 var allSubmissions = await _essaySubmissionRepository.GetSubmissionsByEssayIdAsync(essayId);

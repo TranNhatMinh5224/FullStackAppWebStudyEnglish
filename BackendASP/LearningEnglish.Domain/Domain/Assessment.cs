@@ -16,9 +16,6 @@ namespace LearningEnglish.Domain.Entities
         public TimeSpan? TimeLimit { get; set; }
         public bool IsPublished { get; set; } = true;
 
-        public decimal TotalPoints { get; set; }
-        public int PassingScore { get; set; }
-
         // Navigation Properties
         public Module? Module { get; set; }
         public List<Essay> Essays { get; set; } = new List<Essay>();

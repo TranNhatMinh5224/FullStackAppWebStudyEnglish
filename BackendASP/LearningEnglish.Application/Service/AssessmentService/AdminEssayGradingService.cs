@@ -81,7 +81,7 @@ public class AdminEssayGradingService : IAdminEssayGradingService
                 return response;
             }
 
-            var maxScore = assessment.TotalPoints;
+            var maxScore = essay.TotalPoints;
 
             // Use centralized prompt builder
             var prompt = EssayGradingPrompt.BuildPrompt(
@@ -181,7 +181,7 @@ public class AdminEssayGradingService : IAdminEssayGradingService
                 return response;
             }
 
-            var maxScore = assessment.TotalPoints;
+            var maxScore = essay.TotalPoints;
 
             if (dto.Score > maxScore)
             {
@@ -256,7 +256,7 @@ public class AdminEssayGradingService : IAdminEssayGradingService
                     return response;
                 }
 
-                var maxScore = assessment.TotalPoints;
+                var maxScore = essay.TotalPoints;
 
                 // Get all submissions chưa chấm (hoặc chỉ có AI score, chưa có teacher score)
                 var allSubmissions = await _submissionRepository.GetSubmissionsByEssayIdAsync(essayId);

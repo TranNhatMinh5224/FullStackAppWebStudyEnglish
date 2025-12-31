@@ -17,7 +17,7 @@ namespace LearningEnglish.Domain.Entities
         public string? ImageKey { get; set; }
         public string? ImageType { get; set; }
 
-        public AssessmentType Type { get; set; } = AssessmentType.Essay;
+        public decimal TotalPoints { get; set; } // Điểm tối đa của bài essay
 
         // Navigation Properties
         public Assessment? Assessment { get; set; }

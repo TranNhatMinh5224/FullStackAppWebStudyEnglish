@@ -66,13 +66,19 @@ namespace LearningEnglish.Application.Service.EssayService
                 }
 
                 // Map DTO to Entity
-                var essay = new Essay
-                {
-                    AssessmentId = dto.AssessmentId,
-                    Title = dto.Title,
-                    Description = dto.Description,
-                    Type = AssessmentType.Essay
-                };
+            var essay = new Essay
+            {
+                AssessmentId = dto.AssessmentId,
+                Title = dto.Title,
+                Description = dto.Description,
+                TotalPoints = dto.TotalPoints,
+                
+                // Attachments
+                AudioKey = dto.AudioTempKey,
+                AudioType = dto.AudioType,
+                ImageKey = dto.ImageTempKey,
+                ImageType = dto.ImageType
+            };
 
                 string? committedAudioKey = null;
                 string? committedImageKey = null;

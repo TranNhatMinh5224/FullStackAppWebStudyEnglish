@@ -13,8 +13,6 @@ namespace LearningEnglish.Application.DTOs
         public string? TimeLimit { get; set; }
 
         public bool IsPublished { get; set; } = false;
-        public decimal TotalPoints { get; set; }
-        public int PassingScore { get; set; }
 
         // Navigation DTOs
         public string? ModuleTitle { get; set; }
@@ -35,8 +33,6 @@ namespace LearningEnglish.Application.DTOs
         public string? TimeLimit { get; set; }
 
         public bool IsPublished { get; set; } = false;
-        public decimal TotalPoints { get; set; }
-        public int PassingScore { get; set; }
     }
     public class UpdateAssessmentDto : CreateAssessmentDto
     {

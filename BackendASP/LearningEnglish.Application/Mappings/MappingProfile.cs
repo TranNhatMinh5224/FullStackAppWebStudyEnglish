@@ -14,7 +14,7 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<EssaySubmission, EssayGradingResultDto>()
                 .ForMember(dest => dest.SubmissionId, opt => opt.MapFrom(src => src.SubmissionId))
                 .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.TeacherScore ?? src.Score ?? 0))
-                .ForMember(dest => dest.MaxScore, opt => opt.MapFrom(src => src.Essay != null && src.Essay.Assessment != null ? src.Essay.Assessment.TotalPoints : 0))
+                .ForMember(dest => dest.MaxScore, opt => opt.MapFrom(src => src.Essay != null ? src.Essay.TotalPoints : 0))
                 .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.TeacherFeedback ?? src.Feedback ?? string.Empty))
                 .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt ?? src.GradedAt ?? DateTime.UtcNow))
                 .ForMember(dest => dest.GradedByTeacher, opt => opt.MapFrom(src => src.TeacherScore.HasValue))
@@ -338,8 +338,7 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<Essay, EssayDto>();
 
             CreateMap<CreateEssayDto, Essay>()
-                .ForMember(dest => dest.EssayId, opt => opt.Ignore())
-                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Domain.Enums.AssessmentType.Essay));
+                .ForMember(dest => dest.EssayId, opt => opt.Ignore());
 
             // EssaySubmission mappings
             CreateMap<EssaySubmission, EssaySubmissionDto>()
@@ -361,7 +360,10 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.FinalScore))
                 .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.TeacherFeedback ?? src.Feedback))
                 .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => src.TeacherGradedAt ?? src.GradedAt))
-                .ForMember(dest => dest.MaxScore, opt => opt.MapFrom(src => src.Essay != null && src.Essay.Assessment != null ? src.Essay.Assessment.TotalPoints : (decimal?)null))
+        // Max score từ assessment
+        .ForMember(dest => dest.MaxScore, opt => opt.MapFrom(src => src.Essay != null ? src.Essay.TotalPoints : (decimal?)null))
+
+        // User info
                 // Essay info
                 .ForMember(dest => dest.EssayTitle, opt => opt.MapFrom(src => src.Essay != null ? src.Essay.Title : null))
                 .ForMember(dest => dest.EssayDescription, opt => opt.MapFrom(src => src.Essay != null ? src.Essay.Description : null));

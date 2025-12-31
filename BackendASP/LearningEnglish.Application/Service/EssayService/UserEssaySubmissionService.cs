@@ -521,7 +521,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // 6. Build prompt using centralized prompt builder
-                var maxScore = assessment.TotalPoints;
+                var maxScore = essay.TotalPoints;
                 var prompt = EssayGradingPrompt.BuildPrompt(
                     essay.Title,
                     essay.Description ?? string.Empty,
