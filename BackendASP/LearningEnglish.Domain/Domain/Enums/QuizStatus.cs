@@ -2,8 +2,9 @@ namespace LearningEnglish.Domain.Enums
 {
     public enum QuizStatus
     {
-        Open = 1,
-        Closed = 2,
-        Archived = 3
+        Draft = 0,      // Đang soạn thảo
+        Open = 1,       // Đang mở cho làm bài
+        Closed = 2,     // Đã đóng
+        Archived = 3    // Đã lưu trữ
     }
 }
