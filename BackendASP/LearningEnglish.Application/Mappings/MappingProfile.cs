@@ -3,6 +3,8 @@ using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.DTOs.Admin;
 using LearningEnglish.Domain.Enums;
+using LearningEnglish.Application.DTOS.Common;
+using LearningEnglish.Application.Mappings.Converters;
 
 namespace LearningEnglish.Application.Mappings
 {
@@ -10,6 +12,18 @@ namespace LearningEnglish.Application.Mappings
     {
         public MappingProfile()
         {
+            // ===== ENUM MAPPINGS =====
+            CreateMap<CourseStatus, EnumMappingDto>().ConvertUsing<EnumTypeConverter<CourseStatus>>();
+            CreateMap<CourseType, EnumMappingDto>().ConvertUsing<EnumTypeConverter<CourseType>>();
+            CreateMap<DifficultyLevel, EnumMappingDto>().ConvertUsing<EnumTypeConverter<DifficultyLevel>>();
+            CreateMap<QuestionType, EnumMappingDto>().ConvertUsing<EnumTypeConverter<QuestionType>>();
+            CreateMap<QuizStatus, EnumMappingDto>().ConvertUsing<EnumTypeConverter<QuizStatus>>();
+            CreateMap<PaymentStatus, EnumMappingDto>().ConvertUsing<EnumTypeConverter<PaymentStatus>>();
+            CreateMap<SubmissionStatus, EnumMappingDto>().ConvertUsing<EnumTypeConverter<SubmissionStatus>>();
+            CreateMap<QuizType, EnumMappingDto>().ConvertUsing<EnumTypeConverter<QuizType>>();
+            CreateMap<ProductType, EnumMappingDto>().ConvertUsing<EnumTypeConverter<ProductType>>();
+            CreateMap<AssetType, EnumMappingDto>().ConvertUsing<EnumTypeConverter<AssetType>>();
+
             // Essay Grading mappings
             CreateMap<EssaySubmission, EssayGradingResultDto>()
                 .ForMember(dest => dest.SubmissionId, opt => opt.MapFrom(src => src.SubmissionId))
@@ -340,6 +354,10 @@ namespace LearningEnglish.Application.Mappings
             CreateMap<CreateEssayDto, Essay>()
                 .ForMember(dest => dest.EssayId, opt => opt.Ignore());
 
+            CreateMap<UpdateEssayDto, Essay>()
+                .ForMember(dest => dest.TotalPoints, opt => opt.Condition(src => src.TotalPoints.HasValue)) // Chỉ update nếu có giá trị
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
             // EssaySubmission mappings
             CreateMap<EssaySubmission, EssaySubmissionDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
@@ -487,36 +505,30 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.IsPassed, opt => opt.Ignore());
 
             // ===== ASSET FRONTEND MAPPINGS =====
-            // AssetFrontend Entity -> AssetFrontendDto (string to enum conversion for AssetType, add ImageUrl from KeyImage in service)
+            // AssetFrontend Entity -> AssetFrontendDto (AutoMapper handles Enum mapping automatically)
             CreateMap<AssetFrontend, AssetFrontendDto>()
-                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.KeyImage)) // Will be converted to public URL in service
-                .ForMember(dest => dest.AssetType, opt => opt.ConvertUsing<AssetTypeStringToEnumConverter, string?>(src => src.AssetType));
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.KeyImage)); // Will be converted to public URL in service
 
-            // AssetFrontendDto -> AssetFrontend Entity (enum to string conversion for AssetType, ignore ImageUrl as it's computed field)  
+            // AssetFrontendDto -> AssetFrontend Entity
             CreateMap<AssetFrontendDto, AssetFrontend>()
                 .ForMember(dest => dest.KeyImage, opt => opt.MapFrom(src => src.KeyImage)) // Keep KeyImage as is, ignore ImageUrl
-                .ForMember(dest => dest.AssetType, opt => opt.ConvertUsing<AssetTypeEnumToStringConverter, AssetType>(src => src.AssetType))
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Preserve existing CreatedAt
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)); // Update timestamp on mapping back to entity
 
-            // CreateAssetFrontendDto -> AssetFrontend Entity (enum to string conversion for AssetType, set timestamps and KeyImage from temp key in service) 
+            // CreateAssetFrontendDto -> AssetFrontend Entity
             CreateMap<CreateAssetFrontendDto, AssetFrontend>()
                 .ForMember(dest => dest.KeyImage, opt => opt.MapFrom(src => src.ImageTempKey)) // Will be committed in service
-                .ForMember(dest => dest.AssetType, opt => opt.ConvertUsing<AssetTypeEnumToStringConverter, AssetType>(src => src.AssetType)) 
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)) 
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)); // Set both timestamps on create
 
-            // UpdateAssetFrontendDto -> AssetFrontend Entity (enum to string conversion for AssetType, set timestamps and KeyImage from temp key in service) 
+            // UpdateAssetFrontendDto -> AssetFrontend Entity
             CreateMap<UpdateAssetFrontendDto, AssetFrontend>()
                 .ForMember(dest => dest.NameImage, opt => opt.Condition(src => src.NameImage != null))
                 .ForMember(dest => dest.KeyImage, opt => opt.MapFrom(src => src.ImageTempKey ?? string.Empty)) // Use temp key if provided, otherwise keep existing (handled in service) 
                 .ForMember(dest => dest.DescriptionImage, opt => opt.Condition(src => src.DescriptionImage != null))
-                .ForMember(dest => dest.AssetType, opt => {
-                    opt.Condition(src => src.AssetType.HasValue);
-                    opt.ConvertUsing<AssetTypeNullableEnumToStringConverter, AssetType?>(src => src.AssetType);
-                })
                 .ForMember(dest => dest.Order, opt => opt.Condition(src => src.Order.HasValue))
                 .ForMember(dest => dest.IsActive, opt => opt.Condition(src => src.IsActive.HasValue))
+                .ForMember(dest => dest.AssetType, opt => opt.Condition(src => src.AssetType.HasValue)) // Only map if not null
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Preserve existing CreatedAt on update 
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)); // Update timestamp on update
 

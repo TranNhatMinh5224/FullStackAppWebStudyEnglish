@@ -1165,7 +1165,7 @@ namespace LearningEnglish.Infrastructure.Data
                 new User
                 {
                     UserId = 1,
-                    FirstName = "Admin",
+                    FirstName = "Super Admin",
                     LastName = "System",
                     Email = "minhxoandev@gmail.com",
                     NormalizedEmail = "MINHXOANDEV@GMAIL.COM",

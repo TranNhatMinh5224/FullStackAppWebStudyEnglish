@@ -141,7 +141,7 @@ namespace LearningEnglish.Application.Service
                 {
                     NameImage = newAssetFrontend.NameImage,
                     DescriptionImage = newAssetFrontend.DescriptionImage,
-                    AssetType = newAssetFrontend.AssetType.ToString(),
+                    AssetType = newAssetFrontend.AssetType,
                     Order = newAssetFrontend.Order,
                     IsActive = newAssetFrontend.IsActive
                 };

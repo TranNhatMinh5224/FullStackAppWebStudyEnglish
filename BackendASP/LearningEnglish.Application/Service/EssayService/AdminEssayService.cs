@@ -290,6 +290,9 @@ namespace LearningEnglish.Application.Service.EssayService
                 if (dto.Description != null)
                     existingEssay.Description = dto.Description;
 
+                if (dto.TotalPoints.HasValue)
+                    existingEssay.TotalPoints = dto.TotalPoints.Value;
+
                 string? newAudioKey = null;
                 string? newImageKey = null;
                 string? oldAudioKey = !string.IsNullOrWhiteSpace(existingEssay.AudioKey) ? existingEssay.AudioKey : null;

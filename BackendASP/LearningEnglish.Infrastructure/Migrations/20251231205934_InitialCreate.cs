@@ -14,9 +14,6 @@ namespace LearningEnglish.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Enable pg_trgm extension for full-text search
-            migrationBuilder.Sql(@"CREATE EXTENSION IF NOT EXISTS pg_trgm;");
-
             migrationBuilder.CreateTable(
                 name: "AssetsFrontend",
                 columns: table => new
@@ -26,7 +23,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                     NameImage = table.Column<string>(type: "text", nullable: false),
                     KeyImage = table.Column<string>(type: "text", nullable: false),
                     DescriptionImage = table.Column<string>(type: "text", nullable: false),
-                    AssetType = table.Column<string>(type: "text", nullable: true),
+                    AssetType = table.Column<int>(type: "integer", nullable: false),
                     Order = table.Column<int>(type: "integer", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -156,9 +153,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                     OpenAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DueAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     TimeLimit = table.Column<TimeSpan>(type: "interval", nullable: true),
-                    IsPublished = table.Column<bool>(type: "boolean", nullable: false),
-                    TotalPoints = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    PassingScore = table.Column<int>(type: "integer", nullable: false)
+                    IsPublished = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -178,7 +173,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                     AudioType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     ImageKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     ImageType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    Type = table.Column<int>(type: "integer", nullable: false)
+                    TotalPoints = table.Column<decimal>(type: "numeric", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -517,7 +512,9 @@ namespace LearningEnglish.Infrastructure.Migrations
                     TextContent = table.Column<string>(type: "character varying(20000)", maxLength: 20000, nullable: true),
                     AttachmentKey = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     AttachmentType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    SubmittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    EndTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    SubmittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     Score = table.Column<decimal>(type: "numeric", nullable: true),
                     Feedback = table.Column<string>(type: "character varying(5000)", maxLength: 5000, nullable: true),
@@ -860,6 +857,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                     EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     AutoRenew = table.Column<bool>(type: "boolean", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     PaymentId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
@@ -974,15 +972,15 @@ namespace LearningEnglish.Infrastructure.Migrations
                 columns: new[] { "PermissionId", "Category", "CreatedAt", "Description", "DisplayName", "Name" },
                 values: new object[,]
                 {
-                    { 1, "Content", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5689), "Tạo, sửa, xóa, publish khóa học", "Quản lý khóa học", "Admin.Course.Manage" },
-                    { 2, "Content", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5707), "Tạo, sửa, xóa lessons và modules", "Quản lý bài học", "Admin.Lesson.Manage" },
-                    { 3, "Content", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5710), "Quản lý flashcards, quizzes, essays, assets frontend", "Quản lý nội dung", "Admin.Content.Manage" },
-                    { 4, "Finance", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5712), "Xem, block/unblock, xóa users, gán roles", "Quản lý người dùng", "Admin.User.Manage" },
-                    { 5, "Finance", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5714), "Xem payments, hoàn tiền, fix lỗi thanh toán", "Quản lý thanh toán", "Admin.Payment.Manage" },
-                    { 6, "Finance", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5726), "Xem báo cáo doanh thu và thống kê tài chính", "Xem doanh thu", "Admin.Revenue.View" },
-                    { 7, "Finance", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5745), "Tạo, sửa, xóa teacher packages", "Quản lý gói giáo viên", "Admin.Package.Manage" },
-                    { 8, "System", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5747), "Super Admin - full permissions", "Toàn quyền hệ thống", "Admin.System.FullAccess" },
-                    { 9, "Finance", new DateTime(2025, 12, 26, 4, 47, 25, 372, DateTimeKind.Utc).AddTicks(5750), "Thêm/xóa học viên vào khóa học (dùng khi thanh toán lỗi, nâng cấp user)", "Quản lý học viên trong khóa học", "Admin.Course.Enroll" }
+                    { 1, "Content", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2325), "Tạo, sửa, xóa, publish khóa học", "Quản lý khóa học", "Admin.Course.Manage" },
+                    { 2, "Content", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2333), "Tạo, sửa, xóa lessons và modules", "Quản lý bài học", "Admin.Lesson.Manage" },
+                    { 3, "Content", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2334), "Quản lý flashcards, quizzes, essays, assets frontend", "Quản lý nội dung", "Admin.Content.Manage" },
+                    { 4, "Finance", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2335), "Xem, block/unblock, xóa users, gán roles", "Quản lý người dùng", "Admin.User.Manage" },
+                    { 5, "Finance", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2347), "Xem payments, hoàn tiền, fix lỗi thanh toán", "Quản lý thanh toán", "Admin.Payment.Manage" },
+                    { 6, "Finance", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2348), "Xem báo cáo doanh thu và thống kê tài chính", "Xem doanh thu", "Admin.Revenue.View" },
+                    { 7, "Finance", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2349), "Tạo, sửa, xóa teacher packages", "Quản lý gói giáo viên", "Admin.Package.Manage" },
+                    { 8, "System", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2351), "Super Admin - full permissions", "Toàn quyền hệ thống", "Admin.System.FullAccess" },
+                    { 9, "Finance", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2331), "Thêm/xóa học viên vào khóa học (dùng khi thanh toán lỗi, nâng cấp user)", "Quản lý học viên trong khóa học", "Admin.Course.Enroll" }
                 });
 
             migrationBuilder.InsertData(
@@ -1000,35 +998,30 @@ namespace LearningEnglish.Infrastructure.Migrations
             migrationBuilder.InsertData(
                 table: "Users",
                 columns: new[] { "UserId", "AvatarKey", "CreatedAt", "CurrentTeacherSubscriptionId", "DateOfBirth", "Email", "EmailVerified", "FirstName", "IsMale", "LastName", "NormalizedEmail", "PasswordHash", "PhoneNumber", "Status", "UpdatedAt" },
-                values: new object[] { 1, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, new DateTime(2004, 2, 5, 0, 0, 0, 0, DateTimeKind.Utc), "minhxoandev@gmail.com", true, "Admin", true, "System", "MINHXOANDEV@GMAIL.COM", "$2a$11$Su/pjIfbYnr3SUiPoSM3p.yJMg/SqkUcYX9K/EMZtyiWOlEvyt95a", "0257554479", 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) });
+                values: new object[] { 1, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, new DateTime(2004, 2, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), "minhxoandev@gmail.com", true, "Super Admin", true, "System", "MINHXOANDEV@GMAIL.COM", "$2a$11$x5uEDL.RI5tL0ZzAbBDiDOUtftuotWvoQJAo/0pc5Tjs/MsNGBEqm", "0257554479", 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) });
 
             migrationBuilder.InsertData(
                 table: "RolePermissions",
                 columns: new[] { "PermissionId", "RoleId", "AssignedAt" },
                 values: new object[,]
                 {
-                    // SuperAdmin (RoleId = 1): Tất cả permissions
-                    { 1, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Course.Manage
-                    { 2, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Lesson.Manage
-                    { 3, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Content.Manage
-                    { 4, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.User.Manage
-                    { 5, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Payment.Manage
-                    { 6, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Revenue.View
-                    { 7, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Package.Manage
-                    { 8, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.System.FullAccess
-                    { 9, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Course.Enroll
-                    
-                    // ContentAdmin (RoleId = 2): Content permissions (1,2,3)
-                    { 1, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Course.Manage
-                    { 2, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Lesson.Manage
-                    { 3, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Content.Manage
-                    
-                    // FinanceAdmin (RoleId = 3): Finance permissions (9, 4,5,6,7)
-                    { 9, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Course.Enroll
-                    { 4, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.User.Manage
-                    { 5, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Payment.Manage
-                    { 6, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }, // Admin.Revenue.View
-                    { 7, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }  // Admin.Package.Manage
+                    { 1, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 2, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 3, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 4, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 5, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 6, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 7, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 8, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 9, 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 1, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 2, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 3, 2, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 4, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 5, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 6, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 7, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { 9, 3, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }
                 });
 
             migrationBuilder.InsertData(

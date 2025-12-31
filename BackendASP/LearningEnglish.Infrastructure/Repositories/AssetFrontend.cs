@@ -1,6 +1,7 @@
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Infrastructure.Data;
+using LearningEnglish.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -29,7 +30,7 @@ public class AssetFrontendRepository : IAssetFrontendRepository
     public async Task<List<AssetFrontend>> GetAssetByType(int type)
     {
         return await _context.AssetsFrontend
-            .Where(a => a.AssetType == type.ToString())
+            .Where(a => a.AssetType == (AssetType)type)
             .ToListAsync();
     }
 

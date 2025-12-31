@@ -51,6 +51,8 @@ namespace LearningEnglish.Application.DTOs
         public string? Title { get; set; }
         public string? Description { get; set; }
 
+        public decimal? TotalPoints { get; set; } // Cho phép update điểm
+
         // Audio attachment (temp key from MinIO)
         public string? AudioTempKey { get; set; }
         public string? AudioType { get; set; }

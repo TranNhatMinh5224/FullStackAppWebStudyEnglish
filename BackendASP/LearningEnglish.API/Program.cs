@@ -37,6 +37,7 @@ using LearningEnglish.Application.Service.EssayGrading;
 using LearningEnglish.Application.Service.LectureService;
 using LearningEnglish.Application.Service.FlashCardService;
 using LearningEnglish.Application.Service.AssessmentService;
+using LearningEnglish.Application.Service.EnumService;
 using LearningEnglish.Application.Interface.Infrastructure.ImageService;
 using LearningEnglish.Infrastructure.Common.Helpers;
 using Microsoft.Extensions.Options;
@@ -277,6 +278,7 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IAdminManagementService, AdminManagementService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IInformationUserService, InformationUserService>();
+builder.Services.AddScoped<IEnumService, EnumService>();
 
 // 🎤 Azure Speech Service for Pronunciation Assessment
 builder.Services.Configure<AzureSpeechOptions>(builder.Configuration.GetSection("AzureSpeech"));

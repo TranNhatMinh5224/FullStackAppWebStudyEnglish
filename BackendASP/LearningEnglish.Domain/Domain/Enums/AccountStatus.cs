@@ -2,7 +2,7 @@ namespace LearningEnglish.Domain.Enums;
 
 public enum AccountStatus
 {
-    Active = 1,
-    Inactive = 2,
-    Suspended = 3
+    Active = 1, // Kích hoạt
+    Inactive = 2, // Vô hiệu hóa
+    Suspended = 3 // Tạm ngưng
 }
