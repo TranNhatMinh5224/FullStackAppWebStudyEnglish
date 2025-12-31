@@ -14,7 +14,7 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<PaymentCleanupService> _logger;
-        private readonly TimeSpan _cleanupInterval = TimeSpan.FromHours(1); // Chạy mỗi giờ
+        private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(15); // Chạy mỗi 15 phút
 
         public PaymentCleanupService(
             IServiceScopeFactory serviceScopeFactory,
@@ -26,8 +26,8 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("💳 Payment Cleanup Service started - Running every {Interval} hour(s)",
-                _cleanupInterval.TotalHours);
+            _logger.LogInformation("💳 Payment Cleanup Service started - Running every {Interval} minute(s)",
+                _cleanupInterval.TotalMinutes);
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -35,7 +35,7 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
                 {
                     await CleanupExpiredPaymentsAsync();
 
-                    // Chờ 1 giờ trước khi chạy lần tiếp theo
+                    // Chờ 15 phút trước khi chạy lần tiếp theo
                     await Task.Delay(_cleanupInterval, stoppingToken);
                 }
                 catch (OperationCanceledException)
@@ -65,9 +65,9 @@ namespace LearningEnglish.Application.Service.BackgroundJobs
             {
                 _logger.LogInformation("🔍 Starting expired payment cleanup at {Time}", DateTime.UtcNow);
 
-                // Grace period 1 giờ: Chỉ cleanup payments đã hết hạn > 1 giờ
+                // Grace period 15 phút: Chỉ cleanup payments đã hết hạn > 15 phút
                 // Tránh cleanup payment vừa mới hết hạn (user có thể đang thanh toán)
-                var cutoffTime = DateTime.UtcNow.AddHours(-1);
+                var cutoffTime = DateTime.UtcNow.AddMinutes(-15);
 
                 // Batch processing để tránh load quá nhiều vào memory
                 const int BATCH_SIZE = 500;
