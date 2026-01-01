@@ -7,6 +7,8 @@ public static class AdminPermissionSeeder
     // Seed danh sách permissions cho admin
     public static List<Permission> GetAdminPermissions()
     {
+        var fixedCreated = new DateTime(2025, 01, 01, 0, 0, 0, DateTimeKind.Utc);
+        
         return new List<Permission>
         {
             // CONTENT
@@ -16,7 +18,8 @@ public static class AdminPermissionSeeder
                 Name = "Admin.Course.Manage",
                 DisplayName = "Quản lý khóa học",
                 Category = "Content",
-                Description = "Tạo, sửa, xóa, publish khóa học"
+                Description = "Tạo, sửa, xóa, publish khóa học",
+                CreatedAt = fixedCreated
             },
             new()
             {
@@ -24,7 +27,8 @@ public static class AdminPermissionSeeder
                 Name = "Admin.Course.Enroll",
                 DisplayName = "Quản lý học viên trong khóa học",
                 Category = "Finance",
-                Description = "Thêm/xóa học viên vào khóa học (dùng khi thanh toán lỗi, nâng cấp user)"
+                Description = "Thêm/xóa học viên vào khóa học (dùng khi thanh toán lỗi, nâng cấp user)",
+                CreatedAt = fixedCreated
             },
             new()
             {
@@ -32,7 +36,8 @@ public static class AdminPermissionSeeder
                 Name = "Admin.Lesson.Manage",
                 DisplayName = "Quản lý bài học",
                 Category = "Content",
-                Description = "Tạo, sửa, xóa lessons và modules"
+                Description = "Tạo, sửa, xóa lessons và modules",
+                CreatedAt = fixedCreated
             },
             new()
             {
@@ -40,7 +45,8 @@ public static class AdminPermissionSeeder
                 Name = "Admin.Content.Manage",
                 DisplayName = "Quản lý nội dung",
                 Category = "Content",
-                Description = "Quản lý flashcards, quizzes, essays, assets frontend"
+                Description = "Quản lý flashcards, quizzes, essays, assets frontend",
+                CreatedAt = fixedCreated
             },
 
             // FINANCE
@@ -50,7 +56,8 @@ public static class AdminPermissionSeeder
                 Name = "Admin.User.Manage",
                 DisplayName = "Quản lý người dùng",
                 Category = "Finance",
-                Description = "Xem, block/unblock, xóa users, gán roles"
+                Description = "Xem, block/unblock, xóa users, gán roles",
+                CreatedAt = fixedCreated
             },
             new()
             {
@@ -58,7 +65,8 @@ public static class AdminPermissionSeeder
                 Name = "Admin.Payment.Manage",
                 DisplayName = "Quản lý thanh toán",
                 Category = "Finance",
-                Description = "Xem payments, hoàn tiền, fix lỗi thanh toán"
+                Description = "Xem payments, hoàn tiền, fix lỗi thanh toán",
+                CreatedAt = fixedCreated
             },
             new()
             {
@@ -66,7 +74,8 @@ public static class AdminPermissionSeeder
                 Name = "Admin.Revenue.View",
                 DisplayName = "Xem doanh thu",
                 Category = "Finance",
-                Description = "Xem báo cáo doanh thu và thống kê tài chính"
+                Description = "Xem báo cáo doanh thu và thống kê tài chính",
+                CreatedAt = fixedCreated
             },
             new()
             {
@@ -74,7 +83,8 @@ public static class AdminPermissionSeeder
                 Name = "Admin.Package.Manage",
                 DisplayName = "Quản lý gói giáo viên",
                 Category = "Finance",
-                Description = "Tạo, sửa, xóa teacher packages"
+                Description = "Tạo, sửa, xóa teacher packages",
+                CreatedAt = fixedCreated
             },
 
             // SYSTEM
@@ -84,7 +94,8 @@ public static class AdminPermissionSeeder
                 Name = "Admin.System.FullAccess",
                 DisplayName = "Toàn quyền hệ thống",
                 Category = "System",
-                Description = "Super Admin - full permissions"
+                Description = "Super Admin - full permissions",
+                CreatedAt = fixedCreated
             }
         };
     }

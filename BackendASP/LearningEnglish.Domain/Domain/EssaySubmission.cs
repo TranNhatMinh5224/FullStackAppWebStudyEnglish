@@ -16,7 +16,10 @@ public class EssaySubmission
     public string? AttachmentKey { get; set; }
     public string? AttachmentType { get; set; }
 
-    public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? StartedAt { get; set; }          // Thời điểm bắt đầu (khi bấm Start)
+    public DateTime? EndTime { get; set; }            // Thời điểm phải nộp (Deadline cá nhân)
+    public DateTime? SubmittedAt { get; set; }        // Thời điểm nộp thực tế
+
     public SubmissionStatus Status { get; set; } = SubmissionStatus.Submitted;
 
     // AI Grading

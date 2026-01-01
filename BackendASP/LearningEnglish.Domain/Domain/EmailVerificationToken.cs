@@ -15,9 +15,9 @@ public class EmailVerificationToken
 
     public bool IsUsed { get; set; } = false;
 
-    // Navigation property
+
     public User? User { get; set; }
 
-    // Helper method
+ 
     public bool IsExpired() => DateTime.UtcNow > ExpiresAt;
 }

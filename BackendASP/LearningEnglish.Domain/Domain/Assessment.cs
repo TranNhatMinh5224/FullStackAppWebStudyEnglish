@@ -11,10 +11,11 @@ namespace LearningEnglish.Domain.Entities
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
 
-        public DateTime? OpenAt { get; set; }
-        public DateTime? DueAt { get; set; }
-        public TimeSpan? TimeLimit { get; set; }
-        public bool IsPublished { get; set; } = true;
+        public DateTime? OpenAt { get; set; } // Thời gian mở bài kiểm tra
+        public DateTime? DueAt { get; set; } // Thời gian kết thúc bài kiểm tra ví dụ : hạn cuối nộp bài  
+        public TimeSpan? TimeLimit { get; set; } // Giới hạn thời gian làm bài
+
+        public bool IsPublished { get; set; } = true; // Bài kiểm tra có được công khai hay không
 
         // Navigation Properties
         public Module? Module { get; set; }

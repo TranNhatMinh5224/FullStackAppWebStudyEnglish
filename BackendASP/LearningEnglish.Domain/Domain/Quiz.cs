@@ -8,11 +8,11 @@ namespace LearningEnglish.Domain.Entities
         public int AssessmentId { get; set; }
 
         public string Title { get; set; } = string.Empty;
-        public string? Description { get; set; }
+        public string? Description { get; set; } // Mo ta bai thi
         public string? Instructions { get; set; } // Hướng dẫn làm bài
 
-        public QuizType Type { get; set; } = QuizType.Practice;
-        public QuizStatus Status { get; set; } = QuizStatus.Open;
+        public QuizType Type { get; set; } = QuizType.Practice; // Loai bai thi
+        public QuizStatus Status { get; set; } = QuizStatus.Open; // Trạng thái bài thi
         public int TotalQuestions { get; set; } // Tong so cau hoi trong bai thi
         public int? PassingScore { get; set; } // Diem dat yeu cau
         public decimal TotalPossibleScore { get; set; } // Tổng điểm tối đa của bài quiz

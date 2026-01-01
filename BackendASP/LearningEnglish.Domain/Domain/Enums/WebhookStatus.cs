@@ -2,9 +2,9 @@ namespace LearningEnglish.Domain.Enums;
 
 public enum WebhookStatus
 {
-    Pending = 0,      // Webhook mới nhận, chưa xử lý
-    Processing = 1,   // Đang xử lý
-    Processed = 2,    // Xử lý thành công
-    Failed = 3,       // Xử lý thất bại, sẽ retry
-    DeadLetter = 4    // Đã retry max lần, chuyển sang dead letter queue
+    Pending = 1,      // Webhook mới nhận, chưa xử lý
+    Processing = 2,   // Đang xử lý
+    Processed = 3,    // Xử lý thành công
+    Failed = 4,       // Xử lý thất bại, sẽ retry
+    DeadLetter = 5    // Đã retry max lần, chuyển sang dead letter queue
 }

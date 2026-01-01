@@ -38,7 +38,7 @@ namespace LearningEnglish.Infrastructure.Repositories
         public async Task<int> GetBlockedUsersCountAsync()
         {
             return await _context.Users
-                .Where(u => u.Status == AccountStatus.Suspended || u.Status == AccountStatus.Inactive)
+                .Where(u => u.Status == AccountStatus.Inactive)
                 .CountAsync();
         }
 

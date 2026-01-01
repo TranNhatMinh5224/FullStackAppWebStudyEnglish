@@ -1,4 +1,4 @@
-using LearningEnglish.Domain.Enums;
+
 namespace LearningEnglish.Domain.Entities
 {
     // Tạo Essay cho bài kiểm tra dạng tự luận
@@ -14,8 +14,11 @@ namespace LearningEnglish.Domain.Entities
         public string? AudioType { get; set; }
 
         // Image attachment for essay question
+        
         public string? ImageKey { get; set; }
         public string? ImageType { get; set; }
+
+     
 
         public decimal TotalPoints { get; set; } // Điểm tối đa của bài essay
 

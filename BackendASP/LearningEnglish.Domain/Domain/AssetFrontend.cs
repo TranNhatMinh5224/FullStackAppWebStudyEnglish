@@ -1,3 +1,5 @@
+using LearningEnglish.Domain.Enums;
+
 namespace LearningEnglish.Domain.Entities
 {
     // Entity cho quản lý hình ảnh/tài nguyên frontend (banner, hero images, etc.)
@@ -15,7 +17,7 @@ namespace LearningEnglish.Domain.Entities
         public string DescriptionImage { get; set; } = string.Empty;
         
         // Loại asset: "banner", "hero", "logo", "icon", etc.
-        public string? AssetType { get; set; }
+        public AssetType AssetType { get; set; }
         
         // Thứ tự hiển thị
         public int? Order { get; set; } = 0;

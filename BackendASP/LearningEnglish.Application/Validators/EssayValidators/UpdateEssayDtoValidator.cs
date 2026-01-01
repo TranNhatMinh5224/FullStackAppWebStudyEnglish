@@ -15,6 +15,12 @@ namespace LearningEnglish.Application.Validators.EssayValidators
                 .MaximumLength(2000).WithMessage("Mô tả Essay không được quá 2000 ký tự")
                 .When(x => !string.IsNullOrEmpty(x.Description));
 
+            RuleFor(x => x.TotalPoints)
+                .GreaterThan(0).WithMessage("Điểm tối đa phải lớn hơn 0")
+                
+                .When(x => x.TotalPoints.HasValue);
+
+            
         }
     }
 }
