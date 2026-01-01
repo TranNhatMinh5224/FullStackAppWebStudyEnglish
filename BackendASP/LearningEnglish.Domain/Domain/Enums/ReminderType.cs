@@ -4,7 +4,7 @@ public enum ReminderType
 {
     DailyStudy = 1,
     FlashcardReview = 2,
-    AssignmentDue = 3,
+    AssignmentDue = 3, 
     QuizDeadline = 4,
     LessonReminder = 5
 }

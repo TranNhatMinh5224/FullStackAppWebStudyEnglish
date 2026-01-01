@@ -1171,7 +1171,7 @@ namespace LearningEnglish.Infrastructure.Data
                     NormalizedEmail = "MINHXOANDEV@GMAIL.COM",
                     PasswordHash = adminPasswordHash,
                     PhoneNumber = "0257554479",
-                    DateOfBirth = new DateTime(2004, 2, 5),
+                    DateOfBirth = new DateTime(2004, 2, 5, 0, 0, 0, DateTimeKind.Utc),
                     IsMale = true,
                     EmailVerified = true,
                     AvatarKey = null,

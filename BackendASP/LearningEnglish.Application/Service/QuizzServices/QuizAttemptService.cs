@@ -82,10 +82,10 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                if (quiz.Status == QuizStatus.Closed || quiz.Status == QuizStatus.Archived)
+                if (quiz.Status == QuizStatus.Closed)
                 {
                     response.Success = false;
-                    response.Message = "Quiz đã đóng hoặc đã lưu trữ";
+                    response.Message = "Quiz đã đóng";
                     response.StatusCode = 403;
                     return response;
                 }

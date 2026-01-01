@@ -2,8 +2,7 @@ namespace LearningEnglish.Domain.Enums;
 
 public enum CourseStatus
 {
-    Draft = 1,
-    Published = 2,
-    Archived = 3,
-    Deleted = 4
+    Draft = 0,
+    Published = 1,
+    Deleted = 2
 }

@@ -1,4 +1,4 @@
-using LearningEnglish.Domain.Enums;
+
 namespace LearningEnglish.Domain.Entities
 {
     // Tạo Essay cho bài kiểm tra dạng tự luận

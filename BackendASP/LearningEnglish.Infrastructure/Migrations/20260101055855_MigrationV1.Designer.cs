@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LearningEnglish.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251231205934_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260101055855_MigrationV1")]
+    partial class MigrationV1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1174,7 +1174,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 1,
                             Category = "Content",
-                            CreatedAt = new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2325),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Tạo, sửa, xóa, publish khóa học",
                             DisplayName = "Quản lý khóa học",
                             Name = "Admin.Course.Manage"
@@ -1183,7 +1183,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 9,
                             Category = "Finance",
-                            CreatedAt = new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2331),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Thêm/xóa học viên vào khóa học (dùng khi thanh toán lỗi, nâng cấp user)",
                             DisplayName = "Quản lý học viên trong khóa học",
                             Name = "Admin.Course.Enroll"
@@ -1192,7 +1192,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 2,
                             Category = "Content",
-                            CreatedAt = new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2333),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Tạo, sửa, xóa lessons và modules",
                             DisplayName = "Quản lý bài học",
                             Name = "Admin.Lesson.Manage"
@@ -1201,7 +1201,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 3,
                             Category = "Content",
-                            CreatedAt = new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2334),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Quản lý flashcards, quizzes, essays, assets frontend",
                             DisplayName = "Quản lý nội dung",
                             Name = "Admin.Content.Manage"
@@ -1210,7 +1210,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 4,
                             Category = "Finance",
-                            CreatedAt = new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2335),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Xem, block/unblock, xóa users, gán roles",
                             DisplayName = "Quản lý người dùng",
                             Name = "Admin.User.Manage"
@@ -1219,7 +1219,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 5,
                             Category = "Finance",
-                            CreatedAt = new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2347),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Xem payments, hoàn tiền, fix lỗi thanh toán",
                             DisplayName = "Quản lý thanh toán",
                             Name = "Admin.Payment.Manage"
@@ -1228,7 +1228,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 6,
                             Category = "Finance",
-                            CreatedAt = new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2348),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Xem báo cáo doanh thu và thống kê tài chính",
                             DisplayName = "Xem doanh thu",
                             Name = "Admin.Revenue.View"
@@ -1237,7 +1237,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 7,
                             Category = "Finance",
-                            CreatedAt = new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2349),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Tạo, sửa, xóa teacher packages",
                             DisplayName = "Quản lý gói giáo viên",
                             Name = "Admin.Package.Manage"
@@ -1246,7 +1246,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             PermissionId = 8,
                             Category = "System",
-                            CreatedAt = new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2351),
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Super Admin - full permissions",
                             DisplayName = "Toàn quyền hệ thống",
                             Name = "Admin.System.FullAccess"
@@ -2041,14 +2041,14 @@ namespace LearningEnglish.Infrastructure.Migrations
                         {
                             UserId = 1,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DateOfBirth = new DateTime(2004, 2, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateTime(2004, 2, 5, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "minhxoandev@gmail.com",
                             EmailVerified = true,
                             FirstName = "Super Admin",
                             IsMale = true,
                             LastName = "System",
                             NormalizedEmail = "MINHXOANDEV@GMAIL.COM",
-                            PasswordHash = "$2a$11$x5uEDL.RI5tL0ZzAbBDiDOUtftuotWvoQJAo/0pc5Tjs/MsNGBEqm",
+                            PasswordHash = "$2a$11$G0gdWAt0/OaEfSFTPc/3zuWjibCHeSU.PMQl8rMaEz9CrEXkp36EW",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)

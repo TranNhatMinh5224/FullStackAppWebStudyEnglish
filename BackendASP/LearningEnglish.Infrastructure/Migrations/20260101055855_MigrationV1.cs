@@ -9,11 +9,14 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LearningEnglish.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class MigrationV1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:PostgresExtension:pg_trgm", ",,");
+
             migrationBuilder.CreateTable(
                 name: "AssetsFrontend",
                 columns: table => new
@@ -972,15 +975,15 @@ namespace LearningEnglish.Infrastructure.Migrations
                 columns: new[] { "PermissionId", "Category", "CreatedAt", "Description", "DisplayName", "Name" },
                 values: new object[,]
                 {
-                    { 1, "Content", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2325), "Tạo, sửa, xóa, publish khóa học", "Quản lý khóa học", "Admin.Course.Manage" },
-                    { 2, "Content", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2333), "Tạo, sửa, xóa lessons và modules", "Quản lý bài học", "Admin.Lesson.Manage" },
-                    { 3, "Content", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2334), "Quản lý flashcards, quizzes, essays, assets frontend", "Quản lý nội dung", "Admin.Content.Manage" },
-                    { 4, "Finance", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2335), "Xem, block/unblock, xóa users, gán roles", "Quản lý người dùng", "Admin.User.Manage" },
-                    { 5, "Finance", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2347), "Xem payments, hoàn tiền, fix lỗi thanh toán", "Quản lý thanh toán", "Admin.Payment.Manage" },
-                    { 6, "Finance", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2348), "Xem báo cáo doanh thu và thống kê tài chính", "Xem doanh thu", "Admin.Revenue.View" },
-                    { 7, "Finance", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2349), "Tạo, sửa, xóa teacher packages", "Quản lý gói giáo viên", "Admin.Package.Manage" },
-                    { 8, "System", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2351), "Super Admin - full permissions", "Toàn quyền hệ thống", "Admin.System.FullAccess" },
-                    { 9, "Finance", new DateTime(2025, 12, 31, 20, 59, 34, 213, DateTimeKind.Utc).AddTicks(2331), "Thêm/xóa học viên vào khóa học (dùng khi thanh toán lỗi, nâng cấp user)", "Quản lý học viên trong khóa học", "Admin.Course.Enroll" }
+                    { 1, "Content", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Tạo, sửa, xóa, publish khóa học", "Quản lý khóa học", "Admin.Course.Manage" },
+                    { 2, "Content", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Tạo, sửa, xóa lessons và modules", "Quản lý bài học", "Admin.Lesson.Manage" },
+                    { 3, "Content", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Quản lý flashcards, quizzes, essays, assets frontend", "Quản lý nội dung", "Admin.Content.Manage" },
+                    { 4, "Finance", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Xem, block/unblock, xóa users, gán roles", "Quản lý người dùng", "Admin.User.Manage" },
+                    { 5, "Finance", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Xem payments, hoàn tiền, fix lỗi thanh toán", "Quản lý thanh toán", "Admin.Payment.Manage" },
+                    { 6, "Finance", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Xem báo cáo doanh thu và thống kê tài chính", "Xem doanh thu", "Admin.Revenue.View" },
+                    { 7, "Finance", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Tạo, sửa, xóa teacher packages", "Quản lý gói giáo viên", "Admin.Package.Manage" },
+                    { 8, "System", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Super Admin - full permissions", "Toàn quyền hệ thống", "Admin.System.FullAccess" },
+                    { 9, "Finance", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Thêm/xóa học viên vào khóa học (dùng khi thanh toán lỗi, nâng cấp user)", "Quản lý học viên trong khóa học", "Admin.Course.Enroll" }
                 });
 
             migrationBuilder.InsertData(
@@ -998,7 +1001,7 @@ namespace LearningEnglish.Infrastructure.Migrations
             migrationBuilder.InsertData(
                 table: "Users",
                 columns: new[] { "UserId", "AvatarKey", "CreatedAt", "CurrentTeacherSubscriptionId", "DateOfBirth", "Email", "EmailVerified", "FirstName", "IsMale", "LastName", "NormalizedEmail", "PasswordHash", "PhoneNumber", "Status", "UpdatedAt" },
-                values: new object[] { 1, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, new DateTime(2004, 2, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), "minhxoandev@gmail.com", true, "Super Admin", true, "System", "MINHXOANDEV@GMAIL.COM", "$2a$11$x5uEDL.RI5tL0ZzAbBDiDOUtftuotWvoQJAo/0pc5Tjs/MsNGBEqm", "0257554479", 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) });
+                values: new object[] { 1, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, new DateTime(2004, 2, 5, 0, 0, 0, 0, DateTimeKind.Utc), "minhxoandev@gmail.com", true, "Super Admin", true, "System", "MINHXOANDEV@GMAIL.COM", "$2a$11$G0gdWAt0/OaEfSFTPc/3zuWjibCHeSU.PMQl8rMaEz9CrEXkp36EW", "0257554479", 1, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) });
 
             migrationBuilder.InsertData(
                 table: "RolePermissions",

@@ -4,5 +4,5 @@ public enum AccountStatus
 {
     Active = 1, // Kích hoạt
     Inactive = 2, // Vô hiệu hóa
-    Suspended = 3 // Tạm ngưng
+    
 }
