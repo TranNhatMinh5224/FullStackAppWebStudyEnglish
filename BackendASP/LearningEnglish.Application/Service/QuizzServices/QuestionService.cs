@@ -175,24 +175,30 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                // Validate QuizGroup exists
-                var quizGroup = await _quizGroupRepository.GetQuizGroupByIdAsync(questionCreateDto.QuizGroupId);
-                if (quizGroup == null)
+                // Validate QuizGroup exists if provided
+                if (questionCreateDto.QuizGroupId.HasValue)
                 {
-                    response.Success = false;
-                    response.Message = "Quiz group không tồn tại.";
-                    response.StatusCode = 404;
-                    return response;
+                    var quizGroup = await _quizGroupRepository.GetQuizGroupByIdAsync(questionCreateDto.QuizGroupId.Value);
+                    if (quizGroup == null)
+                    {
+                        response.Success = false;
+                        response.Message = "Quiz group không tồn tại.";
+                        response.StatusCode = 404;
+                        return response;
+                    }
                 }
 
-                // Validate QuizSection exists
-                var quizSection = await _quizSectionRepository.GetQuizSectionByIdAsync(questionCreateDto.QuizSectionId);
-                if (quizSection == null)
+                // Validate QuizSection exists if provided
+                if (questionCreateDto.QuizSectionId.HasValue)
                 {
-                    response.Success = false;
-                    response.Message = "Quiz section không tồn tại.";
-                    response.StatusCode = 404;
-                    return response;
+                    var quizSection = await _quizSectionRepository.GetQuizSectionByIdAsync(questionCreateDto.QuizSectionId.Value);
+                    if (quizSection == null)
+                    {
+                        response.Success = false;
+                        response.Message = "Quiz section không tồn tại.";
+                        response.StatusCode = 404;
+                        return response;
+                    }
                 }
 
                 // Map DTO to Entity
@@ -338,10 +344,10 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Validate QuizGroup exists if changed
-                if (questionUpdateDto.QuizGroupId != existingQuestion.QuizGroupId)
+                // Validate QuizGroup exists if changed and provided
+                if (questionUpdateDto.QuizGroupId.HasValue && questionUpdateDto.QuizGroupId != existingQuestion.QuizGroupId)
                 {
-                    var quizGroup = await _quizGroupRepository.GetQuizGroupByIdAsync(questionUpdateDto.QuizGroupId);
+                    var quizGroup = await _quizGroupRepository.GetQuizGroupByIdAsync(questionUpdateDto.QuizGroupId.Value);
                     if (quizGroup == null)
                     {
                         response.Success = false;
@@ -351,10 +357,10 @@ namespace LearningEnglish.Application.Service
                     }
                 }
 
-                // Validate QuizSection exists if changed
-                if (questionUpdateDto.QuizSectionId != existingQuestion.QuizSectionId)
+                // Validate QuizSection exists if changed and provided
+                if (questionUpdateDto.QuizSectionId.HasValue && questionUpdateDto.QuizSectionId != existingQuestion.QuizSectionId)
                 {
-                    var quizSection = await _quizSectionRepository.GetQuizSectionByIdAsync(questionUpdateDto.QuizSectionId);
+                    var quizSection = await _quizSectionRepository.GetQuizSectionByIdAsync(questionUpdateDto.QuizSectionId.Value);
                     if (quizSection == null)
                     {
                         response.Success = false;
@@ -587,11 +593,15 @@ namespace LearningEnglish.Application.Service
                 // Validate all QuizGroup and QuizSection IDs exist
                 var quizGroupIds = questionBulkCreateDto.Questions
                     .Select(q => q.QuizGroupId)
+                    .Where(id => id.HasValue)
+                    .Select(id => id!.Value)
                     .Distinct()
                     .ToList();
 
                 var quizSectionIds = questionBulkCreateDto.Questions
                     .Select(q => q.QuizSectionId)
+                    .Where(id => id.HasValue)
+                    .Select(id => id!.Value)
                     .Distinct()
                     .ToList();
 

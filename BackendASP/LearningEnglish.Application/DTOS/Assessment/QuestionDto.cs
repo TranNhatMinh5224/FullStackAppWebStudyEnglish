@@ -11,8 +11,8 @@ namespace LearningEnglish.Application.DTOs
         public string? StemHtml { get; set; }
 
         // Liên kết
-        public int QuizGroupId { get; set; }
-        public int QuizSectionId { get; set; }
+        public int? QuizGroupId { get; set; }
+        public int? QuizSectionId { get; set; }
 
         // Điểm & chiến lược chấm
         public decimal Points { get; set; } = 10m;
@@ -49,8 +49,8 @@ namespace LearningEnglish.Application.DTOs
         public string StemText { get; set; } = string.Empty;
         public string? StemHtml { get; set; }
 
-        public int QuizGroupId { get; set; }
-        public int QuizSectionId { get; set; }
+        public int? QuizGroupId { get; set; }
+        public int? QuizSectionId { get; set; }
 
         public decimal Points { get; set; }
         public string? CorrectAnswersJson { get; set; }

@@ -20,11 +20,13 @@ namespace LearningEnglish.Application.Validators
 
             RuleFor(x => x.QuizGroupId)
                 .GreaterThan(0)
-                .WithMessage("QuizGroupId phải lớn hơn 0.");
+                .WithMessage("QuizGroupId phải lớn hơn 0.")
+                .When(x => x.QuizGroupId.HasValue);
 
             RuleFor(x => x.QuizSectionId)
                 .GreaterThan(0)
-                .WithMessage("QuizSectionId phải lớn hơn 0.");
+                .WithMessage("QuizSectionId phải lớn hơn 0.")
+                .When(x => x.QuizSectionId.HasValue);
 
             RuleFor(x => x.Points)
                 .GreaterThan(0)
