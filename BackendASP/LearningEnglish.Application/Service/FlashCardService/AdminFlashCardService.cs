@@ -122,14 +122,77 @@ namespace LearningEnglish.Application.Service
 
             try
             {
-                var entities = dto.FlashCards.Select(x =>
-                {
-                    var fc = _mapper.Map<FlashCard>(x);
-                    fc.ModuleId = dto.ModuleId;
-                    return fc;
-                }).ToList();
+                var flashCards = new List<FlashCard>();
+                var committedImageKeys = new List<string>();
+                var committedAudioKeys = new List<string>();
 
-                var created = await _flashCardRepository.CreateBulkAsync(entities);
+                foreach (var flashCardDto in dto.FlashCards)
+                {
+                    var flashCard = _mapper.Map<FlashCard>(flashCardDto);
+                    flashCard.ModuleId = dto.ModuleId;
+
+                    // Handle image upload
+                    if (!string.IsNullOrWhiteSpace(flashCardDto.ImageTempKey))
+                    {
+                        try
+                        {
+                            flashCard.ImageKey = await _flashCardMediaService.CommitImageAsync(flashCardDto.ImageTempKey);
+                            committedImageKeys.Add(flashCard.ImageKey);
+                        }
+                        catch (Exception imageEx)
+                        {
+                            _logger.LogError(imageEx, "Failed to commit image for flashcard {Word}", flashCardDto.Word);
+
+                            // Rollback committed images
+                            foreach (var key in committedImageKeys)
+                            {
+                                await _flashCardMediaService.DeleteImageAsync(key);
+                            }
+                            foreach (var key in committedAudioKeys)
+                            {
+                                await _flashCardMediaService.DeleteAudioAsync(key);
+                            }
+
+                            response.Success = false;
+                            response.StatusCode = 400;
+                            response.Message = $"Không thể lưu hình ảnh cho '{flashCardDto.Word}'. Vui lòng thử lại.";
+                            return response;
+                        }
+                    }
+
+                    // Handle audio upload
+                    if (!string.IsNullOrWhiteSpace(flashCardDto.AudioTempKey))
+                    {
+                        try
+                        {
+                            flashCard.AudioKey = await _flashCardMediaService.CommitAudioAsync(flashCardDto.AudioTempKey);
+                            committedAudioKeys.Add(flashCard.AudioKey);
+                        }
+                        catch (Exception audioEx)
+                        {
+                            _logger.LogError(audioEx, "Failed to commit audio for flashcard {Word}", flashCardDto.Word);
+
+                            // Rollback committed files
+                            foreach (var key in committedImageKeys)
+                            {
+                                await _flashCardMediaService.DeleteImageAsync(key);
+                            }
+                            foreach (var key in committedAudioKeys)
+                            {
+                                await _flashCardMediaService.DeleteAudioAsync(key);
+                            }
+
+                            response.Success = false;
+                            response.StatusCode = 400;
+                            response.Message = $"Không thể lưu audio cho '{flashCardDto.Word}'. Vui lòng thử lại.";
+                            return response;
+                        }
+                    }
+
+                    flashCards.Add(flashCard);
+                }
+
+                var created = await _flashCardRepository.CreateBulkAsync(flashCards);
                 
                 // Map DTO inline
                 var result = created.Select(fc =>
