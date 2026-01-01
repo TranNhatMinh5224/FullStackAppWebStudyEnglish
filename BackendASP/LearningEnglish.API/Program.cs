@@ -101,11 +101,15 @@ builder.Services.AddSwaggerGen(c =>
 // CORS có chức năng cho phép frontend truy cập API
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", p =>
+    options.AddPolicy("AllowFrontend" , p =>
         p.WithOrigins(frontendUrl)
          .AllowAnyHeader()
          .AllowAnyMethod()
          .AllowCredentials());
+    options.AddPolicy("AllowAll", p =>
+        p.AllowAnyOrigin()
+         .AllowAnyHeader()
+         .AllowAnyMethod());
 });
 
 
