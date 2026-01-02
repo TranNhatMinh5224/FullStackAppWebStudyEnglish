@@ -456,6 +456,17 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.VideoKey, opt => opt.Ignore()) // Set manually in service after commit
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
+            // QuizGroupBulkCreateDto -> QuizGroup mapping for bulk section creation
+            CreateMap<QuizGroupBulkCreateDto, QuizGroup>()
+                .ForMember(dest => dest.QuizGroupId, opt => opt.Ignore())
+                .ForMember(dest => dest.QuizSectionId, opt => opt.Ignore()) // Set manually in service
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Set manually in service
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore()) // Set manually in service
+                .ForMember(dest => dest.ImgKey, opt => opt.Ignore()) // Set manually in service after commit
+                .ForMember(dest => dest.VideoKey, opt => opt.Ignore()) // Set manually in service after commit
+                .ForMember(dest => dest.QuizSection, opt => opt.Ignore())
+                .ForMember(dest => dest.Questions, opt => opt.Ignore()); // Questions created separately in service
+
             // Question mappings
             CreateMap<Question, QuestionReadDto>()
                 .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => src.MediaKey))
