@@ -19,5 +19,8 @@ namespace LearningEnglish.Application.Interface
 
         // Tiếp tục làm bài
         Task<ServiceResponse<QuizAttemptWithQuestionsDto>> ResumeQuizAttemptAsync(int attemptId, int userId);
+
+        // Kiểm tra có bài làm đang InProgress không
+        Task<ServiceResponse<ActiveAttemptDto>> CheckActiveAttemptAsync(int quizId, int userId);
     }
 }

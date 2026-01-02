@@ -187,4 +187,14 @@ namespace LearningEnglish.Application.DTOs
         public bool IsCorrect { get; set; }
         public bool IsSelected { get; set; }  // Học sinh có chọn option này không
     }
+
+    // DTO cho response check active attempt
+    public class ActiveAttemptDto
+    {
+        public bool HasActiveAttempt { get; set; }
+        public int? AttemptId { get; set; }
+        public DateTime? StartedAt { get; set; }
+        public DateTime? EndTime { get; set; }  // StartedAt + Duration
+        public int? TimeRemainingSeconds { get; set; }  // Thời gian còn lại (nếu có duration)
+    }
 }

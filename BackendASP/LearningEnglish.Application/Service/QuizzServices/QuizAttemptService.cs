@@ -718,5 +718,91 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
         }
+
+        public async Task<ServiceResponse<ActiveAttemptDto>> CheckActiveAttemptAsync(int quizId, int userId)
+        {
+            var response = new ServiceResponse<ActiveAttemptDto>();
+
+            try
+            {
+                // 1. Lấy attempt đang InProgress (nếu có)
+                var activeAttempt = await _quizAttemptRepository.GetActiveAttemptAsync(userId, quizId);
+
+                if (activeAttempt == null)
+                {
+                    // Không có bài đang làm
+                    response.Success = true;
+                    response.Data = new ActiveAttemptDto
+                    {
+                        HasActiveAttempt = false
+                    };
+                    response.StatusCode = 200;
+                    response.Message = "No active attempt found";
+                    return response;
+                }
+
+                // 2. Kiểm tra thời gian (nếu quiz có duration)
+                var quiz = await _quizRepository.GetQuizByIdAsync(quizId);
+                DateTime? endTime = null;
+                int? timeRemainingSeconds = null;
+
+                if (quiz?.Duration != null)
+                {
+                    endTime = activeAttempt.StartedAt.AddMinutes(quiz.Duration.Value);
+                    var timeRemaining = endTime.Value - DateTime.UtcNow;
+
+                    if (timeRemaining.TotalSeconds <= 0)
+                    {
+                        // Hết giờ rồi → Auto-submit
+                        activeAttempt.Status = QuizAttemptStatus.Submitted;
+                        activeAttempt.SubmittedAt = endTime;
+                        activeAttempt.TimeSpentSeconds = quiz.Duration.Value * 60;
+                        await _quizAttemptRepository.UpdateQuizAttemptAsync(activeAttempt);
+
+                        _logger.LogInformation("Auto-submitted expired attempt {AttemptId} for user {UserId}",
+                            activeAttempt.AttemptId, userId);
+
+                        // Trả về không có active attempt
+                        response.Success = true;
+                        response.Data = new ActiveAttemptDto
+                        {
+                            HasActiveAttempt = false
+                        };
+                        response.StatusCode = 200;
+                        response.Message = "Previous attempt was auto-submitted due to timeout";
+                        return response;
+                    }
+
+                    timeRemainingSeconds = (int)timeRemaining.TotalSeconds;
+                }
+
+                // 3. Có bài đang làm và còn thời gian
+                response.Success = true;
+                response.Data = new ActiveAttemptDto
+                {
+                    HasActiveAttempt = true,
+                    AttemptId = activeAttempt.AttemptId,
+                    StartedAt = activeAttempt.StartedAt,
+                    EndTime = endTime,
+                    TimeRemainingSeconds = timeRemainingSeconds
+                };
+                response.StatusCode = 200;
+                response.Message = "Active attempt found";
+
+                _logger.LogInformation("User {UserId} has active attempt {AttemptId} for quiz {QuizId}",
+                    userId, activeAttempt.AttemptId, quizId);
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking active attempt for quiz {QuizId} and user {UserId}",
+                    quizId, userId);
+                response.Success = false;
+                response.Message = ex.Message;
+                response.StatusCode = 500;
+                return response;
+            }
+        }
     }
 }
