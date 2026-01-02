@@ -41,8 +41,16 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
                     return response;
                 }
 
-                // nếu bucket không tồn tại thì tạo mới
-                await EnsureBucketExistsAsync(BucketName);
+                // Kiểm tra bucket có tồn tại không, nếu không thì báo lỗi
+                var bucketExists = await _minioClient.BucketExistsAsync(
+                    new BucketExistsArgs().WithBucket(BucketName));
+                if (!bucketExists)
+                {
+                    response.Success = false;
+                    response.Message = $"Bucket '{BucketName}' does not exist.";
+                    response.StatusCode = 400;
+                    return response;
+                }
 
                 // tạo tempkey cho file
                 var extension = Path.GetExtension(file.FileName);
@@ -104,6 +112,18 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
                     response.Success = false;
                     response.Data = false;
                     response.Message = "Object key is null or empty.";
+                    response.StatusCode = 400;
+                    return response;
+                }
+
+                // Kiểm tra bucket có tồn tại không
+                var bucketExists = await _minioClient.BucketExistsAsync(
+                    new BucketExistsArgs().WithBucket(BucketName));
+                if (!bucketExists)
+                {
+                    response.Success = false;
+                    response.Data = false;
+                    response.Message = $"Bucket '{BucketName}' does not exist.";
                     response.StatusCode = 400;
                     return response;
                 }
@@ -312,18 +332,6 @@ namespace LearningEnglish.Infrastructure.MinioFileStorage
             }
 
             return response;
-        }
-
-        private async Task EnsureBucketExistsAsync(string bucketName)
-        {
-            var exists = await _minioClient.BucketExistsAsync(
-                new BucketExistsArgs().WithBucket(bucketName));
-
-            if (!exists)
-            {
-                await _minioClient.MakeBucketAsync(
-                    new MakeBucketArgs().WithBucket(bucketName));
-            }
         }
 
         private static string NormalizeKey(string key)
