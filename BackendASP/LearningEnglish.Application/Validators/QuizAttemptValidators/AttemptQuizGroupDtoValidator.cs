@@ -3,23 +3,26 @@ using LearningEnglish.Application.DTOs;
 
 namespace LearningEnglish.Application.Validators.QuizAttemptValidators;
 
-public class GroupItemDtoValidator : AbstractValidator<GroupItemDto>
+public class GroupItemDtoValidator : AbstractValidator<QuizItemDto>
 {
     public GroupItemDtoValidator()
     {
         RuleFor(x => x.GroupId)
+            .NotNull()
             .GreaterThan(0)
-            .WithMessage("GroupId phải lớn hơn 0");
+            .When(x => x.ItemType == "Group")
+            .WithMessage("GroupId phải lớn hơn 0 khi ItemType là Group");
 
         RuleFor(x => x.Name)
             .NotNull()
             .NotEmpty()
-            .WithMessage("Name không được null hoặc rỗng");
+            .When(x => x.ItemType == "Group")
+            .WithMessage("Name không được null hoặc rỗng khi ItemType là Group");
 
         RuleFor(x => x.Questions)
             .NotNull()
-            .WithMessage("Questions không được null")
             .NotEmpty()
-            .WithMessage("Questions không được rỗng");
+            .When(x => x.ItemType == "Group")
+            .WithMessage("Questions không được null hoặc rỗng khi ItemType là Group");
     }
 }

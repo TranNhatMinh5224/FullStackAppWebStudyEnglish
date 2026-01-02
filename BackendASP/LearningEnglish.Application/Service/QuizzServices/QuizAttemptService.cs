@@ -659,9 +659,10 @@ namespace LearningEnglish.Application.Service
                 {
                     foreach (var item in section.Items)
                     {
-                        if (item is GroupItemDto groupItem)
+                        // Flatten structure: Check ItemType instead of using "is"
+                        if (item.ItemType == "Group")
                         {
-                            foreach (var question in groupItem.Questions)
+                            foreach (var question in item.Questions ?? new List<QuestionDto>())
                             {
                                 if (currentAnswers.TryGetValue(question.QuestionId, out object? value))
                                 {
@@ -679,17 +680,17 @@ namespace LearningEnglish.Application.Service
                                 }
                             }
                         }
-                        else if (item is QuestionItemDto questionItem)
+                        else if (item.ItemType == "Question")
                         {
-                            if (currentAnswers.TryGetValue(questionItem.QuestionId, out object? value))
+                            if (item.QuestionId.HasValue && currentAnswers.TryGetValue(item.QuestionId.Value, out object? value))
                             {
-                                questionItem.IsAnswered = true;
-                                questionItem.UserAnswer = value;
+                                item.IsAnswered = true;
+                                item.UserAnswer = value;
 
                                 // Normalize answer theo QuestionType để đảm bảo format đúng cho frontend
-                                questionItem.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
-                                    questionItem.UserAnswer,
-                                    questionItem.Type
+                                item.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
+                                    item.UserAnswer,
+                                    item.Type ?? Domain.Enums.QuestionType.MultipleChoice
                                 );
 
                                 // KHÔNG set CurrentScore khi đang làm bài (InProgress)

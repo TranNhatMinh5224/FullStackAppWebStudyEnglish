@@ -27,5 +27,11 @@ namespace LearningEnglish.Application.Interface
         
         // Xóa câu hỏi
         Task DeleteQuestionAsync(int questionId);
+
+        // Save changes
+        Task SaveChangesAsync();
+
+        // Add answer option
+        Task AddAnswerOptionAsync(AnswerOption answerOption);
     }
 }

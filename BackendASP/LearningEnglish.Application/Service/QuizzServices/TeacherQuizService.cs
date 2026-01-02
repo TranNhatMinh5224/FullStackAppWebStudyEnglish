@@ -1,6 +1,7 @@
 using LearningEnglish.Application.Interface;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Common;
+using LearningEnglish.Application.Common.Helpers;
 using LearningEnglish.Domain.Entities;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
@@ -218,7 +219,7 @@ namespace LearningEnglish.Application.Service
                 var fullQuiz = await _quizRepository.GetFullQuizAsync(quiz.QuizId);
                 if (fullQuiz != null)
                 {
-                    quiz.TotalPossibleScore = CalculateTotalPossibleScore(fullQuiz);
+                    quiz.TotalPossibleScore = QuizScoreCalculator.CalculateTotalPossibleScore(fullQuiz);
                     await _quizRepository.UpdateQuizAsync(quiz);
                 }
 
@@ -264,7 +265,7 @@ namespace LearningEnglish.Application.Service
                 var fullQuiz = await _quizRepository.GetFullQuizAsync(existingQuiz.QuizId);
                 if (fullQuiz != null)
                 {
-                    existingQuiz.TotalPossibleScore = CalculateTotalPossibleScore(fullQuiz);
+                    existingQuiz.TotalPossibleScore = QuizScoreCalculator.CalculateTotalPossibleScore(fullQuiz);
                     await _quizRepository.UpdateQuizAsync(existingQuiz);
                 }
 
@@ -322,21 +323,5 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        private static decimal CalculateTotalPossibleScore(Quiz quiz)
-        {
-            decimal maxScore = 0;
-            foreach (var section in quiz.QuizSections)
-            {
-                foreach (var group in section.QuizGroups)
-                {
-                    maxScore += group.Questions.Sum(q => q.Points);
-                }
-                if (section.Questions != null)
-                {
-                    maxScore += section.Questions.Sum(q => q.Points);
-                }
-            }
-            return maxScore;
-        }
     }
 }

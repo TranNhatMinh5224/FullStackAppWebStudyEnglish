@@ -13,6 +13,7 @@ namespace LearningEnglish.Application.Service
         private readonly IQuestionRepository _questionRepository;
         private readonly IQuizGroupRepository _quizGroupRepository;
         private readonly IQuizSectionRepository _quizSectionRepository;
+        private readonly IQuizRepository _quizRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<QuestionService> _logger;
         private readonly IMinioFileStorage _minioFileStorage;
@@ -25,6 +26,7 @@ namespace LearningEnglish.Application.Service
             IQuestionRepository questionRepository,
             IQuizGroupRepository quizGroupRepository,
             IQuizSectionRepository quizSectionRepository,
+            IQuizRepository quizRepository,
             IMapper mapper,
             ILogger<QuestionService> logger,
             IMinioFileStorage minioFileStorage)
@@ -32,6 +34,7 @@ namespace LearningEnglish.Application.Service
             _questionRepository = questionRepository;
             _quizGroupRepository = quizGroupRepository;
             _quizSectionRepository = quizSectionRepository;
+            _quizRepository = quizRepository;
             _mapper = mapper;
             _logger = logger;
             _minioFileStorage = minioFileStorage;
@@ -658,6 +661,160 @@ namespace LearningEnglish.Application.Service
                 _logger.LogError(ex, "Lỗi khi tạo hàng loạt câu hỏi");
                 response.Success = false;
                 response.Message = $"Có lỗi xảy ra khi tạo hàng loạt câu hỏi: {ex.Message}";
+                response.StatusCode = 500;
+            }
+
+            return response;
+        }
+
+        public async Task<ServiceResponse<QuizSectionDto>> CreateQuizSectionBulkAsync(QuizSectionBulkCreateDto sectionBulkCreateDto)
+        {
+            var response = new ServiceResponse<QuizSectionDto>();
+
+            try
+            {
+                // 1. Validate Quiz exists
+                var quiz = await _quizRepository.GetQuizByIdAsync(sectionBulkCreateDto.QuizId);
+                if (quiz == null)
+                {
+                    response.Success = false;
+                    response.Message = $"Quiz với ID {sectionBulkCreateDto.QuizId} không tồn tại.";
+                    response.StatusCode = 404;
+                    return response;
+                }
+
+                // 2. Validate total question count
+                var questionsInGroups = sectionBulkCreateDto.QuizGroups.Sum(g => g.Questions?.Count ?? 0);
+                var standaloneCount = sectionBulkCreateDto.StandaloneQuestions?.Count ?? 0;
+                var totalQuestions = questionsInGroups + standaloneCount;
+
+                if (totalQuestions == 0)
+                {
+                    response.Success = false;
+                    response.Message = "Section phải có ít nhất 1 câu hỏi.";
+                    response.StatusCode = 400;
+                    return response;
+                }
+
+                _logger.LogInformation("Creating bulk section with {GroupCount} groups, {GroupQuestions} questions in groups, {StandaloneCount} standalone questions",
+                    sectionBulkCreateDto.QuizGroups.Count, questionsInGroups, standaloneCount);
+
+                // 3. Create QuizSection
+                var quizSection = new QuizSection
+                {
+                    QuizId = sectionBulkCreateDto.QuizId,
+                    Title = sectionBulkCreateDto.Title,
+                    Description = sectionBulkCreateDto.Description,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                await _quizSectionRepository.AddQuizSectionAsync(quizSection);
+                await _quizSectionRepository.SaveChangesAsync();
+
+                _logger.LogInformation("Created QuizSection with ID: {SectionId}", quizSection.QuizSectionId);
+
+                var createdGroupIds = new List<int>();
+                var createdQuestionIds = new List<int>();
+
+                // 4. Create each QuizGroup and its Questions
+                foreach (var groupDto in sectionBulkCreateDto.QuizGroups)
+                {
+                    // 4.1. Create QuizGroup using AutoMapper
+                    var quizGroup = _mapper.Map<QuizGroup>(groupDto);
+                    quizGroup.QuizSectionId = quizSection.QuizSectionId;
+                    quizGroup.CreatedAt = DateTime.UtcNow;
+                    quizGroup.UpdatedAt = DateTime.UtcNow;
+
+                    await _quizGroupRepository.AddQuizGroupAsync(quizGroup);
+                    await _quizGroupRepository.SaveChangesAsync();
+
+                    createdGroupIds.Add(quizGroup.QuizGroupId);
+                    _logger.LogInformation("Created QuizGroup with ID: {GroupId}", quizGroup.QuizGroupId);
+
+                    // 4.2. Create Questions for this group
+                    foreach (var questionDto in groupDto.Questions)
+                    {
+                        // Map using AutoMapper
+                        var question = _mapper.Map<Question>(questionDto);
+                        question.QuizSectionId = quizSection.QuizSectionId;
+                        question.QuizGroupId = quizGroup.QuizGroupId;
+                        question.CreatedAt = DateTime.UtcNow;
+                        question.UpdatedAt = DateTime.UtcNow;
+
+                        await _questionRepository.AddQuestionAsync(question);
+                        await _questionRepository.SaveChangesAsync();
+
+                        createdQuestionIds.Add(question.QuestionId);
+
+                        // 4.3. Create AnswerOptions if needed
+                        if (questionDto.Options != null && questionDto.Options.Count > 0)
+                        {
+                            foreach (var optionDto in questionDto.Options)
+                            {
+                                var answerOption = _mapper.Map<AnswerOption>(optionDto);
+                                answerOption.QuestionId = question.QuestionId;
+
+                                await _questionRepository.AddAnswerOptionAsync(answerOption);
+                            }
+
+                            await _questionRepository.SaveChangesAsync();
+                        }
+                    }
+                }
+
+                // 5. Create standalone questions (không thuộc group)
+                if (sectionBulkCreateDto.StandaloneQuestions != null && sectionBulkCreateDto.StandaloneQuestions.Count > 0)
+                {
+                    _logger.LogInformation("Creating {Count} standalone questions for section", sectionBulkCreateDto.StandaloneQuestions.Count);
+
+                    foreach (var questionDto in sectionBulkCreateDto.StandaloneQuestions)
+                    {
+                        var question = _mapper.Map<Question>(questionDto);
+                        question.QuizSectionId = quizSection.QuizSectionId;
+                        question.QuizGroupId = null; // Standalone không thuộc group
+                        question.CreatedAt = DateTime.UtcNow;
+                        question.UpdatedAt = DateTime.UtcNow;
+
+                        await _questionRepository.AddQuestionAsync(question);
+                        await _questionRepository.SaveChangesAsync();
+
+                        createdQuestionIds.Add(question.QuestionId);
+
+                        // Create AnswerOptions
+                        if (questionDto.Options != null && questionDto.Options.Count > 0)
+                        {
+                            foreach (var optionDto in questionDto.Options)
+                            {
+                                var answerOption = _mapper.Map<AnswerOption>(optionDto);
+                                answerOption.QuestionId = question.QuestionId;
+
+                                await _questionRepository.AddAnswerOptionAsync(answerOption);
+                            }
+
+                            await _questionRepository.SaveChangesAsync();
+                        }
+                    }
+                }
+
+                // 6. Return created section
+                var createdSection = await _quizSectionRepository.GetQuizSectionByIdAsync(quizSection.QuizSectionId);
+                var sectionDto = _mapper.Map<QuizSectionDto>(createdSection);
+
+                response.Data = sectionDto;
+                response.Success = true;
+                response.Message = $"Tạo thành công section với {createdGroupIds.Count} groups và {createdQuestionIds.Count} câu hỏi (trong đó {questionsInGroups} trong groups, {standaloneCount} standalone).";
+                response.StatusCode = 201;
+
+                _logger.LogInformation(
+                    "Successfully created bulk section: SectionId={SectionId}, Groups={GroupCount}, TotalQuestions={QuestionCount}, InGroups={InGroups}, Standalone={Standalone}",
+                    quizSection.QuizSectionId, createdGroupIds.Count, createdQuestionIds.Count, questionsInGroups, standaloneCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi tạo bulk quiz section");
+                response.Success = false;
+                response.Message = $"Có lỗi xảy ra khi tạo section: {ex.Message}";
                 response.StatusCode = 500;
             }
 

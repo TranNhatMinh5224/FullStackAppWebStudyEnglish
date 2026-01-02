@@ -65,35 +65,29 @@ namespace LearningEnglish.Application.DTOs
         public List<QuizItemDto> Items { get; set; } = new();  // Merged Groups + Questions
     }
 
-    // Base DTO cho quiz items (Groups và Questions)
+    
     public class QuizItemDto
     {
         public string ItemType { get; set; } = string.Empty;  // "Group" hoặc "Question"
         public int ItemIndex { get; set; }  // Thứ tự hiển thị (0, 1, 2...)
-    }
 
-    // DTO cho group trong section (dùng cho attempt)
-    public class GroupItemDto : QuizItemDto
-    {
-        public int GroupId { get; set; }
-        public string Name { get; set; } = string.Empty;  // Tên group (Part 1, Part 2)
+       
+        public int? GroupId { get; set; }
+        public string? Name { get; set; }  // Tên group (Part 1, Part 2)
         public string? ImgUrl { get; set; }
         public string? VideoUrl { get; set; }
-        public List<QuestionDto> Questions { get; set; } = new();
-    }
+        public List<QuestionDto>? Questions { get; set; }  // Questions trong group
 
-    // DTO cho standalone question (dùng cho attempt)
-    public class QuestionItemDto : QuizItemDto
-    {
-        public int QuestionId { get; set; }
-        public string QuestionText { get; set; } = string.Empty;
+        // === QUESTION PROPERTIES (null nếu ItemType = "Group") ===
+        public int? QuestionId { get; set; }
+        public string? QuestionText { get; set; }
         public string? MediaUrl { get; set; }
-        public QuestionType Type { get; set; }
-        public decimal Points { get; set; }
-        public bool IsAnswered { get; set; } = false;
+        public QuestionType? Type { get; set; }
+        public decimal? Points { get; set; }
+        public bool? IsAnswered { get; set; }
         public decimal? CurrentScore { get; set; }
         public object? UserAnswer { get; set; }
-        public List<AnswerOptionDto> Options { get; set; } = new();
+        public List<AnswerOptionDto>? Options { get; set; }
     }
 
     // DTO cho câu hỏi (không include đáp án đúng)

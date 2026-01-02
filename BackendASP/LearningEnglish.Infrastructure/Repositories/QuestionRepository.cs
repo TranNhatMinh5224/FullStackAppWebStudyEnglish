@@ -90,5 +90,15 @@ namespace LearningEnglish.Infrastructure.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddAnswerOptionAsync(AnswerOption answerOption)
+        {
+            _context.AnswerOptions.Add(answerOption);
+        }
     }
 }

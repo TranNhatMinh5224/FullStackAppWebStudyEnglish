@@ -25,6 +25,9 @@ namespace LearningEnglish.Application.Interface
         
         // Thêm nhiều câu hỏi cùng lúc
         Task<ServiceResponse<QuestionBulkResponseDto>> AddBulkQuestionsAsync(QuestionBulkCreateDto questionBulkCreateDto);
+        
+        // Thêm bulk cả Quiz Section với Groups và Questions
+        Task<ServiceResponse<QuizSectionDto>> CreateQuizSectionBulkAsync(QuizSectionBulkCreateDto sectionBulkCreateDto);
     }
 }
 

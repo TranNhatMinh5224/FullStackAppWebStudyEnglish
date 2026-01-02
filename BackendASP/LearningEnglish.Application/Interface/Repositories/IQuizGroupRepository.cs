@@ -24,5 +24,11 @@ namespace LearningEnglish.Application.Interface
         
         // Lấy quiz section theo ID
         Task<QuizSection?> GetQuizSectionByIdAsync(int quizSectionId);
+
+        // Save changes
+        Task SaveChangesAsync();
+
+        // Add quiz group without auto save
+        Task AddQuizGroupAsync(QuizGroup quizGroup);
     }
 }

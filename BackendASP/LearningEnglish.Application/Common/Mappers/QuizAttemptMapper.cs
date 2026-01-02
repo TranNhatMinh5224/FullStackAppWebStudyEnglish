@@ -27,22 +27,30 @@ namespace LearningEnglish.Application.Common.Mappers
                     Items = new List<QuizItemDto>()
                 };
 
-                // 1. Map groups sang GroupItemDto
-                var groupItems = section.QuizGroups.Select(g => new GroupItemDto
+                // 1. Map groups sang QuizItemDto
+                var groupItems = section.QuizGroups.Select(g => new QuizItemDto
                 {
                     ItemType = "Group",
+                    ItemIndex = g.DisplayOrder,
+                    
+                    // Group properties
                     GroupId = g.QuizGroupId,
                     Name = g.Name,
-                    ItemIndex = g.DisplayOrder,
+                    ImgUrl = !string.IsNullOrWhiteSpace(g.ImgKey)
+                        ? BuildPublicUrl.BuildURL(QuestionBucket, g.ImgKey)
+                        : null,
+                    VideoUrl = !string.IsNullOrWhiteSpace(g.VideoKey)
+                        ? BuildPublicUrl.BuildURL(QuestionBucket, g.VideoKey)
+                        : null,
                     Questions = g.Questions
                         .Select(q => MapToQuestionDto(q, attemptId, quiz.ShuffleAnswers.GetValueOrDefault(false)))
                         .ToList()
                 }).ToList();
 
-                // 2. Map standalone questions sang QuestionItemDto
+                // 2. Map standalone questions sang QuizItemDto
                 var standaloneQuestionItems = section.Questions
                     .Where(q => q.QuizGroupId == null)
-                    .Select(q => MapToQuestionItemDto(q, attemptId, quiz.ShuffleAnswers.GetValueOrDefault(false)))
+                    .Select(q => MapToStandaloneQuestionItemDto(q, attemptId, quiz.ShuffleAnswers.GetValueOrDefault(false)))
                     .ToList();
 
                 // 3. Merge groups + questions, assign ItemIndex
@@ -94,14 +102,15 @@ namespace LearningEnglish.Application.Common.Mappers
             };
         }
 
-        /// <summary>
-        /// Map Question entity sang QuestionItemDto (cho standalone questions)
-        /// </summary>
-        public static QuestionItemDto MapToQuestionItemDto(Question q, int attemptId, bool shuffleAnswers)
+      
+        public static QuizItemDto MapToStandaloneQuestionItemDto(Question q, int attemptId, bool shuffleAnswers)
         {
-            return new QuestionItemDto
+            return new QuizItemDto
             {
                 ItemType = "Question",
+                ItemIndex = q.DisplayOrder,
+                
+                // Question properties
                 QuestionId = q.QuestionId,
                 QuestionText = q.StemText,
                 MediaUrl = !string.IsNullOrWhiteSpace(q.MediaKey)

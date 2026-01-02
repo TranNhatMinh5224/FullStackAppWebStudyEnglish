@@ -13,11 +13,16 @@ namespace LearningEnglish.API.Controller.Teacher.TeacherQuizSection
     public class TeacherQuizSectionController : ControllerBase
     {
         private readonly IQuizSectionService _quizSectionService;
+        private readonly IQuestionService _questionService;
         private readonly ILogger<TeacherQuizSectionController> _logger;
 
-        public TeacherQuizSectionController(IQuizSectionService quizSectionService, ILogger<TeacherQuizSectionController> logger)
+        public TeacherQuizSectionController(
+            IQuizSectionService quizSectionService,
+            IQuestionService questionService,
+            ILogger<TeacherQuizSectionController> logger)
         {
             _quizSectionService = quizSectionService;
+            _questionService = questionService;
             _logger = logger;
         }
 
@@ -94,6 +99,26 @@ namespace LearningEnglish.API.Controller.Teacher.TeacherQuizSection
                 _logger.LogInformation("Xóa QuizSection thành công: {QuizSectionId}", id);
 
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/teacher/quiz-sections/bulk - Bulk tạo section với groups và questions
+        [HttpPost("bulk")]
+        public async Task<IActionResult> CreateQuizSectionBulk([FromBody] QuizSectionBulkCreateDto bulkCreateDto)
+        {
+            var teacherId = User.GetUserId();
+            _logger.LogInformation("Teacher {TeacherId} đang bulk tạo QuizSection với {GroupCount} groups", 
+                teacherId, bulkCreateDto.QuizGroups?.Count ?? 0);
+
+            var result = await _questionService.CreateQuizSectionBulkAsync(bulkCreateDto);
+
+            if (!result.Success)
+                _logger.LogWarning("Bulk tạo QuizSection thất bại: {Message}", result.Message);
+            else
+                _logger.LogInformation("Bulk tạo QuizSection thành công với ID: {QuizSectionId}", result.Data?.QuizSectionId);
+
+            return result.Success
+                ? StatusCode(201, result)
+                : StatusCode(result.StatusCode, result);
         }
     }
 }

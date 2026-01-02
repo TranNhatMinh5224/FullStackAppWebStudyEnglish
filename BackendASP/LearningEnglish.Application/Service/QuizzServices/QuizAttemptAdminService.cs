@@ -130,11 +130,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 3. Parse AnswersJson và ScoresJson
-                var userAnswers = AnswerNormalizer.DeserializeAnswersJson(attempt.AnswersJson);
-                var scores = AnswerNormalizer.DeserializeScoresJson(attempt.ScoresJson);
-
-                // 4. Build QuizAttemptDetailDto
+                // 3. Build QuizAttemptDetailDto
                 var detailDto = new QuizAttemptDetailDto
                 {
                     AttemptId = attempt.AttemptId,
@@ -153,59 +149,8 @@ namespace LearningEnglish.Application.Service
                     MaxScore = quiz.TotalQuestions > 0 ? quiz.TotalQuestions : 0,
                     Percentage = CalculatePercentageScore(attempt.TotalScore, quiz.TotalQuestions),
                     IsPassed = quiz.PassingScore.HasValue ? attempt.TotalScore >= quiz.PassingScore.Value : false,
-                    Questions = new List<QuestionReviewDto>()
+                    Questions = QuizReviewBuilder.BuildQuestionReviewList(quiz, attempt)
                 };
-
-                // 5. Collect all questions từ sections
-                var allQuestions = new List<Question>();
-                foreach (var section in quiz.QuizSections)
-                {
-                    foreach (var group in section.QuizGroups)
-                    {
-                        allQuestions.AddRange(group.Questions);
-                    }
-                    allQuestions.AddRange(section.Questions.Where(q => q.QuizGroupId == null));
-                }
-
-                // 6. Build QuestionReviewDto cho từng câu
-                foreach (var question in allQuestions.OrderBy(q => q.QuestionId))
-                {
-                    var questionReview = new QuestionReviewDto
-                    {
-                        QuestionId = question.QuestionId,
-                        QuestionText = question.StemText,
-                        MediaUrl = question.MediaKey,
-                        Type = question.Type,
-                        Points = question.Points,
-                        Score = scores.ContainsKey(question.QuestionId) ? scores[question.QuestionId] : 0,
-                        IsCorrect = scores.ContainsKey(question.QuestionId) && scores[question.QuestionId] >= question.Points,
-                        UserAnswer = userAnswers.ContainsKey(question.QuestionId) ? userAnswers[question.QuestionId] : null,
-                        CorrectAnswer = ParseCorrectAnswer(question),
-                        Options = new List<AnswerOptionReviewDto>()
-                    };
-
-                    questionReview.UserAnswerText = BuildAnswerText(question, questionReview.UserAnswer);
-                    questionReview.CorrectAnswerText = BuildAnswerText(question, questionReview.CorrectAnswer);
-
-                    if (question.Options != null && question.Options.Any())
-                    {
-                        var userAnswerIds = ParseUserAnswerAsOptionIds(questionReview.UserAnswer);
-                        
-                        foreach (var option in question.Options.OrderBy(o => o.AnswerOptionId))
-                        {
-                            questionReview.Options.Add(new AnswerOptionReviewDto
-                            {
-                                OptionId = option.AnswerOptionId,
-                                OptionText = option.Text ?? string.Empty,
-                                MediaUrl = option.MediaKey,
-                                IsCorrect = option.IsCorrect,
-                                IsSelected = userAnswerIds.Contains(option.AnswerOptionId)
-                            });
-                        }
-                    }
-
-                    detailDto.Questions.Add(questionReview);
-                }
 
                 response.Success = true;
                 response.Data = detailDto;
@@ -221,101 +166,6 @@ namespace LearningEnglish.Application.Service
             }
 
             return response;
-        }
-
-        private static object? ParseCorrectAnswer(Question question)
-        {
-            if (string.IsNullOrEmpty(question.CorrectAnswersJson))
-                return null;
-
-            try
-            {
-                return System.Text.Json.JsonSerializer.Deserialize<object>(question.CorrectAnswersJson);
-            }
-            catch
-            {
-                return question.CorrectAnswersJson;
-            }
-        }
-
-        private static List<int> ParseUserAnswerAsOptionIds(object? userAnswer)
-        {
-            if (userAnswer == null)
-                return new List<int>();
-
-            try
-            {
-                if (userAnswer is System.Text.Json.JsonElement jsonElement && jsonElement.ValueKind == System.Text.Json.JsonValueKind.Array)
-                {
-                    return jsonElement.EnumerateArray()
-                        .Where(e => e.ValueKind == System.Text.Json.JsonValueKind.Number)
-                        .Select(e => e.GetInt32())
-                        .ToList();
-                }
-
-                if (int.TryParse(userAnswer.ToString(), out int singleId))
-                {
-                    return new List<int> { singleId };
-                }
-            }
-            catch { }
-
-            return new List<int>();
-        }
-
-        private static string BuildAnswerText(Question question, object? answer)
-        {
-            if (answer == null)
-                return "Chưa trả lời";
-
-            try
-            {
-                switch (question.Type)
-                {
-                    case Domain.Enums.QuestionType.MultipleChoice:
-                    case Domain.Enums.QuestionType.TrueFalse:
-                        var optionIds = ParseUserAnswerAsOptionIds(answer);
-                        if (optionIds.Any() && question.Options != null)
-                        {
-                            var selectedOptions = question.Options
-                                .Where(o => optionIds.Contains(o.AnswerOptionId))
-                                .Select(o => o.Text ?? "N/A")
-                                .ToList();
-                            return string.Join(", ", selectedOptions);
-                        }
-                        return answer.ToString() ?? "N/A";
-
-                    case Domain.Enums.QuestionType.FillBlank:
-                        return answer.ToString() ?? "N/A";
-
-                    case Domain.Enums.QuestionType.Matching:
-                        if (answer is System.Text.Json.JsonElement jsonElement && jsonElement.ValueKind == System.Text.Json.JsonValueKind.Object)
-                        {
-                            var pairs = new List<string>();
-                            foreach (var prop in jsonElement.EnumerateObject())
-                            {
-                                pairs.Add($"{prop.Name}→{prop.Value}");
-                            }
-                            return string.Join(", ", pairs);
-                        }
-                        return answer.ToString() ?? "N/A";
-
-                    case Domain.Enums.QuestionType.Ordering:
-                        if (answer is System.Text.Json.JsonElement jsonArr && jsonArr.ValueKind == System.Text.Json.JsonValueKind.Array)
-                        {
-                            var items = jsonArr.EnumerateArray().Select(e => e.ToString()).ToList();
-                            return string.Join(", ", items);
-                        }
-                        return answer.ToString() ?? "N/A";
-
-                    default:
-                        return answer.ToString() ?? "N/A";
-                }
-            }
-            catch
-            {
-                return answer.ToString() ?? "N/A";
-            }
         }
 
         private static decimal CalculatePercentageScore(decimal totalScore, int totalQuestions)

@@ -74,5 +74,17 @@ namespace LearningEnglish.Infrastructure.Repositories
         {
             return await _context.QuizSections.FindAsync(quizSectionId);
         }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddQuizGroupAsync(QuizGroup quizGroup)
+        {
+            quizGroup.CreatedAt = DateTime.UtcNow;
+            quizGroup.UpdatedAt = DateTime.UtcNow;
+            _context.QuizGroups.Add(quizGroup);
+        }
     }
 }
