@@ -411,7 +411,7 @@ namespace LearningEnglish.Application.Service
                 // 8. Lấy đáp án đúng nếu teacher cho phép
                 if (quiz.ShowAnswersAfterSubmit == true)
                 {
-                    result.CorrectAnswers = await GetCorrectAnswersAsync(attempt.QuizId);
+                    result.Questions = QuizReviewBuilder.BuildQuestionReviewList(quiz, attempt);
                 }
 
                 // 9. Tạo notification cho học sinh

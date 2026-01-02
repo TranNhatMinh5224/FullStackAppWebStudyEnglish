@@ -7,6 +7,7 @@ using LearningEnglish.Application.Interface.Strategies;
 using AutoMapper;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Common.Helpers;
+using LearningEnglish.Application.Common.Mappers;
 using Microsoft.Extensions.Logging;
 
 
@@ -62,7 +63,7 @@ namespace LearningEnglish.Application.Service
             _notificationRepository = notificationRepository;
             _logger = logger;
 
-            // Debug: kiểm tra strategies được inject
+            
 
         }
 
@@ -214,7 +215,7 @@ namespace LearningEnglish.Application.Service
                 bool shuffleQuestions = quizDetails.ShuffleQuestions == true;
                 bool shuffleAnswers = quizDetails.ShuffleAnswers == true;
 
-                var shuffledSections = ShuffleQuizForAttempt(quizDetails, newAttempt.AttemptId);
+                var shuffledSections = QuizAttemptMapper.ShuffleQuizForAttempt(quizDetails, newAttempt.AttemptId);
 
                 var attemptDto = _mapper.Map<QuizAttemptWithQuestionsDto>(newAttempt);
                 attemptDto.QuizSections = shuffledSections;
@@ -232,133 +233,6 @@ namespace LearningEnglish.Application.Service
                 response.StatusCode = 500;
                 return response;
             }
-        }
-
-        private static List<AttemptQuizSectionDto> ShuffleQuizForAttempt(Quiz quiz, int attemptId)
-        {
-            var sections = new List<AttemptQuizSectionDto>();
-
-            foreach (var section in quiz.QuizSections)
-            {
-                var allItems = new List<QuizItemDto>();
-
-                // 1. Add Groups với DisplayOrder (giữ nguyên vị trí)
-                foreach (var group in section.QuizGroups.OrderBy(g => g.DisplayOrder))
-                {
-                    var groupItem = new GroupItemDto
-                    {
-                        ItemType = "Group",
-                        ItemIndex = group.DisplayOrder,
-                        GroupId = group.QuizGroupId,
-                        Name = group.Name,
-                        ImgUrl = !string.IsNullOrWhiteSpace(group.ImgKey)
-                            ? BuildPublicUrl.BuildURL("quizgroups", group.ImgKey)
-                            : null,
-                        VideoUrl = !string.IsNullOrWhiteSpace(group.VideoKey)
-                            ? BuildPublicUrl.BuildURL("quizgroups", group.VideoKey)
-                            : null,
-                        Questions = group.Questions
-                            .OrderBy(q => q.DisplayOrder)  // Questions trong group giữ thứ tự
-                            .Select(q => MapToQuestionDto(q, attemptId, quiz.ShuffleAnswers.GetValueOrDefault(false)))
-                            .ToList()
-                    };
-                    allItems.Add(groupItem);
-                }
-
-                // 2. Lấy standalone questions (không thuộc group)
-                var standaloneQuestions = section.Questions
-                    .Where(q => q.QuizGroupId == null)
-                    .OrderBy(q => q.DisplayOrder)
-                    .ToList();
-
-                // 3. Shuffle standalone questions nếu bật
-                if (quiz.ShuffleQuestions.GetValueOrDefault(false))
-                {
-                    var random = new Random(attemptId);
-                    QuizShuffleHelper.FisherYatesShuffle(standaloneQuestions, random);
-                }
-
-                // 4. Tạo mapping DisplayOrder -> ItemIndex để điền vào khoảng trống
-                var groupDisplayOrders = section.QuizGroups.Select(g => g.DisplayOrder).ToHashSet();
-                var maxDisplayOrder = Math.Max(
-                    section.QuizGroups.Any() ? section.QuizGroups.Max(g => g.DisplayOrder) : 0,
-                    section.Questions.Any() ? section.Questions.Max(q => q.DisplayOrder) : 0
-                );
-
-                // 5. Điền standalone questions vào slots trống
-                int questionIndex = 0;
-                for (int displayOrder = 0; displayOrder <= maxDisplayOrder && questionIndex < standaloneQuestions.Count; displayOrder++)
-                {
-                    if (!groupDisplayOrders.Contains(displayOrder))
-                    {
-                        var question = standaloneQuestions[questionIndex];
-                        var questionItem = new QuestionItemDto
-                        {
-                            ItemType = "Question",
-                            ItemIndex = displayOrder,
-                            QuestionId = question.QuestionId,
-                            QuestionText = question.StemText,
-                            MediaUrl = !string.IsNullOrWhiteSpace(question.MediaKey)
-                                ? BuildPublicUrl.BuildURL(QuestionBucket, question.MediaKey)
-                                : null,
-                            Type = question.Type,
-                            Points = question.Points,
-                            IsAnswered = false,
-                            CurrentScore = null,
-                            Options = MapToOptionDtos(question, attemptId, quiz.ShuffleAnswers.GetValueOrDefault(false))
-                        };
-                        allItems.Add(questionItem);
-                        questionIndex++;
-                    }
-                }
-
-                // 6. Sort theo ItemIndex để đảm bảo thứ tự đúng
-                sections.Add(new AttemptQuizSectionDto
-                {
-                    SectionId = section.QuizSectionId,
-                    Title = section.Title,
-                    Items = allItems.OrderBy(i => i.ItemIndex).ToList()
-                });
-            }
-
-            return sections;
-        }
-
-        private static QuestionDto MapToQuestionDto(Question q, int attemptId, bool shuffleAnswers)
-        {
-            return new QuestionDto
-            {
-                QuestionId = q.QuestionId,
-                QuestionText = q.StemText,
-                MediaUrl = !string.IsNullOrWhiteSpace(q.MediaKey)
-                    ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaKey)
-                    : null,
-                Type = q.Type,
-                Points = q.Points,
-                IsAnswered = false,
-                CurrentScore = null,
-                Options = MapToOptionDtos(q, attemptId, shuffleAnswers)
-            };
-        }
-
-        private static List<AnswerOptionDto> MapToOptionDtos(Question question, int attemptId, bool shuffleAnswers)
-        {
-            var options = question.Options.Select(o => new AnswerOptionDto
-            {
-                OptionId = o.AnswerOptionId,
-                OptionText = o.Text ?? string.Empty,
-                MediaUrl = !string.IsNullOrWhiteSpace(o.MediaKey)
-                    ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaKey)
-                    : null
-            }).ToList();
-
-            // Shuffle options nếu bật và question type phù hợp
-            if (shuffleAnswers && QuizShuffleHelper.ShouldShuffleAnswers(question.Type))
-            {
-                QuizShuffleHelper.ShuffleAnswers(options, attemptId, question.QuestionId);
-            }
-
-            return options;
         }
 
         // Update câu trả lời và tính điểm ngay lập tức (real-time scoring)
@@ -537,7 +411,8 @@ namespace LearningEnglish.Application.Service
                 // Lấy đáp án đúng nếu teacher cho phép
                 if (quiz.ShowAnswersAfterSubmit == true)
                 {
-                    result.CorrectAnswers = await GetCorrectAnswersAsync(attempt.QuizId);
+                    // Build chi tiết câu hỏi như Teacher review
+                    result.Questions = QuizReviewBuilder.BuildQuestionReviewList(quiz, attempt);
                 }
 
                 // Tạo notification nộp quiz thành công
@@ -546,7 +421,7 @@ namespace LearningEnglish.Application.Service
                     var notification = new Notification
                     {
                         UserId = attempt.UserId,
-                        Title = "✅ Nộp bài quiz thành công",
+                        Title = " Nộp bài quiz thành công",
                         Message = quiz.ShowScoreImmediately == true 
                             ? $"Bạn đã nộp bài quiz '{quiz.Title}' thành công. Điểm: {attempt.TotalScore}/{quiz.TotalQuestions * 10}" 
                             : $"Bạn đã nộp bài quiz '{quiz.Title}' thành công. Giáo viên sẽ công bố kết quả sau.",
@@ -686,12 +561,12 @@ namespace LearningEnglish.Application.Service
 
                         if (batchSubmitted > 0)
                         {
-                            Console.WriteLine($"✅ Auto-submitted batch: {batchSubmitted} attempts");
+                            Console.WriteLine($" Auto-submitted batch: {batchSubmitted} attempts");
                         }
                     }
                     catch (Exception batchEx)
                     {
-                        Console.WriteLine($"❌ Error in batch processing: {batchEx.Message}. Continuing...");
+                        Console.WriteLine($" Error in batch processing: {batchEx.Message}. Continuing...");
                     }
 
                     skip += BATCH_SIZE;
@@ -773,7 +648,7 @@ namespace LearningEnglish.Application.Service
                 }
 
                 // 5. Áp dụng lại shuffle với cùng seed (attemptId)
-                var shuffledSections = ShuffleQuizForAttempt(quizDetails, attempt.AttemptId);
+                var shuffledSections = QuizAttemptMapper.ShuffleQuizForAttempt(quizDetails, attempt.AttemptId);
 
                 // 6. Parse answers từ DB (chỉ load answers, KHÔNG load scores khi đang làm bài)
                 var currentAnswers = AnswerNormalizer.DeserializeAnswersJson(attempt.AnswersJson);
@@ -841,84 +716,6 @@ namespace LearningEnglish.Application.Service
                 response.StatusCode = 500;
                 return response;
             }
-        }
-
-        private async Task<List<CorrectAnswerDto>> GetCorrectAnswersAsync(int quizId)
-        {
-            var correctAnswers = new List<CorrectAnswerDto>();
-
-            // Lấy tất cả câu hỏi của quiz
-            var quizDetails = await _quizRepository.GetFullQuizAsync(quizId);
-            if (quizDetails == null) return correctAnswers;
-
-            foreach (var section in quizDetails.QuizSections)
-            {
-                // Questions trong groups
-                foreach (var group in section.QuizGroups)
-                {
-                    foreach (var question in group.Questions)
-                    {
-                        correctAnswers.Add(CreateCorrectAnswerDto(question));
-                    }
-                }
-
-                if (section.Questions != null)
-                {
-                    foreach (var question in section.Questions)
-                    {
-                        correctAnswers.Add(CreateCorrectAnswerDto(question));
-                    }
-                }
-            }
-
-            return correctAnswers;
-        }
-
-        private static CorrectAnswerDto CreateCorrectAnswerDto(Question question)
-        {
-            var correctOptions = new List<string>();
-
-            // Lấy đáp án đúng dựa trên loại câu hỏi
-            if (question.Type == QuestionType.MultipleChoice || question.Type == QuestionType.TrueFalse)
-            {
-                // Multiple choice: lấy text của options có IsCorrect = true
-                var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
-                if (correctOption != null)
-                {
-                    correctOptions.Add(correctOption.Text ?? string.Empty);
-                }
-            }
-            else if (question.Type == QuestionType.MultipleAnswers)
-            {
-                // Multiple answers: lấy tất cả options có IsCorrect = true
-                correctOptions = question.Options
-                    .Where(o => o.IsCorrect)
-                    .Select(o => o.Text ?? string.Empty)
-                    .ToList();
-            }
-            else if (question.Type == QuestionType.FillBlank || question.Type == QuestionType.Matching || question.Type == QuestionType.Ordering)
-            {
-                // Parse từ CorrectAnswersJson
-                if (!string.IsNullOrEmpty(question.CorrectAnswersJson))
-                {
-                    try
-                    {
-                        // Đơn giản hóa: lấy raw JSON hoặc parse theo format
-                        correctOptions.Add($"Correct answer data: {question.CorrectAnswersJson}");
-                    }
-                    catch
-                    {
-                        correctOptions.Add("Correct answer available");
-                    }
-                }
-            }
-
-            return new CorrectAnswerDto
-            {
-                QuestionId = question.QuestionId,
-                QuestionText = question.StemText,
-                CorrectOptions = correctOptions
-            };
         }
     }
 }

@@ -764,7 +764,7 @@ namespace LearningEnglish.Application.Service
                 // 9. Get correct answers if teacher allows
                 if (quiz.ShowAnswersAfterSubmit == true)
                 {
-                    result.CorrectAnswers = await GetCorrectAnswersAsync(attempt.QuizId);
+                    result.Questions = QuizReviewBuilder.BuildQuestionReviewList(quiz, attempt);
                 }
 
                 // 10. Create notification for student

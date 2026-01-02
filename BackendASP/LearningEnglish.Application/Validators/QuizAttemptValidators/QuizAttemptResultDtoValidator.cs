@@ -27,8 +27,8 @@ public class QuizAttemptResultDtoValidator : AbstractValidator<QuizAttemptResult
             .NotNull()
             .WithMessage("ScoresByQuestion không được null");
 
-        RuleFor(x => x.CorrectAnswers)
+        RuleFor(x => x.Questions)
             .NotNull()
-            .WithMessage("CorrectAnswers không được null");
+            .WithMessage("Questions không được null");
     }
 }

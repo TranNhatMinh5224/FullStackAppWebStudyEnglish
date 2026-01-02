@@ -495,7 +495,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Percentage, opt => opt.Ignore())
                 .ForMember(dest => dest.IsPassed, opt => opt.Ignore())
                 .ForMember(dest => dest.ScoresByQuestion, opt => opt.Ignore())
-                .ForMember(dest => dest.CorrectAnswers, opt => opt.Ignore());
+                .ForMember(dest => dest.Questions, opt => opt.Ignore());
 
             CreateMap<QuizAttempt, QuizScoreDto>()
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))

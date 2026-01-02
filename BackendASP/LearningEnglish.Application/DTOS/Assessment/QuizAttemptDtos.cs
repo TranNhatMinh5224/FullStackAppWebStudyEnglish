@@ -34,8 +34,8 @@ namespace LearningEnglish.Application.DTOs
         // Điểm từng câu (parse từ ScoresJson)
         public Dictionary<int, decimal> ScoresByQuestion { get; set; } = new();
 
-        // Danh sách đáp án đúng (không show user answers)
-        public List<CorrectAnswerDto> CorrectAnswers { get; set; } = new();
+        // Chi tiết từng câu hỏi với đáp án (khi ShowAnswersAfterSubmit = true)
+        public List<QuestionReviewDto> Questions { get; set; } = new();
 
         public DateTime SubmittedAt { get; set; }
         public int TimeSpentSeconds { get; set; }
@@ -47,6 +47,7 @@ namespace LearningEnglish.Application.DTOs
         public int QuestionId { get; set; }
         public string QuestionText { get; set; } = string.Empty;
         public List<string> CorrectOptions { get; set; } = new();  // Text của đáp án đúng
+        public object? UserAnswer { get; set; }  // Câu trả lời của user (single value, List<string>, hoặc matching pairs)
     }
 
     // DTO cho attempt + questions đã shuffle (dùng khi start)
