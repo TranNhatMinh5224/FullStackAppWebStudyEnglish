@@ -25,7 +25,7 @@ namespace LearningEnglish.Application.Common.Helpers
                 QuestionType.MultipleAnswers => true,  // Chọn nhiều đáp án - shuffle OK
                 QuestionType.TrueFalse => false,       // True/False cố định vị trí
                 QuestionType.FillBlank => false,       // Không có options để shuffle
-                QuestionType.Matching => true,         // Nối cặp - cần shuffle (xử lý riêng)
+                QuestionType.Matching => false,        // Nối cặp - KHÔNG shuffle để giữ thứ tự đề bài
                 QuestionType.Ordering => false,        // Sắp xếp - shuffle = mất đề bài
                 _ => false
             };
