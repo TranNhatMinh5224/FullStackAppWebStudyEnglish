@@ -47,12 +47,14 @@ namespace LearningEnglish.Application.Validators
             RuleFor(x => x.Options)
                 .Must(options => options.Any(o => o.IsCorrect))
                 .WithMessage("Phải có ít nhất 1 đáp án đúng.")
-                .When(x => x.Options != null && x.Options.Count != 0);
+                .When(x => x.Type == QuestionType.MultipleChoice 
+                           && x.Options != null && x.Options.Count > 0);
 
             RuleFor(x => x.Options)
                 .Must(options => options.Count(o => o.IsCorrect) == 1)
                 .WithMessage("Câu hỏi một đáp án chỉ được có đúng 1 đáp án đúng.")
-                .When(x => x.Type == QuestionType.MultipleChoice && x.Options != null && x.Options.Count != 0);
+                .When(x => x.Type == QuestionType.MultipleChoice 
+                           && x.Options != null && x.Options.Count > 0);
 
             RuleFor(x => x.Explanation)
                 .MaximumLength(2000)
