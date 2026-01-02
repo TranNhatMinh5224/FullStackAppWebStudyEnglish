@@ -196,6 +196,7 @@ builder.Services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
+builder.Services.AddScoped<IAssetFrontendRepository, AssetFrontendRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Sorting Services
@@ -241,6 +242,9 @@ builder.Services.AddScoped<ITeacherEssayService, TeacherEssayService>();
 builder.Services.AddScoped<IUserEssaySubmissionService, UserEssaySubmissionService>();
 builder.Services.AddScoped<IAdminEssaySubmissionService, AdminEssaySubmissionService>();
 builder.Services.AddScoped<ITeacherEssaySubmissionService, TeacherEssaySubmissionService>();
+
+// Asset Frontend Service
+builder.Services.AddScoped<IAssetFrontendService, AssetFrontendService>();
 
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 // builder.Services.AddScoped<IPaymentService, PaymentService>();

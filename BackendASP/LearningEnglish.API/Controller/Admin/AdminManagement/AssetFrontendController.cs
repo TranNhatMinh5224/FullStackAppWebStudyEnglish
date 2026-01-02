@@ -9,7 +9,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 {
     [ApiController]
     [Route("api/admin/asset-frontend")]
-    [Authorize(Roles = "Admin")]
+
     public class AssetFrontendController : ControllerBase
     {
         private readonly IAssetFrontendService _assetFrontendService;
@@ -21,7 +21,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // GET: api/admin/asset-frontend
         [HttpGet]
-        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "SuperAdmin,ContentAdmin")]
         public async Task<IActionResult> GetAllAssetFrontends()
         {
             var result = await _assetFrontendService.GetAllAssetFrontends();
@@ -30,7 +30,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // GET: api/admin/asset-frontend/{id}
         [HttpGet("{id}")]
-        [RequirePermission("Admin.Content.Manage")]
+
         public async Task<IActionResult> GetAssetFrontendById(int id)
         {
             var result = await _assetFrontendService.GetAssetFrontendById(id);
@@ -39,7 +39,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // GET: api/admin/asset-frontend/type/{assetType}
         [HttpGet("type/{assetType}")]
-        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> GetAssetsByType(int assetType)
         {
             var result = await _assetFrontendService.GetAssetsByTypeAsync(assetType);
@@ -48,7 +47,6 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // POST: api/admin/asset-frontend
         [HttpPost]
-        [RequirePermission("Admin.Content.Manage")]
         public async Task<IActionResult> CreateAssetFrontend([FromBody] CreateAssetFrontendDto createDto)
         {
             var result = await _assetFrontendService.AddAssetFrontend(createDto);
@@ -57,7 +55,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // PUT: api/admin/asset-frontend/{id}
         [HttpPut("{id}")]
-        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "SuperAdmin,ContentAdmin")]
         public async Task<IActionResult> UpdateAssetFrontend(int id, [FromBody] UpdateAssetFrontendDto updateDto)
         {
             updateDto.Id = id; // Ensure ID is set from route
@@ -67,7 +65,7 @@ namespace LearningEnglish.API.Controller.AdminAndTeacher
 
         // DELETE: api/admin/asset-frontend/{id}
         [HttpDelete("{id}")]
-        [RequirePermission("Admin.Content.Manage")]
+        [Authorize(Roles = "SuperAdmin,ContentAdmin")]
         public async Task<IActionResult> DeleteAssetFrontend(int id)
         {
             var result = await _assetFrontendService.DeleteAssetFrontend(id);
