@@ -1,6 +1,7 @@
 using AutoMapper;
 using LearningEnglish.Application.DTOs;
 using LearningEnglish.Application.Interface;
+using LearningEnglish.Application.Interface.Services;
 using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
@@ -10,9 +11,8 @@ using LearningEnglish.Application.Common.Pagination;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 
-namespace LearningEnglish.Application.Service
+namespace LearningEnglish.Application.Service.PaymentService
 {
-
     public class PaymentService : IPaymentService
     {
         private readonly IPaymentRepository _paymentRepository;
@@ -43,9 +43,8 @@ namespace LearningEnglish.Application.Service
             _payOSService = payOSService;
             _configuration = configuration;
         }
-        // POST /api/payments - Create Payment
-        // service tao process payment
 
+        // POST /api/payments - Create Payment
         public async Task<ServiceResponse<CreateInforPayment>> ProcessPaymentAsync(int userId, requestPayment request)
         {
             var response = new ServiceResponse<CreateInforPayment>();
@@ -87,7 +86,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 2 Validate product and get amount
+                // 3. Validate product and get amount
                 var productValidationResult = await _paymentValidator.ValidateProductAsync(request.ProductId, request.typeproduct);
                 if (!productValidationResult.Success)
                 {
@@ -117,7 +116,7 @@ namespace LearningEnglish.Application.Service
                 // Get product name for description from Strategy
                 var productName = await processor.GetProductNameAsync(request.ProductId);
 
-                // 4 Create payment use transaction
+                // 4. Create payment using transaction
                 await _unitOfWork.BeginTransactionAsync();
                 try
                 {
@@ -139,7 +138,7 @@ namespace LearningEnglish.Application.Service
                     };
 
                     await _paymentRepository.AddPaymentAsync(payment);
-                    await _paymentRepository.SaveChangesAsync();
+                    await _unitOfWork.SaveChangesAsync();
 
                     _logger.LogInformation("Tạo thanh toán {PaymentId} thành công cho User {UserId}, Số tiền: {Amount}",
                         payment.PaymentId, userId, amount);
@@ -154,7 +153,7 @@ namespace LearningEnglish.Application.Service
                         payment.UpdatedAt = DateTime.UtcNow;
                         payment.Description = "Free course enrollment";
                         await _paymentRepository.UpdatePaymentStatusAsync(payment);
-                        await _paymentRepository.SaveChangesAsync();
+                        await _unitOfWork.SaveChangesAsync();
 
                         // Kích hoạt sản phẩm ngay (reuse processor from above)
                         var postPaymentResult = await processor.ProcessPostPaymentAsync(
@@ -205,7 +204,7 @@ namespace LearningEnglish.Application.Service
                 return response;
             }
             response.Success = true;
-            response.StatusCode = 200; // Success
+            response.StatusCode = 200;
             return response;
         }
 
@@ -224,13 +223,13 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Explicit ownership check: user chỉ có thể confirm payment của chính mình
+                // Explicit ownership check
                 if (existingPayment.UserId != userId)
                 {
                     _logger.LogWarning("User {UserId} cố gắng confirm payment {PaymentId} của user khác (Owner: {OwnerId})", 
                         userId, paymentDto.PaymentId, existingPayment.UserId);
                     response.Success = false;
-                    response.StatusCode = 403; // Forbidden
+                    response.StatusCode = 403;
                     response.Message = "Bạn không có quyền xác nhận thanh toán này";
                     return response;
                 }
@@ -244,7 +243,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Validate Amount from DB - Security check to prevent client manipulation
+                // Validate Amount from DB - Security check
                 if (existingPayment.Amount != paymentDto.Amount)
                 {
                     _logger.LogWarning("Amount mismatch cho Payment {PaymentId}. Expected: {ExpectedAmount}, Received: {ReceivedAmount}",
@@ -275,7 +274,7 @@ namespace LearningEnglish.Application.Service
                 existingPayment.UpdatedAt = DateTime.UtcNow;
 
                 await _paymentRepository.UpdatePaymentStatusAsync(existingPayment);
-                await _paymentRepository.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation("Payment {PaymentId} status updated to Completed and saved", paymentDto.PaymentId);
 
@@ -329,7 +328,7 @@ namespace LearningEnglish.Application.Service
 
                 _logger.LogInformation("Xác nhận thanh toán {PaymentId} thành công", paymentDto.PaymentId);
                 response.Success = true;
-                response.StatusCode = 200; // Success
+                response.StatusCode = 200;
                 response.Data = true;
             }
             catch (Exception ex)
@@ -343,7 +342,8 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        // Service laays ra thong tin lich su giao dich (Phân trang)
+
+        // Service lấy ra thông tin lịch sử giao dịch (Phân trang)
         public async Task<ServiceResponse<PagedResult<TransactionHistoryDto>>> GetTransactionHistoryAsync(int userId, PageRequest request)
         {
             var response = new ServiceResponse<PagedResult<TransactionHistoryDto>>();
@@ -352,8 +352,7 @@ namespace LearningEnglish.Application.Service
                 _logger.LogInformation("Getting transaction history for User {UserId}, Page {PageNumber}, Size {PageSize}",
                     userId, request.PageNumber, request.PageSize);
 
-                var totalCount = await _paymentRepository.GetTransactionCountAsync(userId);
-                var payments = await _paymentRepository.GetTransactionHistoryAsync(userId, request.PageNumber, request.PageSize);
+                var (payments, totalCount) = await _paymentRepository.GetTransactionHistoryPagedAsync(userId, request.PageNumber, request.PageSize);
 
                 var transactionDtos = new List<TransactionHistoryDto>();
                 foreach (var payment in payments)
@@ -379,7 +378,7 @@ namespace LearningEnglish.Application.Service
 
                 _logger.LogInformation("Retrieved {Count} transactions for User {UserId}", transactionDtos.Count, userId);
                 response.Success = true;
-                response.StatusCode = 200; // Success
+                response.StatusCode = 200;
             }
             catch (Exception ex)
             {
@@ -391,8 +390,7 @@ namespace LearningEnglish.Application.Service
             return response;
         }
 
-        // service lay chi tiet giao dich
-
+        // Service lấy chi tiết giao dịch
         public async Task<ServiceResponse<TransactionDetailDto>> GetTransactionDetailAsync(int paymentId, int userId)
         {
             var response = new ServiceResponse<TransactionDetailDto>();
@@ -410,13 +408,13 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Repository đã filter theo userId, nhưng thêm explicit check để đảm bảo
+                // Repository đã filter theo userId, nhưng thêm explicit check
                 if (payment.UserId != userId)
                 {
                     _logger.LogWarning("User {UserId} cố gắng xem payment {PaymentId} của user khác (Owner: {OwnerId})", 
                         userId, paymentId, payment.UserId);
                     response.Success = false;
-                    response.StatusCode = 403; // Forbidden
+                    response.StatusCode = 403;
                     response.Message = "Bạn không có quyền xem giao dịch này";
                     return response;
                 }
@@ -433,7 +431,7 @@ namespace LearningEnglish.Application.Service
 
                 _logger.LogInformation("Retrieved transaction detail for Payment {PaymentId}", paymentId);
                 response.Success = true;
-                response.StatusCode = 200; // Success
+                response.StatusCode = 200;
             }
             catch (Exception ex)
             {
@@ -444,6 +442,7 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+
         public async Task<ServiceResponse<PayOSLinkResponse>> CreatePayOSPaymentLinkAsync(int paymentId, int userId)
         {
             var response = new ServiceResponse<PayOSLinkResponse>();
@@ -461,13 +460,13 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Explicit ownership check: user chỉ có thể tạo link cho payment của chính mình
+                // Explicit ownership check
                 if (payment.UserId != userId)
                 {
                     _logger.LogWarning("User {UserId} cố gắng tạo link cho payment {PaymentId} của user khác (Owner: {OwnerId})", 
                         userId, paymentId, payment.UserId);
                     response.Success = false;
-                    response.StatusCode = 403; // Forbidden
+                    response.StatusCode = 403;
                     response.Message = "Bạn không có quyền truy cập thanh toán này";
                     return response;
                 }
@@ -481,7 +480,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 2. Validate PayOS specific requirements
+                // Validate PayOS specific requirements
                 if (payment.OrderCode == 0)
                 {
                     _logger.LogError("Payment {PaymentId} has no OrderCode", paymentId);
@@ -509,13 +508,12 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 3. Get product name for PayOS from Strategy
+                // Get product name for PayOS from Strategy
                 var processor = _paymentStrategies.FirstOrDefault(s => s.ProductType == payment.ProductType);
                 var productName = processor != null 
                     ? await processor.GetProductNameAsync(payment.ProductId)
                     : "Sản phẩm";
                 
-                // Description cho PayOS: dùng tên dịch vụ (PayOS giới hạn <= 9 ký tự)
                 var description = !string.IsNullOrEmpty(payment.Description) 
                     ? payment.Description 
                     : productName;
@@ -532,29 +530,38 @@ namespace LearningEnglish.Application.Service
                     description,
                     payment.OrderCode);
 
-                // Xử lý code 231: OrderCode đã tồn tại → tạo orderCode mới
+                // Xử lý code 231: OrderCode đã tồn tại
                 if (!linkResponse.Success && linkResponse.Message?.Contains("231") == true)
                 {
                     _logger.LogWarning("PayOS returned code 231 (orderCode exists) for Payment {PaymentId}. Generating new orderCode...", paymentId);
                     
-                    // Tạo orderCode mới = PaymentId * 1000000000 + timestamp (đảm bảo unique)
-                    var newOrderCode = (long)paymentId * 1000000000L + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    
-                    // Update payment với orderCode mới
-                    payment.OrderCode = newOrderCode;
-                    payment.ProviderTransactionId = newOrderCode.ToString();
-                    await _paymentRepository.UpdatePaymentStatusAsync(payment);
-                    await _paymentRepository.SaveChangesAsync();
-                    
-                    _logger.LogInformation("Updated Payment {PaymentId} with new OrderCode: {OrderCode}", paymentId, newOrderCode);
-                    
-                    // Thử lại với orderCode mới
-                    linkResponse = await _payOSService.CreatePaymentLinkAsync(
-                        linkRequest, 
-                        payment.Amount, 
-                        productName, 
-                        description,
-                        newOrderCode);
+                    await _unitOfWork.BeginTransactionAsync();
+                    try
+                    {
+                        var newOrderCode = (long)paymentId * 1000000000L + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                        
+                        payment.OrderCode = newOrderCode;
+                        payment.ProviderTransactionId = newOrderCode.ToString();
+                        await _paymentRepository.UpdatePaymentStatusAsync(payment);
+                        await _unitOfWork.SaveChangesAsync();
+                        
+                        _logger.LogInformation("Updated Payment {PaymentId} with new OrderCode: {OrderCode}", paymentId, newOrderCode);
+                        
+                        await _unitOfWork.CommitAsync();
+                        
+                        linkResponse = await _payOSService.CreatePaymentLinkAsync(
+                            linkRequest, 
+                            payment.Amount, 
+                            productName, 
+                            description,
+                            newOrderCode);
+                    }
+                    catch (Exception transactionEx)
+                    {
+                        await _unitOfWork.RollbackAsync();
+                        _logger.LogError(transactionEx, "Failed to update OrderCode for Payment {PaymentId}", paymentId);
+                        throw;
+                    }
                 }
 
                 if (!linkResponse.Success || linkResponse.Data == null)
@@ -566,14 +573,26 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 5. Update payment with CheckoutUrl
-                payment.CheckoutUrl = linkResponse.Data.CheckoutUrl;
-                payment.UpdatedAt = DateTime.UtcNow;
-                await _paymentRepository.UpdatePaymentStatusAsync(payment);
-                await _paymentRepository.SaveChangesAsync();
-
-                _logger.LogInformation("PayOS payment link created successfully for Payment {PaymentId}, OrderCode: {OrderCode}",
-                    paymentId, payment.OrderCode);
+                // Update payment with CheckoutUrl - wrap in transaction
+                await _unitOfWork.BeginTransactionAsync();
+                try
+                {
+                    payment.CheckoutUrl = linkResponse.Data.CheckoutUrl;
+                    payment.UpdatedAt = DateTime.UtcNow;
+                    await _paymentRepository.UpdatePaymentStatusAsync(payment);
+                    await _unitOfWork.SaveChangesAsync();
+                    
+                    await _unitOfWork.CommitAsync();
+                    
+                    _logger.LogInformation("PayOS payment link created successfully for Payment {PaymentId}, OrderCode: {OrderCode}",
+                        paymentId, payment.OrderCode);
+                }
+                catch (Exception transactionEx)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    _logger.LogError(transactionEx, "Failed to update CheckoutUrl for Payment {PaymentId}", paymentId);
+                    throw;
+                }
 
                 response.Data = linkResponse.Data;
                 response.Success = true;
@@ -691,7 +710,7 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        // Xử lý PayOS webhook với signature verification (từ PayOS gọi trực tiếp)
+        // Xử lý PayOS webhook với signature verification
         public async Task<ServiceResponse<bool>> ProcessPayOSWebhookAsync(PayOSWebhookDto webhookData)
         {
             var response = new ServiceResponse<bool>();
@@ -711,7 +730,6 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Process webhook using existing method
                 return await ProcessWebhookFromQueueAsync(webhookData);
             }
             catch (Exception ex)
@@ -724,14 +742,13 @@ namespace LearningEnglish.Application.Service
             }
         }
 
-        // Xác nhận thanh toán PayOS (với validation PayOS status)
+        // Xác nhận thanh toán PayOS
         public async Task<ServiceResponse<bool>> ConfirmPayOSPaymentAsync(int paymentId, int userId)
         {
             var response = new ServiceResponse<bool>();
 
             try
             {
-                // Check payment ownership
                 var payment = await _paymentRepository.GetPaymentByIdAsync(paymentId);
                 if (payment == null)
                 {
@@ -751,7 +768,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Verify PayOS payment status if orderCode exists
+                // Verify PayOS payment status
                 if (!string.IsNullOrEmpty(payment.ProviderTransactionId) &&
                     long.TryParse(payment.ProviderTransactionId, out var orderCode))
                 {
@@ -776,7 +793,6 @@ namespace LearningEnglish.Application.Service
                     }
                 }
 
-                // Create CompletePayment DTO and confirm
                 var confirmDto = new CompletePayment
                 {
                     PaymentId = paymentId,
@@ -808,7 +824,6 @@ namespace LearningEnglish.Application.Service
             {
                 _logger.LogInformation("Processing PayOS return: code={Code}, hasData={HasData}", code, !string.IsNullOrEmpty(data));
 
-                // Validate return parameters
                 if (code != "00")
                 {
                     _logger.LogWarning("PayOS payment failed: {Desc}", desc);
@@ -848,24 +863,6 @@ namespace LearningEnglish.Application.Service
                     payment = await _paymentRepository.GetPaymentByOrderCodeAsync(parsedOrderCode);
                 }
 
-                if (payment == null && !string.IsNullOrEmpty(data))
-                {
-                    try
-                    {
-                        var webhookData = JsonSerializer.Deserialize<JsonElement>(data);
-                        if (webhookData.TryGetProperty("orderCode", out var orderCodeElement))
-                        {
-                            var orderCodeFromData = orderCodeElement.GetInt64();
-                            payment = await _paymentRepository.GetPaymentByOrderCodeAsync(orderCodeFromData);
-                            finalOrderCode = orderCodeFromData.ToString();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Could not parse orderCode from data");
-                    }
-                }
-
                 if (payment == null)
                 {
                     _logger.LogWarning("Payment not found from PayOS return. Code={Code}, HasData={HasData}, OrderCode={OrderCode}", 
@@ -903,7 +900,7 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Auto-confirm payment if still pending and status is PAID
+                // Auto-confirm payment if still pending
                 if (payment.Status == PaymentStatus.Pending)
                 {
                     _logger.LogInformation("Auto-confirming Payment {PaymentId} via Return URL (Status=PAID)", payment.PaymentId);
@@ -930,7 +927,7 @@ namespace LearningEnglish.Application.Service
                     }
                 }
 
-                // Redirect thẳng về course page hoặc home
+                // Redirect based on product type
                 if (payment.ProductType == ProductType.Course)
                 {
                     result.Success = true;

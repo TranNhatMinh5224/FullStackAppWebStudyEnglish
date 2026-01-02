@@ -77,27 +77,32 @@ namespace LearningEnglish.Infrastructure.Repositories
             return await _context.SaveChangesAsync();
         }
 
-       
-        public async Task<IEnumerable<Payment>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize)
+        /// <summary>
+        /// Lấy lịch sử giao dịch với phân trang (optimized - single query with count)
+        /// </summary>
+        public async Task<(IEnumerable<Payment> Items, int TotalCount)> GetTransactionHistoryPagedAsync(
+            int userId,
+            int pageNumber,
+            int pageSize)
         {
-            return await _context.Payments
-                .Where(p => p.UserId == userId)
-                .OrderByDescending(p => p.PaidAt ?? DateTime.MinValue)  // Sort by PaidAt DESC (mới nhất lên đầu)
-                .ThenByDescending(p => p.PaymentId)  // Nếu PaidAt null thì sort theo PaymentId
+            var query = _context.Payments.Where(p => p.UserId == userId);
+            
+            // Count total records
+            var totalCount = await query.CountAsync();
+            
+            // Get paginated items
+            var items = await query
+                .OrderByDescending(p => p.CreatedAt)  // Mới nhất lên đầu
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+            
+            return (items, totalCount);
         }
 
-       
-        public async Task<int> GetTransactionCountAsync(int userId)
-        {
-            return await _context.Payments
-                .Where(p => p.UserId == userId)
-                .CountAsync();
-        }
-
-       
+        /// <summary>
+        /// Lấy chi tiết giao dịch (with authorization check)
+        /// </summary>
         public async Task<Payment?> GetTransactionDetailAsync(int paymentId, int userId)
         {
             return await _context.Payments

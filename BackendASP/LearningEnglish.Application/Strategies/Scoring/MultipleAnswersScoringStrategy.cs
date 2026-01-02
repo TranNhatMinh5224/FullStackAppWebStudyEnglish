@@ -3,7 +3,7 @@ using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Common.Helpers;
 
-namespace LearningEnglish.Application.Service.ScoringStrategies
+namespace LearningEnglish.Application.Strategies.Scoring
 {
     // chấm điểm cho câu hỏi nhiều đáp án (Multiple Answers)
     public class MultipleAnswersScoringStrategy : IScoringStrategy

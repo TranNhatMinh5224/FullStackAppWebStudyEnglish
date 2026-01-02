@@ -32,14 +32,11 @@ namespace LearningEnglish.Application.Interface
         // Lưu thay đổi
         Task<int> SaveChangesAsync();
 
-        // Lấy lịch sử giao dịch với phân trang
-        Task<IEnumerable<Payment>> GetTransactionHistoryAsync(int userId, int pageNumber, int pageSize);
-        
-        // Lấy tất cả lịch sử giao dịch
-
-        
-        // Đếm số giao dịch
-        Task<int> GetTransactionCountAsync(int userId);
+        // Lấy lịch sử giao dịch với phân trang (kết hợp count + data)
+        Task<(IEnumerable<Payment> Items, int TotalCount)> GetTransactionHistoryPagedAsync(
+            int userId, 
+            int pageNumber, 
+            int pageSize);
         
         // Lấy chi tiết giao dịch
         Task<Payment?> GetTransactionDetailAsync(int paymentId, int userId);

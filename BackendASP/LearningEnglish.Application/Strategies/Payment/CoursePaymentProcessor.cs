@@ -6,84 +6,27 @@ using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
-namespace LearningEnglish.Application.Service.PaymentProcessors
+namespace LearningEnglish.Application.Strategies.Payment
 {
     public class CoursePaymentProcessor : IPaymentStrategy
     {
         public ProductType ProductType => ProductType.Course;
 
-        private readonly ICourseRepository _courseRepository;
-        private readonly IUserRepository _userRepository;
         private readonly IUserEnrollmentService _userEnrollmentService;
         private readonly INotificationRepository _notificationRepository;
+        private readonly ICourseRepository _courseRepository;
         private readonly ILogger<CoursePaymentProcessor> _logger;
 
         public CoursePaymentProcessor(
-            ICourseRepository courseRepository,
-            IUserRepository userRepository,
             IUserEnrollmentService userEnrollmentService,
             INotificationRepository notificationRepository,
+            ICourseRepository courseRepository,
             ILogger<CoursePaymentProcessor> logger)
         {
-            _courseRepository = courseRepository;
-            _userRepository = userRepository;
             _userEnrollmentService = userEnrollmentService;
             _notificationRepository = notificationRepository;
+            _courseRepository = courseRepository;
             _logger = logger;
-        }
-
-        public async Task<ServiceResponse<decimal>> ValidateProductAsync(int productId)
-        {
-            var response = new ServiceResponse<decimal>();
-
-            try
-            {
-                var course = await _courseRepository.GetCourseById(productId);
-                if (course == null)
-                {
-                    response.Success = false;
-                    response.Message = "Không tìm thấy khóa học";
-                    return response;
-                }
-
-                if (course.Price == null || course.Price < 0)
-                {
-                    response.Success = false;
-                    response.Message = "Giá khóa học không hợp lệ";
-                    return response;
-                }
-
-                if (!course.CanJoin())
-                {
-                    response.Success = false;
-                    response.Message = "Khóa học đã đầy";
-                    return response;
-                }
-
-                response.Data = course.Price.Value;
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi validate course {CourseId}", productId);
-                response.Success = false;
-                response.Message = "Đã xảy ra lỗi khi kiểm tra khóa học";
-                return response;
-            }
-        }
-
-        public async Task<string> GetProductNameAsync(int productId)
-        {
-            try
-            {
-                var course = await _courseRepository.GetCourseById(productId);
-                return course?.Title ?? $"Khóa học #{productId}";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy tên course {CourseId}", productId);
-                return $"Khóa học #{productId}";
-            }
         }
 
         public async Task<ServiceResponse<bool>> ProcessPostPaymentAsync(int userId, int productId, int paymentId)
@@ -146,6 +89,47 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                 response.Success = false;
                 response.Message = "Đã xảy ra lỗi khi xử lý sau thanh toán";
                 return response;
+            }
+        }
+
+        public async Task<ServiceResponse<decimal>> ValidateProductAsync(int productId)
+        {
+            var response = new ServiceResponse<decimal>();
+
+            try
+            {
+                var course = await _courseRepository.GetCourseById(productId);
+                if (course == null)
+                {
+                    _logger.LogWarning("Course {CourseId} không tồn tại", productId);
+                    response.Success = false;
+                    response.Message = "Khóa học không tồn tại";
+                    return response;
+                }
+                response.Success = true;
+                response.Data = course.Price ?? 0;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi validate course {CourseId}", productId);
+                response.Success = false;
+                response.Message = "Đã xảy ra lỗi khi kiểm tra khóa học";
+                return response;
+            }
+        }
+
+        public async Task<string> GetProductNameAsync(int productId)
+        {
+            try
+            {
+                var course = await _courseRepository.GetCourseById(productId);
+                return course?.Title ?? "Khóa học";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Không thể lấy tên course {CourseId}", productId);
+                return "Khóa học";
             }
         }
     }

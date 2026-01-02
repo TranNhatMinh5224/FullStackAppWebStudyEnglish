@@ -36,52 +36,45 @@ namespace LearningEnglish.Application.Service
                   var response = new ServiceResponse<ResPurchaseTeacherPackageDto>();
             try
             {
-                DateTime startDate;
-                SubscriptionStatus status;
-
-                // Check if user has an active subscription
+                // Business Rule: User chỉ được có 1 subscription tại một thời điểm
+                // Payment validation đã check, nhưng double-check để đảm bảo
                 var existingSubscription = await _teacherSubscriptionRepository.GetActiveSubscriptionAsync(userId);
 
                 if (existingSubscription != null && existingSubscription.EndDate > DateTime.UtcNow)
                 {
-                    // User has active subscription → Schedule new subscription to start after current ends
-                    startDate = existingSubscription.EndDate.AddDays(1);
-                    status = SubscriptionStatus.Pending; // Will auto-activate when StartDate arrives
-
-                    _logger.LogInformation(
-                        "User {UserId} has active subscription until {EndDate}. New subscription scheduled from {StartDate}",
-                        userId, existingSubscription.EndDate, startDate);
-                }
-                else
-                {
-                    // No active subscription or expired → Start immediately
-                    startDate = DateTime.UtcNow;
-                    status = SubscriptionStatus.Active;
-
-                    _logger.LogInformation("User {UserId} has no active subscription. New subscription starts immediately.", userId);
+                    _logger.LogWarning(
+                        "User {UserId} attempted to purchase package while having active subscription until {EndDate}",
+                        userId, existingSubscription.EndDate);
+                    
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = "Bạn đã có gói giáo viên đang hoạt động. Vui lòng đợi gói hiện tại hết hạn trước khi mua gói mới";
+                    return response;
                 }
 
+                // Tạo subscription mới - luôn Active và bắt đầu ngay
+                var startDate = DateTime.UtcNow;
                 var teacherSubscription = new TeacherSubscription
                 {
                     UserId = userId,
                     TeacherPackageId = dto.IdTeacherPackage,
                     StartDate = startDate,
                     EndDate = startDate.AddMonths(12),
-                    Status = status
+                    Status = SubscriptionStatus.Active
                 };
 
                 await _teacherSubscriptionRepository.AddTeacherSubscriptionAsync(teacherSubscription);
 
                 var resultDto = _mapper.Map<ResPurchaseTeacherPackageDto>(teacherSubscription);
 
-                string message = status == SubscriptionStatus.Pending
-                    ? $"Teacher package purchased successfully. Will be activated on {startDate:yyyy-MM-dd}."
-                    : "Teacher package purchased and activated successfully.";
+                _logger.LogInformation(
+                    "User {UserId} purchased teacher package {PackageId}. Active from {StartDate} to {EndDate}",
+                    userId, dto.IdTeacherPackage, startDate, teacherSubscription.EndDate);
 
                 response.Data = resultDto;
                 response.Success = true;
                 response.StatusCode = 201;
-                response.Message = message;
+                response.Message = "Teacher package purchased and activated successfully.";
                 return response;
             }
             catch (Exception ex)

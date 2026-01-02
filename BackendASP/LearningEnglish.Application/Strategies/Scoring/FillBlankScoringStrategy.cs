@@ -3,7 +3,7 @@ using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 
-namespace LearningEnglish.Application.Service.ScoringStrategies
+namespace LearningEnglish.Application.Strategies.Scoring
 {
     public class FillBlankScoringStrategy : IScoringStrategy
     {

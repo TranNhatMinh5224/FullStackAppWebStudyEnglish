@@ -4,7 +4,7 @@ using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
-namespace LearningEnglish.Application.Service
+namespace LearningEnglish.Application.Service.PaymentService
 {
     public class PaymentValidator : IPaymentValidator
     {
@@ -69,16 +69,34 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Kiểm tra user đã mua sản phẩm này chưa
-                var existingPayment = await _paymentRepository.GetSuccessfulPaymentByUserAndProductAsync(userId, productId, productType);
-                if (existingPayment != null)
+                // Kiểm tra duplicate payment
+                if (productType == ProductType.Course)
                 {
-                    _logger.LogWarning("User {UserId} đã mua {ProductType} {ProductId}", userId, productType, productId);
-                    response.Success = false;
-                    response.Message = "Bạn đã mua sản phẩm này rồi";
-                    return response;
+                    // Course: Không cho mua lại nếu đã enrolled
+                    var existingPayment = await _paymentRepository.GetSuccessfulPaymentByUserAndProductAsync(userId, productId, productType);
+                    if (existingPayment != null)
+                    {
+                        _logger.LogWarning("User {UserId} đã mua Course {ProductId}", userId, productId);
+                        response.Success = false;
+                        response.Message = "Bạn đã mua khóa học này rồi";
+                        return response;
+                    }
+                }
+                else if (productType == ProductType.TeacherPackage)
+                {
+                    // TeacherPackage: Chỉ cho phép mua KHI KHÔNG CÓ subscription nào active/pending
+                    // Không phụ thuộc vào packageId cụ thể - chỉ check có subscription hay không
+                    var existingPayment = await _paymentRepository.GetSuccessfulPaymentByUserAndProductAsync(userId, productId, productType);
+                    if (existingPayment != null)
+                    {
+                        _logger.LogWarning("User {UserId} đã có TeacherPackage subscription đang hoạt động hoặc chờ kích hoạt", userId);
+                        response.Success = false;
+                        response.Message = "Bạn đã có gói giáo viên đang hoạt động. Vui lòng đợi gói hiện tại hết hạn trước khi mua gói mới";
+                        return response;
+                    }
                 }
 
+                response.Success = true;
                 response.Data = true;
                 return response;
             }

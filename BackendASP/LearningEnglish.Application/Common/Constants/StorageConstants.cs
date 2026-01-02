@@ -1,11 +1,6 @@
 namespace LearningEnglish.Application.Common.Constants;
 
-/// <summary>
-/// Centralized storage bucket and folder constants
-/// Application-level constants (for backward compatibility)
-/// Infrastructure services use: LearningEnglish.Infrastructure.Common.Constants.StorageConstants
-/// Application services should prefer using Image Services (ICourseImageService, etc.)
-/// </summary>
+
 public static class StorageConstants
 {
     // Course Image Storage

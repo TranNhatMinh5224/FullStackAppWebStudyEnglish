@@ -7,7 +7,7 @@ using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
-namespace LearningEnglish.Application.Service.PaymentProcessors
+namespace LearningEnglish.Application.Strategies.Payment
 {
     public class TeacherPackagePaymentProcessor : IPaymentStrategy
     {
@@ -34,53 +34,6 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
             _notificationRepository = notificationRepository;
             _emailService = emailService;
             _logger = logger;
-        }
-
-        public async Task<ServiceResponse<decimal>> ValidateProductAsync(int productId)
-        {
-            var response = new ServiceResponse<decimal>();
-
-            try
-            {
-                var package = await _teacherPackageRepository.GetTeacherPackageByIdAsync(productId);
-                if (package == null)
-                {
-                    response.Success = false;
-                    response.Message = "Không tìm thấy gói giáo viên";
-                    return response;
-                }
-
-                if (package.Price < 0)
-                {
-                    response.Success = false;
-                    response.Message = "Giá gói giáo viên không hợp lệ";
-                    return response;
-                }
-
-                response.Data = package.Price;
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi validate teacher package {PackageId}", productId);
-                response.Success = false;
-                response.Message = "Đã xảy ra lỗi khi kiểm tra gói giáo viên";
-                return response;
-            }
-        }
-
-        public async Task<string> GetProductNameAsync(int productId)
-        {
-            try
-            {
-                var package = await _teacherPackageRepository.GetTeacherPackageByIdAsync(productId);
-                return package?.PackageName ?? $"Gói giáo viên #{productId}";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy tên teacher package {PackageId}", productId);
-                return $"Gói giáo viên #{productId}";
-            }
         }
 
         public async Task<ServiceResponse<bool>> ProcessPostPaymentAsync(int userId, int productId, int paymentId)
@@ -179,6 +132,47 @@ namespace LearningEnglish.Application.Service.PaymentProcessors
                 response.Success = false;
                 response.Message = "Đã xảy ra lỗi khi xử lý sau thanh toán";
                 return response;
+            }
+        }
+
+        public async Task<ServiceResponse<decimal>> ValidateProductAsync(int productId)
+        {
+            var response = new ServiceResponse<decimal>();
+
+            try
+            {
+                var package = await _teacherPackageRepository.GetTeacherPackageByIdAsync(productId);
+                if (package == null)
+                {
+                    _logger.LogWarning("TeacherPackage {PackageId} không tồn tại", productId);
+                    response.Success = false;
+                    response.Message = "Gói giáo viên không tồn tại";
+                    return response;
+                }
+                response.Success = true;
+                response.Data = package.Price;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi validate teacher package {PackageId}", productId);
+                response.Success = false;
+                response.Message = "Đã xảy ra lỗi khi kiểm tra gói giáo viên";
+                return response;
+            }
+        }
+
+        public async Task<string> GetProductNameAsync(int productId)
+        {
+            try
+            {
+                var package = await _teacherPackageRepository.GetTeacherPackageByIdAsync(productId);
+                return package?.PackageName ?? "Gói giáo viên";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Không thể lấy tên teacher package {PackageId}", productId);
+                return "Gói giáo viên";
             }
         }
     }

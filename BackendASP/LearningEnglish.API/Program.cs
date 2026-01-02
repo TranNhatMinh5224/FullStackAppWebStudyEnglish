@@ -17,8 +17,9 @@ using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Application.Service;
 using LearningEnglish.Application.Service.Auth;
 using LearningEnglish.Application.Service.EssayService;
-using LearningEnglish.Application.Service.PaymentProcessors;
-using LearningEnglish.Application.Service.ScoringStrategies;
+using LearningEnglish.Application.Service.PaymentService;
+using LearningEnglish.Application.Strategies.Payment;
+using LearningEnglish.Application.Strategies.Scoring;
 using LearningEnglish.Application.Service.BackgroundJobs;
 using LearningEnglish.Application.Validators;
 using LearningEnglish.Infrastructure.Repositories;
@@ -48,7 +49,6 @@ using LearningEnglish.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using LearningEnglish.Domain.Domain;
 using LearningEnglish.Domain.Entities;
-using LearningEnglish.Application.Features.Payments.Commands.CreatePayment;
 
 
 
@@ -121,8 +121,8 @@ builder.Services.AddValidatorsFromAssembly(typeof(MappingProfile).Assembly);
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// MediatR
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ProcessPaymentCommand).Assembly));
+// MediatR (for other features, not Payment)
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(MappingProfile).Assembly));
 
 // Database (PostgreSQL)
 if (string.IsNullOrWhiteSpace(conn))
@@ -201,6 +201,10 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Sorting Services
 builder.Services.AddScoped<ISortingService<Course>, CourseSortingService>();
 builder.Services.AddScoped<ISortingService<User>, UserSortingService>();
+
+// Payment Services (Traditional Pattern - Controller → Service → Repository)
+builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
+builder.Services.AddScoped<IPaymentService, LearningEnglish.Application.Service.PaymentService.PaymentService>();
 
 // Service layer
 builder.Services.AddScoped<IAdminCourseService, AdminCourseService>();
@@ -368,8 +372,7 @@ builder.Services.AddScoped<IAiResponseParser, AiResponseParser>();
 // Background Jobs
 builder.Services.AddScoped<TempFileCleanupJob>();
 
-// Payment related services
-builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
+// Payment Strategy Pattern (giống Scoring Strategy)
 builder.Services.AddScoped<IPaymentStrategy, CoursePaymentProcessor>();
 builder.Services.AddScoped<IPaymentStrategy, TeacherPackagePaymentProcessor>();
 

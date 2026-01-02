@@ -1,7 +1,7 @@
 using System.Text.Json;
 using LearningEnglish.Domain.Entities;
 
-namespace LearningEnglish.Application.Service.ScoringStrategies
+namespace LearningEnglish.Application.Strategies.Scoring
 {
     public static class ScoringHelper
     {

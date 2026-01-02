@@ -3,7 +3,7 @@ using LearningEnglish.Domain.Enums;
 using LearningEnglish.Application.Interface.Strategies;
 using LearningEnglish.Application.Common.Helpers;
 
-namespace LearningEnglish.Application.Service.ScoringStrategies
+namespace LearningEnglish.Application.Strategies.Scoring
 {
     public class OrderingScoringStrategy : IScoringStrategy
     {

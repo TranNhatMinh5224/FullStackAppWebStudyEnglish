@@ -1,5 +1,4 @@
 using LearningEnglish.Application.Common;
-using LearningEnglish.Application.DTOs;
 using LearningEnglish.Domain.Enums;
 
 namespace LearningEnglish.Application.Interface.Strategies
@@ -8,13 +7,13 @@ namespace LearningEnglish.Application.Interface.Strategies
     {
         ProductType ProductType { get; }
         
-        // Xác thực sản phẩm
+        // Xử lý business logic sau thanh toán (enroll, subscription, notification)
+        Task<ServiceResponse<bool>> ProcessPostPaymentAsync(int userId, int productId, int paymentId);
+        
+        // Validate sản phẩm và trả về amount
         Task<ServiceResponse<decimal>> ValidateProductAsync(int productId);
         
         // Lấy tên sản phẩm
         Task<string> GetProductNameAsync(int productId);
-        
-        // Xử lý sau thanh toán
-        Task<ServiceResponse<bool>> ProcessPostPaymentAsync(int userId, int productId, int paymentId);
     }
 }
