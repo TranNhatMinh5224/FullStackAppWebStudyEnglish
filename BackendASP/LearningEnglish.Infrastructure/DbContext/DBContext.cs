@@ -79,9 +79,11 @@ namespace LearningEnglish.Infrastructure.Data
                 e.Property(u => u.PasswordHash)
                  .HasMaxLength(255);
 
+                // Phone: Optional field (default empty), format validated in validator when provided
                 e.Property(u => u.PhoneNumber)
-                 .IsRequired()
-                 .HasMaxLength(20);
+                 .IsRequired() // Required nhưng có thể là string.Empty
+                 .HasMaxLength(10) // 0xxxxxxxxx (10 digits)
+                 .HasDefaultValue(string.Empty);
 
                 e.Property(u => u.AvatarKey)
                  .HasMaxLength(500);
@@ -94,7 +96,8 @@ namespace LearningEnglish.Infrastructure.Data
                  .HasDefaultValue(true);
 
                 e.Property(u => u.Status)
-                 .IsRequired();
+                 .IsRequired()
+                 .HasDefaultValue(AccountStatus.Active);
 
                 e.Property(u => u.EmailVerified)
                  .IsRequired()
@@ -216,7 +219,7 @@ namespace LearningEnglish.Infrastructure.Data
                  .HasMaxLength(500);
 
                 e.Property(c => c.ImageType)
-                 .HasMaxLength(50);
+                 .HasMaxLength(100);
 
                 e.Property(c => c.ClassCode)
                  .HasMaxLength(20);
@@ -272,7 +275,7 @@ namespace LearningEnglish.Infrastructure.Data
                  .HasMaxLength(500);
 
                 e.Property(l => l.ImageType)
-                 .HasMaxLength(50);
+                 .HasMaxLength(100);
 
                 e.Property(l => l.CreatedAt)
                  .IsRequired();
@@ -307,7 +310,7 @@ namespace LearningEnglish.Infrastructure.Data
                  .HasMaxLength(500);
 
                 e.Property(m => m.ImageType)
-                 .HasMaxLength(50);
+                 .HasMaxLength(100);
 
                 e.Property(m => m.ContentType)
                  .IsRequired();
@@ -529,6 +532,10 @@ namespace LearningEnglish.Infrastructure.Data
                 e.Property(qg => qg.VideoType)
                  .HasMaxLength(50);
 
+                e.Property(qg => qg.DisplayOrder)
+                 .IsRequired()
+                 .HasDefaultValue(0);
+
                 e.HasOne(qg => qg.QuizSection)
                  .WithMany(qs => qs.QuizGroups)
                  .HasForeignKey(qg => qg.QuizSectionId)
@@ -596,6 +603,10 @@ namespace LearningEnglish.Infrastructure.Data
 
                 e.Property(q => q.MetadataJson)
                  .HasMaxLength(5000);
+
+                e.Property(q => q.DisplayOrder)
+                 .IsRequired()
+                 .HasDefaultValue(0);
 
                 e.HasOne(q => q.QuizSection)
                  .WithMany(qs => qs.Questions) // Giả sử QuizSection có List<Question>
@@ -1082,9 +1093,7 @@ namespace LearningEnglish.Infrastructure.Data
                 e.HasIndex(p => new { p.ProductType, p.ProductId });
                 e.HasIndex(p => p.CreatedAt);
                 e.HasIndex(p => p.Gateway);
-                
-                // Unique index for IdempotencyKey - Prevents duplicate payments (Race condition protection)
-                // Partial index: Only applies when IdempotencyKey IS NOT NULL
+             
                 e.HasIndex(p => new { p.UserId, p.IdempotencyKey })
                  .IsUnique()
                  .HasFilter("\"IdempotencyKey\" IS NOT NULL");

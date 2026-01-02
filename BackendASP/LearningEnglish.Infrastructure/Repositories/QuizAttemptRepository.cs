@@ -78,6 +78,24 @@ namespace LearningEnglish.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<QuizAttempt>> GetInProgressAttemptsBatchAsync(int skip, int take)
+        {
+            return await _context.QuizAttempts
+                .Include(qa => qa.Quiz)
+                .Where(qa => qa.Status == QuizAttemptStatus.InProgress)
+                .OrderBy(qa => qa.StartedAt) // Xử lý attempts cũ trước
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync();
+        }
+
+        public async Task<int> CountInProgressAttemptsAsync()
+        {
+            return await _context.QuizAttempts
+                .Where(qa => qa.Status == QuizAttemptStatus.InProgress)
+                .CountAsync();
+        }
+
         public async Task<List<QuizAttempt>> GetByQuizIdAsync(int quizId)
         {
             return await _context.QuizAttempts

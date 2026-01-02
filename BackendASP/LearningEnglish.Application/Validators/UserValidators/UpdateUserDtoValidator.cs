@@ -15,10 +15,10 @@ namespace LearningEnglish.Application.Validators.User
                 .NotEmpty().WithMessage("Last name is required")
                 .MaximumLength(100).WithMessage("Last name must not exceed 100 characters");
 
+            // Phone number: Optional (có thể để trống), nhưng nếu nhập thì phải đúng format
             RuleFor(x => x.PhoneNumber)
-                .NotEmpty().WithMessage("Phone number is required")
                 .Matches(@"^0\d{9}$").WithMessage("Phone number must be 10 digits starting with 0")
-                .MaximumLength(20).WithMessage("Phone number must not exceed 20 characters");
+                .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber)); // Chỉ validate khi có giá trị
 
             RuleFor(x => x.DateOfBirth)
                 .LessThan(DateTime.UtcNow).WithMessage("Date of birth must be in the past")

@@ -22,6 +22,9 @@ namespace LearningEnglish.Application.DTOs
 
         public string? Explanation { get; set; }
 
+        // Thứ tự hiển thị (dùng cho shuffle logic)
+        public int DisplayOrder { get; set; } = 0;
+
         // Media handling
         public string? MediaType { get; set; }
         public string? MediaTempKey { get; set; } // MinIO temp key for file upload
@@ -59,6 +62,9 @@ namespace LearningEnglish.Application.DTOs
         public string? Explanation { get; set; }
         public string? MediaUrl { get; set; }
         public string? MediaType { get; set; }
+
+        // Thứ tự hiển thị (dùng cho shuffle logic)
+        public int DisplayOrder { get; set; }
 
         public List<AnswerOptionReadDto> Options { get; set; } = new();
 

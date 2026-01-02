@@ -29,6 +29,12 @@ namespace LearningEnglish.Application.Interface
         // Lấy tất cả bài làm đang thực hiện
         Task<List<QuizAttempt>> GetInProgressAttemptsAsync();
 
+        // Lấy bài làm đang thực hiện với pagination (cho auto-submit)
+        Task<List<QuizAttempt>> GetInProgressAttemptsBatchAsync(int skip, int take);
+
+        // Đếm số bài làm đang thực hiện
+        Task<int> CountInProgressAttemptsAsync();
+
         // Lấy tất cả bài làm của quiz
         Task<List<QuizAttempt>> GetByQuizIdAsync(int quizId);
 

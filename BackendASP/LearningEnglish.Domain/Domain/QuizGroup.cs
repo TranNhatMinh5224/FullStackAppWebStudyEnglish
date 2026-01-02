@@ -6,6 +6,7 @@ namespace LearningEnglish.Domain.Entities
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int QuizSectionId { get; set; }
+        public int DisplayOrder { get; set; } = 0; // Thứ tự hiển thị trong section
         public string Title { get; set; } = string.Empty;
         public string? ImgKey { get; set; }
         public string? VideoKey { get; set; }

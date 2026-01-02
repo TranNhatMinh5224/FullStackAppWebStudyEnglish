@@ -236,88 +236,129 @@ namespace LearningEnglish.Application.Service
 
         private static List<AttemptQuizSectionDto> ShuffleQuizForAttempt(Quiz quiz, int attemptId)
         {
-            // Sao chép structure (questions trong groups giữ nguyên)
-            var sections = quiz.QuizSections.Select(s => new AttemptQuizSectionDto
+            var sections = new List<AttemptQuizSectionDto>();
+
+            foreach (var section in quiz.QuizSections)
             {
-                SectionId = s.QuizSectionId,
-                Title = s.Title,
-                QuizGroups = s.QuizGroups.Select(g => new AttemptQuizGroupDto
+                var allItems = new List<QuizItemDto>();
+
+                // 1. Add Groups với DisplayOrder (giữ nguyên vị trí)
+                foreach (var group in section.QuizGroups.OrderBy(g => g.DisplayOrder))
                 {
-                    GroupId = g.QuizGroupId,
-                    Name = g.Name,
-                    ImgUrl = !string.IsNullOrWhiteSpace(g.ImgKey)
-                        ? BuildPublicUrl.BuildURL("quizgroups", g.ImgKey)
-                        : null,
-                    VideoUrl = !string.IsNullOrWhiteSpace(g.VideoKey)
-                        ? BuildPublicUrl.BuildURL("quizgroups", g.VideoKey)
-                        : null,
-                    Questions = g.Questions.Select(q => new QuestionDto  // Giữ nguyên thứ tự
+                    var groupItem = new GroupItemDto
                     {
-                        QuestionId = q.QuestionId,
-                        QuestionText = q.StemText,
-                        MediaUrl = !string.IsNullOrWhiteSpace(q.MediaKey)
-                            ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaKey)
+                        ItemType = "Group",
+                        ItemIndex = group.DisplayOrder,
+                        GroupId = group.QuizGroupId,
+                        Name = group.Name,
+                        ImgUrl = !string.IsNullOrWhiteSpace(group.ImgKey)
+                            ? BuildPublicUrl.BuildURL("quizgroups", group.ImgKey)
                             : null,
-                        Type = q.Type,
-                        Points = q.Points,
-                        IsAnswered = false,
-                        CurrentScore = null,
-                        Options = q.Options.Select(o => new AnswerOptionDto
-                        {
-                            OptionId = o.AnswerOptionId,
-                            OptionText = o.Text ?? string.Empty,
-                            MediaUrl = !string.IsNullOrWhiteSpace(o.MediaKey)
-                                ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaKey)
-                                : null
-                        }).ToList()
-                    }).ToList()
-                }).ToList(),
-                Questions = s.Questions?.Select(q => new QuestionDto  // Sẽ shuffle
-                {
-                    QuestionId = q.QuestionId,
-                    QuestionText = q.StemText,
-                    MediaUrl = !string.IsNullOrWhiteSpace(q.MediaKey)
-                        ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaKey)
-                        : null,
-                    Type = q.Type,
-                    Points = q.Points,
-                    IsAnswered = false,
-                    CurrentScore = null,
-                    Options = q.Options.Select(o => new AnswerOptionDto
-                    {
-                        OptionId = o.AnswerOptionId,
-                        OptionText = o.Text ?? string.Empty,
-                        MediaUrl = !string.IsNullOrWhiteSpace(o.MediaKey)
-                            ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaKey)
-                            : null
-                    }).ToList()
-                }).ToList() ?? new List<QuestionDto>()
-            }).ToList();
+                        VideoUrl = !string.IsNullOrWhiteSpace(group.VideoKey)
+                            ? BuildPublicUrl.BuildURL("quizgroups", group.VideoKey)
+                            : null,
+                        Questions = group.Questions
+                            .OrderBy(q => q.DisplayOrder)  // Questions trong group giữ thứ tự
+                            .Select(q => MapToQuestionDto(q, attemptId, quiz.ShuffleAnswers.GetValueOrDefault(false)))
+                            .ToList()
+                    };
+                    allItems.Add(groupItem);
+                }
 
-            // Shuffle chỉ standalone questions
-            if (quiz.ShuffleQuestions.GetValueOrDefault(false))
-                QuizShuffleHelper.ShuffleStandaloneQuestions(sections, attemptId);
+                // 2. Lấy standalone questions (không thuộc group)
+                var standaloneQuestions = section.Questions
+                    .Where(q => q.QuizGroupId == null)
+                    .OrderBy(q => q.DisplayOrder)
+                    .ToList();
 
-            // Shuffle answers
-            if (quiz.ShuffleAnswers.GetValueOrDefault(false))
-            {
-                foreach (var section in sections)
+                // 3. Shuffle standalone questions nếu bật
+                if (quiz.ShuffleQuestions.GetValueOrDefault(false))
                 {
-                    foreach (var group in section.QuizGroups)
+                    var random = new Random(attemptId);
+                    QuizShuffleHelper.FisherYatesShuffle(standaloneQuestions, random);
+                }
+
+                // 4. Tạo mapping DisplayOrder -> ItemIndex để điền vào khoảng trống
+                var groupDisplayOrders = section.QuizGroups.Select(g => g.DisplayOrder).ToHashSet();
+                var maxDisplayOrder = Math.Max(
+                    section.QuizGroups.Any() ? section.QuizGroups.Max(g => g.DisplayOrder) : 0,
+                    section.Questions.Any() ? section.Questions.Max(q => q.DisplayOrder) : 0
+                );
+
+                // 5. Điền standalone questions vào slots trống
+                int questionIndex = 0;
+                for (int displayOrder = 0; displayOrder <= maxDisplayOrder && questionIndex < standaloneQuestions.Count; displayOrder++)
+                {
+                    if (!groupDisplayOrders.Contains(displayOrder))
                     {
-                        foreach (var question in group.Questions)
+                        var question = standaloneQuestions[questionIndex];
+                        var questionItem = new QuestionItemDto
                         {
-                            QuizShuffleHelper.ShuffleAnswers(question.Options, attemptId);
-                        }
-                    }
-                    foreach (var question in section.Questions)
-                    {
-                        QuizShuffleHelper.ShuffleAnswers(question.Options, attemptId);
+                            ItemType = "Question",
+                            ItemIndex = displayOrder,
+                            QuestionId = question.QuestionId,
+                            QuestionText = question.StemText,
+                            MediaUrl = !string.IsNullOrWhiteSpace(question.MediaKey)
+                                ? BuildPublicUrl.BuildURL(QuestionBucket, question.MediaKey)
+                                : null,
+                            Type = question.Type,
+                            Points = question.Points,
+                            IsAnswered = false,
+                            CurrentScore = null,
+                            Options = MapToOptionDtos(question, attemptId, quiz.ShuffleAnswers.GetValueOrDefault(false))
+                        };
+                        allItems.Add(questionItem);
+                        questionIndex++;
                     }
                 }
+
+                // 6. Sort theo ItemIndex để đảm bảo thứ tự đúng
+                sections.Add(new AttemptQuizSectionDto
+                {
+                    SectionId = section.QuizSectionId,
+                    Title = section.Title,
+                    Items = allItems.OrderBy(i => i.ItemIndex).ToList()
+                });
             }
 
             return sections;
+        }
+
+        private static QuestionDto MapToQuestionDto(Question q, int attemptId, bool shuffleAnswers)
+        {
+            return new QuestionDto
+            {
+                QuestionId = q.QuestionId,
+                QuestionText = q.StemText,
+                MediaUrl = !string.IsNullOrWhiteSpace(q.MediaKey)
+                    ? BuildPublicUrl.BuildURL(QuestionBucket, q.MediaKey)
+                    : null,
+                Type = q.Type,
+                Points = q.Points,
+                IsAnswered = false,
+                CurrentScore = null,
+                Options = MapToOptionDtos(q, attemptId, shuffleAnswers)
+            };
+        }
+
+        private static List<AnswerOptionDto> MapToOptionDtos(Question question, int attemptId, bool shuffleAnswers)
+        {
+            var options = question.Options.Select(o => new AnswerOptionDto
+            {
+                OptionId = o.AnswerOptionId,
+                OptionText = o.Text ?? string.Empty,
+                MediaUrl = !string.IsNullOrWhiteSpace(o.MediaKey)
+                    ? BuildPublicUrl.BuildURL(QuestionBucket, o.MediaKey)
+                    : null
+            }).ToList();
+
+            // Shuffle options nếu bật và question type phù hợp
+            if (shuffleAnswers && QuizShuffleHelper.ShouldShuffleAnswers(question.Type))
+            {
+                QuizShuffleHelper.ShuffleAnswers(options, attemptId, question.QuestionId);
+            }
+
+            return options;
         }
 
         // Update câu trả lời và tính điểm ngay lập tức (real-time scoring)
@@ -549,17 +590,26 @@ namespace LearningEnglish.Application.Service
                 const int BATCH_SIZE = 200; // 200 attempts/batch
                 int totalSubmitted = 0;
                 int skip = 0;
-                bool hasMore = true;
 
-                while (hasMore)
+                // Đếm tổng số attempts cần xử lý
+                int totalCount = await _quizAttemptRepository.CountInProgressAttemptsAsync();
+                if (totalCount == 0)
                 {
-                    // Lấy batch InProgress attempts với Quiz included (tránh N+1 query)
-                    var inProgressAttempts = await _quizAttemptRepository.GetInProgressAttemptsAsync();
-                    var batch = inProgressAttempts.Skip(skip).Take(BATCH_SIZE).ToList();
+                    response.Success = true;
+                    response.Data = true;
+                    response.Message = "No attempts to auto-submit";
+                    return response;
+                }
+
+                _logger.LogInformation("Auto-submit: Processing {TotalCount} InProgress attempts", totalCount);
+
+                while (skip < totalCount)
+                {
+                    // Lấy batch từ DB (chỉ 200 records vào memory)
+                    var batch = await _quizAttemptRepository.GetInProgressAttemptsBatchAsync(skip, BATCH_SIZE);
 
                     if (batch.Count == 0)
                     {
-                        hasMore = false;
                         break;
                     }
 
@@ -570,23 +620,65 @@ namespace LearningEnglish.Application.Service
 
                         foreach (var attempt in batch)
                         {
-                            // Quiz đã được Include trong GetInProgressAttemptsAsync → không cần query lại
-                            var quiz = attempt.Quiz;
-                            if (quiz == null || !quiz.Duration.HasValue) continue;
-
-                            // Tính thời gian kết thúc
-                            var endTime = attempt.StartedAt.AddMinutes(quiz.Duration.Value);
-
-                            // Nếu đã hết thời gian
-                            if (now >= endTime)
+                            try
                             {
-                                // Auto-submit
-                                attempt.Status = QuizAttemptStatus.Submitted;
-                                attempt.SubmittedAt = endTime; // Thời gian hết hạn
-                                attempt.TimeSpentSeconds = quiz.Duration.Value * 60; // Thời gian tối đa
+                                // Quiz đã được Include trong GetInProgressAttemptsAsync → không cần query lại
+                                var quiz = attempt.Quiz;
+                                if (quiz == null || !quiz.Duration.HasValue) continue;
 
-                                await _quizAttemptRepository.UpdateQuizAttemptAsync(attempt);
-                                batchSubmitted++;
+                                // Tính thời gian kết thúc
+                                var endTime = attempt.StartedAt.AddMinutes(quiz.Duration.Value);
+
+                                // Nếu đã hết thời gian
+                                if (now >= endTime)
+                                {
+                                    // Auto-submit
+                                    attempt.Status = QuizAttemptStatus.Submitted;
+                                    attempt.SubmittedAt = endTime; // Thời gian hết hạn
+                                    attempt.TimeSpentSeconds = quiz.Duration.Value * 60; // Thời gian tối đa
+
+                                    await _quizAttemptRepository.UpdateQuizAttemptAsync(attempt);
+
+                                    // Mark module as completed (giống manual submit)
+                                    try
+                                    {
+                                        var assessment = await _assessmentRepository.GetAssessmentById(quiz.AssessmentId);
+                                        if (assessment?.ModuleId != null)
+                                        {
+                                            await _moduleProgressService.CompleteModuleAsync(attempt.UserId, assessment.ModuleId);
+                                        }
+                                    }
+                                    catch (Exception moduleEx)
+                                    {
+                                        _logger.LogError(moduleEx, "Failed to mark module completed for attempt {AttemptId}", attempt.AttemptId);
+                                    }
+
+                                    // Tạo notification cho user
+                                    try
+                                    {
+                                        var notification = new Notification
+                                        {
+                                            UserId = attempt.UserId,
+                                            Title = "⏰ Quiz đã hết thời gian",
+                                            Message = $"Bài quiz '{quiz.Title}' của bạn đã được tự động nộp do hết thời gian làm bài.",
+                                            Type = NotificationType.AssessmentGraded,
+                                            IsRead = false,
+                                            CreatedAt = DateTime.UtcNow
+                                        };
+                                        await _notificationRepository.AddAsync(notification);
+                                    }
+                                    catch (Exception notifEx)
+                                    {
+                                        _logger.LogError(notifEx, "Failed to create notification for attempt {AttemptId}", attempt.AttemptId);
+                                    }
+
+                                    batchSubmitted++;
+                                }
+                            }
+                            catch (Exception attemptEx)
+                            {
+                                _logger.LogError(attemptEx, "Failed to auto-submit attempt {AttemptId}", attempt.AttemptId);
+                                // Continue với attempt tiếp theo
                             }
                         }
 
@@ -604,19 +696,13 @@ namespace LearningEnglish.Application.Service
 
                     skip += BATCH_SIZE;
 
-                    // Nếu batch nhỏ hơn BATCH_SIZE → đây là batch cuối
-                    if (batch.Count < BATCH_SIZE)
-                    {
-                        hasMore = false;
-                    }
-
                     // Throttle để tránh quá tải DB
                     await Task.Delay(100);
                 }
 
                 response.Success = true;
                 response.Data = true;
-                response.Message = $"Auto-submitted {totalSubmitted} expired attempts";
+                response.Message = $"Auto-submitted {totalSubmitted} expired attempts (processed {totalCount} total)";
 
                 return response;
             }
@@ -696,20 +782,39 @@ namespace LearningEnglish.Application.Service
                 // Lý do: User không nên biết mình làm đúng hay sai khi đang làm bài
                 foreach (var section in shuffledSections)
                 {
-                    // Questions trong groups
-                    foreach (var group in section.QuizGroups)
+                    foreach (var item in section.Items)
                     {
-                        foreach (var question in group.Questions)
+                        if (item is GroupItemDto groupItem)
                         {
-                            if (currentAnswers.TryGetValue(question.QuestionId, out object? value))
+                            foreach (var question in groupItem.Questions)
                             {
-                                question.IsAnswered = true;
-                                question.UserAnswer = value;
+                                if (currentAnswers.TryGetValue(question.QuestionId, out object? value))
+                                {
+                                    question.IsAnswered = true;
+                                    question.UserAnswer = value;
+
+                                    // Normalize answer theo QuestionType để đảm bảo format đúng cho frontend
+                                    question.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
+                                        question.UserAnswer,
+                                        question.Type
+                                    );
+
+                                    // KHÔNG set CurrentScore khi đang làm bài (InProgress)
+                                    // Chỉ hiển thị điểm sau khi submit
+                                }
+                            }
+                        }
+                        else if (item is QuestionItemDto questionItem)
+                        {
+                            if (currentAnswers.TryGetValue(questionItem.QuestionId, out object? value))
+                            {
+                                questionItem.IsAnswered = true;
+                                questionItem.UserAnswer = value;
 
                                 // Normalize answer theo QuestionType để đảm bảo format đúng cho frontend
-                                question.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
-                                    question.UserAnswer,
-                                    question.Type
+                                questionItem.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
+                                    questionItem.UserAnswer,
+                                    questionItem.Type
                                 );
 
                                 // KHÔNG set CurrentScore khi đang làm bài (InProgress)
@@ -717,28 +822,9 @@ namespace LearningEnglish.Application.Service
                             }
                         }
                     }
-
-                    // Standalone questions
-                    foreach (var question in section.Questions)
-                    {
-                        if (currentAnswers.TryGetValue(question.QuestionId, out object? value))
-                        {
-                            question.IsAnswered = true;
-                            question.UserAnswer = value;
-
-                            // Normalize answer theo QuestionType để đảm bảo format đúng cho frontend
-                            question.UserAnswer = AnswerNormalizer.NormalizeUserAnswer(
-                                question.UserAnswer,
-                                question.Type
-                            );
-
-                            // KHÔNG set CurrentScore khi đang làm bài (InProgress)
-                            // Chỉ hiển thị điểm sau khi submit
-                        }
-                    }
                 }
 
-                var attemptDto = _mapper.Map<QuizAttemptWithQuestionsDto>(attempt);
+            var attemptDto = _mapper.Map<QuizAttemptWithQuestionsDto>(attempt);
                 attemptDto.QuizSections = shuffledSections;
 
                 response.Success = true;

@@ -36,15 +36,6 @@ namespace LearningEnglish.API.Controller.Teacher
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/teacher/quiz-attempts/{attemptId} - Lấy chi tiết một attempt theo ID
-        [HttpGet("{attemptId}")]
-        public async Task<IActionResult> GetAttemptDetails(int attemptId)
-        {
-            var teacherId = User.GetUserId();
-            var result = await _quizAttemptTeacherService.GetAttemptDetailsAsync(attemptId, teacherId);
-            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
-        }
-
         // GET: api/teacher/quiz-attempts/stats/{quizId} - Lấy thống kê làm bài cho một quiz
         [HttpGet("stats/{quizId}")]
         public async Task<IActionResult> GetQuizAttemptStats(int quizId)
@@ -80,6 +71,23 @@ namespace LearningEnglish.API.Controller.Teacher
             var result = await _quizAttemptTeacherService.GetUserQuizAttemptsAsync(userId, quizId, teacherId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
+
+        // GET: api/teacher/quiz-attempts/{attemptId}/review - Lấy chi tiết bài làm với đáp án để review
+        [HttpGet("{attemptId}/review")]
+        public async Task<IActionResult> GetAttemptDetailForReview(int attemptId)
+        {
+            var teacherId = User.GetUserId();
+            var result = await _quizAttemptTeacherService.GetAttemptDetailForReviewAsync(attemptId, teacherId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
+
+        // POST: api/teacher/quiz-attempts/force-submit/{attemptId} - Bắt buộc nộp bài (khi học sinh vi phạm, quên nộp)
+        [HttpPost("force-submit/{attemptId}")]
+        public async Task<IActionResult> ForceSubmitAttempt(int attemptId)
+        {
+            var teacherId = User.GetUserId();
+            var result = await _quizAttemptTeacherService.ForceSubmitAttemptAsync(attemptId, teacherId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
     }
 }
-

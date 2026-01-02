@@ -3,6 +3,7 @@ using System;
 using LearningEnglish.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LearningEnglish.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260101193817_AddDisplayOrderToQuestionAndQuizGroup")]
+    partial class AddDisplayOrderToQuestionAndQuizGroup
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -192,8 +195,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.Property<string>("ImageType")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("boolean");
@@ -703,8 +706,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.Property<string>("ImageType")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("OrderIndex")
                         .HasColumnType("integer");
@@ -803,8 +806,8 @@ namespace LearningEnglish.Infrastructure.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.Property<string>("ImageType")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("LessonId")
                         .HasColumnType("integer");
@@ -2010,15 +2013,11 @@ namespace LearningEnglish.Infrastructure.Migrations
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)")
-                        .HasDefaultValue("");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -2059,7 +2058,7 @@ namespace LearningEnglish.Infrastructure.Migrations
                             IsMale = true,
                             LastName = "System",
                             NormalizedEmail = "MINHXOANDEV@GMAIL.COM",
-                            PasswordHash = "$2a$11$xNG.jO.dvki/9Sw8y77x8udKr1wwGja7P9c6nnG8SAeEN3RnsImcS",
+                            PasswordHash = "$2a$11$cCtTOxxj3lg4r.PC0HnDOeFXETUW.gNDlpohWwxb.PLCSmXCMriN2",
                             PhoneNumber = "0257554479",
                             Status = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)

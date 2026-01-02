@@ -73,7 +73,6 @@ namespace LearningEnglish.Infrastructure.Repositories
         // Lấy đầy đủ cấu trúc Quiz với Sections, Groups, Questions và Options
         public async Task<Quiz?> GetFullQuizAsync(int quizId)
         {
-
             return await _context.Quizzes
                 .AsNoTracking()
                 .Where(q => q.QuizId == quizId)
@@ -81,6 +80,9 @@ namespace LearningEnglish.Infrastructure.Repositories
                     .ThenInclude(s => s.QuizGroups)
                         .ThenInclude(g => g.Questions)
                             .ThenInclude(qn => qn.Options)
+                .Include(q => q.QuizSections)
+                    .ThenInclude(s => s.Questions) // Load standalone questions
+                        .ThenInclude(qn => qn.Options)
                 .FirstOrDefaultAsync();
         }
     }

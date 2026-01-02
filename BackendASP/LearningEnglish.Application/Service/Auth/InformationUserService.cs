@@ -108,10 +108,13 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // Check số điện thoại trùng (nếu thay đổi)
-                if (dto.PhoneNumber != user.PhoneNumber)
+                // Trim và normalize phone number
+                var phoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? string.Empty : dto.PhoneNumber.Trim();
+
+                // Check số điện thoại trùng (nếu thay đổi và không rỗng)
+                if (!string.IsNullOrEmpty(phoneNumber) && phoneNumber != user.PhoneNumber)
                 {
-                    var existingPhone = await _userRepository.GetUserByPhoneNumberAsync(dto.PhoneNumber);
+                    var existingPhone = await _userRepository.GetUserByPhoneNumberAsync(phoneNumber);
                     if (existingPhone != null && existingPhone.UserId != userId)
                     {
                         response.Success = false;
@@ -121,7 +124,11 @@ namespace LearningEnglish.Application.Service
                     }
                 }
 
+                // Map DTO to User với trim
                 _mapper.Map(dto, user);
+                user.FirstName = dto.FirstName.Trim();
+                user.LastName = dto.LastName.Trim();
+                user.PhoneNumber = phoneNumber;
                 user.UpdatedAt = DateTime.UtcNow;
                 await _userRepository.UpdateUserAsync(user);
                 await _userRepository.SaveChangesAsync();

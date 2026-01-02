@@ -13,8 +13,8 @@ namespace LearningEnglish.Application.Interface
         // Lấy danh sách bài làm phân trang
         Task<ServiceResponse<PagedResult<QuizAttemptDto>>> GetQuizAttemptsPagedAsync(int quizId, PageRequest request);
         
-        // Lấy chi tiết bài làm
-        Task<ServiceResponse<QuizAttemptDto>> GetAttemptDetailsAsync(int attemptId);
+        // Lấy chi tiết bài làm với đáp án để admin review
+        Task<ServiceResponse<QuizAttemptDetailDto>> GetAttemptDetailForReviewAsync(int attemptId);
         
         // Buộc nộp bài
         Task<ServiceResponse<QuizAttemptResultDto>> ForceSubmitAttemptAsync(int attemptId);

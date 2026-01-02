@@ -15,6 +15,10 @@ namespace LearningEnglish.Application.DTOs
         public int? VideoDuration { get; set; }
 
         public float SumScore { get; set; }
+        
+        // Thứ tự hiển thị (dùng cho shuffle logic)
+        public int DisplayOrder { get; set; }
+        
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
@@ -32,6 +36,9 @@ namespace LearningEnglish.Application.DTOs
 
         public float SumScore { get; set; }
 
+        // Thứ tự hiển thị (dùng cho shuffle logic)
+        public int DisplayOrder { get; set; } = 0;
+
         // Media handling
         public string? ImgTempKey { get; set; }
         public string? ImgType { get; set; }
@@ -48,6 +55,9 @@ namespace LearningEnglish.Application.DTOs
         public string Title { get; set; } = string.Empty;
 
         public float SumScore { get; set; }
+
+        // Thứ tự hiển thị (dùng cho shuffle logic)
+        public int DisplayOrder { get; set; } = 0;
 
         // Media handling
         public string? ImgTempKey { get; set; }
@@ -69,6 +79,10 @@ namespace LearningEnglish.Application.DTOs
 
         public string? ImgType { get; set; }
         public string? VideoType { get; set; }
+        
+        // Thứ tự hiển thị (dùng cho shuffle logic)
+        public int DisplayOrder { get; set; }
+        
         public int? VideoDuration { get; set; }
 
         public float SumScore { get; set; }

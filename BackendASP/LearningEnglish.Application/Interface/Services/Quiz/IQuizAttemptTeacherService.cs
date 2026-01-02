@@ -12,9 +12,6 @@ namespace LearningEnglish.Application.Interface
         // Lấy danh sách bài làm phân trang (chỉ quiz trong course của teacher)
         Task<ServiceResponse<PagedResult<QuizAttemptDto>>> GetQuizAttemptsPagedAsync(int quizId, int teacherId, PageRequest request);
         
-        // Lấy chi tiết bài làm (chỉ quiz trong course của teacher)
-        Task<ServiceResponse<QuizAttemptDto>> GetAttemptDetailsAsync(int attemptId, int teacherId);
-        
         // Lấy thống kê quiz (chỉ quiz trong course của teacher)
         Task<ServiceResponse<object>> GetQuizAttemptStatsAsync(int quizId, int teacherId);
         
@@ -26,6 +23,12 @@ namespace LearningEnglish.Application.Interface
         
         // Lấy bài làm của người dùng (chỉ quiz trong course của teacher)
         Task<ServiceResponse<List<QuizAttemptDto>>> GetUserQuizAttemptsAsync(int userId, int quizId, int teacherId);
+        
+        // Lấy chi tiết bài làm với đáp án để teacher review (chỉ quiz trong course của teacher)
+        Task<ServiceResponse<QuizAttemptDetailDto>> GetAttemptDetailForReviewAsync(int attemptId, int teacherId);
+        
+        // Force submit bài làm (dùng khi học sinh vi phạm nguyên tắc, quên nộp, hoặc gặp sự cố)
+        Task<ServiceResponse<QuizAttemptResultDto>> ForceSubmitAttemptAsync(int attemptId, int teacherId);
     }
 }
 

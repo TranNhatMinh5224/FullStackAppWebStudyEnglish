@@ -3,9 +3,9 @@ using LearningEnglish.Application.DTOs;
 
 namespace LearningEnglish.Application.Validators.QuizAttemptValidators;
 
-public class AttemptQuizGroupDtoValidator : AbstractValidator<AttemptQuizGroupDto>
+public class GroupItemDtoValidator : AbstractValidator<GroupItemDto>
 {
-    public AttemptQuizGroupDtoValidator()
+    public GroupItemDtoValidator()
     {
         RuleFor(x => x.GroupId)
             .GreaterThan(0)

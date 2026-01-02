@@ -13,6 +13,7 @@ namespace LearningEnglish.Domain.Entities
         public int? QuizGroupId { get; set; } // Thuộc về QuizGroup nào
         public int? QuizSectionId { get; set; } // Thuộc về QuizSection nào
 
+        public int DisplayOrder { get; set; } = 0; // Thứ tự hiển thị trong section/group
         public decimal Points { get; set; } = 10m; // Điểm câu hỏi
         public string? CorrectAnswersJson { get; set; } // Đáp án đúng (cho câu nhiều đáp án, ghép đôi, sắp xếp) 
 

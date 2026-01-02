@@ -59,20 +59,29 @@ namespace LearningEnglish.Application.Service
                     await _emailVerificationTokenRepository.SaveChangesAsync();
                 }
 
-                // Check số điện thoại đã tồn tại VÀ đã verify
-                var existingPhone = await _userRepository.GetUserByPhoneNumberAsync(dto.PhoneNumber);
-                if (existingPhone != null && existingPhone.EmailVerified)
+                // Trim và normalize phone number
+                var phoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? string.Empty : dto.PhoneNumber.Trim();
+
+                // Check số điện thoại đã tồn tại VÀ đã verify (chỉ khi phone number không rỗng)
+                if (!string.IsNullOrEmpty(phoneNumber))
                 {
-                    response.Success = false;
-                    response.StatusCode = 400;
-                    response.Message = "Số điện thoại đã tồn tại trong hệ thống";
-                    return response;
+                    var existingPhone = await _userRepository.GetUserByPhoneNumberAsync(phoneNumber);
+                    if (existingPhone != null && existingPhone.EmailVerified)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = "Số điện thoại đã tồn tại trong hệ thống";
+                        return response;
+                    }
                 }
 
                 // Tạo user MỚI với EmailVerified = FALSE (trạng thái chờ xác thực)
                 var user = _mapper.Map<User>(dto);
                 user.SetPassword(dto.Password);
-                user.NormalizedEmail = dto.Email.ToUpper();
+                user.NormalizedEmail = dto.Email.Trim().ToUpper();
+                user.FirstName = dto.FirstName.Trim();
+                user.LastName = dto.LastName.Trim();
+                user.PhoneNumber = phoneNumber;
                 user.EmailVerified = false;  // ← CHƯA XÁC THỰC
 
                 // Gắn role Student mặc định cho user mới

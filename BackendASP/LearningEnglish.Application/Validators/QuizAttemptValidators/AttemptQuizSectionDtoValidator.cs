@@ -16,12 +16,8 @@ public class AttemptQuizSectionDtoValidator : AbstractValidator<AttemptQuizSecti
             .NotEmpty()
             .WithMessage("Title không được null hoặc rỗng");
 
-        RuleFor(x => x.QuizGroups)
+        RuleFor(x => x.Items)
             .NotNull()
-            .WithMessage("QuizGroups không được null");
-
-        RuleFor(x => x.Questions)
-            .NotNull()
-            .WithMessage("Questions không được null");
+            .WithMessage("Items không được null");
     }
 }

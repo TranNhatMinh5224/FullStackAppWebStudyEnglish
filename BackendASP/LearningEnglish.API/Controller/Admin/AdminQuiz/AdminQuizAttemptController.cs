@@ -36,12 +36,12 @@ namespace LearningEnglish.API.Controller.Admin
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
-        // GET: api/admin/quiz-attempts/{attemptId} - Lấy chi tiết một attempt theo ID
-        [HttpGet("{attemptId}")]
+        // GET: api/admin/quiz-attempts/{attemptId}/review - Lấy chi tiết bài làm với đáp án để review
+        [HttpGet("{attemptId}/review")]
         [RequirePermission("Admin.Content.Manage")]
-        public async Task<IActionResult> GetAttemptDetails(int attemptId)
+        public async Task<IActionResult> GetAttemptDetailForReview(int attemptId)
         {
-            var result = await _quizAttemptAdminService.GetAttemptDetailsAsync(attemptId);
+            var result = await _quizAttemptAdminService.GetAttemptDetailForReviewAsync(attemptId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
 
