@@ -48,32 +48,19 @@ namespace LearningEnglish.Application.Common.Mappers
                 }).ToList();
 
                 // 2. Map standalone questions sang QuizItemDto
+                // ItemIndex được lấy từ Question.DisplayOrder để cho phép xen kẽ tự do với Groups
                 var standaloneQuestionItems = section.Questions
                     .Where(q => q.QuizGroupId == null)
                     .Select(q => MapToStandaloneQuestionItemDto(q, attemptId, quiz.ShuffleAnswers.GetValueOrDefault(false)))
                     .ToList();
 
-                // 3. Merge groups + questions, assign ItemIndex
+                // 3. Merge groups + questions vào cùng list
                 var allItems = new List<QuizItemDto>();
-
-                // Lấy tất cả DisplayOrder của groups để tránh conflict
-                var groupDisplayOrders = section.QuizGroups.Select(g => g.DisplayOrder).ToHashSet();
-
-                int nextAvailableIndex = 0;
-                foreach (var questionItem in standaloneQuestionItems)
-                {
-                    // Tìm ItemIndex không trùng với group DisplayOrder
-                    while (groupDisplayOrders.Contains(nextAvailableIndex))
-                    {
-                        nextAvailableIndex++;
-                    }
-                    questionItem.ItemIndex = nextAvailableIndex++;
-                }
-
                 allItems.AddRange(groupItems);
                 allItems.AddRange(standaloneQuestionItems);
 
-                // 5. Sort theo ItemIndex
+                // 4. Sort theo ItemIndex để xen kẽ Groups và Questions
+                // Frontend có thể control thứ tự bằng cách set DisplayOrder cho Groups và Questions
                 sectionDto.Items = allItems.OrderBy(i => i.ItemIndex).ToList();
 
                 sections.Add(sectionDto);
