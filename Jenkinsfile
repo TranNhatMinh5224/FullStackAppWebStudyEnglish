@@ -58,8 +58,20 @@ pipeline {
             steps {
                 dir(BACKEND_PATH) {
                     sh '''
+                        # Copy .env.example to .env.dev (will use actual values from file)
+                        if [ -f .env.dev ]; then
+                            echo ".env.dev already exists, using it"
+                        else
+                            echo "Creating .env.dev from .env.example"
+                            cp .env.example .env.dev
+                        fi
+                        
+                        # Deploy
                         docker compose -f docker-compose.dev.yml down || true
                         docker compose -f docker-compose.dev.yml up -d
+                        
+                        echo "✓ Deployment completed"
+                        docker compose -f docker-compose.dev.yml ps
                     '''
                 }
             }
