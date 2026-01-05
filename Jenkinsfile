@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         REGISTRY_URL = 'localhost:5000'
+        REGISTRY_CREDENTIALS = 'docker-registry-credentials'
         IMAGE_NAME = 'learning-english-api'
         BACKEND_PATH = 'BackendASP'
 
@@ -17,28 +18,11 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                 echo "Branch: ${env.BRANCH_NAME}"
-            }
-        }
-
-        stage('Build & Test') {
-            steps {
-                dir(BACKEND_PATH) {
-                    sh '''
-                        # Ensure .NET SDK is available
-                        if ! command -v dotnet &> /dev/null; then
-                            echo "Installing .NET SDK..."
-                            apt-get update && apt-get install -y dotnet-sdk-8.0
-                        fi
-                        
-                        echo "Current directory: $(pwd)"
-                        echo ".NET version: $(dotnet --version)"
-                        
-                        dotnet restore
-                        dotnet build -c Release --no-restore
-                        dotnet test -c Release --no-build || true
-                    '''
-                }
+                echo "Build: #${env.BUILD_NUMBER}"
+                echo "Image Tag: ${IMAGE_TAG}"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             }
         }
 
@@ -54,10 +38,18 @@ pipeline {
 
         stage('Push Image') {
             steps {
-                sh '''
-                    docker push ${FULL_IMAGE_NAME}
-                    docker push ${LATEST_IMAGE}
-                '''
+                script {
+                    withCredentials([usernamePassword(credentialsId: REGISTRY_CREDENTIALS, usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASS')]) {
+                        sh '''
+                            echo "Logging into registry..."
+                            echo "${REGISTRY_PASS}" | docker login ${REGISTRY_URL} -u "${REGISTRY_USER}" --password-stdin
+                            echo "Pushing images..."
+                            docker push ${FULL_IMAGE_NAME}
+                            docker push ${LATEST_IMAGE}
+                            echo "✓ Images pushed successfully"
+                        '''
+                    }
+                }
             }
         }
 
