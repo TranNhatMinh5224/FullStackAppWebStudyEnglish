@@ -23,7 +23,7 @@ public class GradingBreakdown
 public class TeacherGradingDto
 {
     public decimal Score { get; set; }
-    public string Feedback { get; set; } = string.Empty;
+    public string? Feedback { get; set; }
 }
 
 // Internal DTO for parsing Gemini AI response
