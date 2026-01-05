@@ -81,23 +81,22 @@ pipeline {
             when { branch 'staging' }
             steps {
                 dir(BACKEND_PATH) {
-                    sh '''
-                        # Copy .env.example to .env.staging if not exists
-                        if [ -f .env.staging ]; then
-                            echo ".env.staging already exists, using it"
-                        else
-                            echo "Creating .env.staging from .env.example"
+                    withCredentials([string(credentialsId: 'staging-postgres-password', variable: 'STAGING_DB_PASS'), string(credentialsId: 'staging-jwt-key', variable: 'STAGING_JWT_KEY')]) {
+                        sh '''
+                            # Generate .env.staging from .env.example with real secrets
                             cp .env.example .env.staging
-                            echo "⚠️  WARNING: Update .env.staging with real staging credentials!"
-                        fi
-                        
-                        # Deploy
-                        docker compose -f docker-compose.staging.yml down || true
-                        docker compose -f docker-compose.staging.yml up -d
-                        
-                        echo "✓ Deployment completed"
-                        docker compose -f docker-compose.staging.yml ps
-                    '''
+                            sed -i "s/YOUR_POSTGRES_PASSWORD/${STAGING_DB_PASS}/g" .env.staging
+                            sed -i "s/YOUR_PASSWORD/${STAGING_DB_PASS}/g" .env.staging
+                            sed -i "s/YOUR_SECRET_KEY_HERE_MIN_32_CHARS/${STAGING_JWT_KEY}/g" .env.staging
+                            
+                            # Deploy
+                            docker compose -f docker-compose.staging.yml down || true
+                            docker compose -f docker-compose.staging.yml up -d
+                            
+                            echo "✓ Deployment completed"
+                            docker compose -f docker-compose.staging.yml ps
+                        '''
+                    }
                 }
             }
         }
@@ -107,23 +106,22 @@ pipeline {
             steps {
                 input message: 'Deploy production?', ok: 'Deploy'
                 dir(BACKEND_PATH) {
-                    sh '''
-                        # Copy .env.example to .env.prod if not exists
-                        if [ -f .env.prod ]; then
-                            echo ".env.prod already exists, using it"
-                        else
-                            echo "Creating .env.prod from .env.example"
+                    withCredentials([string(credentialsId: 'prod-postgres-password', variable: 'PROD_DB_PASS'), string(credentialsId: 'prod-jwt-key', variable: 'PROD_JWT_KEY')]) {
+                        sh '''
+                            # Generate .env.prod from .env.example with real secrets
                             cp .env.example .env.prod
-                            echo "⚠️  WARNING: Update .env.prod with real production credentials!"
-                        fi
-                        
-                        # Deploy
-                        docker compose -f docker-compose.prod.yml down || true
-                        docker compose -f docker-compose.prod.yml up -d
-                        
-                        echo "✓ Production deployment completed"
-                        docker compose -f docker-compose.prod.yml ps
-                    '''
+                            sed -i "s/YOUR_POSTGRES_PASSWORD/${PROD_DB_PASS}/g" .env.prod
+                            sed -i "s/YOUR_PASSWORD/${PROD_DB_PASS}/g" .env.prod
+                            sed -i "s/YOUR_SECRET_KEY_HERE_MIN_32_CHARS/${PROD_JWT_KEY}/g" .env.prod
+                            
+                            # Deploy
+                            docker compose -f docker-compose.prod.yml down || true
+                            docker compose -f docker-compose.prod.yml up -d
+                            
+                            echo "✓ Production deployment completed"
+                            docker compose -f docker-compose.prod.yml ps
+                        '''
+                    }
                 }
             }
         }
