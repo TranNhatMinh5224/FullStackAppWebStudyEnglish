@@ -52,14 +52,11 @@ using LearningEnglish.Domain.Entities;
 
 
 
-var builder = WebApplication.CreateBuilder(args); // WebApplicationBuilder tự động load appsettings.json và appsettings.{Environment}.json và environment variables
-
-// Load configuration (appsettings + environment)
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
-
+var builder = WebApplication.CreateBuilder(args); 
+// WebApplicationBuilder tự động load:
+// 1. appsettings.json
+// 2. appsettings.{Environment}.json (Development, Staging, Production)
+// 3. Environment Variables (OVERRIDE appsettings files - highest priority)
 
 // đọc cấu hình từ appsettings
 var frontendUrl = builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";

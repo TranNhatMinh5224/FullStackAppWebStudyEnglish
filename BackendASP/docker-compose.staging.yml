@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: learning-english-postgres-staging
+    env_file:
+      - .env.staging
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    networks:
+      - learning-english-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ASP.NET Core API (Staging mode)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: learning-english-api-staging
+    env_file:
+      - .env.staging
+    ports:
+      - "5031:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learning-english-network
+    restart: unless-stopped
+
+networks:
+  learning-english-network:
+    driver: bridge
+
+volumes:
+  postgres_data_staging:
+    driver: local
