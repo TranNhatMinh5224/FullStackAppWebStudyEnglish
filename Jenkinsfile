@@ -36,6 +36,18 @@ pipeline {
             }
         }
 
+        stage('Setup Environment') {
+            steps {
+                sh '''
+                    echo "Installing Docker CLI..."
+                    apt-get update && apt-get install -y docker.io
+                    docker --version
+                    dotnet --version
+                    echo "Environment ready!"
+                '''
+            }
+        }
+
         stage('Environment Info') {
             steps {
                 script {
