@@ -17,7 +17,7 @@ pipeline {
     }
 
     environment {
-        REGISTRY_URL = 'localhost:5000'
+        REGISTRY_URL = 'host.docker.internal:5000'
         REGISTRY_CREDENTIALS = 'docker-registry-credentials'
         IMAGE_NAME = 'learning-english-api'
         BACKEND_PATH = 'BackendASP'
