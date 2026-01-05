@@ -1,24 +1,8 @@
-// Jenkinsfile ĐƠN GIẢN cho Cloudflare Tunnel
-// Branch flow: feature/* → dev → staging → main
-//
-// STRATEGY: Local deployment với Cloudflare Tunnel
-// - Feature: CI only (build, test, push image)
-// - Dev: CI + Auto deploy local
-// - Staging: CI + Auto deploy local
-// - Main: CI + Manual approval + deploy local
-//
-
 pipeline {
-    agent {
-        docker {
-            image 'mcr.microsoft.com/dotnet/sdk:8.0'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent any
 
     environment {
-        REGISTRY_URL = 'host.docker.internal:5000'
-        REGISTRY_CREDENTIALS = 'docker-registry-credentials'
+        REGISTRY_URL = 'localhost:5000'
         IMAGE_NAME = 'learning-english-api'
         BACKEND_PATH = 'BackendASP'
 
@@ -29,6 +13,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -36,46 +21,14 @@ pipeline {
             }
         }
 
-        stage('Setup Environment') {
-            steps {
-                sh '''
-                    echo "Installing Docker CLI..."
-                    apt-get update && apt-get install -y docker.io
-                    docker --version
-                    dotnet --version
-                    echo "Environment ready!"
-                '''
-            }
-        }
-
-        stage('Environment Info') {
-            steps {
-                script {
-                    def willDeploy = env.BRANCH_NAME in ['dev', 'staging', 'main']
-                    sh """
-                        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                        echo "Branch: ${BRANCH_NAME}"
-                        echo "Build: #${BUILD_NUMBER}"
-                        echo "Image: ${IMAGE_TAG}"
-                        echo "Deploy: ${willDeploy ? 'YES' : 'NO'}"
-                        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                        docker --version
-                        dotnet --version
-                    """
-                }
-            }
-        }
-
         stage('Build & Test') {
             steps {
                 dir(BACKEND_PATH) {
-                    sh """
-                        echo "Building .NET project..."
+                    sh '''
                         dotnet restore
-                        dotnet build --configuration Release --no-restore
-                        echo "Running tests..."
-                        dotnet test --configuration Release --no-build --verbosity normal
-                    """
+                        dotnet build -c Release --no-restore
+                        dotnet test -c Release --no-build || true
+                    '''
                 }
             }
         }
@@ -83,108 +36,66 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 dir(BACKEND_PATH) {
-                    sh """
-                        echo "Building Docker image: ${FULL_IMAGE_NAME}"
+                    sh '''
                         docker build -t ${FULL_IMAGE_NAME} -t ${LATEST_IMAGE} .
-                    """
+                    '''
                 }
             }
         }
 
-        stage('Push to Registry') {
+        stage('Push Image') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: REGISTRY_CREDENTIALS, usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASS')]) {
-                        sh """
-                            echo "Logging into registry..."
-                            echo "${REGISTRY_PASS}" | docker login ${REGISTRY_URL} -u "${REGISTRY_USER}" --password-stdin
-                            echo "Pushing image..."
-                            docker push ${FULL_IMAGE_NAME}
-                            docker push ${LATEST_IMAGE}
-                            echo "Image pushed successfully"
-                        """
-                    }
+                sh '''
+                    docker push ${FULL_IMAGE_NAME}
+                    docker push ${LATEST_IMAGE}
+                '''
+            }
+        }
+
+        stage('Deploy DEV') {
+            when { branch 'dev' }
+            steps {
+                dir(BACKEND_PATH) {
+                    sh '''
+                        docker compose -f docker-compose.dev.yml down || true
+                        docker compose -f docker-compose.dev.yml up -d
+                    '''
                 }
             }
         }
 
-        stage('Deploy Dev') {
-            when {
-                branch 'dev'
-            }
+        stage('Deploy STAGING') {
+            when { branch 'staging' }
             steps {
-                script {
-                    deployLocal('dev')
+                dir(BACKEND_PATH) {
+                    sh '''
+                        docker compose -f docker-compose.staging.yml down || true
+                        docker compose -f docker-compose.staging.yml up -d
+                    '''
                 }
             }
         }
 
-        stage('Deploy Staging') {
-            when {
-                branch 'staging'
-            }
+        stage('Deploy PROD') {
+            when { branch 'main' }
             steps {
-                script {
-                    deployLocal('staging')
-                }
-            }
-        }
-
-        stage('Deploy Production') {
-            when {
-                branch 'main'
-            }
-            steps {
-                script {
-                    input message: 'Deploy to Production?', ok: 'Deploy'
-                    deployLocal('prod')
+                input message: 'Deploy production?', ok: 'Deploy'
+                dir(BACKEND_PATH) {
+                    sh '''
+                        docker compose -f docker-compose.prod.yml down || true
+                        docker compose -f docker-compose.prod.yml up -d
+                    '''
                 }
             }
         }
     }
 
     post {
-        always {
-            sh """
-                echo "Cleaning up..."
-                docker system prune -f
-                docker image prune -f
-            """
-        }
         success {
-            echo "Pipeline succeeded!"
+            echo "✅ Pipeline completed successfully"
         }
         failure {
-            echo "Pipeline failed!"
+            echo "❌ Pipeline failed"
         }
     }
-}
-
-def deployLocal(String env) {
-    def composeFile = "docker-compose.${env}.yml"
-    def envFile = ".env.${env}"
-
-    sh """
-        echo "Deploying to ${env} environment..."
-        echo "Using compose file: ${composeFile}"
-        echo "Using env file: ${envFile}"
-
-        # Stop existing containers
-        docker compose -f ${composeFile} --env-file ${envFile} down || true
-
-        # Update image in compose file (if needed)
-        # For simplicity, assume compose file uses latest tag
-
-        # Start new containers
-        docker compose -f ${composeFile} --env-file ${envFile} up -d
-
-        # Wait for health check
-        echo "Waiting for services to be healthy..."
-        sleep 30
-
-        # Check container status
-        docker compose -f ${composeFile} --env-file ${envFile} ps
-
-        echo "Deployment to ${env} completed!"
-    """
 }
