@@ -64,10 +64,10 @@ namespace LearningEnglish.Application.Common.Helpers
             };
         }
 
-        // Generates OTP expiration time (default: 5 minutes from now in UTC)
-        // minutes: Minutes until expiration (default: 5)
+        // Generates OTP expiration time (default: 2 minute from now in UTC)
+        // minutes: Minutes until expiration (default: 2)
         // returns: Expiration DateTime in UTC
-        public static DateTime GetExpirationTime(int minutes = 5)
+        public static DateTime GetExpirationTime(int minutes = 2)
         {
             return DateTime.UtcNow.AddMinutes(minutes);
         }

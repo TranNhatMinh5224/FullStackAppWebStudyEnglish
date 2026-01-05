@@ -26,6 +26,9 @@ namespace LearningEnglish.Application.Interface
         // Lấy bài làm đang thực hiện
         Task<QuizAttempt?> GetActiveAttemptAsync(int userId, int quizId);
 
+        // Lấy bài làm đang thực hiện của user (bất kỳ quiz nào)
+        Task<QuizAttempt?> GetAnyActiveAttemptByUserIdAsync(int userId);
+
         // Lấy tất cả bài làm đang thực hiện
         Task<List<QuizAttempt>> GetInProgressAttemptsAsync();
 

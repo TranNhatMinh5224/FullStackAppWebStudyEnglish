@@ -52,7 +52,7 @@ using LearningEnglish.Domain.Entities;
 
 
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args); // WebApplicationBuilder tự động load appsettings.json và appsettings.{Environment}.json và environment variables
 
 // Load configuration (appsettings + environment)
 builder.Configuration
@@ -63,7 +63,7 @@ builder.Configuration
 
 // đọc cấu hình từ appsettings
 var frontendUrl = builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
-var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+var conn = builder.Configuration.GetConnectionString("DefaultConnection"); // đọc chuỗi kết nối từ ConnectionStrings:DefaultConnection
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
@@ -205,7 +205,7 @@ builder.Services.AddScoped<ISortingService<User>, UserSortingService>();
 
 // Payment Services (Traditional Pattern - Controller → Service → Repository)
 builder.Services.AddScoped<IPaymentValidator, PaymentValidator>();
-builder.Services.AddScoped<IPaymentService, LearningEnglish.Application.Service.PaymentService.PaymentService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 // Service layer
 builder.Services.AddScoped<IAdminCourseService, AdminCourseService>();
@@ -406,7 +406,7 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<VocabularyReminderService>(); // 12:00 UTC = 19:00 VN
 
-// Configure BuildPublicUrl helpers for MinIO public URLs (must be before app.Build())
+
 // Application-level helper
 LearningEnglish.Application.Common.Helpers.BuildPublicUrl.Configure(builder.Configuration);
 // Infrastructure-level helper (used by ImageServices)

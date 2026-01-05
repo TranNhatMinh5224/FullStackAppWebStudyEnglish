@@ -75,7 +75,7 @@ namespace LearningEnglish.Application.Service
                     }
                 }
 
-                // Tạo user MỚI với EmailVerified = FALSE (trạng thái chờ xác thực)
+                // Tạo user MỚI với EmailVerified
                 var user = _mapper.Map<User>(dto);
                 user.SetPassword(dto.Password);
                 user.NormalizedEmail = dto.Email.Trim().ToUpper();

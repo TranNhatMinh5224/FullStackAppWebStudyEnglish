@@ -193,6 +193,8 @@ namespace LearningEnglish.Application.DTOs
     {
         public bool HasActiveAttempt { get; set; }
         public int? AttemptId { get; set; }
+        public int? QuizId { get; set; }
+        public string? QuizTitle { get; set; }
         public DateTime? StartedAt { get; set; }
         public DateTime? EndTime { get; set; }  // StartedAt + Duration
         public int? TimeRemainingSeconds { get; set; }  // Thời gian còn lại (nếu có duration)

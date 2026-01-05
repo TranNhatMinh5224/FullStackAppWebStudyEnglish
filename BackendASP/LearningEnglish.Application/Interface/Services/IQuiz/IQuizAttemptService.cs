@@ -22,5 +22,8 @@ namespace LearningEnglish.Application.Interface
 
         // Kiểm tra có bài làm đang InProgress không
         Task<ServiceResponse<ActiveAttemptDto>> CheckActiveAttemptAsync(int quizId, int userId);
+
+        // Kiểm tra bất kỳ bài làm nào đang thực hiện của user
+        Task<ServiceResponse<ActiveAttemptDto>> GetAnyActiveAttemptAsync(int userId);
     }
 }

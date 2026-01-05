@@ -1,10 +1,9 @@
 version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:17-alpine
-    container_name: learning-english-postgres-dev
+    container_name: learning-english-postgres-deploy
     env_file:
       - .env.dev
     environment:
@@ -25,12 +24,11 @@ services:
       timeout: 5s
       retries: 5
 
-  # ASP.NET Core API (Development mode)
+  # ASP.NET Core API (From Registry)
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: learning-english-api-dev
+    # Use pre-built image from registry instead of building
+    image: ${REGISTRY_IMAGE:-localhost:5000/learning-english-api:dev-latest}
+    container_name: learning-english-api-deploy
     env_file:
       - .env.dev
     environment:
@@ -93,6 +91,7 @@ services:
     networks:
       - learning-english-network
     restart: unless-stopped
+
 networks:
   learning-english-network:
     driver: bridge
@@ -100,4 +99,3 @@ networks:
 volumes:
   postgres_data_dev:
     driver: local
-

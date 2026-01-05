@@ -1,9 +1,18 @@
 ###############################################
-#  ENVIRONMENT VARIABLES (Not used in .NET)
+#  ENVIRONMENT VARIABLES 
 ###############################################
-# .NET uses appsettings.{Environment}.json instead
+# Docker Compose environment files - NEVER COMMIT THESE!
 .env
 .env.*
+.env.dev
+.env.staging
+.env.prod
+.env.local
+.env.*.local
+
+# Keep only the README guide
+!.env.README.md
+!.env.example
 
 ###############################################
 #  APP SETTINGS - SENSITIVE DATA

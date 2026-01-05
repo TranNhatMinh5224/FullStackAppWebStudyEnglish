@@ -64,5 +64,14 @@ namespace LearningEnglish.API.Controller.User
             var result = await _quizAttemptService.CheckActiveAttemptAsync(quizId, userId);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
+
+        // GET: api/user/quiz-attempts/current-active - kiem tra xem co dang lam bat ky bai quiz nao khong
+        [HttpGet("current-active")]
+        public async Task<IActionResult> GetAnyActiveAttempt()
+        {
+            var userId = User.GetUserId();
+            var result = await _quizAttemptService.GetAnyActiveAttemptAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
     }
 }
