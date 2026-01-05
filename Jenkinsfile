@@ -25,6 +25,15 @@ pipeline {
             steps {
                 dir(BACKEND_PATH) {
                     sh '''
+                        # Ensure .NET SDK is available
+                        if ! command -v dotnet &> /dev/null; then
+                            echo "Installing .NET SDK..."
+                            apt-get update && apt-get install -y dotnet-sdk-8.0
+                        fi
+                        
+                        echo "Current directory: $(pwd)"
+                        echo ".NET version: $(dotnet --version)"
+                        
                         dotnet restore
                         dotnet build -c Release --no-restore
                         dotnet test -c Release --no-build || true
