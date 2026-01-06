@@ -33,6 +33,35 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - learning-english-network
+    restart: unless-stopped
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: learning-english-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    networks:
+      - learning-english-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # NGINX Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: learning-english-nginx-dev
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.dev.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
     networks:
       - learning-english-network
     restart: unless-stopped
@@ -42,5 +71,7 @@ networks:
 
 volumes:
   postgres_data_dev:
+    driver: local
+  redis_data_dev:
     driver: local
 

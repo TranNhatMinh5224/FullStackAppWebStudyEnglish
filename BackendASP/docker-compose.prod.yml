@@ -29,8 +29,10 @@ services:
     container_name: learning-english-api-prod
     env_file:
       - .env.prod
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
     ports:
-      - "80:8080"
+      - "8082:8080"
     depends_on:
       postgres:
         condition: service_healthy
