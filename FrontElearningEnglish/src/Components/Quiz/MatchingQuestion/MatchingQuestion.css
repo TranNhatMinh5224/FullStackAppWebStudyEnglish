@@ -1,0 +1,152 @@
+.matching-question {
+    margin-top: 16px;
+}
+
+.matching-instructions {
+    background: rgba(65, 214, 227, 0.1);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.matching-instructions p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text-secondary, #6b7280);
+    font-style: italic;
+}
+
+.matching-container {
+    gap: 20px;
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap; /* allow stacking on small screens */
+}
+
+.matching-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Ensure columns sit side-by-side on wider screens */
+@media (min-width: 768px) {
+    .matching-container {
+        flex-wrap: nowrap;
+    }
+    .matching-column {
+        flex: 1 1 50%;
+        min-width: 0;
+    }
+}
+
+.column-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary, #1f2937);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--color-border-light, #e5e7eb);
+}
+
+.matching-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 2px solid var(--color-border-light, #e5e7eb);
+    border-radius: 12px;
+    background: var(--color-bg-primary, white);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 60px;
+}
+
+.matching-item:hover {
+    border-color: var(--color-secondary-cyan, #41d6e3);
+    background: rgba(65, 214, 227, 0.05);
+}
+
+.matching-item.selected {
+    border-color: var(--color-secondary-cyan, #41d6e3);
+    background: rgba(65, 214, 227, 0.15);
+    box-shadow: 0 0 0 3px rgba(65, 214, 227, 0.2);
+}
+
+.matching-item.matched {
+    border-color: var(--color-status-success, #10b981);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.matching-item.matched:hover {
+    border-color: var(--color-status-error, #ef4444);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.item-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-secondary-cyan, #41d6e3);
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.matching-item.matched .item-number {
+    background: var(--color-status-success, #10b981);
+}
+
+.item-text {
+    flex: 1;
+    font-size: 15px;
+    color: var(--color-text-primary, #1f2937);
+    line-height: 1.5;
+}
+
+/* Ensure the content inside matching items aligns to the left edge */
+.matching-column {
+    align-items: stretch;
+}
+
+.matching-column .matching-item {
+    width: 100%;
+    justify-content: flex-start; /* place badge + text to the left */
+}
+
+.matching-column .matching-item .fw-medium,
+.matching-column .matching-item .item-text {
+    text-align: left;
+}
+
+/* Override bootstrap utility that sets justify-content-between on Card.Body */
+.matching-column .matching-item .card-body {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    gap: 12px;
+    width: 100%;
+}
+
+/* Ensure inner left wrapper doesn't center its content */
+.matching-column .matching-item .card-body > .d-flex {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+.match-indicator {
+    color: var(--color-status-success, #10b981);
+    font-size: 20px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+}
+
