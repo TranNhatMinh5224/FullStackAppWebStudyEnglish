@@ -59,7 +59,7 @@ var builder = WebApplication.CreateBuilder(args);
 // 3. Environment Variables (OVERRIDE appsettings files - highest priority)
 
 // đọc cấu hình từ appsettings
-var frontendUrl = builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+// var frontendUrl = builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
 var conn = builder.Configuration.GetConnectionString("DefaultConnection"); // đọc chuỗi kết nối từ ConnectionStrings:DefaultConnection
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
@@ -98,11 +98,6 @@ builder.Services.AddSwaggerGen(c =>
 // CORS có chức năng cho phép frontend truy cập API
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend" , p =>
-        p.WithOrigins(frontendUrl)
-         .AllowAnyHeader()
-         .AllowAnyMethod()
-         .AllowCredentials());
     options.AddPolicy("AllowAll", p =>
         p.AllowAnyOrigin()
          .AllowAnyHeader()
@@ -431,7 +426,7 @@ else
 }
 
 app.UseRouting();
-app.UseCors("AllowFrontend");
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
