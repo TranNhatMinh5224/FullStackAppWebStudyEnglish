@@ -98,6 +98,7 @@ namespace LearningEnglish.Infrastructure.Repositories
 
         public async Task AddAnswerOptionAsync(AnswerOption answerOption)
         {
+            await Task.CompletedTask;
             _context.AnswerOptions.Add(answerOption);
         }
     }
