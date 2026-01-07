@@ -127,11 +127,11 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
     }));
 
 // Redis Distributed Cache
-// builder.Services.AddStackExchangeRedisCache(options =>
-// {
-//     options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
-//     options.InstanceName = "LearningEnglish_";
-// });
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+    options.InstanceName = "LearningEnglish_";
+});
 
 // JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
