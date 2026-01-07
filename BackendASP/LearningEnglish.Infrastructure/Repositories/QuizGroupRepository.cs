@@ -82,6 +82,7 @@ namespace LearningEnglish.Infrastructure.Repositories
 
         public async Task AddQuizGroupAsync(QuizGroup quizGroup)
         {
+            await Task.CompletedTask;
             quizGroup.CreatedAt = DateTime.UtcNow;
             quizGroup.UpdatedAt = DateTime.UtcNow;
             _context.QuizGroups.Add(quizGroup);

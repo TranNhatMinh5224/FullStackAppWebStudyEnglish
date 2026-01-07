@@ -2,7 +2,7 @@ using LearningEnglish.Domain.Entities;
 using LearningEnglish.Domain.Enums;
 using Xunit;
 
-namespace LearningEnglish.Tests.DomainTest;
+namespace LearningEnglish.Tests.DomainTest.Users;
 
 public class UserTests
 {

@@ -29,6 +29,8 @@ services:
     container_name: learning-english-api-staging
     env_file:
       - .env.staging
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
     ports:
       - "5031:8080"
     depends_on:

@@ -71,11 +71,17 @@ namespace LearningEnglish.Application.DTOs
         public string ItemType { get; set; } = string.Empty;  // "Group" hoặc "Question"
         public int ItemIndex { get; set; }  // Thứ tự hiển thị (0, 1, 2...)
 
-       
+        // === GROUP PROPERTIES (null nếu ItemType = "Question") ===
         public int? GroupId { get; set; }
         public string? Name { get; set; }  // Tên group (Part 1, Part 2)
+        public string? Title { get; set; }  // Tiêu đề group
+        public string? Description { get; set; }  // Mô tả group
         public string? ImgUrl { get; set; }
         public string? VideoUrl { get; set; }
+        public string? ImgType { get; set; }  // Loại file ảnh
+        public string? VideoType { get; set; }  // Loại file video
+        public int? VideoDuration { get; set; }  // Độ dài video (giây)
+        public float? SumScore { get; set; }  // Tổng điểm group
         public List<QuestionDto>? Questions { get; set; }  // Questions trong group
 
         // === QUESTION PROPERTIES (null nếu ItemType = "Group") ===

@@ -80,6 +80,7 @@ namespace LearningEnglish.Infrastructure.Repositories
 
         public async Task AddQuizSectionAsync(QuizSection quizSection)
         {
+            await Task.CompletedTask;
             quizSection.CreatedAt = DateTime.UtcNow;
             quizSection.UpdatedAt = DateTime.UtcNow;
             _context.QuizSections.Add(quizSection);

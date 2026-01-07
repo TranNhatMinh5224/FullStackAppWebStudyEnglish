@@ -67,6 +67,7 @@ pipeline {
                         fi
                         
                         # Deploy
+                        docker compose -f docker-compose.dev.yml pull
                         docker compose -f docker-compose.dev.yml down || true
                         docker compose -f docker-compose.dev.yml up -d
                         
@@ -81,19 +82,63 @@ pipeline {
             when { branch 'staging' }
             steps {
                 dir(BACKEND_PATH) {
-                    withCredentials([string(credentialsId: 'staging-postgres-password', variable: 'STAGING_DB_PASS'), string(credentialsId: 'staging-jwt-key', variable: 'STAGING_JWT_KEY')]) {
+                    withCredentials([
+                        string(credentialsId: 'staging-postgres-password', variable: 'STAGING_DB_PASS'),
+                        string(credentialsId: 'staging-jwt-key', variable: 'STAGING_JWT_KEY'),
+                        string(credentialsId: 'staging-smtp-password', variable: 'STAGING_SMTP_PASS'),
+                        string(credentialsId: 'staging-azure-speech-key', variable: 'STAGING_AZURE_SPEECH_KEY'),
+                        string(credentialsId: 'staging-minio-access-key', variable: 'STAGING_MINIO_ACCESS_KEY'),
+                        string(credentialsId: 'staging-minio-secret-key', variable: 'STAGING_MINIO_SECRET_KEY'),
+                        string(credentialsId: 'staging-oxford-app-id', variable: 'STAGING_OXFORD_APP_ID'),
+                        string(credentialsId: 'staging-oxford-app-key', variable: 'STAGING_OXFORD_APP_KEY'),
+                        string(credentialsId: 'staging-unsplash-app-id', variable: 'STAGING_UNSPLASH_APP_ID'),
+                        string(credentialsId: 'staging-unsplash-access-key', variable: 'STAGING_UNSPLASH_ACCESS_KEY'),
+                        string(credentialsId: 'staging-unsplash-secret-key', variable: 'STAGING_UNSPLASH_SECRET_KEY'),
+                        string(credentialsId: 'staging-google-client-id', variable: 'STAGING_GOOGLE_CLIENT_ID'),
+                        string(credentialsId: 'staging-google-client-secret', variable: 'STAGING_GOOGLE_CLIENT_SECRET'),
+                        string(credentialsId: 'staging-facebook-app-id', variable: 'STAGING_FACEBOOK_APP_ID'),
+                        string(credentialsId: 'staging-facebook-app-secret', variable: 'STAGING_FACEBOOK_APP_SECRET'),
+                        string(credentialsId: 'staging-casso-client-id', variable: 'STAGING_CASSO_CLIENT_ID'),
+                        string(credentialsId: 'staging-casso-api-key', variable: 'STAGING_CASSO_API_KEY'),
+                        string(credentialsId: 'staging-casso-checksum-key', variable: 'STAGING_CASSO_CHECKSUM_KEY'),
+                        string(credentialsId: 'staging-payos-client-id', variable: 'STAGING_PAYOS_CLIENT_ID'),
+                        string(credentialsId: 'staging-payos-api-key', variable: 'STAGING_PAYOS_API_KEY'),
+                        string(credentialsId: 'staging-payos-checksum-key', variable: 'STAGING_PAYOS_CHECKSUM_KEY'),
+                        string(credentialsId: 'staging-gemini-api-key', variable: 'STAGING_GEMINI_API_KEY')
+                    ]) {
                         sh '''
                             # Generate .env.staging from .env.example with real secrets
                             cp .env.example .env.staging
                             sed -i "s/YOUR_POSTGRES_PASSWORD/${STAGING_DB_PASS}/g" .env.staging
                             sed -i "s/YOUR_PASSWORD/${STAGING_DB_PASS}/g" .env.staging
                             sed -i "s/YOUR_SECRET_KEY_HERE_MIN_32_CHARS/${STAGING_JWT_KEY}/g" .env.staging
+                            sed -i "s/YOUR_APP_PASSWORD/${STAGING_SMTP_PASS}/g" .env.staging
+                            sed -i "s/YOUR_AZURE_SPEECH_KEY/${STAGING_AZURE_SPEECH_KEY}/g" .env.staging
+                            sed -i "s/YOUR_MINIO_ACCESS_KEY/${STAGING_MINIO_ACCESS_KEY}/g" .env.staging
+                            sed -i "s/YOUR_MINIO_SECRET_KEY/${STAGING_MINIO_SECRET_KEY}/g" .env.staging
+                            sed -i "s/YOUR_OXFORD_APP_ID/${STAGING_OXFORD_APP_ID}/g" .env.staging
+                            sed -i "s/YOUR_OXFORD_APP_KEY/${STAGING_OXFORD_APP_KEY}/g" .env.staging
+                            sed -i "s/YOUR_UNSPLASH_APP_ID/${STAGING_UNSPLASH_APP_ID}/g" .env.staging
+                            sed -i "s/YOUR_UNSPLASH_ACCESS_KEY/${STAGING_UNSPLASH_ACCESS_KEY}/g" .env.staging
+                            sed -i "s/YOUR_UNSPLASH_SECRET_KEY/${STAGING_UNSPLASH_SECRET_KEY}/g" .env.staging
+                            sed -i "s/YOUR_GOOGLE_CLIENT_ID/${STAGING_GOOGLE_CLIENT_ID}/g" .env.staging
+                            sed -i "s/YOUR_GOOGLE_CLIENT_SECRET/${STAGING_GOOGLE_CLIENT_SECRET}/g" .env.staging
+                            sed -i "s/YOUR_FACEBOOK_APP_ID/${STAGING_FACEBOOK_APP_ID}/g" .env.staging
+                            sed -i "s/YOUR_FACEBOOK_APP_SECRET/${STAGING_FACEBOOK_APP_SECRET}/g" .env.staging
+                            sed -i "s/YOUR_CASSO_CLIENT_ID/${STAGING_CASSO_CLIENT_ID}/g" .env.staging
+                            sed -i "s/YOUR_CASSO_API_KEY/${STAGING_CASSO_API_KEY}/g" .env.staging
+                            sed -i "s/YOUR_CASSO_CHECKSUM_KEY/${STAGING_CASSO_CHECKSUM_KEY}/g" .env.staging
+                            sed -i "s/YOUR_PAYOS_CLIENT_ID/${STAGING_PAYOS_CLIENT_ID}/g" .env.staging
+                            sed -i "s/YOUR_PAYOS_API_KEY/${STAGING_PAYOS_API_KEY}/g" .env.staging
+                            sed -i "s/YOUR_PAYOS_CHECKSUM_KEY/${STAGING_PAYOS_CHECKSUM_KEY}/g" .env.staging
+                            sed -i "s/YOUR_GEMINI_API_KEY/${STAGING_GEMINI_API_KEY}/g" .env.staging
                             
                             # Deploy
+                            docker compose -f docker-compose.staging.yml pull
                             docker compose -f docker-compose.staging.yml down || true
                             docker compose -f docker-compose.staging.yml up -d
                             
-                            echo "✓ Deployment completed"
+                            echo "✓ Staging deployment completed"
                             docker compose -f docker-compose.staging.yml ps
                         '''
                     }
@@ -106,15 +151,59 @@ pipeline {
             steps {
                 input message: 'Deploy production?', ok: 'Deploy'
                 dir(BACKEND_PATH) {
-                    withCredentials([string(credentialsId: 'prod-postgres-password', variable: 'PROD_DB_PASS'), string(credentialsId: 'prod-jwt-key', variable: 'PROD_JWT_KEY')]) {
+                    withCredentials([
+                        string(credentialsId: 'prod-postgres-password', variable: 'PROD_DB_PASS'),
+                        string(credentialsId: 'prod-jwt-key', variable: 'PROD_JWT_KEY'),
+                        string(credentialsId: 'prod-smtp-password', variable: 'PROD_SMTP_PASS'),
+                        string(credentialsId: 'prod-azure-speech-key', variable: 'PROD_AZURE_SPEECH_KEY'),
+                        string(credentialsId: 'prod-minio-access-key', variable: 'PROD_MINIO_ACCESS_KEY'),
+                        string(credentialsId: 'prod-minio-secret-key', variable: 'PROD_MINIO_SECRET_KEY'),
+                        string(credentialsId: 'prod-oxford-app-id', variable: 'PROD_OXFORD_APP_ID'),
+                        string(credentialsId: 'prod-oxford-app-key', variable: 'PROD_OXFORD_APP_KEY'),
+                        string(credentialsId: 'prod-unsplash-app-id', variable: 'PROD_UNSPLASH_APP_ID'),
+                        string(credentialsId: 'prod-unsplash-access-key', variable: 'PROD_UNSPLASH_ACCESS_KEY'),
+                        string(credentialsId: 'prod-unsplash-secret-key', variable: 'PROD_UNSPLASH_SECRET_KEY'),
+                        string(credentialsId: 'prod-google-client-id', variable: 'PROD_GOOGLE_CLIENT_ID'),
+                        string(credentialsId: 'prod-google-client-secret', variable: 'PROD_GOOGLE_CLIENT_SECRET'),
+                        string(credentialsId: 'prod-facebook-app-id', variable: 'PROD_FACEBOOK_APP_ID'),
+                        string(credentialsId: 'prod-facebook-app-secret', variable: 'PROD_FACEBOOK_APP_SECRET'),
+                        string(credentialsId: 'prod-casso-client-id', variable: 'PROD_CASSO_CLIENT_ID'),
+                        string(credentialsId: 'prod-casso-api-key', variable: 'PROD_CASSO_API_KEY'),
+                        string(credentialsId: 'prod-casso-checksum-key', variable: 'PROD_CASSO_CHECKSUM_KEY'),
+                        string(credentialsId: 'prod-payos-client-id', variable: 'PROD_PAYOS_CLIENT_ID'),
+                        string(credentialsId: 'prod-payos-api-key', variable: 'PROD_PAYOS_API_KEY'),
+                        string(credentialsId: 'prod-payos-checksum-key', variable: 'PROD_PAYOS_CHECKSUM_KEY'),
+                        string(credentialsId: 'prod-gemini-api-key', variable: 'PROD_GEMINI_API_KEY')
+                    ]) {
                         sh '''
                             # Generate .env.prod from .env.example with real secrets
                             cp .env.example .env.prod
                             sed -i "s/YOUR_POSTGRES_PASSWORD/${PROD_DB_PASS}/g" .env.prod
                             sed -i "s/YOUR_PASSWORD/${PROD_DB_PASS}/g" .env.prod
                             sed -i "s/YOUR_SECRET_KEY_HERE_MIN_32_CHARS/${PROD_JWT_KEY}/g" .env.prod
+                            sed -i "s/YOUR_APP_PASSWORD/${PROD_SMTP_PASS}/g" .env.prod
+                            sed -i "s/YOUR_AZURE_SPEECH_KEY/${PROD_AZURE_SPEECH_KEY}/g" .env.prod
+                            sed -i "s/YOUR_MINIO_ACCESS_KEY/${PROD_MINIO_ACCESS_KEY}/g" .env.prod
+                            sed -i "s/YOUR_MINIO_SECRET_KEY/${PROD_MINIO_SECRET_KEY}/g" .env.prod
+                            sed -i "s/YOUR_OXFORD_APP_ID/${PROD_OXFORD_APP_ID}/g" .env.prod
+                            sed -i "s/YOUR_OXFORD_APP_KEY/${PROD_OXFORD_APP_KEY}/g" .env.prod
+                            sed -i "s/YOUR_UNSPLASH_APP_ID/${PROD_UNSPLASH_APP_ID}/g" .env.prod
+                            sed -i "s/YOUR_UNSPLASH_ACCESS_KEY/${PROD_UNSPLASH_ACCESS_KEY}/g" .env.prod
+                            sed -i "s/YOUR_UNSPLASH_SECRET_KEY/${PROD_UNSPLASH_SECRET_KEY}/g" .env.prod
+                            sed -i "s/YOUR_GOOGLE_CLIENT_ID/${PROD_GOOGLE_CLIENT_ID}/g" .env.prod
+                            sed -i "s/YOUR_GOOGLE_CLIENT_SECRET/${PROD_GOOGLE_CLIENT_SECRET}/g" .env.prod
+                            sed -i "s/YOUR_FACEBOOK_APP_ID/${PROD_FACEBOOK_APP_ID}/g" .env.prod
+                            sed -i "s/YOUR_FACEBOOK_APP_SECRET/${PROD_FACEBOOK_APP_SECRET}/g" .env.prod
+                            sed -i "s/YOUR_CASSO_CLIENT_ID/${PROD_CASSO_CLIENT_ID}/g" .env.prod
+                            sed -i "s/YOUR_CASSO_API_KEY/${PROD_CASSO_API_KEY}/g" .env.prod
+                            sed -i "s/YOUR_CASSO_CHECKSUM_KEY/${PROD_CASSO_CHECKSUM_KEY}/g" .env.prod
+                            sed -i "s/YOUR_PAYOS_CLIENT_ID/${PROD_PAYOS_CLIENT_ID}/g" .env.prod
+                            sed -i "s/YOUR_PAYOS_API_KEY/${PROD_PAYOS_API_KEY}/g" .env.prod
+                            sed -i "s/YOUR_PAYOS_CHECKSUM_KEY/${PROD_PAYOS_CHECKSUM_KEY}/g" .env.prod
+                            sed -i "s/YOUR_GEMINI_API_KEY/${PROD_GEMINI_API_KEY}/g" .env.prod
                             
                             # Deploy
+                            docker compose -f docker-compose.prod.yml pull
                             docker compose -f docker-compose.prod.yml down || true
                             docker compose -f docker-compose.prod.yml up -d
                             

@@ -61,7 +61,7 @@ namespace LearningEnglish.API.Authorization
     {
         public TeacherRoleRequirement()
         {
-            // Không cần tham số, chỉ cần check role Teacher
+            
         }
     }
 }

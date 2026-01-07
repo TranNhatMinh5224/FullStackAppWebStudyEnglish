@@ -311,8 +311,49 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
-                // 3. Tìm scoring strategy
+                // ========================================
+                // 3. TÌM SCORING STRATEGY PHÙ HỢP (STRATEGY PATTERN)
+                // ========================================
+                // _scoringStrategies là IEnumerable<IScoringStrategy> chứa TẤT CẢ strategies:
+                // [
+                //   MultipleChoiceScoringStrategy   { Type = QuestionType.MultipleChoice },
+                //   MatchingScoringStrategy         { Type = QuestionType.Matching },
+                //   FillBlankScoringStrategy        { Type = QuestionType.FillBlank },
+                //   TrueFalseScoringStrategy        { Type = QuestionType.TrueFalse },
+                //   MultipleAnswersScoringStrategy  { Type = QuestionType.MultipleAnswers },
+                //   OrderingScoringStrategy         { Type = QuestionType.Ordering }
+                // ]
+                //
+                // VÍ DỤ:
+                // - question.Type = QuestionType.MultipleChoice (enum value = 1)
+                //
+                // FirstOrDefault(s => s.Type == question.Type):
+                // - Duyệt qua TỪNG strategy trong _scoringStrategies
+                // - s: Biến đại diện cho strategy hiện tại (vd: MultipleChoiceScoringStrategy)
+                // - s.Type: Lấy property Type của strategy (vd: QuestionType.MultipleChoice)
+                // - s.Type == question.Type: So sánh với Type của question
+                //   + MultipleChoiceScoringStrategy.Type (=1) == question.Type (=1) → TRUE ✓
+                //   + MatchingScoringStrategy.Type (=5) == question.Type (=1) → FALSE
+                //   + ... tiếp tục với các strategy còn lại
+                // - FirstOrDefault(): Trả về strategy ĐẦU TIÊN khớp điều kiện
+                //   → strategy = MultipleChoiceScoringStrategy
+                //
+                // KẾT QUẢ:
+                // - Nếu tìm thấy: strategy = instance của strategy phù hợp
+                // - Nếu không tìm thấy: strategy = null
+                //
+                // TƯƠNG ĐƯƠNG CODE DÀI:
+                // IScoringStrategy? strategy = null;
+                // foreach (var s in _scoringStrategies)
+                // {
+                //     if (s.Type == question.Type)
+                //     {
+                //         strategy = s;
+                //         break; // Tìm thấy rồi thì dừng
+                //     }
+                // }
                 var strategy = _scoringStrategies.FirstOrDefault(s => s.Type == question.Type);
+                
                 if (strategy == null)
                 {
                     response.Success = false;
@@ -690,7 +731,7 @@ namespace LearningEnglish.Application.Service
                 // 6. Parse answers từ DB (chỉ load answers, KHÔNG load scores khi đang làm bài)
                 var currentAnswers = AnswerNormalizer.DeserializeAnswersJson(attempt.AnswersJson);
 
-                // 7. Populate answers vào questions trong DTO (KHÔNG hiển thị điểm khi InProgress)
+               
                 // Lý do: User không nên biết mình làm đúng hay sai khi đang làm bài
                 foreach (var section in shuffledSections)
                 {

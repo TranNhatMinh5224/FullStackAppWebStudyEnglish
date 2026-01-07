@@ -49,6 +49,7 @@ public class PaymentWebhookQueueRepository : IPaymentWebhookQueueRepository
 
     public async Task UpdateWebhookStatusAsync(PaymentWebhookQueue webhook)
     {
+        await Task.CompletedTask;
         _context.PaymentWebhookQueues.Update(webhook);
     }
 
