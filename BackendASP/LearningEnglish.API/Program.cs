@@ -126,6 +126,9 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
         npgsql.EnableRetryOnFailure(0);
     }));
 
+// In-Memory Cache
+builder.Services.AddMemoryCache();
+
 // Redis Distributed Cache
 builder.Services.AddStackExchangeRedisCache(options =>
 {
