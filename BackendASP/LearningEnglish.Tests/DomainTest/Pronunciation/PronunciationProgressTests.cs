@@ -171,4 +171,68 @@ public class PronunciationProgressTests
         Assert.True(progress.IsMastered);
         Assert.NotNull(progress.MasteredAt);
     }
+
+    [Fact]
+    public void UpdateAfterAssessment_ShouldNotMarkMastered_WhenAvgScoreIsBelowThreshold()
+    {
+        // Arrange
+        var progress = new PronunciationProgress
+        {
+            TotalAttempts = 1,
+            BestScore = 95,
+            AvgPronunciationScore = 80,
+            IsMastered = false
+        };
+
+        // Act
+        // Current Avg 80. New Attempt 89. New Avg = (80+89)/2 = 84.5 < 85
+        progress.UpdateAfterAssessment(89, 89, 89, 89, new(), new(), DateTime.UtcNow);
+
+        // Assert
+        Assert.Equal(84.5, progress.AvgPronunciationScore);
+        Assert.False(progress.IsMastered);
+    }
+
+    [Fact]
+    public void UpdateAfterAssessment_ShouldNotMarkMastered_WhenBestScoreIsBelowThreshold()
+    {
+        // Arrange
+        var progress = new PronunciationProgress
+        {
+            TotalAttempts = 1,
+            BestScore = 80,
+            AvgPronunciationScore = 84,
+            IsMastered = false
+        };
+
+        // Act
+        // Current Avg 84. New Attempt 88. New Avg = (84+88)/2 = 86 > 85 (OK)
+        // Best Score updates to 88 < 90 (FAIL)
+        progress.UpdateAfterAssessment(88, 88, 88, 88, new(), new(), DateTime.UtcNow);
+
+        // Assert
+        Assert.True(progress.AvgPronunciationScore >= 85);
+        Assert.True(progress.BestScore < 90);
+        Assert.False(progress.IsMastered);
+    }
+
+    [Fact]
+    public void UpdateAfterAssessment_ShouldNotUpdateMasteredAt_WhenAlreadyMastered()
+    {
+        // Arrange
+        var initialMasteredDate = DateTime.UtcNow.AddDays(-1);
+        var progress = new PronunciationProgress
+        {
+            IsMastered = true,
+            MasteredAt = initialMasteredDate,
+            BestScore = 95,
+            AvgPronunciationScore = 90
+        };
+
+        // Act
+        progress.UpdateAfterAssessment(95, 95, 95, 95, new(), new(), DateTime.UtcNow);
+
+        // Assert
+        Assert.Equal(initialMasteredDate, progress.MasteredAt);
+    }
 }
