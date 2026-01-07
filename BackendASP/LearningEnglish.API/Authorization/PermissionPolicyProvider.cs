@@ -40,9 +40,9 @@ namespace LearningEnglish.API.Authorization
                 return Task.FromResult<AuthorizationPolicy?>(policy);
             }
 
-            // ═══════════════════════════════════════════════════════════════
+          
             // HANDLE TEACHER ROLE POLICY
-            // ═══════════════════════════════════════════════════════════════
+            
             if (policyName == TEACHER_ROLE_POLICY)
             {
                 var policy = new AuthorizationPolicyBuilder()

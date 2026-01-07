@@ -36,12 +36,18 @@ namespace LearningEnglish.Application.Common.Mappers
                     // Group properties
                     GroupId = g.QuizGroupId,
                     Name = g.Name,
+                    Title = g.Title,
+                    Description = g.Description,
                     ImgUrl = !string.IsNullOrWhiteSpace(g.ImgKey)
                         ? BuildPublicUrl.BuildURL(QuestionBucket, g.ImgKey)
                         : null,
                     VideoUrl = !string.IsNullOrWhiteSpace(g.VideoKey)
                         ? BuildPublicUrl.BuildURL(QuestionBucket, g.VideoKey)
                         : null,
+                    ImgType = g.ImgType,
+                    VideoType = g.VideoType,
+                    VideoDuration = g.VideoDuration,
+                    SumScore = g.SumScore,
                     Questions = g.Questions
                         .Select(q => MapToQuestionDto(q, attemptId, quiz.ShuffleAnswers.GetValueOrDefault(false)))
                         .ToList()

@@ -136,6 +136,7 @@ namespace LearningEnglish.Infrastructure.Services
             string locale = "en-US")
         {
             // Not implemented yet - can add if needed
+            await Task.CompletedTask;
             throw new NotImplementedException("Stream-based assessment not implemented yet");
         }
 
@@ -145,6 +146,7 @@ namespace LearningEnglish.Infrastructure.Services
             string voiceName = "en-US-JennyNeural")
         {
             // Not implemented yet - can add for TTS feature
+            await Task.CompletedTask;
             throw new NotImplementedException("Text-to-speech not implemented yet");
         }
 

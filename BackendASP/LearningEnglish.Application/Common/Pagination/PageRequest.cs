@@ -1,7 +1,7 @@
 namespace LearningEnglish.Application.Common.Pagination
 {
     // Base class cho pagination requests
-    // Tuân thủ Single Responsibility Principle: chỉ lo pagination logic
+   
     public class PageRequest
     {
         private int _pageNumber = 1;

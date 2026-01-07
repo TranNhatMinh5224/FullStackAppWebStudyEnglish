@@ -14,7 +14,7 @@ using Microsoft.Extensions.Configuration;
 
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type
 
-namespace LearningEnglish.Tests.ServiceTest;
+namespace LearningEnglish.Tests.ServiceTest.Users;
 
 public class InformationUserServiceTests
 {
