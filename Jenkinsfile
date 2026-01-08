@@ -1,22 +1,28 @@
+// khai báo Jenkins Pipeline
 pipeline {
+    // sử dụng bất kỳ agent nào có sẵn
     agent any
+    // thiết lập biến môi trường
 
     environment {
-        REGISTRY_URL = 'localhost:5000'
-        REGISTRY_CREDENTIALS = 'docker-registry-credentials'
-        IMAGE_NAME = 'learning-english-api'
-        BACKEND_PATH = 'BackendASP'
+        
+        REGISTRY_URL = 'localhost:5000' // URL của Docker registry
+        REGISTRY_CREDENTIALS = 'docker-registry-credentials' // ID của credentials trong Jenkins
+        IMAGE_NAME = 'learning-english-api' // tên của Docker image
+        BACKEND_PATH = 'BackendElearningEnglish' // đường dẫn đến thư mục backend
 
-        NORMALIZED_BRANCH = "${env.BRANCH_NAME}".replaceAll('/', '-')
-        IMAGE_TAG = "${NORMALIZED_BRANCH}-${env.BUILD_NUMBER}"
-        FULL_IMAGE_NAME = "${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
-        LATEST_IMAGE = "${REGISTRY_URL}/${IMAGE_NAME}:${NORMALIZED_BRANCH}-latest"
+        NORMALIZED_BRANCH = "${env.BRANCH_NAME}".replaceAll('/', '-') // chuẩn hóa tên nhánh để sử dụng trong tag . ví dụ 'nfeature/xyz' thành 'feature-xyz'
+        IMAGE_TAG = "${NORMALIZED_BRANCH}-${env.BUILD_NUMBER}" // tag của image dựa trên nhánh và số build . ví dụ 'feature-xyz-15'
+        FULL_IMAGE_NAME = "${REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}" // tên đầy đủ của image với tag . ví dụ 'localhost:5000/learning-english-api:feature-xyz-15'
+        LATEST_IMAGE = "${REGISTRY_URL}/${IMAGE_NAME}:${NORMALIZED_BRANCH}-latest" // tên image với tag latest cho nhánh . ví dụ 'localhost:5000/learning-english-api:feature-xyz-latest'
     }
+    // định nghĩa các giai đoạn của pipeline
+    // mỗi giai đoạn đại diện cho một bước trong quy trình CI/CD
 
-    stages {
+    stages { // bắt đầu định nghĩa các giai đoạn
 
-        stage('Checkout') {
-            steps {
+        stage('Checkout') { // giai đoạn kiểm tra mã nguồn từ hệ thống quản lý phiên bản
+            steps {  // bước thực hiện trong giai đoạn này
                 checkout scm
                 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                 echo "Branch: ${env.BRANCH_NAME}"
@@ -25,6 +31,7 @@ pipeline {
                 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             }
         }
+        // giai đoạn xây dựng Docker image
 
         stage('Build Docker Image') {
             steps {
@@ -35,6 +42,7 @@ pipeline {
                 }
             }
         }
+        // giai đoạn đẩy Docker image lên registry 
 
         stage('Push Image') {
             steps {
@@ -52,6 +60,7 @@ pipeline {
                 }
             }
         }
+        // giai đoạn triển khai ứng dụng dựa trên nhánh hiện tại
 
         stage('Deploy DEV') {
             when { branch 'dev' }
@@ -77,6 +86,7 @@ pipeline {
                 }
             }
         }
+        // giai đoạn triển khai lên môi trường staging
 
         stage('Deploy STAGING') {
             when { branch 'staging' }
@@ -145,6 +155,7 @@ pipeline {
                 }
             }
         }
+        // giai đoạn triển khai lên môi trường production
 
         stage('Deploy PROD') {
             when { branch 'main' }
@@ -215,6 +226,7 @@ pipeline {
             }
         }
     }
+    // khối post để xử lý kết quả của pipeline
 
     post {
         success {

@@ -1,0 +1,19 @@
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.header-title {
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+}

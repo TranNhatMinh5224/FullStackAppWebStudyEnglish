@@ -1,0 +1,239 @@
+/* Override Bootstrap modal styles - make it wider and centered */
+.quiz-attempt-detail-modal-dialog,
+.modal .quiz-attempt-detail-modal-dialog,
+.modal.show .quiz-attempt-detail-modal-dialog,
+.quiz-attempt-detail-modal .modal-dialog.quiz-attempt-detail-modal-dialog,
+.modal.quiz-attempt-detail-modal .modal-dialog.quiz-attempt-detail-modal-dialog,
+.modal.show.quiz-attempt-detail-modal .modal-dialog.quiz-attempt-detail-modal-dialog,
+body .modal .quiz-attempt-detail-modal-dialog,
+body .modal.show .quiz-attempt-detail-modal-dialog,
+body .quiz-attempt-detail-modal .modal-dialog.quiz-attempt-detail-modal-dialog,
+html body .modal .quiz-attempt-detail-modal-dialog,
+html body .modal.show .quiz-attempt-detail-modal-dialog,
+html body .quiz-attempt-detail-modal .modal-dialog.quiz-attempt-detail-modal-dialog {
+  max-width: 900px !important;
+  width: 90% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+body .modal.show .quiz-attempt-detail-modal .modal-dialog.quiz-attempt-detail-modal-dialog,
+body .modal.show.quiz-attempt-detail-modal .modal-dialog.quiz-attempt-detail-modal-dialog,
+html body .modal.show .quiz-attempt-detail-modal-dialog,
+html body .modal.show .quiz-attempt-detail-modal .modal-dialog.quiz-attempt-detail-modal-dialog {
+  max-width: 900px !important;
+  width: 90% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  min-height: calc(100% - 1rem) !important;
+}
+
+.quiz-attempt-detail-modal-dialog.modal-dialog-centered,
+.modal.quiz-attempt-detail-modal .modal-dialog.quiz-attempt-detail-modal-dialog.modal-dialog-centered,
+body .quiz-attempt-detail-modal .modal-dialog.quiz-attempt-detail-modal-dialog.modal-dialog-centered,
+html body .quiz-attempt-detail-modal-dialog.modal-dialog-centered,
+html body .modal.quiz-attempt-detail-modal .modal-dialog.quiz-attempt-detail-modal-dialog.modal-dialog-centered {
+  max-width: 900px !important;
+  width: 90% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  min-height: calc(100% - 1rem) !important;
+}
+
+.quiz-attempt-detail-modal .modal-content,
+.modal.quiz-attempt-detail-modal .modal-content,
+body .quiz-attempt-detail-modal .modal-content,
+html body .quiz-attempt-detail-modal .modal-content {
+  border-radius: 16px !important;
+  border: none !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+  max-width: none !important;
+  width: 100% !important;
+  max-height: 90vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.quiz-attempt-detail-modal .modal-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 24px 28px;
+}
+
+.quiz-attempt-detail-modal .modal-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.quiz-attempt-detail-modal .modal-body {
+  padding: 28px;
+  overflow-y: auto;
+  flex: 1;
+  max-height: calc(90vh - 140px);
+}
+
+.quiz-attempt-detail-modal .modal-footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 20px 28px;
+  gap: 12px;
+}
+
+/* Questions Review Section */
+.quiz-attempt-detail-modal .questions-review-section {
+  margin-top: 24px;
+}
+
+.quiz-attempt-detail-modal .questions-review-section h5 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.quiz-attempt-detail-modal .question-review-item {
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
+}
+
+.quiz-attempt-detail-modal .question-review-item.correct-answer {
+  border-left: 4px solid #10b981;
+  background-color: #f0fdf4;
+}
+
+.quiz-attempt-detail-modal .question-review-item.incorrect-answer {
+  border-left: 4px solid #ef4444;
+  background-color: #fef2f2;
+}
+
+.quiz-attempt-detail-modal .question-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.quiz-attempt-detail-modal .question-badge {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.quiz-attempt-detail-modal .question-badge.number {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.quiz-attempt-detail-modal .question-badge.type {
+  background-color: #6b7280;
+  color: white;
+}
+
+.quiz-attempt-detail-modal .question-badge.correct {
+  background-color: #10b981;
+  color: white;
+}
+
+.quiz-attempt-detail-modal .question-badge.incorrect {
+  background-color: #ef4444;
+  color: white;
+}
+
+.quiz-attempt-detail-modal .question-text {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.quiz-attempt-detail-modal .question-options {
+  list-style: none;
+  padding-left: 0;
+  margin: 12px 0;
+}
+
+.quiz-attempt-detail-modal .question-options li {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: all 0.2s;
+}
+
+.quiz-attempt-detail-modal .question-options li.selected {
+  background-color: #dbeafe;
+  border: 1px solid #3b82f6;
+  font-weight: 500;
+}
+
+.quiz-attempt-detail-modal .question-options li.correct-option {
+  background-color: #d1fae5;
+  border: 1px solid #10b981;
+}
+
+.quiz-attempt-detail-modal .question-options li .option-label {
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.quiz-attempt-detail-modal .question-options li .correct-indicator {
+  color: #10b981;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.quiz-attempt-detail-modal .question-options li .selected-indicator {
+  color: #3b82f6;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.quiz-attempt-detail-modal .answer-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.quiz-attempt-detail-modal .user-answer,
+.quiz-attempt-detail-modal .correct-answer-text {
+  font-size: 14px;
+  margin-bottom: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.quiz-attempt-detail-modal .user-answer strong,
+.quiz-attempt-detail-modal .correct-answer-text strong {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.quiz-attempt-detail-modal .user-answer {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.quiz-attempt-detail-modal .correct-answer-text {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
+.quiz-attempt-detail-modal .question-score {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 8px;
+}

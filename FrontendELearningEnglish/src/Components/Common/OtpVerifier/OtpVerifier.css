@@ -1,0 +1,148 @@
+.otp-container {
+  min-height: 100vh;
+  height: 100vh;
+  background: linear-gradient(135deg, #7abfec 0%, #fdf2f8 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.otp-box {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  padding: 48px 40px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.otp-box h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+.otp-desc {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 32px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.otp-input-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.otp-input {
+  width: 48px;
+  height: 55px;
+  font-size: 22px;
+  text-align: center;
+  border-radius: 12px;
+  border: 1.5px solid #d1d5db;
+  outline: none;
+  transition: 0.2s;
+  background: white;
+}
+
+.otp-input:focus:not(:disabled) {
+  border-color: #7f56d9;
+  box-shadow: 0 0 0 3px rgba(127, 86, 217, 0.3);
+}
+
+.otp-input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.otp-error {
+  color: #ef4444;
+  margin-bottom: 20px;
+  font-size: 14px;
+  min-height: 20px;
+  text-align: left;
+}
+
+.otp-error-max {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.otp-btn {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(to right, #41d6e3 0%, #06b6d4 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+  box-shadow: 0 4px 12px rgba(65, 214, 227, 0.3);
+}
+
+.otp-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(65, 214, 227, 0.4);
+  opacity: 0.95;
+}
+
+.otp-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.otp-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.otp-resend {
+  margin-top: 24px;
+  font-size: 14px;
+  color: #555;
+}
+
+.resend-btn {
+  background: none;
+  border: none;
+  color: #7a3df0;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+  font-size: 14px;
+  transition: opacity 0.2s ease;
+  text-decoration: underline;
+}
+
+.resend-btn:hover:not(:disabled) {
+  opacity: 0.8;
+}
+
+.resend-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.otp-timer {
+  font-size: 13px;
+  color: #6b7280;
+  margin-left: 8px;
+}
+
+.otp-expired {
+  font-size: 13px;
+  color: #ef4444;
+  margin-left: 8px;
+}
