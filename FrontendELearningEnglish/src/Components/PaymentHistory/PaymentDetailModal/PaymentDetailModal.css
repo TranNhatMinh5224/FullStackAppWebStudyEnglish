@@ -1,0 +1,50 @@
+/* Đảm bảo modal được căn giữa màn hình */
+.modal.show .modal-dialog {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 1rem);
+}
+
+.modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 1rem);
+}
+
+.payment-detail-content {
+    padding: 10px 0;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.detail-value {
+    font-size: 16px;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.amount-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #10b981;
+}
+
+.status-badge-large {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 16px;
+}
+
+.status-badge-large.status-completed {
+    background-color: #41d6e3 !important;
+    color: white !important;
+}
+
+.modal-footer .btn {
+    min-width: 100px;
+}

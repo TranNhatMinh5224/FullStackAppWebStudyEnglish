@@ -1,0 +1,126 @@
+/* Giữ lại các style đặc biệt nếu cần cho hiệu ứng gradient hoặc badge hot, còn lại đã dùng react-bootstrap */
+.premium-subtitle {
+  background: linear-gradient(90deg, #6fd5e0, #d447b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.premium-content {
+ margin-top: 40px;
+ margin-bottom: 40px;
+}
+.plan-badge-hot {
+  position: absolute;
+  top: -12px;
+  right: 24px;
+  background: linear-gradient(90deg, #6fd5e0, #d447b6);
+  color: #ffffff;
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.price-old {
+  font-size: 20px;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+.price-new {
+  font-size: 36px;
+  font-weight: 800;
+  background: linear-gradient(90deg, #6fd5e0, #d447b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.price-currency {
+  font-size: 20px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plan-features li {
+  font-size: 16px;
+  color: #1f2937;
+  line-height: 1.6;
+}
+
+.premium-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.premium-btn {
+  padding: 16px 40px;
+  border-radius: 28px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+  min-width: 180px;
+}
+
+.premium-btn.login-btn {
+  background: #ffffff;
+  color: #7a3df0;
+  border: 2px solid #7a3df0;
+}
+
+.premium-btn.login-btn:hover {
+  background: #7a3df0;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(122, 61, 240, 0.3);
+}
+
+.premium-btn.register-btn {
+  background: linear-gradient(90deg, #6fd5e0, #d447b6);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(111, 213, 224, 0.3);
+}
+
+.premium-btn.register-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(111, 213, 224, 0.4);
+}
+
+@media (max-width: 768px) {
+  .premium-plans {
+    grid-template-columns: 1fr;
+  }
+
+  .premium-actions {
+    flex-direction: column;
+  }
+
+  .premium-btn {
+    width: 100%;
+  }
+
+  .welcome-premium {
+    padding: 40px 20px;
+  }
+}
+
