@@ -129,9 +129,11 @@ ehthumbs.db
 ###############################################
 # CUSTOM IGNORES (optional)
 ###############################################
-/BackendASP/**/bin/
-/BackendASP/**/obj/
-/Frontend/**/build/
+/BackendElearningEnglish/**/bin/
+/BackendElearningEnglish/**/obj/
+/FrontElearningEnglish/**/node_modules/
+/FrontElearningEnglish/**/build/
+/FrontElearningEnglish/**/dist/
 logs/
 
 ###############################################

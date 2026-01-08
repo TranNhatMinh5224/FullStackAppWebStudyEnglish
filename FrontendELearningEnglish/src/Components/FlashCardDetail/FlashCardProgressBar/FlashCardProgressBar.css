@@ -1,0 +1,81 @@
+.flashcard-progress-bar {
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: -30px;
+}
+
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.progress-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary, #1f2937);
+}
+
+.progress-count {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary, #1f2937);
+}
+
+.progress-bottom-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.progress-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-border-light, #e5e7eb);
+    color: var(--color-text-secondary, #6b7280);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.progress-close-btn:hover {
+    background: var(--color-text-tertiary, #9ca3af);
+    color: white;
+    transform: scale(1.1);
+}
+
+.progress-track {
+    flex: 1;
+    height: 12px;
+    background: var(--color-border-light, #e5e7eb);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-secondary-cyan, #41d6e3) 0%, var(--color-secondary-pink, #d946ef) 100%);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+/* Review variant - chỉnh alignment cho trang review */
+.flashcard-progress-bar.review-variant .progress-top-row {
+    justify-content: flex-end;
+}
+
+.flashcard-progress-bar.review-variant .progress-label {
+    display: none;
+}

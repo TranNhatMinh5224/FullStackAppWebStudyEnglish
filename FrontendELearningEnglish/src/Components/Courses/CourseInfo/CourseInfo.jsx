@@ -1,0 +1,25 @@
+import React from "react";
+import { Container, Row, Col } from "react-bootstrap";
+import "./CourseInfo.css";
+import CourseDescription from "../CourseDescription/CourseDescription";
+
+export default function CourseInfo({ course }) {
+    return (
+        <div className="course-info">
+            <Container fluid>
+                <Row>
+                    <Col>
+                        <section className="course-info-section">
+                            <h2 className="course-info-title">Giới thiệu khoá học</h2>
+                            
+                            <div className="course-info-subsection">
+                                <CourseDescription description={course.description} />
+                            </div>
+                        </section>
+                    </Col>
+                </Row>
+            </Container>
+        </div>
+    );
+}
+

@@ -1,0 +1,42 @@
+.flashcard-navigation {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-secondary-cyan, #41d6e3);
+    color: white;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.nav-button:hover:not(.disabled) {
+    background: var(--color-secondary-cyan-dark, #35c4d0);
+    transform: scale(1.1);
+}
+
+.nav-button.disabled {
+    background: var(--color-border-light, #e5e7eb);
+    color: var(--color-text-tertiary, #9ca3af);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+    .nav-button {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+    }
+}
+

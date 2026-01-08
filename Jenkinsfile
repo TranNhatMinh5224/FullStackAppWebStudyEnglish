@@ -9,7 +9,7 @@ pipeline {
         REGISTRY_URL = 'localhost:5000' // URL của Docker registry
         REGISTRY_CREDENTIALS = 'docker-registry-credentials' // ID của credentials trong Jenkins
         IMAGE_NAME = 'learning-english-api' // tên của Docker image
-        BACKEND_PATH = 'BackendASP' // đường dẫn đến thư mục backend
+        BACKEND_PATH = 'BackendElearningEnglish' // đường dẫn đến thư mục backend
 
         NORMALIZED_BRANCH = "${env.BRANCH_NAME}".replaceAll('/', '-') // chuẩn hóa tên nhánh để sử dụng trong tag . ví dụ 'nfeature/xyz' thành 'feature-xyz'
         IMAGE_TAG = "${NORMALIZED_BRANCH}-${env.BUILD_NUMBER}" // tag của image dựa trên nhánh và số build . ví dụ 'feature-xyz-15'
