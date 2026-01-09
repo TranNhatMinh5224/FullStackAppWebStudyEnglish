@@ -1,7 +1,4 @@
-###############################################
-#  ENVIRONMENT VARIABLES 
-###############################################
-# Docker Compose environment files - NEVER COMMIT THESE!
+
 .env
 
 .env.dev
@@ -14,16 +11,12 @@
 !.env.README.md
 
 
-###############################################
-#  APP SETTINGS - SENSITIVE DATA
-###############################################
-# Exclude environment-specific appsettings (often contain secrets)
 **/appsettings.Development.json
 **/appsettings.Docker.json
 **/appsettings.Staging.json
 **/appsettings.Production.json
 **/appsettings.Local.json
-**/appsettings.Test.json
+
 
 # Keep template/example files
 !**/appsettings.json
@@ -82,12 +75,12 @@ build/
 dist/
 coverage/
 npm-debug.log*
+yarn-error.log*
 yarn-debug.log*
 yarn-error.log*
 # Giữ lockfile để build reproducible
-# (KHÔNG ignore 2 file dưới, nên comment lại)
-# package-lock.json
-# yarn.lock
+package-lock.json
+yarn.lock
 
 ###############################################
 #  TEST OUTPUT
@@ -100,8 +93,7 @@ nunit-*.xml
 
 ###############################################
 #  ENTITY FRAMEWORK
-###############################################
-# KHÔNG ignore migrations (cần commit để đồng bộ DB schema)
+
 *.dbmdl
 
 ###############################################
@@ -129,7 +121,7 @@ ehthumbs.db
 ###############################################
 # CUSTOM IGNORES (optional)
 ###############################################
-/BackendASP/**/bin/
-/BackendASP/**/obj/
-/Frontend/**/build/
+/BackendELearningEnglish/**/bin/
+/BackendELearningEnglish/**/obj/
+/FrontElearningEnglish/**/build/
 logs/

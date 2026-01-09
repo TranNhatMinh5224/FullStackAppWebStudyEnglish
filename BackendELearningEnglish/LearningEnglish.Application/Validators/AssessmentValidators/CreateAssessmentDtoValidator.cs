@@ -1,0 +1,51 @@
+using FluentValidation;
+using LearningEnglish.Application.DTOs;
+
+namespace LearningEnglish.Application.Validators.AssessmentValidators
+{
+    public class CreateAssessmentDtoValidator : AbstractValidator<CreateAssessmentDto>
+    {
+        public CreateAssessmentDtoValidator()
+        {
+            RuleFor(x => x.ModuleId)
+                .GreaterThan(0)
+                .WithMessage("Module ID phải lớn hơn 0");
+
+            RuleFor(x => x.Title)
+                .NotEmpty()
+                .WithMessage("Tiêu đề Assessment không được để trống")
+                .Length(1, 200)
+                .WithMessage("Tiêu đề Assessment phải có độ dài từ 1 đến 200 ký tự");
+
+            RuleFor(x => x.Description)
+                .MaximumLength(1000)
+                .WithMessage("Mô tả Assessment không được vượt quá 1000 ký tự")
+                .When(x => !string.IsNullOrEmpty(x.Description));
+
+
+
+
+
+            RuleFor(x => x.OpenAt)
+                .LessThan(x => x.DueAt)
+                .When(x => x.OpenAt.HasValue && x.DueAt.HasValue)
+                .WithMessage("Thời gian mở phải trước thời gian đóng");
+
+            RuleFor(x => x.TimeLimit)
+                .Must(BeValidTimeSpan)
+                .When(x => !string.IsNullOrEmpty(x.TimeLimit))
+                .WithMessage("Thời gian giới hạn phải có định dạng hợp lệ (HH:MM:SS) và lớn hơn 0");
+        }
+
+        private static bool BeValidTimeSpan(string? timeLimit)
+        {
+            if (string.IsNullOrEmpty(timeLimit))
+                return true;
+
+            if (!TimeSpan.TryParse(timeLimit, out var timespan))
+                return false;
+
+            return timespan > TimeSpan.Zero;
+        }
+    }
+}

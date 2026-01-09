@@ -1,0 +1,101 @@
+version: '3.8'
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: learning-english-postgres-deploy
+    env_file:
+      - .env.dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: ${PGDATA}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    networks:
+      - learning-english-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ASP.NET Core API (From Registry)
+  api:
+    # Use pre-built image from registry instead of building
+    image: ${REGISTRY_IMAGE:-localhost:5000/learning-english-api:dev-latest}
+    container_name: learning-english-api-deploy
+    env_file:
+      - .env.dev
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=${ASPNETCORE_URLS}
+      # Database
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      # JWT
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      # MinIO (External - hosted at data.minhduong.id.vn)
+      - MinIO__Endpoint=${MINIO_ENDPOINT}
+      - MinIO__AccessKey=${MINIO_ACCESS_KEY}
+      - MinIO__SecretKey=${MINIO_SECRET_KEY}
+      - MinIO__UseSSL=${MINIO_USE_SSL}
+      - Minio__BaseUrl=${MINIO_BASE_URL}
+      # SMTP
+      - Smtp__Host=${SMTP_HOST}
+      - Smtp__Port=${SMTP_PORT}
+      - Smtp__User=${SMTP_USER}
+      - Smtp__Password=${SMTP_PASSWORD}
+      - Smtp__EnableSsl=${SMTP_ENABLE_SSL}
+      - Smtp__FromName=${SMTP_FROM_NAME}
+      # Azure Speech
+      - AzureSpeech__SubscriptionKey=${AZURE_SPEECH_KEY}
+      - AzureSpeech__Region=${AZURE_SPEECH_REGION}
+      # Oxford Dictionary
+      - OxfordDictionary__BaseUrl=${OXFORD_BASE_URL}
+      - OxfordDictionary__AppId=${OXFORD_APP_ID}
+      - OxfordDictionary__AppKey=${OXFORD_APP_KEY}
+      # Unsplash
+      - Unsplash__ApplicationId=${UNSPLASH_APPLICATION_ID}
+      - Unsplash__AccessKey=${UNSPLASH_ACCESS_KEY}
+      - Unsplash__SecretKey=${UNSPLASH_SECRET_KEY}
+      - Unsplash__BaseUrl=${UNSPLASH_BASE_URL}
+      # Google Auth
+      - GoogleAuth__ClientId=${GOOGLE_CLIENT_ID}
+      - GoogleAuth__ClientSecret=${GOOGLE_CLIENT_SECRET}
+      # Facebook Auth
+      - FacebookAuth__AppId=${FACEBOOK_APP_ID}
+      - FacebookAuth__AppSecret=${FACEBOOK_APP_SECRET}
+      # PayOS
+      - PayOS__ClientId=${PAYOS_CLIENT_ID}
+      - PayOS__ApiKey=${PAYOS_API_KEY}
+      - PayOS__ChecksumKey=${PAYOS_CHECKSUM_KEY}
+      - PayOS__ApiUrl=${PAYOS_API_URL}
+      - PayOS__ReturnUrl=${PAYOS_RETURN_URL}
+      - PayOS__CancelUrl=${PAYOS_CANCEL_URL}
+      - PayOS__WebhookUrl=${PAYOS_WEBHOOK_URL}
+      # Gemini
+      - Gemini__ApiKey=${GEMINI_API_KEY}
+      # Frontend
+      - Frontend__BaseUrl=${FRONTEND_BASE_URL}
+    ports:
+      - "5030:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - learning-english-network
+    restart: unless-stopped
+
+networks:
+  learning-english-network:
+    driver: bridge
+
+volumes:
+  postgres_data_dev:
+    driver: local

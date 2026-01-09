@@ -1,0 +1,130 @@
+/* Common styles for all create modals with image upload */
+
+/* Modal dialog sizing */
+.create-with-image-modal-dialog,
+.modal .create-with-image-modal-dialog,
+.modal.show .create-with-image-modal-dialog {
+  max-width: 900px !important;
+  width: 90% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Override global modal.show rule */
+body .modal.show .create-with-image-modal .modal-dialog.create-with-image-modal-dialog,
+html body .modal.show .create-with-image-modal-dialog {
+  max-width: 900px !important;
+  width: 90% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  min-height: calc(100% - 1rem) !important;
+}
+
+/* Common top banner styling - consistent across all modals */
+.create-with-image-modal .form-top-banner {
+  margin: 0 auto;
+  width: 100%;
+  padding: 18px 28px;
+  border-radius: 18px 18px 12px 12px;
+  background: linear-gradient(90deg,#6FD5E0 0%, #4FC1C9 100%);
+  box-shadow: 0 12px 28px rgba(79,193,201,0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.create-with-image-modal .form-top-banner h4 {
+  color: white;
+  margin-bottom: 0;
+  font-weight: 600;
+}
+
+/* Modal body styling */
+.create-with-image-modal .modal-body {
+  padding-top: 1.5rem;
+}
+
+/* Image upload area styling */
+.create-with-image-modal .image-upload-area {
+  transition: all 0.2s ease;
+}
+
+.create-with-image-modal .image-upload-area.drag-over {
+  background-color: #e3f2fd !important;
+  border-color: #2196f3 !important;
+  border-width: 2px !important;
+}
+
+.create-with-image-modal .image-upload-area.uploading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Recommended badge styling */
+.create-with-image-modal .recommended-badge {
+  background: linear-gradient(90deg,#6FD5E0 0%, #4FC1C9 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Card styling */
+.create-with-image-modal .card {
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+}
+
+.create-with-image-modal .card-title {
+  color: #495057;
+  margin-bottom: 1rem;
+}
+
+/* Form controls */
+.create-with-image-modal .form-label.required::after {
+  content: " *";
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Button styling */
+.create-with-image-modal .btn-primary {
+  background: linear-gradient(90deg,#6FD5E0 0%, #4FC1C9 100%);
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.create-with-image-modal .btn-primary:hover {
+  background: linear-gradient(90deg,#4FC1C9 0%, #3BA8B0 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79,193,201,0.3);
+}
+
+.create-with-image-modal .btn-outline-secondary {
+  border-color: #6c757d;
+  color: #6c757d;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-weight: 500;
+}
+
+.create-with-image-modal .btn-outline-secondary:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+/* Specific modal overrides */
+.create-course-modal .form-top-banner {
+  background: linear-gradient(90deg,#6FD5E0 0%, #4FC1C9 100%);
+}
+
+.create-module-modal .form-top-banner {
+  background: linear-gradient(90deg,#6FD5E0 0%, #4FC1C9 100%);
+}

@@ -1,0 +1,208 @@
+.module-card {
+    background: var(--color-bg-primary, white);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: visible;
+    min-height: 100px;
+}
+
+.module-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.module-card.completed {
+    border-color: var(--color-status-success, #10b981);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.module-icon-wrapper {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    position: relative;
+    z-index: 1;
+}
+
+.module-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.module-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.module-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+.module-image.lecture,
+.module-image[class*="lecture"] {
+    background: linear-gradient(135deg, #6fd5e0 0%, #41d6e3 100%);
+}
+
+.module-image.flashcard,
+.module-image[class*="flashcard"] {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.module-image.assignment,
+.module-image[class*="assignment"] {
+    background: linear-gradient(135deg, #d946ef 0%, #c026d3 100%);
+}
+
+.module-image.quiz,
+.module-image[class*="quiz"] {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.module-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.module-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-primary, #1f2937);
+    margin: 0 0 6px 0;
+}
+
+.module-description {
+    font-size: 14px;
+    color: var(--color-text-secondary, #6b7280);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.module-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.pronunciation-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+    position: relative;
+}
+
+/* Màu xám khi chưa hoàn thành flashcard - disabled */
+.pronunciation-btn.pronunciation-disabled {
+    background: var(--color-border-light, #e5e7eb);
+    color: var(--color-text-secondary, #6b7280);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Màu xanh cyan khi flashcard hoàn thành (chưa hoàn thành pronunciation) */
+.pronunciation-btn.pronunciation-pending {
+    background: var(--color-secondary-cyan, #41d6e3);
+    color: white;
+    cursor: pointer;
+}
+
+.pronunciation-btn.pronunciation-pending:hover {
+    background: #35b8c4;
+}
+
+/* Màu xanh khi đã hoàn thành pronunciation */
+.pronunciation-btn.pronunciation-completed {
+    background: var(--color-secondary-cyan, #41d6e3);
+    color: white;
+}
+
+.pronunciation-btn.pronunciation-completed:hover {
+    background: #35b8c4;
+}
+
+.pronunciation-btn svg {
+    font-size: 12px;
+}
+
+.module-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.module-action-btn svg {
+    font-size: 14px;
+}
+
+.module-action-btn.completed-btn {
+    background: var(--color-status-success, #10b981);
+}
+
+.module-action-btn.continue-btn,
+.module-action-btn.start-btn {
+    background: var(--color-secondary-cyan, #41d6e3);
+}
+
+.module-action-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .module-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .module-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .module-action-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}

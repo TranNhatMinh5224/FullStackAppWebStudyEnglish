@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Course Purchase Confirmation - Catalunya English</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f7fa;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f5f7fa; padding: 40px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Mua Khóa Học Thành Công!</h1>
+                            <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Catalunya English Learning Platform</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <p style="margin: 0 0 20px; color: #2d3748; font-size: 16px; line-height: 1.6;">Chào <strong style="color: #10b981;">{{USER_NAME}}</strong>,</p>
+                            
+                            <p style="margin: 0 0 30px; color: #4a5568; font-size: 15px; line-height: 1.6;">🎊 Chúc mừng! Bạn đã đăng ký thành công khóa học. Hãy bắt đầu hành trình học tập của bạn ngay hôm nay!</p>
+                            
+                            <!-- Course Info Card -->
+                            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 30px;">
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-left: 4px solid #10b981; border-radius: 12px; padding: 24px;">
+                                        <h3 style="margin: 0 0 16px; color: #065f46; font-size: 18px; font-weight: 700;">📚 Thông Tin Khóa Học</h3>
+                                        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                                <td style="padding: 8px 0; color: #047857; font-size: 14px; font-weight: 600;">Tên khóa học:</td>
+                                                <td style="padding: 8px 0; color: #065f46; font-size: 14px; text-align: right; font-weight: 700;">{{COURSE_NAME}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; color: #047857; font-size: 14px; font-weight: 600;">Ngày đăng ký:</td>
+                                                <td style="padding: 8px 0; color: #065f46; font-size: 14px; text-align: right;">{{PURCHASE_DATE}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; color: #047857; font-size: 14px; font-weight: 600;">Trạng thái:</td>
+                                                <td style="padding: 8px 0; text-align: right;">
+                                                    <span style="background-color: #10b981; color: #ffffff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">✅ Đã Kích Hoạt</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- CTA Button -->
+                            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 30px;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{COURSE_URL}}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 16px 36px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                                            🚀 Bắt Đầu Học Ngay
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Next Steps -->
+                            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 30px;">
+                                <tr>
+                                    <td style="background-color: #f7fafc; border-radius: 12px; padding: 24px;">
+                                        <h3 style="margin: 0 0 16px; color: #2d3748; font-size: 16px; font-weight: 700;">📖 Các Bước Tiếp Theo:</h3>
+                                        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                                <td style="padding: 8px 0; color: #4a5568; font-size: 14px; line-height: 1.8;">
+                                                    <span style="color: #10b981; font-weight: 700;">1.</span> Truy cập dashboard khóa học của bạn
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; color: #4a5568; font-size: 14px; line-height: 1.8;">
+                                                    <span style="color: #10b981; font-weight: 700;">2.</span> Xem video bài giảng và tài liệu học tập
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; color: #4a5568; font-size: 14px; line-height: 1.8;">
+                                                    <span style="color: #10b981; font-weight: 700;">3.</span> Tham gia cộng đồng học viên
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; color: #4a5568; font-size: 14px; line-height: 1.8;">
+                                                    <span style="color: #10b981; font-weight: 700;">4.</span> Theo dõi tiến độ học tập của bạn
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="margin: 0 0 8px; color: #4a5568; font-size: 15px; line-height: 1.6;">Chúc bạn học tập hiệu quả! 🎓</p>
+                            <p style="margin: 0; color: #718096; font-size: 14px;">Hỗ trợ: <a href="mailto:support@catalunya-english.com" style="color: #10b981; text-decoration: none;">support@catalunya-english.com</a></p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f7fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0 0 8px; color: #718096; font-size: 13px;">
+                                Cảm ơn bạn đã tin tưởng Catalunya English
+                            </p>
+                            <p style="margin: 0; color: #a0aec0; font-size: 12px;">
+                                © {{CURRENT_YEAR}} <strong>Catalunya English</strong>. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
