@@ -13,7 +13,7 @@ namespace LearningEnglish.Application.Validators.CourseValidators
 
             RuleFor(x => x.Description)
                 .NotEmpty().WithMessage("Course description is required")
-                .MaximumLength(2000).WithMessage("Course description must not exceed 2000 characters");
+                .MaximumLength(200000).WithMessage("Course description must not exceed 200000 characters");
 
 
             RuleFor(x => x.Price)
