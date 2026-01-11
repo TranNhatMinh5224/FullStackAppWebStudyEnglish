@@ -17,7 +17,7 @@ namespace LearningEnglish.Application.Validators.CourseValidators
             // Description: Chỉ validate khi có giá trị
             RuleFor(x => x.Description)
                 .NotEmpty().WithMessage("Course description cannot be empty if provided")
-                .MaximumLength(2000).WithMessage("Course description must not exceed 2000 characters")
+                .MaximumLength(1000000).WithMessage("Course description must not exceed 1000000 characters")
                 .When(x => x.Description != null);
 
             // Price: Chỉ validate khi có giá trị

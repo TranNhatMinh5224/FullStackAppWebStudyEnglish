@@ -213,7 +213,7 @@ namespace LearningEnglish.Infrastructure.Data
 
                 e.Property(c => c.DescriptionMarkdown)
                  .IsRequired()
-                 .HasMaxLength(200000);
+                 .HasMaxLength(1000000);
 
                 e.Property(c => c.ImageKey)
                  .HasMaxLength(500);
@@ -269,7 +269,7 @@ namespace LearningEnglish.Infrastructure.Data
                  .HasMaxLength(255);
 
                 e.Property(l => l.Description)
-                 .HasMaxLength(1000);
+                 .HasMaxLength(200);
 
                 e.Property(l => l.ImageKey)
                  .HasMaxLength(500);
@@ -304,7 +304,7 @@ namespace LearningEnglish.Infrastructure.Data
                  .HasMaxLength(255);
 
                 e.Property(m => m.Description)
-                 .HasMaxLength(1000);
+                 .HasMaxLength(200);
 
                 e.Property(m => m.ImageKey)
                  .HasMaxLength(500);

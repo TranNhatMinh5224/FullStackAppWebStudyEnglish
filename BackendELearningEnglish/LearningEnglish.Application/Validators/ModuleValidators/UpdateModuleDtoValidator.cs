@@ -14,7 +14,7 @@ namespace LearningEnglish.Application.Validators.ModuleValidators
                 .When(x => x.Name != null);
 
             RuleFor(x => x.Description)
-                .MaximumLength(1000).WithMessage("Mô tả module không được vượt quá 1000 ký tự")
+                .MaximumLength(200).WithMessage("Mô tả module không được vượt quá 200 ký tự")
                 .When(x => x.Description != null);
 
             RuleFor(x => x.ContentType)
