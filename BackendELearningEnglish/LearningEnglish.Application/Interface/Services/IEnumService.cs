@@ -23,6 +23,9 @@ namespace LearningEnglish.Application.Interface.Services
         // Asset Frontend Related
         ServiceResponse<List<EnumMappingDto>> GetAssetTypes();
 
+        // Lecture Related
+        ServiceResponse<List<EnumMappingDto>> GetLectureTypes();
+
         // Master Data (Gộp tất cả cho Frontend)
         ServiceResponse<Dictionary<string, List<EnumMappingDto>>> GetAllEnums();
     }

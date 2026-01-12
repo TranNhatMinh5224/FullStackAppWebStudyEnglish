@@ -39,17 +39,17 @@ namespace LearningEnglish.Application.Validators
                 .WithMessage("Nhãn đánh số chỉ được chứa chữ, số, khoảng trắng và các ký tự -, ., _")
                 .When(x => !string.IsNullOrEmpty(x.NumberingLabel));
 
-            // Validate Type - phải là enum hợp lệ
+            // Validate Type - phải là enum hợp lệ (Content, Document, Video)
             RuleFor(x => x.Type)
                 .NotNull()
                 .WithMessage("Loại lecture là bắt buộc")
                 .IsInEnum()
-                .WithMessage("Loại lecture không hợp lệ. Chỉ chấp nhận: Content, Video, Audio, Document, Interactive");
+                .WithMessage("Loại lecture không hợp lệ. Chỉ chấp nhận: Content (1), Document (2), Video (3)");
 
-            // Validate MarkdownContent - tùy chọn, tối đa 50000 ký tự
+            // Validate MarkdownContent - tùy chọn, tối đa 5 triệu ký tự (chỉ cho Document)
             RuleFor(x => x.MarkdownContent)
-                .MaximumLength(50000)
-                .WithMessage("Nội dung Markdown không được vượt quá 50000 ký tự")
+                .MaximumLength(5000000)
+                .WithMessage("Nội dung Markdown không được vượt quá 5 triệu ký tự")
                 .When(x => !string.IsNullOrEmpty(x.MarkdownContent));
 
             // Validate ParentLectureId - nếu có phải > 0

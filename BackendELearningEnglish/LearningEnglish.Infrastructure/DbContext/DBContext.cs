@@ -348,7 +348,7 @@ namespace LearningEnglish.Infrastructure.Data
                  .IsRequired();
 
                 e.Property(l => l.MarkdownContent)
-                 .HasMaxLength(50000);
+                 .HasMaxLength(5000000);
 
                 e.Property(l => l.RenderedHtml)
                  .IsRequired();

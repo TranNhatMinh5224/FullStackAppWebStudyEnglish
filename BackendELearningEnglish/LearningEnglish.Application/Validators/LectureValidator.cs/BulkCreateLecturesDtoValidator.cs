@@ -75,10 +75,10 @@ namespace LearningEnglish.Application.Validators
                 .IsInEnum()
                 .WithMessage("Loại lecture không hợp lệ");
 
-            // Validate MarkdownContent - tùy chọn
+            // Validate MarkdownContent - tùy chọn, tối đa 5 triệu ký tự
             RuleFor(x => x.MarkdownContent)
-                .MaximumLength(50000)
-                .WithMessage("Nội dung Markdown không được vượt quá 50000 ký tự")
+                .MaximumLength(5000000)
+                .WithMessage("Nội dung Markdown không được vượt quá 5 triệu ký tự")
                 .When(x => !string.IsNullOrEmpty(x.MarkdownContent));
 
            
