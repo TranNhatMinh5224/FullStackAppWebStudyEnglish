@@ -1,0 +1,148 @@
+/* Clean Bootstrap approach - minimal overrides (copy from CourseFormModal) */
+.create-module-modal-dialog {
+  max-width: 900px;
+  width: 95%;
+}
+
+/* Layout & Scrollbar */
+.create-module-modal .modal-content {
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.create-module-modal .modal-body {
+  background-color: #f8fafc;
+  padding: 1.5rem 2rem;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+}
+
+.create-module-modal .modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.create-module-modal .modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* Header SaaS Modern */
+.create-module-modal .modal-header {
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+  justify-content: center;
+  border-radius: 20px 20px 0 0;
+  position: relative;
+  text-align: center;
+}
+
+.create-module-modal .modal-title-custom {
+  color: white;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+/* Section Logic */
+.form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  background: #74CEDE;
+  border-radius: 2px;
+}
+
+/* Form Styling */
+.create-module-modal .form-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #334155;
+  margin-bottom: 0.4rem;
+}
+
+.create-module-modal .form-control, 
+.create-module-modal .form-select {
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  padding: 0.6rem 0.8rem;
+  transition: all 0.2s;
+}
+
+.create-module-modal .form-control:focus,
+.create-module-modal .form-select:focus {
+  border-color: #74CEDE;
+  box-shadow: 0 0 0 4px rgba(116, 206, 222, 0.1);
+  outline: none;
+}
+
+/* Footer Sticky */
+.create-module-modal .modal-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem 2rem;
+  gap: 12px;
+}
+
+.btn-primary-custom {
+  background: #74CEDE;
+  border: none;
+  font-weight: 600;
+  padding: 0.6rem 2rem;
+  border-radius: 8px;
+  color: white;
+  transition: all 0.2s;
+}
+
+.btn-primary-custom:hover:not(:disabled) {
+  background: #5BB8C8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(116, 206, 222, 0.3);
+}
+
+.char-count {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+  padding: 0.25rem 0.5rem;
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
+.char-count.text-warning {
+  color: #f59e0b;
+  background: #fef3c7;
+}
+
+.char-count.text-danger {
+  color: #dc2626;
+  background: #fee2e2;
+}

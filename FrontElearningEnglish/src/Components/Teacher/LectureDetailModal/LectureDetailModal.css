@@ -1,0 +1,99 @@
+.lecture-detail-modal .modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.lecture-detail-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: none;
+  padding: 1.25rem 1.5rem;
+}
+
+.lecture-detail-header .modal-title {
+  color: white;
+  font-weight: 600;
+}
+
+.lecture-detail-header .btn-link {
+  color: white;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.lecture-detail-header .btn-link:hover {
+  opacity: 1;
+}
+
+.lecture-detail-content {
+  padding: 0.5rem;
+}
+
+.lecture-detail-header-info {
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.lecture-detail-markdown {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.markdown-content {
+  line-height: 1.8;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.markdown-content p {
+  margin-bottom: 1rem;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+}
+
+.markdown-content code {
+  background-color: #f1f3f5;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.markdown-content pre {
+  background-color: #f1f3f5;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.lecture-detail-media {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.lecture-detail-media video {
+  background-color: #000;
+}
+
+.media-document {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lecture-detail-metadata {
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+  margin-top: 1rem;
+}

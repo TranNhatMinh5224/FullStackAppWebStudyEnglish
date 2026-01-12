@@ -1,0 +1,272 @@
+/* =====================================================
+   Global Modal Fix - Đảm bảo modal luôn vừa với viewport
+   Import file này vào App.js hoặc index.js
+   ===================================================== */
+
+/* Ngăn scroll trang khi modal mở */
+body.modal-open {
+  overflow: hidden !important;
+  padding-right: 0 !important;
+}
+
+/* Modal backdrop full screen */
+.modal {
+  overflow: hidden !important;
+}
+
+/* Modal dialog - căn giữa và giới hạn trong viewport */
+.modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+  margin: 1rem auto !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Modal dialog centered - đảm bảo căn giữa đúng */
+.modal-dialog-centered {
+  min-height: calc(100% - 2rem) !important;
+}
+
+/* Modal content - giới hạn chiều cao */
+.modal-content {
+  max-height: calc(100vh - 2rem) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Modal header - cố định */
+.modal-header {
+  flex-shrink: 0 !important;
+}
+
+/* Modal body - scroll bên trong */
+.modal-body {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  max-height: calc(100vh - 200px) !important;
+}
+
+/* Modal footer - cố định */
+.modal-footer {
+  flex-shrink: 0 !important;
+}
+
+/* Scrollbar đẹp cho modal body */
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* =====================================================
+   Specific Modal Fixes - Override cho từng modal cụ thể
+   ===================================================== */
+
+/* CreateCourseModal */
+.create-course-modal .modal-dialog,
+.create-course-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-course-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-course-modal .modal-body {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+}
+
+/* CreateLessonModal */
+.create-lesson-modal .modal-dialog,
+.create-lesson-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-lesson-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-lesson-modal .modal-body {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+}
+
+/* CreateModuleModal */
+.create-module-modal .modal-dialog,
+.create-module-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-module-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-module-modal .modal-body {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+}
+
+/* CreateLectureModal (clm prefix) */
+.clm-modal .modal-dialog,
+.clm-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.clm-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.clm-modal .modal-body,
+.clm-body {
+  max-height: calc(100vh - 200px) !important;
+  overflow-y: auto !important;
+}
+
+/* CreateQuizModal */
+.create-quiz-modal .modal-dialog,
+.create-quiz-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-quiz-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-quiz-modal .modal-body {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+}
+
+/* CreateEssayModal */
+.create-essay-modal .modal-dialog,
+.create-essay-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-essay-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-essay-modal .modal-body {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+}
+
+/* CreateAssessmentModal */
+.create-assessment-modal .modal-dialog,
+.create-assessment-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-assessment-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-assessment-modal .modal-body {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+}
+
+/* CreateQuizSectionModal */
+.create-quiz-section-modal .modal-dialog,
+.create-quiz-section-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-quiz-section-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-quiz-section-modal .modal-body {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+}
+
+/* CreateQuizGroupModal */
+.create-quiz-group-modal .modal-dialog,
+.create-quiz-group-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-quiz-group-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-quiz-group-modal .modal-body {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+}
+
+/* CreateQuestionModal */
+.create-question-modal .modal-dialog,
+.create-question-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-question-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-question-modal .modal-body {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+}
+
+/* CreateFlashCardModal */
+.create-flashcard-modal .modal-dialog,
+.create-flashcard-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-flashcard-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.create-flashcard-modal .modal-body {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+}
+
+/* PackageFormModal */
+.package-form-modal .modal-dialog,
+.package-form-modal-dialog {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.package-form-modal .modal-content {
+  max-height: calc(100vh - 2rem) !important;
+}
+
+.package-form-modal .modal-body {
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto !important;
+}
+
+/* =====================================================
+   Responsive adjustments
+   ===================================================== */
+@media (max-height: 700px) {
+  .modal-body {
+    max-height: calc(100vh - 160px) !important;
+  }
+}
+
+@media (max-height: 500px) {
+  .modal-body {
+    max-height: calc(100vh - 140px) !important;
+  }
+}

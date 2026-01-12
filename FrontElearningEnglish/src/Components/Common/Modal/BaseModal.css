@@ -1,0 +1,326 @@
+/* ============================================
+   BASE MODAL STYLES - SaaS Modern Design
+   Use Bootstrap props first, CSS only for custom design
+   ============================================ */
+
+/* Modal Sizes - Use dialogClassName */
+.modal-dialog.modal-xl-custom {
+  max-width: 1100px;
+  width: 95%;
+}
+
+.modal-dialog.modal-lg-custom {
+  max-width: 900px;
+  width: 90%;
+}
+
+.modal-dialog.modal-md-custom {
+  max-width: 600px;
+  width: 85%;
+}
+
+/* Base Modal Content - Modern Card Style */
+.modal-modern .modal-content {
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Gradient Header - Cyan Theme */
+.modal-modern .modal-header {
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+  justify-content: center;
+  position: relative;
+  text-align: center;
+}
+
+.modal-modern .modal-header .modal-title {
+  color: white;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+/* Close Button - White on gradient */
+.modal-modern .modal-header .btn-close {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.modal-modern .modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+/* Modal Body - Light background with scrollbar */
+.modal-modern .modal-body {
+  background-color: #f8fafc;
+  padding: 1.5rem 2rem;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+
+.modal-modern .modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-modern .modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-modern .modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.modal-modern .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Modal Footer - Sticky */
+.modal-modern .modal-footer {
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem 2rem;
+  gap: 12px;
+}
+
+/* ============================================
+   FORM ELEMENTS INSIDE MODAL
+   ============================================ */
+
+/* Form Section Card */
+.modal-modern .form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* Section Title with accent bar */
+.modal-modern .section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-modern .section-title::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  border-radius: 2px;
+}
+
+/* Form Group */
+.modal-modern .form-group {
+  margin-bottom: 1.25rem;
+}
+
+/* Form Label */
+.modal-modern .form-label {
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.modal-modern .form-label.required::after {
+  content: " *";
+  color: #ef4444;
+}
+
+/* Form Control */
+.modal-modern .form-control {
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.modal-modern .form-control:focus {
+  border-color: #74CEDE;
+  box-shadow: 0 0 0 3px rgba(116, 206, 222, 0.15);
+}
+
+.modal-modern .form-control.is-invalid {
+  border-color: #ef4444;
+}
+
+.modal-modern .form-control.is-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* Form Hint */
+.modal-modern .form-hint {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 0.4rem;
+}
+
+/* Char Count */
+.modal-modern .char-count {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  text-align: right;
+  padding: 0.25rem 0.5rem;
+  background: #f1f5f9;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+/* Primary Button - Gradient Cyan */
+.modal-modern .btn-primary-custom {
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 0.7rem 1.5rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.modal-modern .btn-primary-custom:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(116, 206, 222, 0.4);
+}
+
+.modal-modern .btn-primary-custom:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Secondary Button - Outline */
+.modal-modern .btn-secondary-custom {
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  font-weight: 600;
+  padding: 0.7rem 1.5rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.modal-modern .btn-secondary-custom:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+/* ============================================
+   IMAGE/FILE PREVIEW
+   ============================================ */
+
+/* Upload Area */
+.modal-modern .upload-area {
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fafbfc;
+}
+
+.modal-modern .upload-area:hover {
+  border-color: #74CEDE;
+  background: rgba(116, 206, 222, 0.05);
+}
+
+.modal-modern .upload-area.uploading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Preview Container */
+.modal-modern .preview-container {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.modal-modern .preview-image {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Remove Button - Circular Dark */
+.modal-modern .btn-remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+.modal-modern .btn-remove:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+.modal-modern .btn-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .modal-dialog.modal-xl-custom,
+  .modal-dialog.modal-lg-custom {
+    width: 95%;
+    margin: 0.5rem auto;
+  }
+
+  .modal-modern .modal-header {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .modal-modern .modal-body {
+    padding: 1rem 1.25rem;
+  }
+
+  .modal-modern .modal-footer {
+    padding: 0.75rem 1.25rem;
+  }
+}

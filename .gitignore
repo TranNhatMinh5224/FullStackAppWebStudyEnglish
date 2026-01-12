@@ -1,30 +1,27 @@
 
-.env
+########################################
+# Consolidated .gitignore for project
+########################################
 
+# Environment files
+.env
 .env.dev
 .env.staging
 .env.prod
 .env.local
 .env.*.local
-
-# Keep only the README guide
 !.env.README.md
 
-
+# ASP.NET Core / .NET
 **/appsettings.Development.json
 **/appsettings.Docker.json
 **/appsettings.Staging.json
 **/appsettings.Production.json
 **/appsettings.Local.json
-
-
-# Keep template/example files
 !**/appsettings.json
 !**/appsettings.Example.json
 
-###############################################
-# ASP.NET CORE / .NET BUILD ARTIFACTS
-###############################################
+# Build artifacts
 bin/
 obj/
 out/
@@ -40,20 +37,7 @@ publish/
 *.ide
 *.swp
 
-# IDE metadata
-.vs/
-.vscode/
-.idea/
-*.sln.docstates
-*.user
-*.userosscache
-*.suo
-*.rsuser
-*.userprefs
-
-###############################################
-#  BUILD CONFIGURATIONS
-###############################################
+# Build configurations
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -67,61 +51,86 @@ bld/
 artifacts/
 TestResults/
 
-###############################################
-# FRONTEND (React / Node.js)
-###############################################
-node_modules/
-build/
-dist/
-coverage/
+# Frontend (Node / React)
+/node_modules/
+/.pnp
+.pnp.js
+/build
+/dist
+/coverage
 npm-debug.log*
-yarn-error.log*
 yarn-debug.log*
 yarn-error.log*
-# Giữ lockfile để build reproducible
+
+# Keep lockfiles if you want reproducible builds
 package-lock.json
 yarn.lock
 
-###############################################
-#  TEST OUTPUT
-###############################################
+# Test output
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
 
-###############################################
-#  ENTITY FRAMEWORK
-
+# Entity Framework
 *.dbmdl
 
-###############################################
-#  OS-SPECIFIC FILES
-###############################################
+# OS-specific
 .DS_Store
 Thumbs.db
 desktop.ini
 $RECYCLE.BIN/
 ehthumbs.db
 
-###############################################
-#  BACKUPS / TEMP FILES
-###############################################
+# IDE / editor
+.vs/
+.vscode/
+.idea/
+*.sln.docstates
+*.user
+*.userosscache
+*.suo
+*.rsuser
+*.userprefs
+*.iml
+*.swp
+*.swo
+*~
+
+# Docker / registry / Jenkins
+auth/
+registry-data/
+data/
+jenkins_home/
+
+# Secrets and keys
+secrets/
+*.key
+*.pem
+
+# Logs and temp
+logs/
+*.log
+tmp/
+temp/
+*.tmp
+
+# Backup / archive
+*.bak
+*.backup
 *.old
 *.orig
-*.tmp
-*.bak
-*.swp
 *.zip
 *.tar
 *.7z
 *.rar
 
-###############################################
-# CUSTOM IGNORES (optional)
-###############################################
+# Project-specific ignores
 /BackendELearningEnglish/**/bin/
 /BackendELearningEnglish/**/obj/
 /FrontElearningEnglish/**/build/
-logs/
+
+########################################
+# End of consolidated .gitignore
+########################################

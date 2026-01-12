@@ -1,0 +1,459 @@
+/* =====================================================
+   LectureTreeView Styles
+   Prefix: ltv- (Lecture Tree View)
+   ===================================================== */
+
+/* Container */
+.ltv-container {
+  width: 100%;
+  padding: 0;
+}
+
+/* Header */
+.ltv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.ltv-header__stats {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ltv-header__icon {
+  font-size: 1.25rem;
+  color: #6c757d;
+}
+
+.ltv-header__text {
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+.ltv-header__text strong {
+  color: #212529;
+  font-weight: 600;
+}
+
+.ltv-header__legend {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ltv-legend-item {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.ltv-legend-item--level0 { background-color: #0d6efd; }
+.ltv-legend-item--level1 { background-color: #198754; }
+.ltv-legend-item--level2 { background-color: #fd7e14; }
+.ltv-legend-item--level3 { background-color: #6f42c1; }
+
+/* Empty State */
+.ltv-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+}
+
+.ltv-empty__icon {
+  font-size: 3rem;
+  color: #adb5bd;
+  margin-bottom: 1rem;
+}
+
+.ltv-empty__text {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.ltv-empty__hint {
+  font-size: 0.9rem;
+  color: #adb5bd;
+  margin: 0;
+}
+
+/* Tree */
+.ltv-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Node */
+.ltv-node {
+  position: relative;
+  width: 100%;
+}
+
+/* Connector line - đường nối từ cha xuống con */
+.ltv-node__connector {
+  position: absolute;
+  left: 24px;
+  top: -12px;
+  height: calc(100% + 12px);
+  width: 0;
+  border-left: 3px solid #dee2e6;
+  z-index: 0;
+}
+
+.ltv-node__connector--last {
+  height: 36px;
+}
+
+.ltv-node__connector::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 24px;
+  width: 20px;
+  height: 0;
+  border-top: 3px solid inherit;
+}
+
+/* Card */
+.ltv-card {
+  border: none !important;
+  border-left: 5px solid #0d6efd !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.25s ease;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.ltv-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.ltv-card__body {
+  padding: 1rem 1.25rem !important;
+}
+
+.ltv-card__main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+/* Expand icon */
+.ltv-card__expand {
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ltv-expand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  color: #6c757d;
+}
+
+.ltv-expand-icon--active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.ltv-expand-icon--active:hover {
+  background: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+  transform: scale(1.1);
+}
+
+.ltv-expand-icon--placeholder {
+  opacity: 0;
+}
+
+/* Type icon */
+.ltv-card__type-icon {
+  min-width: 48px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.ltv-card__type-icon--primary {
+  background: rgba(13, 110, 253, 0.12);
+  color: #0d6efd;
+}
+
+.ltv-card__type-icon--info {
+  background: rgba(13, 202, 240, 0.12);
+  color: #0dcaf0;
+}
+
+.ltv-card__type-icon--danger {
+  background: rgba(220, 53, 69, 0.12);
+  color: #dc3545;
+}
+
+.ltv-card:hover .ltv-card__type-icon {
+  transform: scale(1.08);
+}
+
+/* Info section */
+.ltv-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ltv-card__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.ltv-card__numbering {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6c757d;
+  background: #e9ecef;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.ltv-card__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #212529;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.2s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ltv-card__title:hover {
+  color: #0d6efd;
+}
+
+.ltv-card__view-icon {
+  font-size: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: #0d6efd;
+  flex-shrink: 0;
+}
+
+.ltv-card__title:hover .ltv-card__view-icon {
+  opacity: 1;
+}
+
+/* Meta row */
+.ltv-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ltv-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.ltv-badge--type {
+  font-weight: 500;
+}
+
+.ltv-badge--level {
+  font-weight: 600;
+}
+
+.ltv-badge--children {
+  display: flex;
+  align-items: center;
+}
+
+.ltv-card__duration {
+  font-size: 0.75rem;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ltv-card__parent {
+  font-size: 0.75rem;
+  color: #6c757d;
+  background: #f8f9fa;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ltv-card__parent strong {
+  color: #495057;
+}
+
+/* Actions */
+.ltv-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.ltv-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.ltv-btn--add {
+  background: #198754;
+  border-color: #198754;
+}
+
+.ltv-btn--add:hover {
+  background: #157347;
+  border-color: #157347;
+  transform: translateY(-1px);
+}
+
+.ltv-btn--edit,
+.ltv-btn--delete {
+  padding: 0.4rem 0.6rem;
+}
+
+.ltv-btn__text {
+  display: inline;
+}
+
+/* Children container */
+.ltv-children {
+  margin-left: 48px;
+  margin-top: 0.75rem;
+  padding-left: 24px;
+  position: relative;
+}
+
+/* Level-based indentation */
+.ltv-node--level1 { margin-left: 0; }
+.ltv-node--level2 { margin-left: 0; }
+.ltv-node--level3 { margin-left: 0; }
+.ltv-node--level4 { margin-left: 0; }
+
+/* =====================================================
+   Responsive Styles
+   ===================================================== */
+@media (max-width: 992px) {
+  .ltv-btn__text {
+    display: none;
+  }
+  
+  .ltv-btn--add {
+    padding: 0.4rem 0.6rem;
+  }
+  
+  .ltv-card__parent {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .ltv-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .ltv-card__main {
+    flex-wrap: wrap;
+  }
+  
+  .ltv-card__info {
+    flex: 1 1 100%;
+    order: 3;
+    margin-top: 0.75rem;
+  }
+  
+  .ltv-card__actions {
+    order: 2;
+    margin-left: auto;
+  }
+  
+  .ltv-children {
+    margin-left: 24px;
+    padding-left: 16px;
+  }
+  
+  .ltv-node__connector {
+    left: 12px;
+  }
+  
+  .ltv-node__connector::before {
+    width: 12px;
+  }
+  
+  .ltv-card__type-icon {
+    min-width: 40px;
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .ltv-card__body {
+    padding: 0.75rem !important;
+  }
+  
+  .ltv-card__title {
+    font-size: 0.9rem;
+  }
+  
+  .ltv-badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+  }
+  
+  .ltv-btn {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}

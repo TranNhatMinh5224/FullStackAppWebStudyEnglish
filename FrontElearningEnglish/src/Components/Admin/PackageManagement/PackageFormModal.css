@@ -1,0 +1,189 @@
+/* Clean Bootstrap approach - SaaS Modern Style */
+.package-form-modal-dialog {
+  max-width: 900px;
+  width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Layout & Scrollbar */
+.package-form-modal .modal-content {
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.package-form-modal .modal-body {
+  background-color: #f8fafc;
+  padding: 1.5rem 2rem;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+
+.package-form-modal .modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.package-form-modal .modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* Header SaaS Modern */
+.package-form-modal .modal-header {
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+  justify-content: center;
+  border-radius: 20px 20px 0 0;
+  position: relative;
+  text-align: center;
+}
+
+.package-form-modal .modal-header .btn-close {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.package-form-modal .modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.package-form-modal .modal-title,
+.package-form-modal .modal-title-custom {
+  color: white !important;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+/* Section Logic */
+.package-form-modal .form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.package-form-modal .section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.package-form-modal .section-title::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  background: #74CEDE;
+  border-radius: 2px;
+}
+
+/* Form Styling */
+.package-form-modal .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.package-form-modal .form-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #334155;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.package-form-modal .form-label.required::after {
+  content: " *";
+  color: #ef4444;
+}
+
+.package-form-modal .form-control, 
+.package-form-modal .form-select {
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  padding: 0.6rem 0.8rem;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.package-form-modal .form-control:focus,
+.package-form-modal .form-select:focus {
+  border-color: #74CEDE;
+  box-shadow: 0 0 0 4px rgba(116, 206, 222, 0.1);
+  outline: none;
+}
+
+/* Footer Sticky */
+.package-form-modal .modal-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem 2rem;
+  gap: 12px;
+}
+
+.package-form-modal .btn-primary-custom,
+.package-form-modal .modal-footer .btn-primary {
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  border: none;
+  font-weight: 600;
+  padding: 0.6rem 2rem;
+  border-radius: 8px;
+  color: white;
+  transition: all 0.2s;
+}
+
+.package-form-modal .btn-primary-custom:hover:not(:disabled),
+.package-form-modal .modal-footer .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5BB8C8 0%, #4AA8B8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(116, 206, 222, 0.3);
+}
+
+.package-form-modal .text-danger {
+  color: #ef4444;
+}
+
+.package-form-modal .text-primary {
+  color: #74CEDE;
+}
+
+.package-form-modal .border-bottom {
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.package-form-modal .char-count {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+  padding: 0.25rem 0.5rem;
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
+.package-form-modal .char-count.text-warning {
+  color: #f59e0b;
+  background: #fef3c7;
+}
+
+.package-form-modal .char-count.text-danger {
+  color: #dc2626;
+  background: #fee2e2;
+}

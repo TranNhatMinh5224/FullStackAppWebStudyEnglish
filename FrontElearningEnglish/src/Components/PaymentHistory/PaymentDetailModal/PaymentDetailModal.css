@@ -1,0 +1,40 @@
+/* Clean Bootstrap approach - scoped to PaymentDetailModal only */
+/* Bootstrap handles centering with 'centered' prop, we only add minimal custom styles */
+
+.payment-detail-content {
+    padding: 10px 0;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.detail-value {
+    font-size: 16px;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.amount-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #10b981;
+}
+
+.status-badge-large {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 16px;
+}
+
+.status-badge-large.status-completed {
+    background-color: #41d6e3;
+    color: white;
+}
+
+.payment-detail-modal .modal-footer .btn {
+    min-width: 100px;
+}

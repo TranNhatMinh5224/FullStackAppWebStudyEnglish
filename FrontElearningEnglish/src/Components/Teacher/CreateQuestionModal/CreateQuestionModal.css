@@ -1,0 +1,268 @@
+/* Clean Bootstrap approach - SaaS Modern Style */
+.create-question-modal-xl {
+  max-width: 1100px;
+  width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Layout & Scrollbar */
+.modal.show .create-question-modal .modal-content,
+.modal.show .create-question-modal-xl .modal-content,
+.create-question-modal .modal-content,
+.create-question-modal-xl .modal-content {
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: none;
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.create-question-modal .modal-body,
+.create-question-modal-xl .modal-body {
+  background-color: #f8fafc;
+  padding: 1.5rem 2rem;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.create-question-modal .modal-body::-webkit-scrollbar,
+.create-question-modal-xl .modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.create-question-modal .modal-body::-webkit-scrollbar-thumb,
+.create-question-modal-xl .modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* Header SaaS Modern */
+.create-question-modal .modal-header,
+.create-question-modal-xl .modal-header {
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+  justify-content: center;
+  border-radius: 20px 20px 0 0;
+  position: relative;
+  text-align: center;
+}
+
+.create-question-modal .modal-header .btn-close,
+.create-question-modal-xl .modal-header .btn-close {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.create-question-modal .modal-header .btn-close:hover,
+.create-question-modal-xl .modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.create-question-modal .modal-header .modal-title,
+.create-question-modal-xl .modal-header .modal-title,
+.create-question-modal .modal-header .modal-title-custom,
+.create-question-modal-xl .modal-header .modal-title-custom {
+  color: white;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+/* Tabs Styling - Modern */
+.custom-tabs {
+  background: white;
+  border-radius: 12px;
+  padding: 0.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.custom-tabs .nav-link {
+  color: #64748b;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  transition: all 0.2s;
+  border: none;
+}
+
+.custom-tabs .nav-link:hover {
+  color: #334155;
+  background: #f1f5f9;
+}
+
+.custom-tabs .nav-link.active {
+  color: white;
+  font-weight: 700;
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  border: none;
+}
+
+/* Section Logic */
+.create-question-modal .form-section,
+.create-question-modal-xl .form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.create-question-modal .section-title,
+.create-question-modal-xl .section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-question-modal .section-title::before,
+.create-question-modal-xl .section-title::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  background: #74CEDE;
+  border-radius: 2px;
+}
+
+/* Form Styling */
+.create-question-modal .form-label,
+.create-question-modal-xl .form-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #334155;
+  margin-bottom: 0.4rem;
+}
+
+.create-question-modal .form-label.required::after,
+.create-question-modal-xl .form-label.required::after {
+  content: " *";
+  color: #ef4444;
+}
+
+.create-question-modal .form-control, 
+.create-question-modal .form-select,
+.create-question-modal-xl .form-control, 
+.create-question-modal-xl .form-select {
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  padding: 0.6rem 0.8rem;
+  transition: all 0.2s;
+}
+
+.create-question-modal .form-control:focus,
+.create-question-modal .form-select:focus,
+.create-question-modal-xl .form-control:focus,
+.create-question-modal-xl .form-select:focus {
+  border-color: #74CEDE;
+  box-shadow: 0 0 0 4px rgba(116, 206, 222, 0.1);
+  outline: none;
+}
+
+/* Options Container - Modern */
+.options-grid {
+  background-color: #f8fafc;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.option-item {
+  background: white;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.option-item:hover {
+  border-color: #74CEDE;
+  box-shadow: 0 2px 8px rgba(116, 206, 222, 0.15);
+}
+
+.scale-125 {
+  transform: scale(1.25);
+}
+
+.matching-arrow {
+  font-size: 1.2rem;
+  color: #74CEDE;
+}
+
+/* Footer Sticky */
+.create-question-modal .modal-footer,
+.create-question-modal-xl .modal-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem 2rem;
+  gap: 12px;
+}
+
+.create-question-modal .btn-primary-custom,
+.create-question-modal .modal-footer .btn-primary,
+.create-question-modal-xl .btn-primary-custom,
+.create-question-modal-xl .modal-footer .btn-primary {
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  border: none;
+  font-weight: 600;
+  padding: 0.6rem 2rem;
+  border-radius: 8px;
+  color: white;
+  transition: all 0.2s;
+}
+
+.create-question-modal .btn-primary-custom:hover:not(:disabled),
+.create-question-modal .modal-footer .btn-primary:hover:not(:disabled),
+.create-question-modal-xl .btn-primary-custom:hover:not(:disabled),
+.create-question-modal-xl .modal-footer .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5BB8C8 0%, #4AA8B8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(116, 206, 222, 0.3);
+}
+
+.create-question-modal .char-count,
+.create-question-modal-xl .char-count {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+  padding: 0.25rem 0.5rem;
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
+.create-question-modal .char-count.text-warning,
+.create-question-modal-xl .char-count.text-warning {
+  color: #f59e0b;
+  background: #fef3c7;
+}
+
+.create-question-modal .char-count.text-danger,
+.create-question-modal-xl .char-count.text-danger {
+  color: #dc2626;
+  background: #fee2e2;
+}

@@ -1,0 +1,93 @@
+.admin-module-lecture-detail-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+  padding: 2rem;
+  padding-top: calc(2rem + 70px);
+}
+
+.lecture-management-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+  border: 1px solid #e9ecef;
+}
+
+.lecture-management-header .header-content h2 {
+  font-size: 2rem;
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.lecture-management-header .module-name {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #6c757d;
+}
+
+.lecture-management-header .create-lecture-btn {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+  transition: all 0.3s ease;
+}
+
+.lecture-management-header .create-lecture-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(13, 110, 253, 0.4);
+}
+
+.lecture-list {
+  margin-top: 20px;
+}
+
+.lecture-card {
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.lecture-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.lecture-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-buttons button {
+  transition: all 0.2s;
+}
+
+.action-buttons button:hover {
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .admin-module-lecture-detail-container {
+    padding: 10px;
+  }
+
+  .lecture-card .card-body {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 15px;
+  }
+
+  .action-buttons {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+}

@@ -1,0 +1,218 @@
+/* Clean Bootstrap approach - minimal overrides */
+.create-flashcard-modal-dialog {
+  max-width: 1200px;
+  width: 95%;
+}
+
+/* Layout & Scrollbar */
+.create-flashcard-modal .modal-content {
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.create-flashcard-modal .modal-body {
+  background-color: #f8fafc;
+  padding: 1.5rem 2rem;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+}
+
+.create-flashcard-modal .modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.create-flashcard-modal .modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* Header SaaS Modern */
+.create-flashcard-modal .modal-header {
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+  justify-content: center;
+  border-radius: 20px 20px 0 0;
+  position: relative;
+  text-align: center;
+}
+
+.create-flashcard-modal .modal-title-custom {
+  color: white;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+/* Section Logic */
+.form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  background: #74CEDE;
+  border-radius: 2px;
+}
+
+/* Form Styling */
+.create-flashcard-modal .form-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #334155;
+  margin-bottom: 0.4rem;
+}
+
+.create-flashcard-modal .form-control, 
+.create-flashcard-modal .form-select {
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  padding: 0.6rem 0.8rem;
+  transition: all 0.2s;
+}
+
+.create-flashcard-modal .form-control:focus,
+.create-flashcard-modal .form-select:focus {
+  border-color: #74CEDE;
+  box-shadow: 0 0 0 4px rgba(116, 206, 222, 0.1);
+  outline: none;
+}
+
+.create-flashcard-modal .form-control.is-invalid,
+.create-flashcard-modal .form-select.is-invalid {
+  border-color: #dc3545;
+}
+
+.create-flashcard-modal .invalid-feedback {
+  display: block;
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Media Upload Area */
+.media-upload-area {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+  position: relative;
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-upload-area:hover {
+  border-color: #74CEDE;
+  background: #f0f9ff;
+}
+
+.media-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+
+.media-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.media-preview img {
+  max-height: 150px;
+  width: auto;
+  border-radius: 8px;
+}
+
+/* Footer Sticky */
+.create-flashcard-modal .modal-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem 2rem;
+  gap: 12px;
+}
+
+.btn-primary-custom {
+  background: #74CEDE;
+  border: none;
+  font-weight: 600;
+  padding: 0.6rem 2rem;
+  border-radius: 8px;
+  color: white;
+  transition: all 0.2s;
+}
+
+.btn-primary-custom:hover:not(:disabled) {
+  background: #5BB8C8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(116, 206, 222, 0.3);
+}
+
+.btn-primary-custom:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Required field indicator */
+.required:after {
+  content: " *";
+  color: #dc3545;
+}
+
+/* Auto-resize textarea */
+.auto-resize-textarea {
+  min-height: 38px;
+  max-height: 120px;
+  overflow-y: auto;
+  resize: none;
+}
+
+.auto-resize-textarea:focus {
+  overflow-y: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .create-flashcard-modal-dialog {
+    width: 98%;
+    max-width: 98%;
+  }
+  
+  .create-flashcard-modal .modal-body {
+    padding: 1rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+}

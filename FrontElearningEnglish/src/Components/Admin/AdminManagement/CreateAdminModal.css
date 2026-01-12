@@ -1,0 +1,173 @@
+/* CreateAdminModal - SaaS Modern Style */
+.create-admin-modal-dialog {
+  max-width: 600px;
+  width: 95%;
+}
+
+/* Layout & Scrollbar */
+.create-admin-modal .modal-content {
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.create-admin-modal .modal-body {
+  background-color: #f8fafc;
+  padding: 1.5rem 2rem;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+
+.create-admin-modal .modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.create-admin-modal .modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* Header SaaS Modern */
+.create-admin-modal .modal-header {
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+  justify-content: center;
+  border-radius: 20px 20px 0 0;
+  position: relative;
+  text-align: center;
+}
+
+.create-admin-modal .modal-header .btn-close {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.create-admin-modal .modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.create-admin-modal .modal-title {
+  color: white;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+/* Form Section */
+.create-admin-modal .form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.create-admin-modal .section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-admin-modal .section-title::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  background: #74CEDE;
+  border-radius: 2px;
+}
+
+/* Form Styling */
+.create-admin-modal .form-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.create-admin-modal .form-control,
+.create-admin-modal .form-select {
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.create-admin-modal .form-control:focus,
+.create-admin-modal .form-select:focus {
+  border-color: #74CEDE;
+  box-shadow: 0 0 0 3px rgba(116, 206, 222, 0.15);
+}
+
+.create-admin-modal .form-text {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Alert */
+.create-admin-modal .alert {
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.create-admin-modal .alert-danger {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Footer */
+.create-admin-modal .modal-footer {
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem 2rem;
+  gap: 12px;
+}
+
+.create-admin-modal .modal-footer .btn {
+  padding: 0.6rem 2rem;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.create-admin-modal .modal-footer .btn-secondary {
+  background-color: #f1f5f9;
+  color: #374151;
+}
+
+.create-admin-modal .modal-footer .btn-secondary:hover {
+  background-color: #e2e8f0;
+}
+
+.create-admin-modal .modal-footer .btn-primary {
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  color: white;
+}
+
+.create-admin-modal .modal-footer .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5BB8C8 0%, #4AA8B8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(116, 206, 222, 0.3);
+}
+
+.create-admin-modal .modal-footer .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
