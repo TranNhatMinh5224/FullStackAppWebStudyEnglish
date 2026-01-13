@@ -32,6 +32,7 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
   // Submit state
   const [submitting, setSubmitting] = useState(false);
   const [loadingPackage, setLoadingPackage] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Confirm close modal state
   const [showConfirmClose, setShowConfirmClose] = useState(false);
@@ -364,6 +365,7 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
               onUploadSuccess={handleImageUploadSuccess}
               onRemove={handleImageRemove}
               onError={handleImageError}
+              onUploadingChange={setUploadingImage}
               label={isUpdateMode ? "Thay đổi ảnh hoặc kéo thả vào đây" : "Chọn ảnh hoặc kéo thả vào đây"}
               hint="Hỗ trợ: JPG, PNG, GIF (tối đa 5MB)"
             />

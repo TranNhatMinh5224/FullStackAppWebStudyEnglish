@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
 import "./ForgotPassword.css";
 import { authService } from "../../Services/authService";
 import { useNavigate } from "react-router-dom";
@@ -75,52 +76,65 @@ export default function ForgotPassword() {
         <div className="forgot-password-shape shape-pink"></div>
       </div>
 
-      <div className="forgot-password-card">
-        <div className="forgot-password-icon-wrapper">
-          <img src={iconLock} alt="Khóa - Quên mật khẩu" className="forgot-password-icon" />
-        </div>
+      <Container>
+        <Row className="justify-content-center">
+          <Col xs={12} sm={10} md={8} lg={6} xl={5}>
+            <div className="forgot-password-card">
+              <div className="forgot-password-icon-wrapper">
+                <img src={iconLock} alt="Khóa - Quên mật khẩu" className="forgot-password-icon" />
+              </div>
 
-        <h1 className="forgot-password-title">Quên mật khẩu?</h1>
+              <h1 className="forgot-password-title">Quên mật khẩu?</h1>
 
-        <p className="forgot-password-description">
-          Nhập email bạn đã dùng để đăng ký, chúng tôi sẽ gửi mã OTP để đặt lại mật khẩu.
-        </p>
+              <p className="forgot-password-description">
+                Nhập email bạn đã dùng để đăng ký, chúng tôi sẽ gửi mã OTP để đặt lại mật khẩu.
+              </p>
 
-        <form onSubmit={handleSendOTP}>
-          <div className="forgot-password-form-group">
-            <label className="forgot-password-label">Email</label>
-            <InputField
-              type="email"
-              name="email"
-              placeholder="email@example.com"
-              value={email}
-              onChange={handleEmailChange}
-              error={emailError}
-              disabled={loading}
-            />
-          </div>
+              <Form onSubmit={handleSendOTP}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="forgot-password-label">Email</Form.Label>
+                  <InputField
+                    type="email"
+                    name="email"
+                    placeholder="email@example.com"
+                    value={email}
+                    onChange={handleEmailChange}
+                    error={emailError}
+                    disabled={loading}
+                  />
+                </Form.Group>
 
-          {error && <div className="forgot-password-error-message">{error}</div>}
-          {success && <div className="forgot-password-success-message">{success}</div>}
+                {error && <Alert variant="danger" className="forgot-password-error-message">{error}</Alert>}
+                {success && <Alert variant="success" className="forgot-password-success-message">{success}</Alert>}
 
-          <button
-            type="submit"
-            className="forgot-password-submit-btn"
-            onClick={handleSendOTP}
-            disabled={loading || !!emailError}
-          >
-            {loading ? "Đang gửi..." : "Gửi mã OTP"}
-          </button>
-        </form>
+                <div className="d-grid mb-3">
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    onClick={handleSendOTP}
+                    disabled={loading || !!emailError}
+                    className="forgot-password-submit-btn"
+                    size="lg"
+                  >
+                    {loading ? "Đang gửi..." : "Gửi mã OTP"}
+                  </Button>
+                </div>
+              </Form>
 
-        <button
-          className="forgot-password-back-link"
-          onClick={() => navigate("/login")}
-          disabled={loading}
-        >
-          Quay lại Đăng nhập
-        </button>
-      </div>
+              <div className="d-grid">
+                <Button
+                  variant="link"
+                  onClick={() => navigate("/login")}
+                  disabled={loading}
+                  className="forgot-password-back-link"
+                >
+                  Quay lại Đăng nhập
+                </Button>
+              </div>
+            </div>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 }

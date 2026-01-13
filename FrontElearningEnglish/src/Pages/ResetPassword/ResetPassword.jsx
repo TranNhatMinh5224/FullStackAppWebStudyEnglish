@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
 import "./ResetPassword.css";
 import { authService } from "../../Services/authService";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -177,79 +178,93 @@ export default function ResetPassword() {
 
   return (
     <>
-    <div className="reset-password-container">
-      <div className="reset-password-background">
-        <div className="reset-password-shape shape-cyan"></div>
-        <div className="reset-password-shape shape-pink"></div>
-      </div>
-
-      <div className="reset-password-card">
-        <div className="reset-password-icon-wrapper">
-          <img src={iconLock} alt="Lock" className="reset-password-icon" />
+      <div className="reset-password-container">
+        <div className="reset-password-background">
+          <div className="reset-password-shape shape-cyan"></div>
+          <div className="reset-password-shape shape-pink"></div>
         </div>
 
-        <h1 className="reset-password-title">Tạo mật khẩu mới</h1>
+        <Container>
+          <Row className="justify-content-center">
+            <Col xs={12} sm={10} md={8} lg={6} xl={5}>
+              <div className="reset-password-card">
+                <div className="reset-password-icon-wrapper">
+                  <img src={iconLock} alt="Lock" className="reset-password-icon" />
+                </div>
 
-        <p className="reset-password-description">
-          Đặt lại mật khẩu cho email <strong>{email}</strong>
-        </p>
+                <h1 className="reset-password-title">Tạo mật khẩu mới</h1>
 
-        <form onSubmit={handleReset}>
-          <div className="reset-password-form-group">
-            <label className="reset-password-label">Mật khẩu mới</label>
-            <InputField
-              type="password"
-              name="newPassword"
-              placeholder="Nhập mật khẩu mới"
-              value={formData.newPassword}
-              onChange={handleInputChange}
-              error={errors.newPassword}
-              disabled={loading}
-              showPasswordToggle={true}
-              showPassword={showPassword}
-              onTogglePassword={() => setShowPassword(!showPassword)}
-              maxLength={20}
-            />
-          </div>
+                <p className="reset-password-description">
+                  Đặt lại mật khẩu cho email <strong>{email}</strong>
+                </p>
 
-          <div className="reset-password-form-group">
-            <label className="reset-password-label">Xác nhận mật khẩu</label>
-            <InputField
-              type="password"
-              name="confirmPassword"
-              placeholder="Nhập lại mật khẩu mới"
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-              error={errors.confirmPassword}
-              disabled={loading}
-              showPasswordToggle={true}
-              showPassword={showConfirmPassword}
-              onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
-              maxLength={20}
-            />
-          </div>
+                <Form onSubmit={handleReset}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="reset-password-label">Mật khẩu mới</Form.Label>
+                    <InputField
+                      type="password"
+                      name="newPassword"
+                      placeholder="Nhập mật khẩu mới"
+                      value={formData.newPassword}
+                      onChange={handleInputChange}
+                      error={errors.newPassword}
+                      disabled={loading}
+                      showPasswordToggle={true}
+                      showPassword={showPassword}
+                      onTogglePassword={() => setShowPassword(!showPassword)}
+                      maxLength={20}
+                    />
+                  </Form.Group>
 
-          {error && <div className="reset-password-error-message">{error}</div>}
-          {success && <div className="reset-password-success-message">{success}</div>}
+                  <Form.Group className="mb-3">
+                    <Form.Label className="reset-password-label">Xác nhận mật khẩu</Form.Label>
+                    <InputField
+                      type="password"
+                      name="confirmPassword"
+                      placeholder="Nhập lại mật khẩu mới"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      error={errors.confirmPassword}
+                      disabled={loading}
+                      showPasswordToggle={true}
+                      showPassword={showConfirmPassword}
+                      onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
+                      maxLength={20}
+                    />
+                  </Form.Group>
 
-          <button
-            type="submit"
-            className="reset-password-submit-btn"
-            disabled={loading || !!errors.newPassword || !!errors.confirmPassword}
-          >
-            {loading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
-          </button>
-        </form>
+                  {error && <Alert variant="danger" className="reset-password-alert-error">{error}</Alert>}
+                  {success && <Alert variant="success" className="reset-password-alert-success">{success}</Alert>}
 
-          <button
-            className="reset-password-back-link"
-            onClick={() => navigate("/login")}
-            disabled={loading}
-          >
-            Quay lại Đăng nhập
-          </button>
+                  <div className="d-grid">
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="lg"
+                      className="reset-password-submit-btn"
+                      disabled={loading || !!errors.newPassword || !!errors.confirmPassword}
+                    >
+                      {loading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
+                    </Button>
+                  </div>
+                </Form>
+
+                <div className="text-center mt-3">
+                  <Button
+                    variant="link"
+                    className="reset-password-back-link"
+                    onClick={() => navigate("/login")}
+                    disabled={loading}
+                  >
+                    Quay lại Đăng nhập
+                  </Button>
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </Container>
       </div>
-    </div>
+
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => {

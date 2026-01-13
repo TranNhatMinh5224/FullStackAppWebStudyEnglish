@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
 import "./Login.css";
 import Header from "../../Components/Header/LogoHeader";
 import { useNavigate } from "react-router-dom";
@@ -151,103 +152,121 @@ export default function Login() {
     <div className="auth-container">
       <Header />
 
-      <div className="auth-card">
-        <h1 className="auth-title">Chào mừng trở lại!</h1>
-        <p className="auth-subtitle">Đăng nhập để tiếp tục hành trình của bạn.</p>
+      <Container>
+        <Row className="justify-content-center">
+          <Col xs={12} sm={10} md={8} lg={6} xl={5}>
+            <div className="auth-card">
+              <h1 className="auth-title">Chào mừng trở lại!</h1>
+              <p className="auth-subtitle">Đăng nhập để tiếp tục hành trình của bạn.</p>
 
-        {/* General error message */}
-        {generalError && (
-          <div className="auth-error-message">{generalError}</div>
-        )}
+              {/* General error message */}
+              {generalError && (
+                <Alert variant="danger" className="auth-error-message">
+                  {generalError}
+                </Alert>
+              )}
 
-        <form onSubmit={handleLogin}>
-          {/* Email Input */}
-          <InputField
-            type="email"
-            name="email"
-            placeholder="email@gmail.com"
-            value={formData.email}
-            onChange={handleInputChange}
-            error={errors.email}
-            disabled={loading}
-          />
+              <Form onSubmit={handleLogin}>
+                {/* Email Input */}
+                <Form.Group className="mb-3">
+                  <InputField
+                    type="email"
+                    name="email"
+                    placeholder="email@gmail.com"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    error={errors.email}
+                    disabled={loading}
+                  />
+                </Form.Group>
 
-          {/* Password Input */}
-          <InputField
-            type="password"
-            name="password"
-            placeholder="Nhập mật khẩu của bạn"
-            value={formData.password}
-            onChange={handleInputChange}
-            error={errors.password}
-            disabled={loading}
-            showPasswordToggle={true}
-            showPassword={showPassword}
-            onTogglePassword={() => setShowPassword(!showPassword)}
-          />
+                {/* Password Input */}
+                <Form.Group className="mb-3">
+                  <InputField
+                    type="password"
+                    name="password"
+                    placeholder="Nhập mật khẩu của bạn"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    error={errors.password}
+                    disabled={loading}
+                    showPasswordToggle={true}
+                    showPassword={showPassword}
+                    onTogglePassword={() => setShowPassword(!showPassword)}
+                  />
+                </Form.Group>
 
-          {/* Options */}
-          <div className="auth-options">
-            <label>
-              <input type="checkbox" /> Remember me
-            </label>
-            <span
-              className="auth-link"
-              onClick={() => navigate("/forgot-password")}
-              style={{ cursor: "pointer" }}
-            >
-              Quên mật khẩu?
-            </span>
-          </div>
+                {/* Options */}
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <Form.Check 
+                    type="checkbox" 
+                    label="Remember me"
+                    className="auth-remember"
+                  />
+                  <span
+                    className="auth-link"
+                    onClick={() => navigate("/forgot-password")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Quên mật khẩu?
+                  </span>
+                </div>
 
-          {/* Login button */}
-          <button
-            className="auth-btn primary"
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-          </button>
-        </form>
+                {/* Login button */}
+                <div className="d-grid">
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    disabled={loading}
+                    className="auth-btn"
+                    size="lg"
+                  >
+                    {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                  </Button>
+                </div>
+              </Form>
 
-        {/* Register */}
-        <p className="auth-footer">
-          Chưa có tài khoản?{" "}
-          <span className="auth-link" onClick={() => navigate("/register")}>
-            Đăng ký
-          </span>
-        </p>
+              {/* Register */}
+              <p className="auth-footer text-center mt-3">
+                Chưa có tài khoản?{" "}
+                <span className="auth-link" onClick={() => navigate("/register")}>
+                  Đăng ký
+                </span>
+              </p>
 
-        <div className="divider">HOẶC</div>
+              <div className="divider">HOẶC</div>
 
-        {/* Social login buttons */}
-        <SocialLoginButton
-          type="google"
-          icon={FcGoogle}
-          text="Đăng nhập bằng Google"
-          onClick={handleGoogleLogin}
-          disabled={loading}
-          loading={socialLoading.google}
-        />
+              {/* Social login buttons */}
+              <SocialLoginButton
+                type="google"
+                icon={FcGoogle}
+                text="Đăng nhập bằng Google"
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                loading={socialLoading.google}
+              />
 
-        <SocialLoginButton
-          type="facebook"
-          icon={FaFacebookF}
-          text="Đăng nhập bằng Facebook"
-          onClick={handleFacebookLogin}
-          disabled={loading}
-          loading={socialLoading.facebook}
-        />
+              <SocialLoginButton
+                type="facebook"
+                icon={FaFacebookF}
+                text="Đăng nhập bằng Facebook"
+                onClick={handleFacebookLogin}
+                disabled={loading}
+                loading={socialLoading.facebook}
+              />
 
-        <SocialLoginButton
-          type="guest"
-          icon={FaUser}
-          text="Đăng nhập bằng khách"
-          onClick={handleGuestLogin}
-          disabled={loading}
-          loading={socialLoading.guest}
-        />
-      </div>
+              <SocialLoginButton
+                type="guest"
+                icon={FaUser}
+                text="Đăng nhập bằng khách"
+                onClick={handleGuestLogin}
+                disabled={loading}
+                loading={socialLoading.guest}
+              />
+            </div>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 }

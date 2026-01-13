@@ -40,96 +40,86 @@
   margin-bottom: 24px;
 }
 
-.otp-input {
+/* Bootstrap Form.Control override for OTP inputs */
+.otp-input.form-control {
   width: 48px;
   height: 55px;
   font-size: 22px;
   text-align: center;
   border-radius: 12px;
   border: 1.5px solid #d1d5db;
-  outline: none;
   transition: 0.2s;
-  background: white;
 }
 
-.otp-input:focus:not(:disabled) {
+.otp-input.form-control:focus {
   border-color: #7f56d9;
   box-shadow: 0 0 0 3px rgba(127, 86, 217, 0.3);
 }
 
-.otp-input:disabled {
+.otp-input.form-control:disabled {
   background-color: #f5f5f5;
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-.otp-error {
+/* Bootstrap Alert override */
+.otp-alert-error.alert {
   color: #ef4444;
-  margin-bottom: 20px;
+  background: rgba(239, 68, 68, 0.1);
+  border: none;
+  border-radius: 8px;
   font-size: 14px;
-  min-height: 20px;
   text-align: left;
+  margin-bottom: 20px;
 }
 
-.otp-error-max {
+.otp-alert-error.otp-error-max {
   color: #d32f2f;
   font-weight: 600;
 }
 
-.otp-btn {
-  width: 100%;
-  padding: 14px 24px;
-  border: none;
+/* Bootstrap Button primary override */
+.otp-btn.btn-primary {
+  background: linear-gradient(to right, #41d6e3 0%, #06b6d4 100%) !important;
+  border: none !important;
   border-radius: 12px;
-  background: linear-gradient(to right, #41d6e3 0%, #06b6d4 100%);
-  color: white;
-  font-size: 16px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 8px;
   box-shadow: 0 4px 12px rgba(65, 214, 227, 0.3);
+  transition: all 0.3s ease;
 }
 
-.otp-btn:hover:not(:disabled) {
+.otp-btn.btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(65, 214, 227, 0.4);
   opacity: 0.95;
 }
 
-.otp-btn:active:not(:disabled) {
+.otp-btn.btn-primary:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.otp-btn:disabled {
+.otp-btn.btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-.otp-resend {
-  margin-top: 24px;
-  font-size: 14px;
-  color: #555;
-}
-
-.resend-btn {
-  background: none;
-  border: none;
+/* Bootstrap Button link override */
+.resend-btn.btn-link {
   color: #7a3df0;
-  cursor: pointer;
   font-weight: 600;
   padding: 0;
   font-size: 14px;
-  transition: opacity 0.2s ease;
   text-decoration: underline;
+  transition: opacity 0.2s ease;
 }
 
-.resend-btn:hover:not(:disabled) {
+.resend-btn.btn-link:hover:not(:disabled) {
+  color: #7a3df0;
   opacity: 0.8;
 }
 
-.resend-btn:disabled {
+.resend-btn.btn-link:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   text-decoration: none;

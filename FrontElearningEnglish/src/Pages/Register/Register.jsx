@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
 import "./Register.css";
 import Header from "../../Components/Header/LogoHeader";
 import { useNavigate } from "react-router-dom";
@@ -239,158 +240,188 @@ export default function Register() {
     <div className="auth-container">
       <Header />
 
-      <div className="auth-card">
-        <h1 className="auth-title">Tạo tài khoản của bạn</h1>
+      <Container>
+        <Row className="justify-content-center">
+          <Col xs={12} sm={10} md={8} lg={6} xl={5}>
+            <div className="auth-card">
+              <h1 className="auth-title">Tạo tài khoản của bạn</h1>
 
-        {/* General error message */}
-        {generalError && (
-          <div className="auth-error-message">{generalError}</div>
-        )}
+              {/* General error message */}
+              {generalError && (
+                <Alert variant="danger" className="auth-error-message">
+                  {generalError}
+                </Alert>
+              )}
 
-        <form onSubmit={handleRegister}>
-          {/* Name Row */}
-          <div className="form-row">
-            <InputField
-              type="text"
-              name="firstName"
-              placeholder="Họ"
-              value={formData.firstName}
-              onChange={handleInputChange}
-              error={errors.firstName}
-              disabled={loading}
-              maxLength={20}
-            />
-            <InputField
-              type="text"
-              name="lastName"
-              placeholder="Tên"
-              value={formData.lastName}
-              onChange={handleInputChange}
-              error={errors.lastName}
-              disabled={loading}
-              maxLength={20}
-            />
-          </div>
+              <Form onSubmit={handleRegister}>
+                {/* Name Row */}
+                <Row className="g-3 mb-3">
+                  <Col xs={12} sm={6}>
+                    <InputField
+                      type="text"
+                      name="firstName"
+                      placeholder="Họ"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      error={errors.firstName}
+                      disabled={loading}
+                      maxLength={20}
+                    />
+                  </Col>
+                  <Col xs={12} sm={6}>
+                    <InputField
+                      type="text"
+                      name="lastName"
+                      placeholder="Tên"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      error={errors.lastName}
+                      disabled={loading}
+                      maxLength={20}
+                    />
+                  </Col>
+                </Row>
 
-          {/* Email */}
-          <InputField
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleInputChange}
-            error={errors.email}
-            disabled={loading}
-            required
-            pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(com\.vn|org\.vn|edu\.vn|co\.uk|com|net|org|info|io|co|gov|edu|vn)$"
-            title="Email phải có đuôi hợp lệ (ví dụ: .com, .net, .org, .io, .vn, .com.vn)"
-          />
+                {/* Email */}
+                <Form.Group className="mb-3">
+                  <InputField
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    error={errors.email}
+                    disabled={loading}
+                    required
+                    pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(com\.vn|org\.vn|edu\.vn|co\.uk|com|net|org|info|io|co|gov|edu|vn)$"
+                    title="Email phải có đuôi hợp lệ (ví dụ: .com, .net, .org, .io, .vn, .com.vn)"
+                  />
+                </Form.Group>
 
-          {/* Password */}
-          <InputField
-            type="password"
-            name="password"
-            placeholder="Tạo mật khẩu"
-            value={formData.password}
-            onChange={handleInputChange}
-            error={errors.password}
-            disabled={loading}
-            showPasswordToggle={true}
-            showPassword={showPassword}
-            onTogglePassword={() => setShowPassword(!showPassword)}
-          />
-          <p className="password-note">
-            * chú ý mật khẩu tối thiểu 6 ký tự bao gồm chữ hoa & ký tự đặc biệt!
-          </p>
+                {/* Password */}
+                <Form.Group className="mb-2">
+                  <InputField
+                    type="password"
+                    name="password"
+                    placeholder="Mật khẩu"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    error={errors.password}
+                    disabled={loading}
+                    showPasswordToggle={true}
+                    showPassword={showPassword}
+                    onTogglePassword={() => setShowPassword(!showPassword)}
+                  />
+                  <Form.Text className="password-note">
+                    * chú ý mật khẩu tối thiểu 6 ký tự bao gồm chữ hoa & ký tự đặc biệt!
+                  </Form.Text>
+                </Form.Group>
 
-          {/* Confirm Password */}
-          <InputField
-            type="password"
-            name="confirmPassword"
-            placeholder="Xác nhận mật khẩu"
-            value={formData.confirmPassword}
-            onChange={handleInputChange}
-            error={errors.confirmPassword}
-            disabled={loading}
-            showPasswordToggle={true}
-            showPassword={showConfirmPassword}
-            onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
-          />
+                {/* Confirm Password */}
+                <Form.Group className="mb-3">
+                  <InputField
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="Xác nhận mật khẩu"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    error={errors.confirmPassword}
+                    disabled={loading}
+                    showPasswordToggle={true}
+                    showPassword={showConfirmPassword}
+                    onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
+                  />
+                </Form.Group>
 
-          {/* Phone Number */}
-          <InputField
-            type="tel"
-            name="phoneNumber"
-            placeholder="Số điện thoại"
-            value={formData.phoneNumber}
-            onChange={handleInputChange}
-            error={errors.phoneNumber}
-            disabled={loading}
-          />
+                {/* Phone Number */}
+                <Form.Group className="mb-3">
+                  <InputField
+                    type="tel"
+                    name="phoneNumber"
+                    placeholder="Số điện thoại"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    error={errors.phoneNumber}
+                    disabled={loading}
+                  />
+                </Form.Group>
 
-          {/* Date of Birth */}
-          <div className="date-picker-wrapper">
-            <DatePicker
-              value={formData.dateOfBirth}
-              onChange={handleDateChange}
-              disabled={loading}
-              hasError={!!errors.dateOfBirth}
-            />
-            {errors.dateOfBirth && (
-              <span className="input-field-error">{errors.dateOfBirth}</span>
-            )}
-          </div>
+                {/* Date of Birth */}
+                <Form.Group className="mb-3">
+                  <div className="date-picker-wrapper">
+                    <DatePicker
+                      value={formData.dateOfBirth}
+                      onChange={handleDateChange}
+                      disabled={loading}
+                      hasError={!!errors.dateOfBirth}
+                    />
+                    {errors.dateOfBirth && (
+                      <Form.Text className="text-danger d-block text-center">
+                        {errors.dateOfBirth}
+                      </Form.Text>
+                    )}
+                  </div>
+                </Form.Group>
 
-          {/* Gender Radio Buttons */}
-          <div className="gender-radio-wrapper">
-            <div className="gender-radio-label">Giới tính</div>
-            <div className="gender-radio-group">
-              <label className="gender-radio-option">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="female"
-                  checked={formData.gender === "female"}
-                  onChange={handleGenderChange}
-                  disabled={loading}
-                />
-                <span className="radio-label">Nữ</span>
-              </label>
-              <label className="gender-radio-option">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="male"
-                  checked={formData.gender === "male"}
-                  onChange={handleGenderChange}
-                  disabled={loading}
-                />
-                <span className="radio-label">Nam</span>
-              </label>
+                {/* Gender Radio Buttons */}
+                <Form.Group className="mb-3">
+                  <Form.Label className="gender-radio-label">Giới tính</Form.Label>
+                  <div className="d-flex gap-4">
+                    <Form.Check
+                      type="radio"
+                      id="gender-female"
+                      name="gender"
+                      value="female"
+                      label="Nữ"
+                      checked={formData.gender === "female"}
+                      onChange={handleGenderChange}
+                      disabled={loading}
+                      className="gender-radio-option"
+                    />
+                    <Form.Check
+                      type="radio"
+                      id="gender-male"
+                      name="gender"
+                      value="male"
+                      label="Nam"
+                      checked={formData.gender === "male"}
+                      onChange={handleGenderChange}
+                      disabled={loading}
+                      className="gender-radio-option"
+                    />
+                  </div>
+                  {errors.gender && (
+                    <Form.Text className="text-danger d-block">
+                      {errors.gender}
+                    </Form.Text>
+                  )}
+                </Form.Group>
+
+                {/* Submit Button */}
+                <div className="d-grid">
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    disabled={loading}
+                    className="auth-btn"
+                    size="lg"
+                  >
+                    {loading ? "Đang đăng ký..." : "Đăng ký"}
+                  </Button>
+                </div>
+              </Form>
+
+              {/* Footer */}
+              <p className="auth-footer text-center mt-3">
+                Đã có tài khoản?{" "}
+                <span className="auth-link" onClick={() => navigate("/login")}>
+                  Đăng nhập ngay
+                </span>
+              </p>
             </div>
-            {errors.gender && (
-              <span className="input-field-error">{errors.gender}</span>
-            )}
-          </div>
-
-          {/* Submit Button */}
-          <button
-            className="auth-btn primary"
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? "Đang đăng ký..." : "Đăng ký"}
-          </button>
-        </form>
-
-        {/* Footer */}
-        <p className="auth-footer">
-          Đã có tài khoản?{" "}
-          <span className="auth-link" onClick={() => navigate("/login")}>
-            Đăng nhập ngay
-          </span>
-        </p>
-      </div>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 }

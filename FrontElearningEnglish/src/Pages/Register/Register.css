@@ -1,22 +1,22 @@
 /* ===========================
-   REGISTER PAGE
+   REGISTER PAGE - BOOTSTRAP OPTIMIZED
 =========================== */
 
 .auth-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #932da3 0%, #ffffff 100%);
-  padding: 40px 60px;
+  padding: 40px 20px;
   box-sizing: border-box;
 }
 
 .auth-card {
-  width: 420px;
-  margin: 60px auto;
   background: #ffffff;
   border-radius: 18px;
   padding: 40px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   text-align: center;
+  margin-top: 60px;
+  margin-bottom: 60px;
 }
 
 /* ===========================
@@ -31,35 +31,18 @@
 }
 
 /* ===========================
-   ERROR MESSAGE
+   ERROR MESSAGE - Override Bootstrap Alert
 =========================== */
 
 .auth-error-message {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #ef4444 !important;
+  border: none !important;
   padding: 12px 16px;
   border-radius: 8px;
   margin-bottom: 20px;
   font-size: 14px;
   text-align: left;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* ===========================
-   FORM ROW
-=========================== */
-
-.form-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 15px;
-}
-
-.form-row .input-field-wrapper,
-.form-row .select-field-wrapper {
-  flex: 1;
-  margin-bottom: 0;
 }
 
 /* ===========================
@@ -162,69 +145,34 @@
 }
 
 /* ===========================
-   GENDER RADIO BUTTONS
+   GENDER RADIO BUTTONS - Bootstrap Form.Check Override
 =========================== */
-
-.gender-radio-wrapper {
-  margin-bottom: 15px;
-  width: 100%;
-}
 
 .gender-radio-label {
   font-size: 15px;
   font-weight: 500;
   color: #1f2937;
-  margin-bottom: 12px;
+  margin-bottom: 12px !important;
   text-align: left;
 }
 
-.gender-radio-group {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-.gender-radio-option {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  user-select: none;
-}
-
-.gender-radio-option input[type="radio"] {
+.gender-radio-option .form-check-input {
   width: 20px;
   height: 20px;
-  margin: 0;
-  margin-right: 8px;
   cursor: pointer;
-  accent-color: #7a3df0;
+  border-color: #d1d5db;
 }
 
-.gender-radio-option input[type="radio"]:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+.gender-radio-option .form-check-input:checked {
+  background-color: #7a3df0;
+  border-color: #7a3df0;
 }
 
-.gender-radio-option .radio-label {
+.gender-radio-option .form-check-label {
   font-size: 15px;
   color: #1f2937;
   cursor: pointer;
-}
-
-.gender-radio-option:has(input[type="radio"]:disabled) .radio-label {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.gender-radio-wrapper .input-field-error {
-  display: block;
-  margin-top: 8px;
-  margin-left: 0;
-  font-size: 13px;
-  color: #ef4444;
-  text-align: left;
-  width: 100%;
-  min-height: 20px;
+  margin-left: 8px;
 }
 
 /* ===========================
@@ -243,34 +191,37 @@
 }
 
 /* ===========================
-   BUTTON
+   BUTTON - Bootstrap Button Override (Giữ màu gradient)
 =========================== */
 
-.auth-btn {
+.auth-btn.btn-primary {
   width: 100%;
   height: 52px;
   border-radius: 28px;
   border: none;
   font-weight: 600;
-  cursor: pointer;
   font-size: 15px;
-  margin-top: 10px;
-  transition: 0.25s;
+  background: linear-gradient(90deg, #6fd5e0, #d447b6) !important;
+  color: white !important;
+  transition: transform 0.25s, opacity 0.25s;
 }
 
-.auth-btn.primary {
-  background: linear-gradient(90deg, #6fd5e0, #d447b6);
-  color: white;
-}
-
-.auth-btn:hover:not(:disabled) {
+.auth-btn.btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
   opacity: 0.95;
+  background: linear-gradient(90deg, #6fd5e0, #d447b6) !important;
 }
 
-.auth-btn:disabled {
+.auth-btn.btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  background: linear-gradient(90deg, #6fd5e0, #d447b6) !important;
+}
+
+.auth-btn.btn-primary:focus,
+.auth-btn.btn-primary:active {
+  background: linear-gradient(90deg, #6fd5e0, #d447b6) !important;
+  box-shadow: none !important;
 }
 
 /* ===========================
@@ -278,7 +229,6 @@
 =========================== */
 
 .auth-footer {
-  margin-top: 15px;
   font-size: 14px;
   color: #6b7280;
 }
@@ -287,30 +237,29 @@
   color: #7a3df0;
   cursor: pointer;
   font-weight: 500;
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
 }
 
 /* ===========================
-   RESPONSIVE
+   RESPONSIVE - Bootstrap handles most, custom tweaks only
 =========================== */
 
-@media (max-width: 520px) {
+@media (max-width: 576px) {
   .auth-card {
-    width: 100%;
     padding: 30px 20px;
+    margin-top: 30px;
+    margin-bottom: 30px;
   }
 
   .auth-container {
-    padding: 20px;
+    padding: 20px 15px;
   }
 
-  .form-row {
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .form-row .input-field-wrapper,
-  .form-row .select-field-wrapper,
-  .form-row .date-picker-wrapper {
-    margin-bottom: 15px;
+  .auth-title {
+    font-size: 24px;
   }
 }

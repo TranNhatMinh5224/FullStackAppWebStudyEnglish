@@ -15,6 +15,7 @@ import "./FileUpload.css";
  * @param {Function} props.onUploadSuccess - Callback when upload succeeds: (tempKey, fileType, previewUrl, fileSize, duration) => void
  * @param {Function} props.onRemove - Callback when file is removed: () => void
  * @param {Function} props.onError - Callback when error occurs: (errorMessage) => void
+ * @param {Function} props.onUploadingChange - Callback when uploading state changes: (isUploading) => void
  * @param {string} props.label - Label text (default: "Chọn file hoặc kéo thả vào đây")
  * @param {string} props.hint - Hint text (default: "Hỗ trợ Paste (Ctrl+V) từ Clipboard")
  * @param {boolean} props.enablePaste - Enable paste from clipboard (default: true)
@@ -29,6 +30,7 @@ export default function FileUpload({
     onUploadSuccess,
     onRemove,
     onError,
+    onUploadingChange,
     label = "Chọn file hoặc kéo thả vào đây",
     hint = "Hỗ trợ Paste (Ctrl+V) từ Clipboard",
     enablePaste = true,
@@ -126,6 +128,7 @@ export default function FileUpload({
         setUploading(true);
         setUploadProgress(10);
         setError(null);
+        if (onUploadingChange) onUploadingChange(true);
 
         try {
             // Create preview
@@ -189,9 +192,10 @@ export default function FileUpload({
             setTimeout(() => {
                 setUploading(false);
                 setUploadProgress(0);
+                if (onUploadingChange) onUploadingChange(false);
             }, 600);
         }
-    }, [bucket, showPreview, existingUrl, onUploadSuccess, onError, validateFile, extractDuration]);
+    }, [bucket, showPreview, existingUrl, onUploadSuccess, onError, onUploadingChange, validateFile, extractDuration]);
 
     // Process file
     const processFile = useCallback(async (file) => {

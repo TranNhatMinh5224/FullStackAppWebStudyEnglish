@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Container, Row, Col, Button, Alert, Form } from "react-bootstrap";
 import "./OtpVerifier.css";
 
 /**
@@ -176,53 +177,74 @@ export default function OtpVerifier({
 
   return (
     <div className="otp-container">
-      <div className="otp-box">
-        <h2>{title}</h2>
-        {description ? (
-          <p className="otp-desc">{description}</p>
-        ) : (
-          <p className="otp-desc">Mã xác minh đã được gửi đến email <strong>{email}</strong></p>
-        )}
+      <Container>
+        <Row className="justify-content-center">
+          <Col xs={12} sm={10} md={8} lg={6} xl={5}>
+            <div className="otp-box">
+              <h2>{title}</h2>
+              {description ? (
+                <p className="otp-desc">{description}</p>
+              ) : (
+                <p className="otp-desc">Mã xác minh đã được gửi đến email <strong>{email}</strong></p>
+              )}
 
-        <div className="otp-input-group">
-          {otp.map((digit, index) => (
-            <input
-              key={index}
-              ref={(el) => (inputRefs.current[index] = el)}
-              value={digit}
-              className="otp-input"
-              maxLength={1}
-              inputMode="numeric"
-              type="text"
-              onChange={(e) => handleChange(e, index)}
-              onKeyDown={(e) => handleKeyDown(e, index)}
-              onPaste={handlePaste}
-              autoComplete="off"
-              disabled={loading || maxAttemptsReached}
-            />
-          ))}
-        </div>
+              <div className="otp-input-group">
+                {otp.map((digit, index) => (
+                  <Form.Control
+                    key={index}
+                    ref={(el) => (inputRefs.current[index] = el)}
+                    value={digit}
+                    className="otp-input"
+                    maxLength={1}
+                    inputMode="numeric"
+                    type="text"
+                    onChange={(e) => handleChange(e, index)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
+                    onPaste={handlePaste}
+                    autoComplete="off"
+                    disabled={loading || maxAttemptsReached}
+                  />
+                ))}
+              </div>
 
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
-          <span className="otp-timer">Thời gian còn lại: {formatTime(remainingSeconds)}</span>
-        </div>
+              <div className="d-flex justify-content-center mb-2">
+                <span className="otp-timer">Thời gian còn lại: {formatTime(remainingSeconds)}</span>
+              </div>
 
-        {errorMessage && (
-          <p className={`otp-error ${maxAttemptsReached ? "otp-error-max" : ""}`}>{errorMessage}</p>
-        )}
+              {errorMessage && (
+                <Alert variant="danger" className={`otp-alert-error ${maxAttemptsReached ? "otp-error-max" : ""}`}>
+                  {errorMessage}
+                </Alert>
+              )}
 
-        <button className="otp-btn" onClick={handleVerify} disabled={loading || maxAttemptsReached || remainingSeconds === 0}>
-          {loading ? "Đang xác minh..." : "Xác minh"}
-        </button>
+              <div className="d-grid">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="otp-btn"
+                  onClick={handleVerify}
+                  disabled={loading || maxAttemptsReached || remainingSeconds === 0}
+                >
+                  {loading ? "Đang xác minh..." : "Xác minh"}
+                </Button>
+              </div>
 
-        <div className="otp-resend">
-          <span>Chưa nhận được mã? </span>
-          <button className="resend-btn" onClick={handleResend} disabled={loading || maxAttemptsReached || remainingSeconds > 0}>
-            {loading ? "Đang gửi..." : "Gửi lại mã OTP"}
-          </button>
-          {remainingSeconds === 0 && <span className="otp-expired"> &nbsp;Mã đã hết hạn</span>}
-        </div>
-      </div>
+              <div className="otp-resend text-center mt-3">
+                <span>Chưa nhận được mã? </span>
+                <Button
+                  variant="link"
+                  className="resend-btn"
+                  onClick={handleResend}
+                  disabled={loading || maxAttemptsReached || remainingSeconds > 0}
+                >
+                  {loading ? "Đang gửi..." : "Gửi lại mã OTP"}
+                </Button>
+                {remainingSeconds === 0 && <span className="otp-expired"> &nbsp;Mã đã hết hạn</span>}
+              </div>
+            </div>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 }
