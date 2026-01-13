@@ -1,136 +1,346 @@
 
 ########################################
-# Consolidated .gitignore for project
+# Full Stack .gitignore
+# ASP.NET Core + React Project
 ########################################
 
-# Environment files
+# ===========================================
+# Environment Variables & Configuration
+# ===========================================
 .env
-.env.dev
-.env.staging
-.env.prod
 .env.local
-.env.*.local
-!.env.README.md
+.env.development
+.env.development.local
+.env.staging
+.env.staging.local
+.env.production
+.env.production.local
+.env.test
+.env.test.local
 
-# ASP.NET Core / .NET
+# ASP.NET Configuration Files (ignore variants, keep base)
 **/appsettings.Development.json
 **/appsettings.Docker.json
 **/appsettings.Staging.json
 **/appsettings.Production.json
 **/appsettings.Local.json
-!**/appsettings.json
-!**/appsettings.Example.json
+# Keep base configuration files:
+# !**/appsettings.json
 
-# Build artifacts
-bin/
-obj/
-out/
-publish/
-*.exe
-*.dll
-*.pdb
-*.cache
-*.log
-*.db
-*.bak
-*.tmp
-*.ide
-*.swp
-
-# Build configurations
+# ===========================================
+# .NET / ASP.NET Core Build Output
+# ===========================================
+[Bb]in/
+[Oo]bj/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
 x64/
 x86/
+[Ww][Ii][Nn]32/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
 [Ll]og/
-artifacts/
-TestResults/
+[Ll]ogs/
 
-# Frontend (Node / React)
-/node_modules/
-/.pnp
-.pnp.js
-/build
-/dist
-/coverage
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Build Results
+*.dll
+*.exe
+*.pdb
+*.cache
+*.ilk
+*.obj
+*.iobj
+*.pch
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
 
-# Keep lockfiles if you want reproducible builds
-package-lock.json
-yarn.lock
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
 
-# Test output
+# Test Results & Coverage
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+*.coverage
+*.coveragexml
+_Chutzpah*
 
 # Entity Framework
 *.dbmdl
+*.jfm
+Migrations/*.Designer.cs
+# Keep Migrations folder but ignore auto-generated files
 
-# OS-specific
-.DS_Store
-Thumbs.db
-desktop.ini
-$RECYCLE.BIN/
-ehthumbs.db
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
 
-# IDE / editor
+# StyleCop
+StyleCopReport.xml
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# NCrunch
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+# Publish artifacts
+[Pp]ublish/
+out/
+*.pubxml
+*.publishproj
+
+# ===========================================
+# Frontend (Node.js / React)
+# ===========================================
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+/cypress/videos
+/cypress/screenshots
+
+# Production build
+/build
+/dist
+/.next/
+/out/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# React / Webpack
+.cache
+.parcel-cache
+.vite
+
+# TypeScript
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Keep lock files for consistent builds
+# DO NOT ignore these files:
+# !package-lock.json
+# !yarn.lock
+# !pnpm-lock.yaml
+
+# ===========================================
+# Database Files
+# ===========================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+*.mdf
+*.ldf
+*.bak
+
+# ===========================================
+# IDE & Editor Files
+# ===========================================
+# Visual Studio
 .vs/
-.vscode/
-.idea/
 *.sln.docstates
+*.suo
 *.user
 *.userosscache
-*.suo
-*.rsuser
+*.sln.docstates
 *.userprefs
+*.rsuser
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains IDEs (Rider, WebStorm, IntelliJ)
+.idea/
 *.iml
+*.iws
+*.ipr
+.idea_modules/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Other editors
 *.swp
 *.swo
 *~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+.metadata
 
-# Docker / registry / Jenkins
-auth/
+# ===========================================
+# Operating System Files
+# ===========================================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.directory
+.Trash-*
+.nfs*
+
+# ===========================================
+# Docker & DevOps
+# ===========================================
+# Docker volumes and data
+docker-compose.override.yml
+.dockerignore
 registry-data/
-data/
+auth/
 jenkins_home/
+data/
 
-# Secrets and keys
+# Kubernetes
+*.kubeconfig
+
+# ===========================================
+# Security & Secrets
+# ===========================================
 secrets/
+*.pfx
+*.p12
 *.key
 *.pem
+*.crt
+*.cer
+*.p7b
+appsecrets.json
+oauth.json
+credentials.json
 
-# Logs and temp
+# ===========================================
+# Logs & Temporary Files
+# ===========================================
 logs/
 *.log
 tmp/
 temp/
 *.tmp
+*.temp
 
-# Backup / archive
+# ===========================================
+# Archives & Backups
+# ===========================================
 *.bak
 *.backup
 *.old
 *.orig
 *.zip
 *.tar
+*.tar.gz
 *.7z
 *.rar
+*.iso
 
-# Project-specific ignores
-/BackendELearningEnglish/**/bin/
-/BackendELearningEnglish/**/obj/
-/FrontElearningEnglish/**/build/
+# ===========================================
+# Project-Specific
+# ===========================================
+# Add any project-specific ignores here
+wwwroot/uploads/
+wwwroot/temp/
 
 ########################################
-# End of consolidated .gitignore
+# End of .gitignore
 ########################################
