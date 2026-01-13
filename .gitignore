@@ -1,346 +1,98 @@
-
 ########################################
-# Full Stack .gitignore
-# ASP.NET Core + React Project
+# Full Stack .gitignore (Corrected for your Project)
 ########################################
 
 # ===========================================
-# Environment Variables & Configuration
+# 1. HỆ ĐIỀU HÀNH & EDITOR (Rác hệ thống)
 # ===========================================
-.env
-.env.local
-.env.development
-.env.development.local
-.env.staging
-.env.staging.local
-.env.production
-.env.production.local
-.env.test
-.env.test.local
-
-# ASP.NET Configuration Files (ignore variants, keep base)
-**/appsettings.Development.json
-**/appsettings.Docker.json
-**/appsettings.Staging.json
-**/appsettings.Production.json
-**/appsettings.Local.json
-# Keep base configuration files:
-# !**/appsettings.json
-
-# ===========================================
-# .NET / ASP.NET Core Build Output
-# ===========================================
-[Bb]in/
-[Oo]bj/
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Ll]og/
-[Ll]ogs/
-
-# Build Results
-*.dll
-*.exe
-*.pdb
-*.cache
-*.ilk
-*.obj
-*.iobj
-*.pch
-*.ipdb
-*.pgc
-*.pgd
-*.rsp
-*.sbr
-*.tlb
-*.tli
-*.tlh
-*.tmp_proj
-*_wpftmp.csproj
-*.log
-*.vspscc
-*.vssscc
-.builds
-*.pidb
-*.svclog
-*.scc
-
-# Visual Studio profiler
-*.psess
-*.vsp
-*.vspx
-*.sap
-
-# Test Results & Coverage
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
-*.VisualState.xml
-TestResult.xml
-nunit-*.xml
-*.coverage
-*.coveragexml
-_Chutzpah*
-
-# Entity Framework
-*.dbmdl
-*.jfm
-Migrations/*.Designer.cs
-# Keep Migrations folder but ignore auto-generated files
-
-# ASP.NET Scaffolding
-ScaffoldingReadMe.txt
-
-# StyleCop
-StyleCopReport.xml
-
-# NuGet Packages
-*.nupkg
-*.snupkg
-**/packages/*
-!**/packages/build/
-*.nuget.props
-*.nuget.targets
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# NCrunch
-_NCrunch_*
-.*crunch*.local.xml
-nCrunchTemp_*
-
-# Publish artifacts
-[Pp]ublish/
-out/
-*.pubxml
-*.publishproj
-
-# ===========================================
-# Frontend (Node.js / React)
-# ===========================================
-# Dependencies
-node_modules/
-/.pnp
-.pnp.js
-
-# Testing
-/coverage
-/cypress/videos
-/cypress/screenshots
-
-# Production build
-/build
-/dist
-/.next/
-/out/
-
-# Debug logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-.pnpm-debug.log*
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# React / Webpack
-.cache
-.parcel-cache
-.vite
-
-# TypeScript
-*.tsbuildinfo
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Optional stylelint cache
-.stylelintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Yarn Integrity file
-.yarn-integrity
-
-# Keep lock files for consistent builds
-# DO NOT ignore these files:
-# !package-lock.json
-# !yarn.lock
-# !pnpm-lock.yaml
-
-# ===========================================
-# Database Files
-# ===========================================
-*.db
-*.sqlite
-*.sqlite3
-*.db-shm
-*.db-wal
-*.mdf
-*.ldf
-*.bak
-
-# ===========================================
-# IDE & Editor Files
-# ===========================================
-# Visual Studio
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
 .vs/
-*.sln.docstates
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-*.userprefs
-*.rsuser
-
-# Visual Studio Code
 .vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-*.code-workspace
-
-# JetBrains IDEs (Rider, WebStorm, IntelliJ)
 .idea/
-*.iml
-*.iws
-*.ipr
-.idea_modules/
-
-# Sublime Text
-*.sublime-workspace
-*.sublime-project
-
-# Other editors
-*.swp
-*.swo
-*~
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-.metadata
+*.suo
+*.user
+*.userprefs
 
 # ===========================================
-# Operating System Files
+# 2. BACKEND (.NET CORE)
 # ===========================================
-# Windows
-Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-*.stackdump
-[Dd]esktop.ini
-$RECYCLE.BIN/
-*.lnk
+# Thư mục build (sinh ra khi chạy code)
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+publish/
+out/
 
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
-
-# Linux
-*~
-.directory
-.Trash-*
-.nfs*
-
-# ===========================================
-# Docker & DevOps
-# ===========================================
-# Docker volumes and data
-docker-compose.override.yml
-.dockerignore
-registry-data/
-auth/
-jenkins_home/
-data/
-
-# Kubernetes
-*.kubeconfig
-
-# ===========================================
-# Security & Secrets
-# ===========================================
-secrets/
-*.pfx
-*.p12
-*.key
-*.pem
-*.crt
-*.cer
-*.p7b
-appsecrets.json
-oauth.json
-credentials.json
-
-# ===========================================
-# Logs & Temporary Files
-# ===========================================
-logs/
+# File tạm và logs
 *.log
-tmp/
-temp/
 *.tmp
-*.temp
+TestResults/
+*.coverage
+*.coveragexml
+
+# File Database thực tế (KHÔNG CHẶN CODE trong folder Data)
+*.mdf
+*.ldf
+*.db
+*.sqlite
+*.sqlite3
+
+# File cấu hình môi trường (Giữ lại .example hoặc file gốc)
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/appsettings.Docker.json
+# Lưu ý: appsettings.json gốc vẫn được git theo dõi
 
 # ===========================================
-# Archives & Backups
+# 3. FRONTEND (REACTJS)
 # ===========================================
-*.bak
-*.backup
-*.old
-*.orig
-*.zip
-*.tar
-*.tar.gz
-*.7z
-*.rar
-*.iso
+# Thư viện tải về
+**/node_modules/
+
+# Thư mục build production
+**/build/
+**/dist/
+
+# File log npm/yarn
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# File môi trường (chứa key bảo mật)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# Giữ lại .env.example
 
 # ===========================================
-# Project-Specific
+# 4. DEVOPS & DOCKER
 # ===========================================
-# Add any project-specific ignores here
-wwwroot/uploads/
-wwwroot/temp/
+# Chỉ chặn file cấu hình override (thường chứa setting riêng của máy cá nhân)
+docker-compose.override.yml
 
-########################################
-# End of .gitignore
-########################################
+# Chặn thư mục chứa data container (nếu bạn mount volume ra ngoài)
+# Nhưng KHÔNG chặn thư mục Data của code
+.dockerignore
+
+# ===========================================
+# 5. PROJECT SPECIFIC (Cụ thể cho dự án này)
+# ===========================================
+# Chặn file upload ảnh/tài liệu trong quá trình test (tránh nặng git)
+BackendELearningEnglish/LearningEnglish.API/wwwroot/uploads/*
+!BackendELearningEnglish/LearningEnglish.API/wwwroot/uploads/.gitkeep
+
+# ĐẢM BẢO KHÔNG CHẶN FOLDER CODE QUAN TRỌNG
+!BackendELearningEnglish/LearningEnglish.Infrastructure/Data/
