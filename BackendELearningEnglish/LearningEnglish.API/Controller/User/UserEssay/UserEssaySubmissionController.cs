@@ -8,7 +8,7 @@ namespace LearningEnglish.API.Controller.User
 {
     [Route("api/user/essay-submissions")]
     [ApiController]
-    [Authorize(Roles = "Student")]
+    [Authorize(Roles = "Student,SuperAdmin,ContentAdmin,FinanceAdmin")]
     public class UserEssaySubmissionController : ControllerBase
     {
         private readonly IUserEssaySubmissionService _essaySubmissionService;

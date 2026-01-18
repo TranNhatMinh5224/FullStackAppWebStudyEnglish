@@ -1,3 +1,4 @@
+/* Bootstrap utilities: d-flex, flex-column */
 .course-summary-card {
     background: var(--color-bg-primary, white);
     border-radius: 20px;
@@ -5,8 +6,6 @@
     box-shadow: 0 10px 24px var(--shadow-sm, rgba(0, 0, 0, 0.08));
     position: sticky;
     top: 90px;
-    display: flex;
-    flex-direction: column;
     gap: 20px;
 }
 
@@ -14,15 +13,13 @@
     margin-bottom: 8px;
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .course-summary-stats {
-    display: flex;
-    flex-direction: column;
     gap: 16px;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center */
 .course-stat-item {
-    display: flex;
-    align-items: center;
     gap: 12px;
 }
 
@@ -32,9 +29,8 @@
     flex-shrink: 0;
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .stat-content {
-    display: flex;
-    flex-direction: column;
     gap: 4px;
     flex: 1;
 }
@@ -75,9 +71,8 @@
     transform: translateY(0);
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .course-enrolled-actions {
-    display: flex;
-    flex-direction: column;
     gap: 10px;
     margin-top: 8px;
 }

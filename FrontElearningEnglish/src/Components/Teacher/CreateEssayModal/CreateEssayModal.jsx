@@ -245,7 +245,7 @@ export default function CreateEssayModal({ show, onClose, onSuccess, assessmentI
       className="create-essay-modal modal-modern" 
       dialogClassName="create-essay-modal-dialog"
     >
-      <Modal.Header closeButton>
+      <Modal.Header>
         <Modal.Title>{isUpdateMode ? "Cập nhật Essay" : "Tạo Essay mới"}</Modal.Title>
       </Modal.Header>
       <Modal.Body>

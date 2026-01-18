@@ -1,9 +1,9 @@
+/* Bootstrap utilities: d-flex, align-items-center */
 .flashcard-navigation {
-    display: flex;
-    align-items: center;
     gap: 20px;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center, justify-content-center */
 .nav-button {
     width: 60px;
     height: 60px;
@@ -12,9 +12,6 @@
     background: var(--color-secondary-cyan, #41d6e3);
     color: white;
     font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;

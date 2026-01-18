@@ -13,6 +13,12 @@ namespace LearningEnglish.Application.Validators
                 .MaximumLength(200)
                 .WithMessage("Tên nhóm câu hỏi không được vượt quá 200 ký tự.");
 
+            RuleFor(x => x.Title)
+                .NotEmpty()
+                .WithMessage("Tiêu đề không được để trống.")
+                .MaximumLength(200)
+                .WithMessage("Tiêu đề không được vượt quá 200 ký tự.");
+
             RuleFor(x => x.Description)
                 .MaximumLength(1000)
                 .WithMessage("Mô tả không được vượt quá 1000 ký tự.")
@@ -37,6 +43,12 @@ namespace LearningEnglish.Application.Validators
                 .WithMessage("Tên nhóm câu hỏi không được để trống.")
                 .MaximumLength(200)
                 .WithMessage("Tên nhóm câu hỏi không được vượt quá 200 ký tự.");
+
+            RuleFor(x => x.Title)
+                .NotEmpty()
+                .WithMessage("Tiêu đề không được để trống.")
+                .MaximumLength(200)
+                .WithMessage("Tiêu đề không được vượt quá 200 ký tự.");
 
             RuleFor(x => x.Description)
                 .MaximumLength(1000)

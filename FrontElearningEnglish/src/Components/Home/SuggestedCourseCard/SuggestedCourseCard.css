@@ -115,7 +115,10 @@
 
 .suggested-course-card .course-image-wrapper {
     width: 100% !important;
-    height: 180px;
+    height: 200px;
+    min-height: 200px;
+    max-height: 200px;
+    aspect-ratio: 16 / 9;
     overflow: hidden;
     background: var(--color-bg-light, #e0f7fa);
     flex-shrink: 0;
@@ -124,6 +127,9 @@
     z-index: 1;
     transform: translateZ(20px);
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .suggested-course-card .course-image-wrapper::after {
@@ -150,10 +156,17 @@
 .suggested-course-card .course-image {
     width: 100%;
     height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: cover;
-    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    object-position: center center;
     display: block;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform: translateZ(0);
+    background: var(--color-bg-light, #e0f7fa);
+    flex-shrink: 0;
 }
 
 .suggested-course-card:hover .course-image {

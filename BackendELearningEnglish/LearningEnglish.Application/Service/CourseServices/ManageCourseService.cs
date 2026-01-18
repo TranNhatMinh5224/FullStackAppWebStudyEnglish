@@ -58,6 +58,15 @@ namespace LearningEnglish.Application.Service
 
                 var userDtos = _mapper.Map<List<UserDto>>(pagedUsers.Items);
 
+                // Build AvatarUrl từ AvatarUrl (đã là key từ mapping) cho tất cả users (giống pattern GetSystemCoursesAsync)
+                foreach (var userDto in userDtos)
+                {
+                    if (!string.IsNullOrWhiteSpace(userDto.AvatarUrl))
+                    {
+                        userDto.AvatarUrl = _avatarService.BuildAvatarUrl(userDto.AvatarUrl);
+                    }
+                }
+
                 var result = new PagedResult<UserDto>
                 {
                     Items = userDtos,
@@ -95,6 +104,15 @@ namespace LearningEnglish.Application.Service
                 var pagedUsers = await _userRepository.GetUsersByCourseIdPagedForTeacherAsync(courseId, teacherId, userParams);
 
                 var userDtos = _mapper.Map<List<UserDto>>(pagedUsers.Items);
+
+                // Build AvatarUrl từ AvatarUrl (đã là key từ mapping) cho tất cả users (giống pattern GetSystemCoursesAsync)
+                foreach (var userDto in userDtos)
+                {
+                    if (!string.IsNullOrWhiteSpace(userDto.AvatarUrl))
+                    {
+                        userDto.AvatarUrl = _avatarService.BuildAvatarUrl(userDto.AvatarUrl);
+                    }
+                }
 
                 var result = new PagedResult<UserDto>
                 {

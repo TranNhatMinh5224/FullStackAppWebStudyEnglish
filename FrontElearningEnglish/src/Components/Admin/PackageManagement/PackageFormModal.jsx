@@ -8,55 +8,124 @@ export default function PackageFormModal({ show, onClose, onSuccess, packageToEd
     const [formData, setFormData] = useState({
         packageName: "",
         level: 1,  // Basic = 1 in backend enum
-        price: 0,
-        maxCourses: 5,
-        maxLessons: 50,
-        maxStudents: 100
+        price: "",
+        maxCourses: "",
+        maxLessons: "",
+        maxStudents: ""
     });
     const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({
+        price: "",
+        maxCourses: "",
+        maxLessons: "",
+        maxStudents: ""
+    });
 
     useEffect(() => {
         if (packageToEdit) {
             setFormData({
-                packageName: packageToEdit.packageName || packageToEdit.PackageName,
-                level: packageToEdit.level || packageToEdit.Level || 1,  // Basic = 1
-                price: packageToEdit.price || packageToEdit.Price || 0,
-                maxCourses: packageToEdit.maxCourses || packageToEdit.MaxCourses || 5,
-                maxLessons: packageToEdit.maxLessons || packageToEdit.MaxLessons || 50,
-                maxStudents: packageToEdit.maxStudents || packageToEdit.MaxStudents || 100
+                packageName: packageToEdit.packageName || packageToEdit.PackageName || "",
+                level: packageToEdit.level || packageToEdit.Level || 1,
+                price: (packageToEdit.price || packageToEdit.Price || 0).toString(),
+                maxCourses: (packageToEdit.maxCourses || packageToEdit.MaxCourses || 5).toString(),
+                maxLessons: (packageToEdit.maxLessons || packageToEdit.MaxLessons || 50).toString(),
+                maxStudents: (packageToEdit.maxStudents || packageToEdit.MaxStudents || 100).toString()
             });
         } else {
             setFormData({
                 packageName: "",
-                level: 1, // Basic = 1
-                price: 0,
-                maxCourses: 5,
-                maxLessons: 50,
-                maxStudents: 100
+                level: 1,
+                price: "",
+                maxCourses: "",
+                maxLessons: "",
+                maxStudents: ""
             });
         }
+        setErrors({
+            price: "",
+            maxCourses: "",
+            maxLessons: "",
+            maxStudents: ""
+        });
     }, [packageToEdit, show]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        
+        // Đơn giản: chỉ lưu giá trị như các form khác
         setFormData({
             ...formData,
-            [name]: name === "packageName" ? value : Number(value)
+            [name]: value
         });
+        
+        // Clear error khi user đang gõ
+        if (errors[name]) {
+            setErrors({
+                ...errors,
+                [name]: ""
+            });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validate tên gói
+        if (!formData.packageName.trim()) {
+            toast.error("Vui lòng nhập tên gói");
+            return;
+        }
+        
+        // Validate và parse giá
+        const price = formData.price === "" ? 0 : parseInt(formData.price.toString().replace(/[^\d]/g, ''), 10);
+        if (isNaN(price) || price < 0) {
+            setErrors({ ...errors, price: "Giá phải là số hợp lệ và không được âm" });
+            return;
+        }
+        if (price > 100000000) {
+            setErrors({ ...errors, price: "Giá không được vượt quá 100,000,000 VND" });
+            return;
+        }
+        
+        // Validate và parse các trường tài nguyên
+        const maxCourses = formData.maxCourses === "" ? 0 : parseInt(formData.maxCourses, 10);
+        if (isNaN(maxCourses) || maxCourses < 1 || maxCourses > 100) {
+            setErrors({ ...errors, maxCourses: "Max khóa học phải từ 1 đến 100" });
+            toast.error("Vui lòng kiểm tra lại các giá trị tài nguyên");
+            return;
+        }
+        
+        const maxLessons = formData.maxLessons === "" ? 0 : parseInt(formData.maxLessons, 10);
+        if (isNaN(maxLessons) || maxLessons < 1 || maxLessons > 1000) {
+            setErrors({ ...errors, maxLessons: "Max bài học phải từ 1 đến 1,000" });
+            toast.error("Vui lòng kiểm tra lại các giá trị tài nguyên");
+            return;
+        }
+        
+        const maxStudents = formData.maxStudents === "" ? 0 : parseInt(formData.maxStudents, 10);
+        if (isNaN(maxStudents) || maxStudents < 1 || maxStudents > 10000) {
+            setErrors({ ...errors, maxStudents: "Max học viên phải từ 1 đến 10,000" });
+            toast.error("Vui lòng kiểm tra lại các giá trị tài nguyên");
+            return;
+        }
+        
         setLoading(true);
+        setErrors({
+            price: "",
+            maxCourses: "",
+            maxLessons: "",
+            maxStudents: ""
+        });
+        
         try {
             // Prepare data matching backend DTO exactly
             const dataToSend = {
-                packageName: formData.packageName,
+                packageName: formData.packageName.trim(),
                 level: Number(formData.level),
-                price: Number(formData.price),
-                maxCourses: Number(formData.maxCourses),
-                maxLessons: Number(formData.maxLessons),
-                maxStudents: Number(formData.maxStudents)
+                price: price,
+                maxCourses: maxCourses,
+                maxLessons: maxLessons,
+                maxStudents: maxStudents
             };
 
             console.log("Data being sent to API:", dataToSend);
@@ -96,7 +165,7 @@ export default function PackageFormModal({ show, onClose, onSuccess, packageToEd
             dialogClassName="package-form-modal-dialog"
         >
             <Modal.Header closeButton>
-                <Modal.Title>{packageToEdit ? "Cập nhật Gói" : "Thêm Gói Mới"}</Modal.Title>
+                <Modal.Title>{packageToEdit ? "Cập nhật Gói" : "Tạo Teacher Package"}</Modal.Title>
             </Modal.Header>
             <Form onSubmit={handleSubmit}>
                 <Modal.Body>
@@ -139,9 +208,20 @@ export default function PackageFormModal({ show, onClose, onSuccess, packageToEd
                                     name="price"
                                     value={formData.price}
                                     onChange={handleChange}
-                                    min="0"
+                                    placeholder="VD: 1000000"
                                     required
+                                    min="0"
+                                    max="100000000"
+                                    isInvalid={!!errors.price}
                                 />
+                                {errors.price && (
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.price}
+                                    </Form.Control.Feedback>
+                                )}
+                                <Form.Text className="text-muted">
+                                    Nhập giá từ 0 đến 100,000,000 VND
+                                </Form.Text>
                             </Form.Group>
                         </Col>
                     </Row>
@@ -156,7 +236,18 @@ export default function PackageFormModal({ show, onClose, onSuccess, packageToEd
                                     value={formData.maxCourses}
                                     onChange={handleChange}
                                     min="1"
+                                    max="100"
+                                    required
+                                    isInvalid={!!errors.maxCourses}
                                 />
+                                {errors.maxCourses && (
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.maxCourses}
+                                    </Form.Control.Feedback>
+                                )}
+                                <Form.Text className="text-muted">
+                                    Từ 1 đến 100
+                                </Form.Text>
                             </Form.Group>
                         </Col>
                         <Col md={4}>
@@ -168,7 +259,18 @@ export default function PackageFormModal({ show, onClose, onSuccess, packageToEd
                                     value={formData.maxLessons}
                                     onChange={handleChange}
                                     min="1"
+                                    max="1000"
+                                    required
+                                    isInvalid={!!errors.maxLessons}
                                 />
+                                {errors.maxLessons && (
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.maxLessons}
+                                    </Form.Control.Feedback>
+                                )}
+                                <Form.Text className="text-muted">
+                                    Từ 1 đến 1,000
+                                </Form.Text>
                             </Form.Group>
                         </Col>
                         <Col md={4}>
@@ -180,7 +282,18 @@ export default function PackageFormModal({ show, onClose, onSuccess, packageToEd
                                     value={formData.maxStudents}
                                     onChange={handleChange}
                                     min="1"
+                                    max="10000"
+                                    required
+                                    isInvalid={!!errors.maxStudents}
                                 />
+                                {errors.maxStudents && (
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.maxStudents}
+                                    </Form.Control.Feedback>
+                                )}
+                                <Form.Text className="text-muted">
+                                    Từ 1 đến 10,000
+                                </Form.Text>
                             </Form.Group>
                         </Col>
                     </Row>

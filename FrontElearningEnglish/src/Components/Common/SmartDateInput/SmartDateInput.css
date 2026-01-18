@@ -1,0 +1,5 @@
+.smart-date-group { margin-bottom: 1rem; }
+.smart-date-input { width: 100%; }
+.smart-date-group .form-hint { font-size: 0.85rem; color: #6c757d; }
+.smart-date-input.is-invalid { border-color: #dc3545; }
+.invalid-feedback { display: block; }

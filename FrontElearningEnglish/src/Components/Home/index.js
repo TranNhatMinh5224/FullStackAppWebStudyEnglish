@@ -10,4 +10,6 @@ export { default as SuggestedCourseCard } from "./SuggestedCourseCard/SuggestedC
 export { default as SuggestedCoursesSection } from "./SuggestedCoursesSection/SuggestedCoursesSection";
 export { default as UpgradeCard } from "./UpgradeCard/UpgradeCard";
 export { default as AccountUpgradeSection } from "./AccountUpgradeSection/AccountUpgradeSection";
+export { default as SearchBox } from "./SearchBox/SearchBox";
+export { default as TeacherPackageDetailModal } from "./TeacherPackageDetailModal/TeacherPackageDetailModal";
 

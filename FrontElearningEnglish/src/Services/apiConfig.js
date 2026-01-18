@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
         },
         USERS: {
             GET_ALL: "/admin/users",
+            GET_BY_ID: (id) => `/admin/users/${id}`,
             GET_TEACHERS: "/admin/users/teachers",
             GET_BLOCKED: "/admin/users/blocked",
             USER_STATS: "/admin/statistics/users", // Thêm endpoint thống kê user
@@ -241,8 +242,6 @@ export const API_ENDPOINTS = {
     PRONUNCIATION_ASSESSMENTS: {
         ASSESS: "/user/pronunciation-assessments",
         GET_BY_MODULE: (moduleId) => `/user/pronunciation-assessments/module/${moduleId}`,
-        GET_BY_MODULE_PAGINATED: (moduleId) => `/user/pronunciation-assessments/module/${moduleId}/paginated`,
-        GET_ALL: "/user/pronunciation-assessments",
         GET_MODULE_SUMMARY: (moduleId) => `/user/pronunciation-assessments/module/${moduleId}/summary`,
     },
     // Assessments

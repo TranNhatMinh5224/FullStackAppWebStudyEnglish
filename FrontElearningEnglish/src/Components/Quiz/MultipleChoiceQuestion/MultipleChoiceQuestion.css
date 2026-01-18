@@ -1,26 +1,25 @@
 .multiple-choice-question {
-    margin-top: 16px;
+    margin-top: var(--spacing-md, clamp(0.75rem, 0.6rem + 0.75vw, 1rem));
 }
 
 .multiple-answers-hint {
-    margin-bottom: 12px;
-    padding: 8px 12px;
+    margin-bottom: var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
+    padding: var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem)) var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
     background: rgba(65, 214, 227, 0.1);
-    border-radius: 8px;
+    border-radius: var(--radius-md, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
     border-left: 3px solid var(--color-secondary-cyan, #41d6e3);
 }
 
 .hint-text {
-    font-size: 14px;
+    font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
     color: var(--color-secondary-cyan, #41d6e3);
     font-weight: 500;
     font-style: italic;
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .options-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    gap: var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
 }
 
 
@@ -29,36 +28,133 @@
 
 
 
+/* Bootstrap utilities: d-flex, flex-column */
 .option-content {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    gap: var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
     width: 100%;
 }
 
-.option-label {
+.option-item {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: white;
+    margin-bottom: 12px;
+}
+
+.option-item:hover {
+    border-color: #41d6e3;
+    background: rgba(65, 214, 227, 0.05);
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(65, 214, 227, 0.15);
+}
+
+.option-item.selected {
+    border: 3px solid #41d6e3 !important;
+    background: linear-gradient(135deg, rgba(65, 214, 227, 0.15) 0%, rgba(65, 214, 227, 0.08) 100%) !important;
+    box-shadow: 0 4px 16px rgba(65, 214, 227, 0.3), 0 0 0 4px rgba(65, 214, 227, 0.1) !important;
+    transform: translateX(8px);
+}
+
+.option-item.selected:hover {
+    border-color: #2fb8c4 !important;
+    box-shadow: 0 6px 20px rgba(65, 214, 227, 0.4), 0 0 0 4px rgba(65, 214, 227, 0.15) !important;
+}
+
+.option-radio {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #d1d5db;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.option-item.selected .option-radio {
+    border-color: #41d6e3;
+    background: #41d6e3;
+}
+
+.option-radio .check-icon {
+    color: white;
     font-size: 16px;
+}
+
+.option-badge {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 10px;
+    min-width: 32px;
+    text-align: center;
+}
+
+.option-item.selected .option-badge {
+    background-color: #41d6e3 !important;
+}
+
+.selected-badge {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.option-label {
+    font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
     color: var(--color-text-primary, #1f2937);
     line-height: 1.5;
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.option-item.selected .option-label {
+    color: #1e293b;
+    font-weight: 500;
 }
 
 .option-media {
-    margin-top: 8px;
+    margin-top: var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem));
 }
 
 .option-media-element {
     max-width: 100%;
-    max-height: 200px;
-    border-radius: 8px;
+    max-height: clamp(150px, 9.375rem + 3.125vw, 200px);
+    border-radius: var(--radius-md, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
 }
+
+/* ===========================
+   RESPONSIVE - Professional Pattern
+=========================== */
 
 @media (max-width: 768px) {
     .option-item {
-        padding: 12px;
+        padding: var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
     }
+}
 
+@media (max-width: 576px) {
     .option-label {
-        font-size: 14px;
+        font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
     }
 }
 

@@ -6,7 +6,6 @@
 export const ROUTE_PATHS = {
   // Public routes
   ROOT: "/",
-  WELCOME: "/welcome",
   LOGIN: "/login",
   REGISTER: "/register",
   FORGOT_PASSWORD: "/forgot-password",
@@ -30,6 +29,7 @@ export const ROUTE_PATHS = {
   PAYMENT_FAILED: "/payment-failed",
   VOCABULARY_REVIEW: "/vocabulary-review",
   VOCABULARY_NOTEBOOK: "/vocabulary-notebook",
+  SEARCH: "/search",
 
   // Course routes
   COURSE_DETAIL: (courseId) => `/course/${courseId}`,
@@ -85,6 +85,7 @@ export const ROUTE_PATHS = {
     USERS: "/admin/users",
     FINANCE: "/admin/finance",
     SUBMISSION_MANAGEMENT: "/admin/submission-management",
+    ASSET_MANAGEMENT: "/admin/asset-management",
   },
 };
 

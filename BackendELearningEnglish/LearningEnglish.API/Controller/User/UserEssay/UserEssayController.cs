@@ -9,7 +9,7 @@ namespace LearningEnglish.API.Controller.User
     // GET: api/user/essays - quản lý essay cho user role Student
     [Route("api/user/essays")]
     [ApiController]
-    [Authorize(Roles = "Student")]
+    [Authorize(Roles = "Student,SuperAdmin,ContentAdmin,FinanceAdmin")]
     public class UserEssayController : ControllerBase
     {
         private readonly IUserEssayService _essayService;

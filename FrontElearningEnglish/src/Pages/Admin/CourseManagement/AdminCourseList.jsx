@@ -130,12 +130,12 @@ export default function AdminCourseList() {
   return (
     <div className="admin-course-management-container">
       {/* HEADER */}
-      <div className="page-header">
+      <div className="page-header d-flex justify-content-between align-items-center flex-column flex-md-row gap-3">
         <div className="header-content">
           <h1 className="page-title">Course Management</h1>
           <p className="page-subtitle">Monitor and manage all system and teacher-created courses.</p>
         </div>
-        <button className="btn-create" onClick={handleCreateClick}>
+        <button className="btn-create d-flex align-items-center" onClick={handleCreateClick}>
           <MdAdd /> Create New Course
         </button>
       </div>

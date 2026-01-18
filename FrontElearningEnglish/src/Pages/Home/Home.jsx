@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Container } from "react-bootstrap";
 import "./Home.css";
 import MainHeader from "../../Components/Header/MainHeader";
 import { useAuth } from "../../Context/AuthContext";
@@ -9,8 +10,9 @@ import {
   MyCoursesSection,
   SuggestedCoursesSection,
   AccountUpgradeSection,
+  SearchBox,
 } from "../../Components/Home";
-import WelcomeFooter from "../../Components/Welcome/WelcomeFooter";
+import Footer from "../../Components/Footer/Footer";
 import LoginRequiredModal from "../../Components/Common/LoginRequiredModal/LoginRequiredModal";
 import NotificationModal from "../../Components/Common/NotificationModal/NotificationModal";
 
@@ -19,7 +21,8 @@ export default function Home() {
   const navigate = useNavigate();
   const [selectedPackage, setSelectedPackage] = useState(null); // null hoặc teacherPackageId
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [notification, setNotification] = useState({ isOpen: false, type: "info", message: "" });
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoMessage, setInfoMessage] = useState("");
 
   const displayName = isGuest ? "bạn" : user?.fullName || "bạn";
 
@@ -45,11 +48,8 @@ export default function Home() {
     const isTeacher = teacherSubscription?.isTeacher || teacherSubscription?.IsTeacher;
     
     if (isTeacher === true) {
-      setNotification({
-        isOpen: true,
-        type: "info",
-        message: "Gói giáo viên hiện tại của bạn đang hoạt động, vui lòng chờ đến khi hết hạn để kích hoạt gói giáo viên mới!"
-      });
+      setInfoMessage("Gói giáo viên hiện tại của bạn đang hoạt động, vui lòng chờ đến khi hết hạn để kích hoạt gói giáo viên mới!");
+      setShowInfoModal(true);
       return;
     }
 
@@ -67,21 +67,30 @@ export default function Home() {
       <MainHeader />
 
       <div className="home-container">
-        <WelcomeSection displayName={displayName} />
-        <MyCoursesSection />
+        <Container>
+          <WelcomeSection displayName={displayName} />
+          <div className="mb-4">
+            <SearchBox />
+          </div>
+          <MyCoursesSection />
 
-        <section className="home-bottom">
-          <SuggestedCoursesSection />
-          <AccountUpgradeSection
-            selectedPackage={selectedPackage}
-            onPackageHover={handlePackageHover}
-            onPackageLeave={handlePackageLeave}
-            onUpgradeClick={handleUpgradeClick}
-          />
-        </section>
+          <section className="row g-3 g-md-4">
+            <div className="col-12 col-lg-8">
+              <SuggestedCoursesSection />
+            </div>
+            <div className="col-12 col-lg-4">
+              <AccountUpgradeSection
+                selectedPackage={selectedPackage}
+                onPackageHover={handlePackageHover}
+                onPackageLeave={handlePackageLeave}
+                onUpgradeClick={handleUpgradeClick}
+              />
+            </div>
+          </section>
+        </Container>
       </div>
 
-      <WelcomeFooter />
+      <Footer />
 
       <LoginRequiredModal
         isOpen={showLoginModal}
@@ -89,10 +98,12 @@ export default function Home() {
       />
 
       <NotificationModal
-        isOpen={notification.isOpen}
-        onClose={() => setNotification({ isOpen: false, type: "info", message: "" })}
-        type={notification.type}
-        message={notification.message}
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        type="info"
+        message={infoMessage}
+        autoClose={true}
+        autoCloseDelay={4000}
       />
     </>
   );

@@ -7,11 +7,8 @@
     margin-top: 0;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center, justify-content-center, gap-3 */
 .pronunciation-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
     position: relative;
     margin-top: 0.5rem;
     margin-bottom: 1rem;
@@ -56,9 +53,6 @@
 }
 
 .summary-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1.5rem;
     margin-bottom: 2rem;
 }
 
@@ -81,11 +75,8 @@
     font-weight: 500;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center, justify-content-center, gap-3 */
 .summary-grade {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
     margin-bottom: 1.5rem;
     padding: 1rem;
     background: #f8f9fa;
@@ -119,9 +110,8 @@
     font-weight: 500;
 }
 
+/* Bootstrap utilities: d-flex, justify-content-center */
 .summary-actions {
-    display: flex;
-    justify-content: center;
     gap: 1rem;
     margin-top: 2rem;
 }

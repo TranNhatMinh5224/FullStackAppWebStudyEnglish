@@ -26,12 +26,11 @@ public class AssetFrontendRepository : IAssetFrontendRepository
         return await _context.AssetsFrontend.FindAsync(id);
     }
 
-    //  Lấy theo type 
-    public async Task<List<AssetFrontend>> GetAssetByType(int type)
+    //  Lấy theo AssetType
+    public async Task<AssetFrontend?> GetAssetByType(AssetType assetType)
     {
         return await _context.AssetsFrontend
-            .Where(a => a.AssetType == (AssetType)type)
-            .ToListAsync();
+            .FirstOrDefaultAsync(a => a.AssetType == assetType);
     }
 
     // Add
@@ -53,10 +52,7 @@ public class AssetFrontendRepository : IAssetFrontendRepository
 
         existingAsset.NameImage = assetFrontend.NameImage;
         existingAsset.KeyImage = assetFrontend.KeyImage;
-        existingAsset.DescriptionImage = assetFrontend.DescriptionImage;
         existingAsset.AssetType = assetFrontend.AssetType;
-        existingAsset.Order = assetFrontend.Order;
-        existingAsset.IsActive = assetFrontend.IsActive;
         existingAsset.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -75,4 +71,11 @@ public class AssetFrontendRepository : IAssetFrontendRepository
         await _context.SaveChangesAsync();
         return assetFrontend;
     }
+
+    // Public methods - lấy tất cả assets
+    public async Task<List<AssetFrontend>> GetAllActiveAssetFrontend()
+    {
+        return await _context.AssetsFrontend.ToListAsync();
+    }
+
 }

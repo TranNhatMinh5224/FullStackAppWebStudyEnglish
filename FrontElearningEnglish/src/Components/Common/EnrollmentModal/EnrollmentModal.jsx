@@ -14,9 +14,9 @@ export default function EnrollmentModal({
     const isFree = course?.price === 0 || course?.price === null || course?.price === undefined;
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content enrollment-modal-content" onClick={(e) => e.stopPropagation()}>
-                <h2 className="modal-title">Xác nhận đăng ký khóa học</h2>
+        <div className="enrollment-modal-overlay" onClick={isProcessing ? undefined : onClose}>
+            <div className="enrollment-modal-content" onClick={(e) => e.stopPropagation()}>
+                <h2 className="enrollment-modal-title">Xác nhận đăng ký khóa học</h2>
                 
                 <div className="enrollment-modal-body">
                     <p className="enrollment-question">
@@ -31,12 +31,13 @@ export default function EnrollmentModal({
                             </span>
                         </div>
                     )}
+                    
                 </div>
 
-                <div className="modal-buttons">
+                <div className="enrollment-modal-buttons">
                     <button
                         type="button"
-                        className="modal-btn modal-btn-cancel"
+                        className="enrollment-modal-btn enrollment-modal-btn-cancel"
                         onClick={onClose}
                         disabled={isProcessing}
                     >
@@ -45,20 +46,34 @@ export default function EnrollmentModal({
                     {isFree ? (
                         <button
                             type="button"
-                            className="modal-btn modal-btn-submit"
+                            className="enrollment-modal-btn enrollment-modal-btn-submit"
                             onClick={onStartNow}
                             disabled={isProcessing}
                         >
-                            {isProcessing ? "Đang xử lý..." : "Bắt đầu ngay"}
+                            {isProcessing ? (
+                                <>
+                                    <span className="button-spinner"></span>
+                                    Đang xử lý...
+                                </>
+                            ) : (
+                                "Bắt đầu ngay"
+                            )}
                         </button>
                     ) : (
                         <button
                             type="button"
-                            className="modal-btn modal-btn-submit"
+                            className="enrollment-modal-btn enrollment-modal-btn-submit"
                             onClick={onPayment}
                             disabled={isProcessing}
                         >
-                            {isProcessing ? "Đang xử lý..." : "Thanh toán"}
+                            {isProcessing ? (
+                                <>
+                                    <span className="button-spinner"></span>
+                                    Đang xử lý...
+                                </>
+                            ) : (
+                                "Thanh toán"
+                            )}
                         </button>
                     )}
                 </div>

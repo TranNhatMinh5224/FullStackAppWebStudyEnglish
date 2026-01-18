@@ -11,6 +11,29 @@ export default function UserDetailModal({ show, onClose, user }) {
     return new Date(date).toLocaleDateString('vi-VN');
   };
 
+  // Xử lý avatarUrl - check cả camelCase và PascalCase
+  const avatarUrl = user.avatarUrl || user.AvatarUrl || '';
+  const firstName = user.firstName || user.FirstName || '';
+  const lastName = user.lastName || user.LastName || '';
+  const email = user.email || user.Email || '';
+  const phoneNumber = user.phoneNumber || user.PhoneNumber || user.phone || '';
+  const isMale = user.isMale !== undefined ? user.isMale : (user.IsMale !== undefined ? user.IsMale : true);
+  const dateOfBirth = user.dateOfBirth || user.DateOfBirth;
+  const emailVerified = user.emailVerified !== undefined ? user.emailVerified : (user.EmailVerified !== undefined ? user.EmailVerified : false);
+  const roles = user.roles || user.Roles || [];
+
+  // Debug: log để kiểm tra avatarUrl
+  console.log("UserDetailModal - User data:", user);
+  console.log("UserDetailModal - AvatarUrl:", avatarUrl);
+  console.log("UserDetailModal - Has avatarUrl:", !!(avatarUrl && avatarUrl.trim()));
+
+  // Tạo fallback avatar từ tên nếu không có avatarUrl
+  const displayAvatarUrl = avatarUrl && avatarUrl.trim() 
+    ? avatarUrl 
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(`${firstName} ${lastName}`.trim() || 'User')}&background=6366f1&color=fff&size=128`;
+  
+  console.log("UserDetailModal - Display AvatarUrl:", displayAvatarUrl);
+
   return (
     <Modal 
       show={show} 
@@ -25,15 +48,20 @@ export default function UserDetailModal({ show, onClose, user }) {
           <div className="p-4 text-white d-flex justify-content-between align-items-start" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}>
             <div className="d-flex align-items-center">
               <img 
-                src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random&size=128`} 
+                src={displayAvatarUrl} 
                 className="rounded-circle border border-4 border-white shadow-sm me-3" 
                 width="80" height="80" 
                 alt="Avatar"
+                style={{ objectFit: 'cover' }}
+                onError={(e) => {
+                  // Fallback nếu ảnh lỗi
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(`${firstName} ${lastName}`.trim() || 'User')}&background=6366f1&color=fff&size=128`;
+                }}
               />
               <div>
-                <h4 className="mb-1 fw-bold">{user.firstName} {user.lastName}</h4>
+                <h4 className="mb-1 fw-bold">{firstName} {lastName}</h4>
                 <span className="badge bg-white text-primary rounded-pill px-3 py-2 fw-bold">
-                  {user.roles?.[0] || 'Student'}
+                  {roles[0] || 'Student'}
                 </span>
               </div>
             </div>
@@ -57,8 +85,8 @@ export default function UserDetailModal({ show, onClose, user }) {
                     <div className="flex-grow-1">
                       <small className="text-muted d-block mb-1">Email</small>
                       <div className="d-flex align-items-center">
-                        <span className="fw-medium">{user.email}</span>
-                        {user.emailVerified && <MdVerifiedUser className="ms-2 text-success" size={16} title="Đã xác thực"/>}
+                        <span className="fw-medium">{email}</span>
+                        {emailVerified && <MdVerifiedUser className="ms-2 text-success" size={16} title="Đã xác thực"/>}
                       </div>
                     </div>
                   </div>
@@ -72,7 +100,7 @@ export default function UserDetailModal({ show, onClose, user }) {
                     </div>
                     <div className="flex-grow-1">
                       <small className="text-muted d-block mb-1">Số điện thoại</small>
-                      <span className="fw-medium">{user.phoneNumber || user.phone || "Chưa cập nhật"}</span>
+                      <span className="fw-medium">{phoneNumber || "Chưa cập nhật"}</span>
                     </div>
                   </div>
                 </div>
@@ -85,7 +113,7 @@ export default function UserDetailModal({ show, onClose, user }) {
                     </div>
                     <div className="flex-grow-1">
                       <small className="text-muted d-block mb-1">Giới tính</small>
-                      <span className="fw-medium">{user.isMale ? "Nam" : "Nữ"}</span>
+                      <span className="fw-medium">{isMale ? "Nam" : "Nữ"}</span>
                     </div>
                   </div>
                 </div>
@@ -98,7 +126,7 @@ export default function UserDetailModal({ show, onClose, user }) {
                     </div>
                     <div className="flex-grow-1">
                       <small className="text-muted d-block mb-1">Ngày sinh</small>
-                      <span className="fw-medium">{formatDate(user.dateOfBirth)}</span>
+                      <span className="fw-medium">{formatDate(dateOfBirth)}</span>
                     </div>
                   </div>
                 </div>

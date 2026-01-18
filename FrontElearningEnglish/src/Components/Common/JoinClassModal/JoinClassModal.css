@@ -8,7 +8,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: var(--z-index-custom-modal, 2000);
 }
 
 .join-class-modal-overlay .join-class-modal-content {
@@ -18,14 +18,31 @@
     width: 90%;
     max-width: 500px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.modal-title {
+[data-theme="dark"] .join-class-modal-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .join-class-modal-overlay .join-class-modal-content {
+    background: var(--color-bg-primary, #1a1a1a);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--color-border-medium, #4a4a4a);
+}
+
+/* Scoped to JoinClassModal only */
+.join-class-modal .modal-title {
     font-size: 24px;
     font-weight: 700;
     color: var(--color-text-primary, #1f2937);
     margin-bottom: 24px;
     text-align: center;
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] .join-class-modal .modal-title {
+    color: var(--color-text-primary, #f3f4f6);
 }
 
 .modal-input-wrapper {
@@ -39,7 +56,9 @@
     border-radius: 12px;
     font-size: 15px;
     box-sizing: border-box;
-    transition: border-color 0.2s ease;
+    transition: all 0.3s ease;
+    background: var(--color-bg-primary, white);
+    color: var(--color-text-primary, #1f2937);
 }
 
 .modal-input:focus {
@@ -48,7 +67,22 @@
     box-shadow: 0 0 0 3px rgba(65, 214, 227, 0.1);
 }
 
+[data-theme="dark"] .modal-input:focus {
+    box-shadow: 0 0 0 3px rgba(65, 214, 227, 0.25);
+}
+
 .modal-input::placeholder {
+    color: var(--color-text-tertiary, #9ca3af);
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] .modal-input {
+    background: var(--color-bg-secondary, #2d2d2d);
+    border-color: var(--color-border-medium, #4a4a4a);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] .modal-input::placeholder {
     color: var(--color-text-tertiary, #9ca3af);
 }
 
@@ -63,7 +97,8 @@
     gap: 12px;
 }
 
-.modal-btn {
+/* Scoped to JoinClassModal only */
+.join-class-modal .modal-btn {
     flex: 1;
     padding: 12px 24px;
     border: none;
@@ -74,21 +109,39 @@
     transition: opacity 0.2s ease, transform 0.1s ease;
 }
 
-.modal-btn:hover {
+.join-class-modal .modal-btn:hover {
     opacity: 0.9;
     transform: translateY(-1px);
 }
 
-.modal-btn:active {
+.join-class-modal .modal-btn:active {
     transform: translateY(0);
 }
 
-.modal-btn-cancel {
+.join-class-modal .modal-btn-cancel {
     background: var(--color-border-light, #e5e7eb);
     color: var(--color-text-primary, #1f2937);
+    transition: all 0.3s ease;
 }
 
-.modal-btn-submit {
+[data-theme="dark"] .join-class-modal .modal-btn-cancel {
+    background: var(--color-bg-secondary, #2d2d2d);
+    color: var(--color-text-primary, #f3f4f6);
+    border: 1px solid var(--color-border-medium, #4a4a4a);
+}
+
+.join-class-modal .modal-btn-submit {
     background: var(--color-secondary-cyan, #41d6e3);
     color: var(--color-text-white, white);
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .join-class-modal .modal-btn-submit {
+    background: var(--color-secondary-cyan, #41d6e3);
+    color: var(--color-text-white, white);
+}
+
+[data-theme="dark"] .join-class-modal .modal-btn-submit:hover {
+    background: var(--color-secondary-cyan-light, #6fd5e0);
+    opacity: 1;
 }

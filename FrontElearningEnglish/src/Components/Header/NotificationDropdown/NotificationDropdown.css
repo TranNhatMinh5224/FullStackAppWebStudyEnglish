@@ -31,16 +31,18 @@
 .notification-icon {
     width: 20px !important;
     height: 20px !important;
-    object-fit: contain !important;
-    filter: brightness(0) invert(1);
-    display: block !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #fff !important;
+    font-size: 1.125rem !important;
     margin: 0 !important;
     padding: 0 !important;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, color 0.2s ease;
 }
 
 .notification-icon.ringing {

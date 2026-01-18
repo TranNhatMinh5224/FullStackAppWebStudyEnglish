@@ -2,14 +2,27 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button } from "react-bootstrap";
 import { quizService } from "../../../Services/quizService";
 import ConfirmModal from "../../Common/ConfirmModal/ConfirmModal";
+import { useAuth } from "../../../Context/AuthContext";
 import "./CreateQuizSectionModal.css";
 
-export default function CreateQuizSectionModal({ show, onClose, onSuccess, quizId, sectionToUpdate = null, isAdmin = false }) {
+export default function CreateQuizSectionModal({ show, onClose, onSuccess, quizId, sectionToUpdate = null, isAdmin: propIsAdmin = false }) {
+  const { roles } = useAuth();
   const isUpdateMode = !!sectionToUpdate;
+  
+  // Auto-detect admin role from AuthContext if not explicitly provided
+  const isAdmin = propIsAdmin || (roles && roles.some(role => {
+    const roleName = typeof role === 'string' ? role : (role?.name || '');
+    return roleName === "SuperAdmin" || 
+           roleName === "ContentAdmin" || 
+           roleName === "FinanceAdmin";
+  }));
   
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+
+  // Original data for comparison (update mode)
+  const [originalData, setOriginalData] = useState(null);
 
   // Validation errors
   const [errors, setErrors] = useState({});
@@ -32,12 +45,21 @@ export default function CreateQuizSectionModal({ show, onClose, onSuccess, quizI
     setLoadingSection(true);
     try {
       const sectionId = sectionToUpdate.quizSectionId || sectionToUpdate.QuizSectionId;
-      const response = await quizService.getQuizSectionById(sectionId);
+      const response = isAdmin
+        ? await quizService.getAdminQuizSectionById(sectionId)
+        : await quizService.getQuizSectionById(sectionId);
       
       if (response.data?.success && response.data?.data) {
         const section = response.data.data;
-        setTitle(section.title || section.Title || "");
-        setDescription(section.description || section.Description || "");
+        const loadedTitle = section.title || section.Title || "";
+        const loadedDescription = section.description || section.Description || "";
+        setTitle(loadedTitle);
+        setDescription(loadedDescription);
+        // Save original data for comparison
+        setOriginalData({
+          title: loadedTitle,
+          description: loadedDescription
+        });
       }
     } catch (error) {
       console.error("Error loading section data:", error);
@@ -52,19 +74,31 @@ export default function CreateQuizSectionModal({ show, onClose, onSuccess, quizI
     if (!show) {
       setTitle("");
       setDescription("");
+      setOriginalData(null);
       setErrors({});
       setShowConfirmClose(false);
     }
   }, [show]);
 
-  // Check if form has data
+  // Check if form has data or has been modified
   const hasFormData = () => {
+    if (isUpdateMode && originalData) {
+      // In update mode, check if data changed from original
+      return title !== originalData.title || description !== originalData.description;
+    }
+    // In create mode, check if any field has data
     return title.trim() !== "" || description.trim() !== "";
   };
 
   // Handle close with confirmation
   const handleClose = () => {
-    if (hasFormData() && !submitting && !loadingSection) {
+    // Always allow closing if submitting or loading
+    if (submitting || loadingSection) {
+      return; // Don't close if submitting/loading
+    }
+    
+    // Check if form has data
+    if (hasFormData()) {
       setShowConfirmClose(true);
     } else {
       onClose();
@@ -82,6 +116,12 @@ export default function CreateQuizSectionModal({ show, onClose, onSuccess, quizI
 
     if (!title.trim()) {
       newErrors.title = "Tiêu đề là bắt buộc";
+    } else if (title.trim().length > 200) {
+      newErrors.title = "Tiêu đề không được vượt quá 200 ký tự";
+    }
+
+    if (description && description.trim().length > 1000) {
+      newErrors.description = "Mô tả không được vượt quá 1000 ký tự";
     }
 
     setErrors(newErrors);
@@ -142,13 +182,13 @@ export default function CreateQuizSectionModal({ show, onClose, onSuccess, quizI
     <Modal 
       show={show} 
       onHide={handleClose}
-      backdrop="static"
-      keyboard={false}
+      backdrop={submitting ? "static" : true}
+      keyboard={!submitting}
       centered 
       className="create-quiz-section-modal modal-modern" 
       dialogClassName="create-quiz-section-modal-dialog"
     >
-      <Modal.Header closeButton>
+      <Modal.Header>
         <Modal.Title>{isUpdateMode ? "Cập nhật Section" : "Tạo Section mới"}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
@@ -159,39 +199,49 @@ export default function CreateQuizSectionModal({ show, onClose, onSuccess, quizI
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
-            {/* Tiêu đề */}
-            <div className="mb-3">
-              <label className="form-label required">Tiêu đề</label>
-              <input
-                type="text"
-                className={`form-control ${errors.title ? "is-invalid" : ""}`}
-                value={title}
-                onChange={(e) => {
-                  setTitle(e.target.value);
-                  setErrors({ ...errors, title: null });
-                }}
-                placeholder="Nhập tiêu đề Section"
-              />
-              {errors.title && <div className="invalid-feedback">{errors.title}</div>}
-              <div className="form-text">*Bắt buộc</div>
-            </div>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit(e);
+          }}>
+            {/* Thông tin cơ bản */}
+            <div className="form-section-card mb-4">
+              <div className="form-section-title">Thông tin cơ bản</div>
+              
+              {/* Tiêu đề */}
+              <div className="mb-4">
+                <label className="form-label required">Tiêu đề Section</label>
+                <input
+                  type="text"
+                  className={`form-control ${errors.title ? "is-invalid" : ""}`}
+                  value={title}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    setErrors({ ...errors, title: null });
+                  }}
+                  placeholder="Nhập tiêu đề Section"
+                  maxLength={200}
+                />
+                {errors.title && <div className="invalid-feedback">{errors.title}</div>}
+                <div className="form-text">*Bắt buộc (tối đa 200 ký tự)</div>
+              </div>
 
-            {/* Mô tả */}
-            <div className="mb-3">
-              <label className="form-label">Mô tả</label>
-              <textarea
-                className={`form-control ${errors.description ? "is-invalid" : ""}`}
-                value={description}
-                onChange={(e) => {
-                  setDescription(e.target.value);
-                  setErrors({ ...errors, description: null });
-                }}
-                placeholder="Nhập mô tả Section (không bắt buộc)"
-                rows={3}
-              />
-              {errors.description && <div className="invalid-feedback">{errors.description}</div>}
-              <div className="form-text">Không bắt buộc</div>
+              {/* Mô tả */}
+              <div className="mb-3">
+                <label className="form-label">Mô tả</label>
+                <textarea
+                  className={`form-control ${errors.description ? "is-invalid" : ""}`}
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    setErrors({ ...errors, description: null });
+                  }}
+                  placeholder="Nhập mô tả Section (không bắt buộc)"
+                  rows={4}
+                  maxLength={1000}
+                />
+                {errors.description && <div className="invalid-feedback">{errors.description}</div>}
+                <div className="form-text">Không bắt buộc (tối đa 1000 ký tự)</div>
+              </div>
             </div>
 
             {/* Submit error */}
@@ -202,13 +252,19 @@ export default function CreateQuizSectionModal({ show, onClose, onSuccess, quizI
         )}
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose} disabled={submitting || loadingSection}>
+        <Button 
+          variant="secondary" 
+          onClick={handleClose} 
+          disabled={submitting}
+          type="button"
+        >
           Huỷ
         </Button>
         <Button
           variant="primary"
           onClick={handleSubmit}
           disabled={!isFormValid || submitting || loadingSection}
+          type="button"
         >
           {submitting ? (isUpdateMode ? "Đang cập nhật..." : "Đang tạo...") : (isUpdateMode ? "Cập nhật" : "Tạo")}
         </Button>

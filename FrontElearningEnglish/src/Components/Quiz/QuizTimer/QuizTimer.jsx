@@ -38,7 +38,7 @@ export default function QuizTimer({ timeLimit, remainingTime, onTimeUp }) {
         return (
             <Card className="quiz-timer">
                 <Card.Body>
-                    <div className="timer-header">
+                    <div className="timer-header d-flex align-items-center">
                         <FaClock className="timer-icon" />
                         <span className="timer-label">Thời gian còn lại</span>
                     </div>
@@ -53,7 +53,7 @@ export default function QuizTimer({ timeLimit, remainingTime, onTimeUp }) {
         return (
             <Card className="quiz-timer">
                 <Card.Body>
-                    <div className="timer-header">
+                    <div className="timer-header d-flex align-items-center">
                         <FaClock className="timer-icon" />
                         <span className="timer-label">Thời gian còn lại</span>
                     </div>

@@ -89,6 +89,18 @@ namespace LearningEnglish.API.Controller.Admin
             var result = await _adminManagementService.UpgradeUserToTeacherAsync(dto);
             return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
         }
+
+        // endpoint Admin lấy chi tiết user theo ID
+        [HttpGet("{userId:int}")]
+        [RequirePermission("Admin.User.Manage")]
+        public async Task<IActionResult> GetUserById(int userId)
+        {
+            var adminId = User.GetUserId();
+            _logger.LogInformation("Admin {AdminId} đang xem chi tiết user {UserId}", adminId, userId);
+
+            var result = await _userManagementService.GetUserByIdAsync(userId);
+            return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+        }
     }
 }
 

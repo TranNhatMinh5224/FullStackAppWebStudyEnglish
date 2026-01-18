@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
 import "./AdminCourseDetail.css";
+import Breadcrumb from "../../../Components/Common/Breadcrumb/Breadcrumb";
 import { useAuth } from "../../../Context/AuthContext";
 import { adminService } from "../../../Services/adminService";
-import { mochiCourseTeacher, mochiLessonTeacher } from "../../../Assets/Logo";
+import { useAssets } from "../../../Context/AssetContext";
 import CourseFormModal from "../../../Components/Admin/CourseManagement/CourseFormModal/CourseFormModal";
 import CreateLessonModal from "../../../Components/Teacher/CreateLessonModal/CreateLessonModal";
 import SuccessModal from "../../../Components/Common/SuccessModal/SuccessModal";
@@ -16,6 +17,7 @@ export default function AdminCourseDetail() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, roles } = useAuth();
+  const { getDefaultCourseImage, getDefaultLessonImage } = useAssets();
   const [course, setCourse] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -168,7 +170,7 @@ export default function AdminCourseDetail() {
 
   const courseTitle = course.title || course.Title || "Khóa học";
   const courseDescription = course.description || course.Description || "";
-  const courseImage = course.imageUrl || course.ImageUrl || mochiCourseTeacher;
+  const courseImage = course.imageUrl || course.ImageUrl || getDefaultCourseImage();
   const coursePrice = course.price || course.Price || 0;
   const totalLessons = course.totalLessons || course.TotalLessons || 0;
   const isFeatured = course.isFeatured || course.IsFeatured || false;
@@ -176,13 +178,13 @@ export default function AdminCourseDetail() {
   return (
     <div className="admin-course-detail-container">
       <div className="breadcrumb-section">
-        <span className="breadcrumb-text">
-          <span className="breadcrumb-link" onClick={() => navigate("/admin/courses")}>
-            Quản lý khóa học
-          </span>
-          {" / "}
-          <span className="breadcrumb-current">{courseTitle}</span>
-        </span>
+        <Breadcrumb
+          items={[
+            { label: "Quản lý khóa học", path: "/admin/courses" },
+            { label: courseTitle, isCurrent: true }
+          ]}
+          showHomeIcon={false}
+        />
       </div>
 
       <Container fluid className="course-detail-content">
@@ -252,7 +254,7 @@ export default function AdminCourseDetail() {
                   {lessons.map((lesson, index) => {
                     const lessonId = lesson.lessonId || lesson.LessonId;
                     const lessonTitle = lesson.title || lesson.Title || `Lesson ${index + 1}`;
-                    const lessonImage = lesson.imageUrl || lesson.ImageUrl || mochiLessonTeacher;
+                    const lessonImage = lesson.imageUrl || lesson.ImageUrl || getDefaultLessonImage();
                     const moduleCount = lesson.totalModules || lesson.TotalModules || 0;
 
                     return (

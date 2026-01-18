@@ -46,15 +46,21 @@ export default function TeacherQuizSectionManagement() {
   const [deletingGroup, setDeletingGroup] = useState(false);
 
   const isTeacher = roles.includes("Teacher") || user?.teacherSubscription?.isTeacher === true;
+  const isAdmin = roles && roles.some(role => {
+    const roleName = typeof role === 'string' ? role : (role?.name || '');
+    return roleName === "SuperAdmin" || 
+           roleName === "ContentAdmin" || 
+           roleName === "FinanceAdmin";
+  });
 
   useEffect(() => {
-    if (!isAuthenticated || !isTeacher) {
+    if (!isAuthenticated || (!isTeacher && !isAdmin)) {
       navigate("/home");
       return;
     }
 
     fetchData();
-  }, [isAuthenticated, isTeacher, navigate, quizId]);
+  }, [isAuthenticated, isTeacher, isAdmin, navigate, quizId]);
 
   const fetchData = async () => {
     try {
@@ -62,13 +68,17 @@ export default function TeacherQuizSectionManagement() {
       setError("");
 
       // Fetch quiz
-      const quizRes = await quizService.getTeacherQuizById(quizId);
+      const quizRes = isAdmin
+        ? await quizService.getAdminQuizById(quizId)
+        : await quizService.getTeacherQuizById(quizId);
       if (quizRes.data?.success && quizRes.data?.data) {
         setQuiz(quizRes.data.data);
       }
 
       // Fetch sections
-      const sectionsRes = await quizService.getQuizSectionsByQuiz(quizId);
+      const sectionsRes = isAdmin
+        ? await quizService.getAdminQuizSectionsByQuiz(quizId)
+        : await quizService.getQuizSectionsByQuiz(quizId);
       if (sectionsRes.data?.success) {
         const sectionsData = sectionsRes.data.data || [];
         setSections(sectionsData);
@@ -76,7 +86,9 @@ export default function TeacherQuizSectionManagement() {
         // Fetch groups for each section
         const groupsPromises = sectionsData.map(async (section) => {
           const sectionId = section.quizSectionId || section.QuizSectionId;
-          const groupsRes = await quizService.getQuizGroupsBySection(sectionId);
+          const groupsRes = isAdmin
+            ? await quizService.getAdminQuizGroupsBySection(sectionId)
+            : await quizService.getQuizGroupsBySection(sectionId);
           if (groupsRes.data?.success) {
             return { sectionId, groups: groupsRes.data.data || [] };
           }
@@ -133,7 +145,9 @@ export default function TeacherQuizSectionManagement() {
     setDeletingSection(true);
     try {
       const sectionId = sectionToDelete.quizSectionId || sectionToDelete.QuizSectionId;
-      const response = await quizService.deleteQuizSection(sectionId);
+      const response = isAdmin
+        ? await quizService.deleteAdminQuizSection(sectionId)
+        : await quizService.deleteQuizSection(sectionId);
 
       if (response.data?.success) {
         setShowDeleteSectionModal(false);
@@ -173,7 +187,9 @@ export default function TeacherQuizSectionManagement() {
     setDeletingGroup(true);
     try {
       const groupId = groupToDelete.quizGroupId || groupToDelete.QuizGroupId;
-      const response = await quizService.deleteQuizGroup(groupId);
+      const response = isAdmin
+        ? await quizService.deleteAdminQuizGroup(groupId)
+        : await quizService.deleteQuizGroup(groupId);
 
       if (response.data?.success) {
         setShowDeleteGroupModal(false);
@@ -192,7 +208,7 @@ export default function TeacherQuizSectionManagement() {
     }
   };
 
-  if (!isAuthenticated || !isTeacher) {
+  if (!isAuthenticated || (!isTeacher && !isAdmin)) {
     return null;
   }
 
@@ -315,6 +331,7 @@ export default function TeacherQuizSectionManagement() {
           onClose={() => setShowCreateSectionModal(false)}
           onSuccess={handleCreateSectionSuccess}
           quizId={parseInt(quizId)}
+          isAdmin={isAdmin}
         />
       )}
 
@@ -329,6 +346,7 @@ export default function TeacherQuizSectionManagement() {
           onSuccess={handleUpdateSectionSuccess}
           quizId={parseInt(quizId)}
           sectionToUpdate={sectionToUpdate}
+          isAdmin={isAdmin}
         />
       )}
 
@@ -360,6 +378,7 @@ export default function TeacherQuizSectionManagement() {
           }}
           onSuccess={handleCreateGroupSuccess}
           quizSectionId={selectedSectionForGroup.quizSectionId || selectedSectionForGroup.QuizSectionId}
+          isAdmin={isAdmin}
         />
       )}
 
@@ -374,6 +393,7 @@ export default function TeacherQuizSectionManagement() {
           onSuccess={handleUpdateGroupSuccess}
           quizSectionId={groupToUpdate.quizSectionId || groupToUpdate.QuizSectionId}
           groupToUpdate={groupToUpdate}
+          isAdmin={isAdmin}
         />
       )}
 

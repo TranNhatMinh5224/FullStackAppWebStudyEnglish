@@ -39,7 +39,7 @@ export default function InputField({
                 {showPasswordToggle && (
                     <button
                         type="button"
-                        className="password-toggle-btn"
+                        className="password-toggle-btn d-flex align-items-center justify-content-center"
                         onClick={onTogglePassword}
                         tabIndex={-1}
                     >

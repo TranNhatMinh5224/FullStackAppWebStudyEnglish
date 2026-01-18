@@ -11,15 +11,15 @@ export default function MemoryAssessment({ selectedQuality, onQualitySelect }) {
     ];
 
     return (
-        <div className="memory-assessment-container">
-            <p className="memory-assessment-question">
+        <div className="memory-assessment-container d-flex flex-column align-items-center">
+            <p className="memory-assessment-question text-center mb-3">
                 Bạn nhớ từ này ở mức độ nào?
             </p>
-            <div className="memory-assessment-buttons">
+            <div className="memory-assessment-buttons d-flex flex-wrap justify-content-center gap-2 w-100">
                 {qualityOptions.map((option) => (
                     <button
                         key={option.value}
-                        className={`memory-assessment-btn ${
+                        className={`memory-assessment-btn btn ${
                             selectedQuality === option.value ? "selected" : ""
                         }`}
                         style={{
@@ -35,7 +35,7 @@ export default function MemoryAssessment({ selectedQuality, onQualitySelect }) {
                         }}
                         onClick={() => onQualitySelect(option.value)}
                     >
-                        {option.label}
+                        <span className="small">{option.label}</span>
                     </button>
                 ))}
             </div>

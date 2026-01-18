@@ -92,20 +92,16 @@
 }
 
 .payment-list-header {
-    display: grid;
-    grid-template-columns: 2fr 150px 120px 180px;
-    gap: 20px;
     padding: 20px 30px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-bottom: 2px solid #e9ecef;
     font-weight: 600;
-    font-size: 16px;
+    font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
     color: #495057;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center - đã được sử dụng trong JSX */
 .payment-header-column {
-    display: flex;
-    align-items: center;
 }
 
 .payment-list {
@@ -151,59 +147,47 @@
 /* Responsive */
 @media (max-width: 992px) {
     .payment-list-header {
-        grid-template-columns: 2fr 130px 100px 150px;
-        gap: 15px;
         padding: 16px 20px;
     }
 }
 
 @media (max-width: 768px) {
     .payment-history-container {
-        padding: 30px 15px;
-        padding-top: calc(30px + 70px);
+        padding: var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem)) var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
+        padding-top: calc(var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem)) + 70px);
     }
 
     .payment-history-title {
-        font-size: 28px;
+        font-size: var(--font-size-2xl, clamp(1.5rem, 1.3rem + 1vw, 1.875rem));
     }
 
     .payment-history-subtitle {
-        font-size: 16px;
+        font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
     }
 
     .payment-list-header {
-        grid-template-columns: 70px 1fr 100px;
-        gap: 12px;
         padding: 14px 16px;
     }
 
-    .payment-header-column.date-column,
-    .payment-header-column.amount-column {
-        display: none;
-    }
+    /* Bootstrap utilities được sử dụng trong JSX - responsive tự động */
 }
 
 @media (max-width: 576px) {
     .payment-list-header {
-        grid-template-columns: 60px 1fr 90px;
         padding: 12px 12px;
     }
 }
 
-/* Pagination Styles */
+/* Pagination Styles - Bootstrap utilities: d-flex, flex-column, flex-md-row, align-items-center, gap-3 */
 .pagination-wrapper {
     margin-top: 30px;
     padding: 20px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
     border-top: 1px solid #e9ecef;
 }
 
 .pagination-wrapper .pagination {
     margin: 0;
-    display: flex;
+    /* Bootstrap Pagination tự xử lý display: flex */
     gap: 5px;
 }
 

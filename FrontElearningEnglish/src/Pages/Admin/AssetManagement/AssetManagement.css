@@ -1,0 +1,10 @@
+.asset-management-page {
+    min-height: 100vh;
+    background: var(--color-bg-secondary, #f6f8fb);
+    padding: 20px 0;
+}
+
+/* Dark theme */
+[data-theme="dark"] .asset-management-page {
+    background: var(--color-bg-secondary, #1a1a1a);
+}

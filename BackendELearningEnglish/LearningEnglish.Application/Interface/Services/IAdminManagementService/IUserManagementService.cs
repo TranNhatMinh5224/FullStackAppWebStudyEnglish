@@ -22,5 +22,8 @@ namespace LearningEnglish.Application.Interface.AdminManagement
        
         // Lấy danh sách giáo viên
         Task<ServiceResponse<PagedResult<UserDto>>> GetListTeachersPagedAsync(UserQueryParameters request);
+
+        // Lấy chi tiết user theo ID
+        Task<ServiceResponse<UserDto>> GetUserByIdAsync(int userId);
     }
 }

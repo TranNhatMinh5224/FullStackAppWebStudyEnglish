@@ -1,8 +1,8 @@
 import React from "react";
 import { Dropdown } from "react-bootstrap";
+import { FaFire } from "react-icons/fa";
 import { useStreak } from "../../../Context/StreakContext";
 import { useAuth } from "../../../Context/AuthContext";
-import { iconStreakFire as iconFireStreak } from "../../../Assets";
 import "./StreakDropdown.css";
 
 export default function StreakDropdown() {
@@ -20,17 +20,17 @@ export default function StreakDropdown() {
         >
             <Dropdown.Toggle
                 as="div"
-                className="streak-badge"
+                className="streak-badge d-flex align-items-center"
                 id="streak-dropdown"
             >
-                <img src={iconFireStreak} alt="Chuỗi ngày học" className="streak-icon" />
+                <FaFire className="streak-icon" />
                 <span>{streakDays || 0} ngày</span>
             </Dropdown.Toggle>
 
             <Dropdown.Menu className="streak-dropdown">
                 <div className="streak-content">
                     <div className="streak-icon-large">
-                        <img src={iconFireStreak} alt="Chuỗi ngày học" />
+                        <FaFire />
                     </div>
                     <div className="streak-message">
                         <p className="streak-main-text">

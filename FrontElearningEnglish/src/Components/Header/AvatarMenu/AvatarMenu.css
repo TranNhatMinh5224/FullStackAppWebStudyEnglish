@@ -1,0 +1,80 @@
+.avatar-menu-wrapper {
+    position: relative;
+    display: inline-block;
+    z-index: 1000;
+}
+
+.avatar-menu-wrapper .dropdown-toggle::after {
+    display: none !important;
+}
+
+.avatar-menu-trigger {
+    cursor: pointer !important;
+    display: inline-block !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    pointer-events: auto !important;
+    position: relative;
+}
+
+/* Override Profile.css avatar-inner styles */
+.avatar-menu-wrapper .avatar-inner {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure children are clickable */
+.avatar-menu-trigger > * {
+    pointer-events: auto !important;
+}
+
+.avatar-menu {
+    min-width: 220px;
+    padding: 8px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+    border: none !important;
+    margin-top: 8px !important;
+    background: #1f2937 !important;
+    z-index: 1050 !important;
+}
+
+.avatar-menu .dropdown-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 16px !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+    transition: background 0.2s ease;
+    cursor: pointer;
+    font-size: 14px;
+    border: none !important;
+    background: transparent !important;
+}
+
+.avatar-menu .dropdown-item:hover,
+.avatar-menu .dropdown-item:focus {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+}
+
+.avatar-menu .dropdown-item:active {
+    background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.avatar-menu .dropdown-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.avatar-menu-icon {
+    font-size: 16px;
+    color: #fff;
+    flex-shrink: 0;
+}

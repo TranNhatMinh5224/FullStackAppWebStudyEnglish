@@ -1,6 +1,6 @@
 import React from "react";
 import { FaCheckCircle } from "react-icons/fa";
-import { Card } from "react-bootstrap";
+import { Card, Row, Col } from "react-bootstrap";
 import "./QuizNavigation.css";
 
 export default function QuizNavigation({ questions, currentIndex, answers, onGoToQuestion }) {
@@ -34,43 +34,44 @@ export default function QuizNavigation({ questions, currentIndex, answers, onGoT
     return (
         <Card className="quiz-navigation">
             <Card.Body>
-                <div className="navigation-header">
+                <div className="navigation-header d-flex justify-content-between align-items-center">
                     <h4 className="navigation-title">Danh sách câu hỏi</h4>
-                    <div className="navigation-stats">
-                        <div className="stat-panel">
-                                <div className="stat-content">
+                    <div className="navigation-stats d-flex align-items-center">
+                        <div className="stat-panel d-flex align-items-center justify-content-center">
+                                <div className="stat-content d-flex align-items-center">
                                     <FaCheckCircle className="stat-icon" />
                                     <span className="stat-text">{answeredCount}/{questions ? questions.length : 0}</span>
                                 </div>
                         </div>
                     </div>
                 </div>
-                <div className="navigation-grid">
+                <Row className="navigation-grid g-2 mb-3">
                     {questions.map((question, index) => {
                         const status = getQuestionStatus(question, index);
                         const questionId = question.questionId || question.QuestionId;
                         return (
-                            <button
-                                key={questionId || index}
-                                type="button"
-                                className={`navigation-item ${status}`}
-                                onClick={() => onGoToQuestion(index)}
-                            >
-                                {index + 1}
-                            </button>
+                            <Col key={questionId || index} xs={4} sm={3} md={2} lg={2} xl={2}>
+                                <button
+                                    type="button"
+                                    className={`navigation-item ${status} w-100 d-flex align-items-center justify-content-center`}
+                                    onClick={() => onGoToQuestion(index)}
+                                >
+                                    {index + 1}
+                                </button>
+                            </Col>
                         );
                     })}
-                </div>
-                <div className="navigation-legend">
-                    <div className="legend-item">
+                </Row>
+                <div className="navigation-legend d-flex flex-column">
+                    <div className="legend-item d-flex align-items-center">
                         <div className="legend-color current"></div>
                         <span>Đang làm</span>
                     </div>
-                    <div className="legend-item">
+                    <div className="legend-item d-flex align-items-center">
                         <div className="legend-color answered"></div>
                         <span>Đã trả lời</span>
                     </div>
-                    <div className="legend-item">
+                    <div className="legend-item d-flex align-items-center">
                         <div className="legend-color unanswered"></div>
                         <span>Chưa trả lời</span>
                     </div>

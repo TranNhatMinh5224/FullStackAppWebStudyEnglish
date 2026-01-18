@@ -6,6 +6,7 @@ import { teacherPackageService } from "../../Services/teacherPackageService";
 import { courseService } from "../../Services/courseService";
 import { FaCheckCircle } from "react-icons/fa";
 import MainHeader from "../../Components/Header/MainHeader";
+import NotificationModal from "../../Components/Common/NotificationModal/NotificationModal";
 
 export default function Payment() {
     const navigate = useNavigate();
@@ -20,6 +21,9 @@ export default function Payment() {
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [errorType, setErrorType] = useState("error");
 
     useEffect(() => {
         let isCancelled = false; // Flag to prevent state updates after unmount
@@ -138,9 +142,21 @@ export default function Payment() {
                 });
                 
                 let errorMessage = "Có lỗi xảy ra khi xử lý thanh toán";
+                let errorType = "error";
                 
                 if (error.response?.data?.message) {
                     errorMessage = error.response.data.message;
+                    
+                    // Kiểm tra các trường hợp đặc biệt
+                    const messageLower = errorMessage.toLowerCase();
+                    if (messageLower.includes("đã là giáo viên") || 
+                        messageLower.includes("đã là teacher") ||
+                        messageLower.includes("đang hoạt động")) {
+                        errorType = "info";
+                    } else if (messageLower.includes("đã mua") || 
+                               messageLower.includes("đã đăng ký")) {
+                        errorType = "info";
+                    }
                 } else if (error.response?.data?.errors) {
                     // Handle validation errors
                     const errors = error.response.data.errors;
@@ -151,6 +167,11 @@ export default function Payment() {
                 
                 setError(errorMessage);
                 setLoading(false);
+                
+                // Hiển thị thông báo bằng NotificationModal
+                setErrorMessage(errorMessage);
+                setErrorType(errorType);
+                setShowErrorModal(true);
             }
         };
 
@@ -250,6 +271,15 @@ export default function Payment() {
                     )}
                 </div>
             </div>
+
+            <NotificationModal
+                isOpen={showErrorModal}
+                onClose={() => setShowErrorModal(false)}
+                type={errorType}
+                message={errorMessage}
+                autoClose={true}
+                autoCloseDelay={4000}
+            />
         </>
     );
 }

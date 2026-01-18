@@ -47,11 +47,32 @@
   top: 50%;
   transform: translateY(-50%);
   filter: brightness(0) invert(1);
-  opacity: 0.8;
+  opacity: 1 !important;
+  z-index: 1050;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
 }
 
 .create-quiz-modal .modal-header .btn-close:hover {
-  opacity: 1;
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  transform: translateY(-50%) scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.create-quiz-modal .modal-header .btn-close:focus {
+  box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.5) !important;
+  outline: none;
 }
 
 .create-quiz-modal .modal-header .modal-title,
@@ -170,3 +191,111 @@
   background: #fee2e2;
 }
 
+/* Duration Presets */
+.create-quiz-modal .duration-presets {
+  margin-bottom: 1rem;
+}
+
+.create-quiz-modal .preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.create-quiz-modal .preset-btn {
+  padding: 0.5rem 1rem;
+  border: 2px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.create-quiz-modal .preset-btn:hover {
+  border-color: #74CEDE;
+  background: #f0f9ff;
+  color: #0ea5e9;
+  transform: translateY(-1px);
+}
+
+.create-quiz-modal .preset-btn.active {
+  border-color: #74CEDE;
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(116, 206, 222, 0.3);
+}
+
+.create-quiz-modal .duration-input-wrapper {
+  margin-top: 0.5rem;
+}
+
+.create-quiz-modal .duration-input-wrapper .input-group-text {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.create-quiz-modal .duration-input-wrapper .form-control:focus + .input-group-text,
+.create-quiz-modal .duration-input-wrapper .input-group:focus-within .input-group-text {
+  border-color: #74CEDE;
+  background: #f0f9ff;
+  color: #0ea5e9;
+}
+
+/* Improved form sections */
+.create-quiz-modal .form-section-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.create-quiz-modal .form-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.create-quiz-modal .form-section-title::before {
+  content: "";
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(135deg, #74CEDE 0%, #5BB8C8 100%);
+  border-radius: 2px;
+}
+
+/* Better spacing */
+.create-quiz-modal .mb-4 {
+  margin-bottom: 1.5rem !important;
+}
+
+.create-quiz-modal .form-text {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .create-quiz-modal .preset-buttons {
+    gap: 0.375rem;
+  }
+  
+  .create-quiz-modal .preset-btn {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}

@@ -1,106 +1,23 @@
-.lecture-content-wrapper {
+/* ============================================
+   LECTURE CONTENT COMPONENT
+   ============================================ */
+
+.lecture-content-inner {
     width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    background: var(--color-bg-primary, white);
+    min-height: 100%;
     display: flex;
     flex-direction: column;
-    position: relative;
+    animation: lecture-content-fade-in 0.3s ease-in-out;
 }
 
-.lecture-content-back-button {
-    padding: 20px 250px;
-    flex-shrink: 0;
-    border-bottom: 1px solid var(--color-border-light, #e5e7eb);
-}
-
-@media (max-width: 1600px) {
-    .lecture-content-back-button {
-        padding: 20px 220px;
+@keyframes lecture-content-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
     }
-}
-
-@media (max-width: 1400px) {
-    .lecture-content-back-button {
-        padding: 20px 180px;
-    }
-}
-
-@media (max-width: 1200px) {
-    .lecture-content-back-button {
-        padding: 20px 150px;
-    }
-}
-
-@media (max-width: 992px) {
-    .lecture-content-back-button {
-        padding: 20px 100px;
-    }
-}
-
-@media (max-width: 768px) {
-    .lecture-content-back-button {
-        padding: 20px 30px;
-    }
-}
-
-.lecture-content-back-button .back-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: none;
-    border: none;
-    color: var(--color-text-secondary, #6b7280);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    padding: 0;
-    transition: color 0.2s ease;
-}
-
-.lecture-content-back-button .back-button:hover {
-    color: var(--color-secondary-cyan, #41d6e3);
-}
-
-.lecture-content-back-button .back-icon {
-    font-size: 14px;
-}
-
-.lecture-content-container {
-    max-width: 900px;
-    width: 100%;
-    padding: 40px 250px;
-    margin: 0 auto;
-    flex: 1;
-}
-
-@media (max-width: 1600px) {
-    .lecture-content-container {
-        padding: 40px 220px;
-    }
-}
-
-@media (max-width: 1400px) {
-    .lecture-content-container {
-        padding: 40px 180px;
-    }
-}
-
-@media (max-width: 1200px) {
-    .lecture-content-container {
-        padding: 40px 150px;
-    }
-}
-
-@media (max-width: 992px) {
-    .lecture-content-container {
-        padding: 40px 100px;
-    }
-}
-
-@media (max-width: 768px) {
-    .lecture-content-container {
-        padding: 20px 30px;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
@@ -112,37 +29,50 @@
     justify-content: center;
     min-height: 400px;
     text-align: center;
-    color: var(--color-text-secondary, #6b7280);
+    color: #6b7280;
     font-size: 16px;
+    animation: lecture-content-fade-in 0.3s ease-in-out;
+}
+
+[data-theme="dark"] .loading-message,
+[data-theme="dark"] .error-message,
+[data-theme="dark"] .no-lecture-message {
+    color: #9ca3af;
 }
 
 .no-lecture-message p {
     margin: 0;
     font-size: 18px;
-    color: var(--color-text-tertiary, #9ca3af);
+    color: #9ca3af;
 }
 
-/* Scrollbar styling */
-.lecture-content-wrapper::-webkit-scrollbar {
-    width: 8px;
+[data-theme="dark"] .no-lecture-message p {
+    color: #6b7280;
 }
 
-.lecture-content-wrapper::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
+/* Loading skeleton for better UX */
+.loading-message {
+    flex-direction: column;
+    gap: 16px;
 }
 
-.lecture-content-wrapper::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
+.loading-message::before {
+    content: "";
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f4f6;
+    border-top-color: #0d6efd;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
-.lecture-content-wrapper::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
-}
-
-@media (max-width: 768px) {
-    .lecture-content-container {
-        padding: 20px 15px;
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
     }
 }
 
+[data-theme="dark"] .loading-message::before {
+    border-color: #404040;
+    border-top-color: #0d6efd;
+}

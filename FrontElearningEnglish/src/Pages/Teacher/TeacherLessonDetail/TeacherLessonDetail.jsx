@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
 import "./TeacherLessonDetail.css";
 import TeacherHeader from "../../../Components/Header/TeacherHeader";
+import Breadcrumb from "../../../Components/Common/Breadcrumb/Breadcrumb";
 import { useAuth } from "../../../Context/AuthContext";
 import { useModuleTypes } from "../../../hooks/useModuleTypes";
 import { teacherService } from "../../../Services/teacherService";
@@ -11,7 +12,7 @@ import { flashcardService } from "../../../Services/flashcardService";
 import { assessmentService } from "../../../Services/assessmentService";
 import { quizService } from "../../../Services/quizService";
 import { essayService } from "../../../Services/essayService";
-import { mochiLessonTeacher, mochiModuleTeacher } from "../../../Assets/Logo";
+import { useAssets } from "../../../Context/AssetContext";
 import CreateLessonModal from "../../../Components/Teacher/CreateLessonModal/CreateLessonModal";
 import CreateModuleModal from "../../../Components/Teacher/CreateModuleModal/CreateModuleModal";
 import CreateAssessmentModal from "../../../Components/Teacher/CreateAssessmentModal/CreateAssessmentModal";
@@ -25,6 +26,7 @@ export default function TeacherLessonDetail() {
   const navigate = useNavigate();
   const { user, roles, isAuthenticated } = useAuth();
   const { isLecture, isFlashCard, isAssessment, isClickable, getModuleTypePath } = useModuleTypes();
+  const { getDefaultLessonImage } = useAssets();
   const [course, setCourse] = useState(null);
   const [lesson, setLesson] = useState(null);
   const [modules, setModules] = useState([]);
@@ -256,6 +258,7 @@ export default function TeacherLessonDetail() {
 
     navigate(ROUTE_PATHS.TEACHER_EDIT_FLASHCARD(courseId, lessonId, moduleId, flashcardId));
   };
+
   const handleDeleteModuleClick = (module) => {
     setModuleToDelete(module);
     setShowDeleteModuleModal(true);
@@ -313,30 +316,21 @@ export default function TeacherLessonDetail() {
 
   const lessonTitle = lesson.title || lesson.Title || "Bài học";
   const lessonDescription = lesson.description || lesson.Description || "";
-  const lessonImage = lesson.imageUrl || lesson.ImageUrl || mochiLessonTeacher;
+  const lessonImage = lesson.imageUrl || lesson.ImageUrl || getDefaultLessonImage();
 
   return (
     <>
       <TeacherHeader />
       <div className="teacher-lesson-detail-container">
         <div className="breadcrumb-section">
-          <span className="breadcrumb-text">
-            <span
-              className="breadcrumb-link"
-              onClick={() => navigate(ROUTE_PATHS.TEACHER_COURSE_MANAGEMENT)}
-            >
-              Quản lý khoá học
-            </span>
-            {" / "}
-            <span
-              className="breadcrumb-link"
-              onClick={() => navigate(`/teacher/course/${courseId}`)}
-            >
-              {course?.title || course?.Title || courseId}
-            </span>
-            {" / "}
-            <span className="breadcrumb-current">{lessonTitle}</span>
-          </span>
+          <Breadcrumb
+            items={[
+              { label: "Quản lý khoá học", path: ROUTE_PATHS.TEACHER_COURSE_MANAGEMENT },
+              { label: course?.title || course?.Title || courseId, path: `/teacher/course/${courseId}` },
+              { label: lessonTitle, isCurrent: true }
+            ]}
+            showHomeIcon={false}
+          />
         </div>
 
         <Container fluid className="lesson-detail-content">
@@ -356,10 +350,11 @@ export default function TeacherLessonDetail() {
                   <p className="lesson-description">{lessonDescription}</p>
 
                   <button
-                    className="update-lesson-btn"
+                    className="update-btn update-lesson-btn"
                     onClick={() => setShowUpdateModal(true)}
                   >
-                    Cập nhật
+                    <FaEdit className="btn-icon" />
+                    Cập nhật Bài học
                   </button>
                 </div>
               </div>
@@ -480,7 +475,8 @@ export default function TeacherLessonDetail() {
                                   className="content-item"
                                   style={{ cursor: 'pointer' }}
                                   onClick={() => {
-                                    navigate(ROUTE_PATHS.TEACHER_QUIZ_ESSAY_MANAGEMENT(courseId, lessonId, moduleId, assessmentId));
+                                    // Use explicit path construction to match Admin behavior exactly, or fallback to ROUTE_PATHS if defined
+                                    navigate(`/teacher/course/${courseId}/lesson/${lessonId}/module/${moduleId}/assessment/${assessmentId}`);
                                   }}
                                 >
                                   <div className="content-item-info">
@@ -631,11 +627,15 @@ export default function TeacherLessonDetail() {
               ) : (
                 // Modules List View
                 <div className="modules-section">
+                  <div className="modules-header">
+                    <h3>Danh sách Module</h3>
+                  </div>
+                  <div className="modules-list">
                   {modules.length > 0 ? (
                     modules.map((module, index) => {
                       const moduleId = module.moduleId || module.ModuleId;
                       const moduleName = module.name || module.Name || `Module ${index + 1}`;
-                      const moduleImage = module.imageUrl || module.ImageUrl || mochiModuleTeacher;
+                      const moduleImage = module.imageUrl || module.ImageUrl || null; // Module dùng React icon, không cần default image
 
                       // Get contentType - could be number (enum) or string (ContentTypeName)
                       const contentTypeValue = module.contentType || module.ContentType;
@@ -649,13 +649,6 @@ export default function TeacherLessonDetail() {
                       };
 
                       const displayContentType = contentTypeName || contentTypeMap[contentTypeValue] || contentTypeValue || "Unknown";
-
-                      // Determine which button to show based on contentType
-                      // All create buttons removed from modules list view
-                      // They will still appear in module content view when module is selected
-                      const getCreateButton = () => {
-                        return null;
-                      };
 
                       const contentTypeNum = typeof contentTypeValue === 'number' ? contentTypeValue : parseInt(contentTypeValue);
 
@@ -697,7 +690,7 @@ export default function TeacherLessonDetail() {
                           </div>
                           <div className="module-actions" onClick={(e) => e.stopPropagation()}>
                             <button
-                              className="module-update-btn"
+                              className="update-btn"
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 try {
@@ -727,6 +720,7 @@ export default function TeacherLessonDetail() {
                               title="Cập nhật module"
                               disabled={loadingModuleDetail}
                             >
+                              <FaEdit className="btn-icon" />
                               {loadingModuleDetail ? "Đang tải..." : "Cập nhật"}
                             </button>
                             <button
@@ -739,7 +733,6 @@ export default function TeacherLessonDetail() {
                             >
                               <FaTrash />
                             </button>
-                            {getCreateButton()}
                           </div>
                         </div>
                       );
@@ -747,6 +740,7 @@ export default function TeacherLessonDetail() {
                   ) : (
                     <div className="no-modules-message">Chưa có module nào</div>
                   )}
+                  </div>
 
                   <button
                     className="add-module-btn-main"
@@ -919,4 +913,3 @@ export default function TeacherLessonDetail() {
     </>
   );
 }
-

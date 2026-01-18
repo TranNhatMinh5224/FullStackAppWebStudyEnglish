@@ -10,24 +10,25 @@
 }
 
 .auth-card {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 40px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  background: var(--color-bg-white, #ffffff);
+  border-radius: var(--radius-xl, clamp(1rem, 0.8rem + 1vw, 1.5rem));
+  padding: var(--padding-container-xl, clamp(2rem, 1.5rem + 2.5vw, 4rem));
+  box-shadow: 0 20px 40px var(--shadow-lg, rgba(0, 0, 0, 0.15));
   text-align: center;
-  margin-top: 60px;
-  margin-bottom: 60px;
+  margin-top: clamp(2rem, 1.5rem + 2.5vw, 3.75rem);
+  margin-bottom: clamp(2rem, 1.5rem + 2.5vw, 3.75rem);
 }
 
 /* ===========================
-   TEXT
+   TEXT - Responsive Typography
 =========================== */
 
 .auth-title {
-  font-size: 28px;
+  font-size: var(--font-size-3xl, clamp(1.875rem, 1.5rem + 1.875vw, 2.25rem));
   font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 25px;
+  color: var(--color-text-primary, #1f2937);
+  margin-bottom: var(--spacing-lg, clamp(1rem, 0.8rem + 1vw, 1.5rem));
+  line-height: 1.2;
 }
 
 /* ===========================
@@ -35,9 +36,9 @@
 =========================== */
 
 .auth-error-message {
-  background: rgba(239, 68, 68, 0.1) !important;
-  color: #ef4444 !important;
-  border: none !important;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-status-error, #ef4444);
+  border: none;
   padding: 12px 16px;
   border-radius: 8px;
   margin-bottom: 20px;
@@ -49,48 +50,45 @@
    DATE PICKER WRAPPER
 =========================== */
 
+/* Bootstrap utilities: d-flex, flex-column */
 .date-picker-wrapper {
   position: relative;
   margin-bottom: 15px;
-  display: flex;
-  flex-direction: column;
 }
 
 /* Remove padding from react-bootstrap Row and Col, make equal width */
+/* Bootstrap utilities: d-flex, gap-* */
 .date-picker-wrapper .date-picker-container {
-  margin: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  gap: 4px;
+  margin: 0;
+  padding: 0;
+  gap: clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem);
   width: 100%;
   flex: 1;
 }
 
 .date-picker-wrapper .date-picker-container > * {
-  padding: 0 !important;
-  margin: 0 !important;
-  flex: 1 !important;
+  padding: 0;
+  margin: 0;
+  flex: 1;
   min-width: 0;
 }
 
 .date-picker-wrapper .date-picker-container .select-field-wrapper {
-  width: 100% !important;
-  margin-bottom: 0 !important;
+  width: 100%;
+  margin-bottom: 0;
 }
 
+/* Bootstrap utilities: d-flex, flex-column, align-items-center */
 .date-picker-wrapper .date-picker-scroll-wrapper {
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 0;
+  margin: 0;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: none !important;
+  max-width: none;
 }
 
 .date-picker-wrapper .scroll-picker-container {
-  width: 100% !important;
-  height: 100px;
+  width: 100%;
+  height: clamp(80px, 5rem, 100px);
 }
 
 .date-picker-wrapper .scroll-picker-wrapper {
@@ -99,19 +97,19 @@
 
 /* Keep item height 50px to match ScrollPicker logic, but make selected bigger visually */
 .date-picker-wrapper .scroll-picker-item {
-  height: 50px;
-  font-size: 14px;
-  padding: 0 4px;
+  height: clamp(45px, 2.8125rem, 50px);
+  font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
+  padding: 0 clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem);
 }
 
 .date-picker-wrapper .scroll-picker-item.selected {
-  font-size: 26px;
+  font-size: var(--font-size-2xl, clamp(1.5rem, 1.3rem + 1vw, 1.875rem));
   font-weight: 700;
-  color: #1f2937;
-  height: 50px;
+  color: var(--color-text-primary, #1f2937);
+  height: clamp(45px, 2.8125rem, 50px);
   background: rgba(122, 61, 240, 0.05);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
   box-shadow: none;
   z-index: 10;
   position: relative;
@@ -128,20 +126,20 @@
 }
 
 .date-picker-wrapper .date-picker-label {
-  font-size: 11px;
-  margin-top: 4px;
+  font-size: var(--font-size-xs, clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem));
+  margin-top: clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem);
   text-align: center;
 }
 
 .date-picker-wrapper .input-field-error {
   display: block;
-  margin-top: 8px;
+  margin-top: var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem));
   margin-left: 0;
-  font-size: 13px;
-  color: #ef4444;
+  font-size: var(--font-size-xs, clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem));
+  color: var(--color-status-error, #ef4444);
   text-align: center;
   width: 100%;
-  min-height: 20px;
+  min-height: clamp(18px, 1.125rem, 20px);
 }
 
 /* ===========================
@@ -149,30 +147,30 @@
 =========================== */
 
 .gender-radio-label {
-  font-size: 15px;
+  font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
   font-weight: 500;
-  color: #1f2937;
-  margin-bottom: 12px !important;
+  color: var(--color-text-primary, #1f2937);
+  margin-bottom: var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
   text-align: left;
 }
 
 .gender-radio-option .form-check-input {
-  width: 20px;
-  height: 20px;
+  width: clamp(18px, 1.125rem, 20px);
+  height: clamp(18px, 1.125rem, 20px);
   cursor: pointer;
-  border-color: #d1d5db;
+  border-color: var(--color-border-medium, #d1d5db);
 }
 
 .gender-radio-option .form-check-input:checked {
-  background-color: #7a3df0;
-  border-color: #7a3df0;
+  background-color: var(--color-primary-main, #7a3df0);
+  border-color: var(--color-primary-main, #7a3df0);
 }
 
 .gender-radio-option .form-check-label {
-  font-size: 15px;
-  color: #1f2937;
+  font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
+  color: var(--color-text-primary, #1f2937);
   cursor: pointer;
-  margin-left: 8px;
+  margin-left: var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem));
 }
 
 /* ===========================
@@ -180,12 +178,12 @@
 =========================== */
 
 .password-note {
-  font-size: 10.5px;
-  color: #9ca3af;
+  font-size: var(--font-size-xs, clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem));
+  color: var(--color-text-tertiary, #9ca3af);
   text-align: left;
-  margin-top: 8px;
-  margin-bottom: 12px;
-  padding-left: 4px;
+  margin-top: var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem));
+  margin-bottom: var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
+  padding-left: clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem);
   line-height: 1.3;
   opacity: 0.85;
 }
@@ -196,32 +194,32 @@
 
 .auth-btn.btn-primary {
   width: 100%;
-  height: 52px;
-  border-radius: 28px;
+  height: clamp(48px, 3.25rem, 52px);
+  border-radius: var(--radius-xl, clamp(1rem, 0.8rem + 1vw, 1.5rem));
   border: none;
   font-weight: 600;
-  font-size: 15px;
-  background: linear-gradient(90deg, #6fd5e0, #d447b6) !important;
-  color: white !important;
+  font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
+  background: var(--color-primary-gradient, linear-gradient(90deg, #6fd5e0, #d447b6));
+  color: var(--color-text-white, white);
   transition: transform 0.25s, opacity 0.25s;
 }
 
 .auth-btn.btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
   opacity: 0.95;
-  background: linear-gradient(90deg, #6fd5e0, #d447b6) !important;
+  background: var(--color-primary-gradient, linear-gradient(90deg, #6fd5e0, #d447b6));
 }
 
 .auth-btn.btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background: linear-gradient(90deg, #6fd5e0, #d447b6) !important;
+  background: var(--color-primary-gradient, linear-gradient(90deg, #6fd5e0, #d447b6));
 }
 
 .auth-btn.btn-primary:focus,
 .auth-btn.btn-primary:active {
-  background: linear-gradient(90deg, #6fd5e0, #d447b6) !important;
-  box-shadow: none !important;
+  background: var(--color-primary-gradient, linear-gradient(90deg, #6fd5e0, #d447b6));
+  box-shadow: none;
 }
 
 /* ===========================
@@ -229,12 +227,12 @@
 =========================== */
 
 .auth-footer {
-  font-size: 14px;
-  color: #6b7280;
+  font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
+  color: var(--color-text-secondary, #6b7280);
 }
 
 .auth-link {
-  color: #7a3df0;
+  color: var(--color-primary-main, #7a3df0);
   cursor: pointer;
   font-weight: 500;
   text-decoration: none;
@@ -245,21 +243,57 @@
 }
 
 /* ===========================
-   RESPONSIVE - Bootstrap handles most, custom tweaks only
+   RESPONSIVE - Professional Pattern
 =========================== */
 
-@media (max-width: 576px) {
-  .auth-card {
-    padding: 30px 20px;
-    margin-top: 30px;
-    margin-bottom: 30px;
-  }
-
+/* Tablet: 768px and below */
+@media (max-width: 768px) {
   .auth-container {
-    padding: 20px 15px;
+    padding: var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem)) var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
   }
 
-  .auth-title {
-    font-size: 24px;
+  .auth-card {
+    padding: var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem));
+    margin-top: var(--spacing-xl, clamp(1.5rem, 1.2rem + 1.5vw, 2rem));
+    margin-bottom: var(--spacing-xl, clamp(1.5rem, 1.2rem + 1.5vw, 2rem));
+  }
+
+  .date-picker-wrapper .scroll-picker-item.selected {
+    font-size: var(--font-size-xl, clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem));
+  }
+}
+
+/* Mobile: 576px and below */
+@media (max-width: 576px) {
+  .auth-container {
+    padding: var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
+  }
+
+  .auth-card {
+    padding: var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem));
+    margin-top: var(--spacing-lg, clamp(1rem, 0.8rem + 1vw, 1.5rem));
+    margin-bottom: var(--spacing-lg, clamp(1rem, 0.8rem + 1vw, 1.5rem));
+  }
+
+  .auth-btn.btn-primary {
+    height: clamp(44px, 2.75rem, 48px);
+    font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
+  }
+
+  .date-picker-wrapper .scroll-picker-item.selected {
+    font-size: var(--font-size-lg, clamp(1.125rem, 1rem + 0.625vw, 1.25rem));
+  }
+}
+
+/* Small Mobile: 480px and below */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
+    border-radius: var(--radius-lg, clamp(0.75rem, 0.6rem + 0.75vw, 1rem));
+  }
+
+  /* Bootstrap utilities: flex-column trong JSX */
+  .date-picker-wrapper .date-picker-container {
+    gap: var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem));
   }
 }

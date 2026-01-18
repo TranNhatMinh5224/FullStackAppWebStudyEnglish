@@ -1,45 +1,38 @@
 .memory-assessment-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
     margin-top: -10px;
     padding: 10px 20px;
+    width: 100%;
+    max-width: 800px;
 }
 
 .memory-assessment-question {
-    font-size: 18px;
+    font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
     font-weight: 600;
     color: var(--color-text-primary, #1f2937);
     margin: 0;
-    text-align: center;
 }
 
 .memory-assessment-buttons {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
     width: 100%;
     max-width: 800px;
 }
 
 .memory-assessment-btn {
-    flex: 1;
-    min-width: 120px;
+    flex: 1 1 auto;
+    min-width: 100px;
     max-width: 150px;
-    padding: 14px 20px;
+    padding: 12px 16px;
     border: 2px solid;
     border-radius: 12px;
-    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     background: #ffffff;
     color: #1f2937;
+    white-space: nowrap;
 }
 
-.memory-assessment-btn:hover {
+.memory-assessment-btn:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -49,19 +42,40 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-@media (max-width: 768px) {
+/* Bootstrap responsive breakpoints */
+@media (max-width: 575.98px) {
+    .memory-assessment-container {
+        padding: 10px 12px;
+    }
+
     .memory-assessment-buttons {
-        gap: 8px;
+        gap: 6px !important;
     }
 
     .memory-assessment-btn {
-        min-width: 100px;
-        max-width: 120px;
-        padding: 12px 16px;
-        font-size: 14px;
+        min-width: 80px;
+        max-width: 100px;
+        padding: 10px 12px;
+        font-size: 0.75rem;
     }
 
     .memory-assessment-question {
-        font-size: 16px;
+        font-size: 0.875rem;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .memory-assessment-btn {
+        min-width: 100px;
+        max-width: 120px;
+        padding: 12px 14px;
+    }
+}
+
+@media (min-width: 768px) {
+    .memory-assessment-btn {
+        min-width: 120px;
+        max-width: 150px;
+        padding: 14px 20px;
     }
 }

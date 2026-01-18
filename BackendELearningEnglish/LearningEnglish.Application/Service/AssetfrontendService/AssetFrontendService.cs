@@ -4,6 +4,7 @@ using LearningEnglish.Application.Interface.AdminManagement;
 using LearningEnglish.Application.Interface.Infrastructure.MediaService;
 using LearningEnglish.Application.Common;
 using LearningEnglish.Domain.Entities;
+using LearningEnglish.Domain.Enums;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 
@@ -60,86 +61,27 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
-        public async Task<ServiceResponse<AssetFrontendDto>> GetAssetFrontendById(int id)
-        {
-            var response = new ServiceResponse<AssetFrontendDto>();
-            try
-            {
-                var assetFrontend = await _assetFrontendRepository.GetAssetFrontendById(id);
-                if (assetFrontend == null)
-                {
-                    response.Success = false;
-                    response.StatusCode = 404;
-                    response.Message = "Asset Frontend không tồn tại";
-                    return response;
-                }
-                response.Data = _mapper.Map<AssetFrontendDto>(assetFrontend);
-
-                // Thêm ImageUrl
-                if (!string.IsNullOrWhiteSpace(response.Data.KeyImage))
-                {
-                    response.Data.ImageUrl = _assetFrontendMediaService.BuildImageUrl(response.Data.KeyImage);
-                }
-
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = "Lấy thông tin Asset Frontend thành công";
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi khi lấy thông tin Asset Frontend";
-                _logger.LogError(ex, "Lỗi khi lấy thông tin Asset Frontend");
-            }
-            return response;
-
-
-        }
-        public async Task<ServiceResponse<List<AssetFrontendDto>>> GetAssetsByTypeAsync(int assetType)
-        {
-            var response = new ServiceResponse<List<AssetFrontendDto>>();
-            try
-            {
-                var assetFrontends = await _assetFrontendRepository.GetAssetByType(assetType);
-                response.Data = _mapper.Map<List<AssetFrontendDto>>(assetFrontends);
-
-                // Thêm ImageUrl cho từng asset
-                foreach (var asset in response.Data)
-                {
-                    if (!string.IsNullOrWhiteSpace(asset.KeyImage))
-                    {
-                        asset.ImageUrl = _assetFrontendMediaService.BuildImageUrl(asset.KeyImage);
-                    }
-                }
-
-                response.Success = true;
-                response.StatusCode = 200;
-                response.Message = "Lấy danh sách Asset Frontend theo loại thành công";
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.StatusCode = 500;
-                response.Message = "Lỗi khi lấy danh sách Asset Frontend theo loại";
-                _logger.LogError(ex, "Lỗi khi lấy danh sách Asset Frontend theo loại");
-            }
-            return response;
-        }
         public async Task<ServiceResponse<AssetFrontendDto>> AddAssetFrontend(CreateAssetFrontendDto newAssetFrontend)
         {
             var response = new ServiceResponse<AssetFrontendDto>();
             try
             {
+                // Kiểm tra xem đã có asset với AssetType này chưa (chỉ cho phép 1 asset mỗi loại)
+                var existingAsset = await _assetFrontendRepository.GetAssetByType(newAssetFrontend.AssetType);
+                if (existingAsset != null)
+                {
+                    response.Success = false;
+                    response.StatusCode = 400;
+                    response.Message = $"Đã tồn tại asset loại {newAssetFrontend.AssetType}. Chỉ cho phép 1 asset mỗi loại. Vui lòng cập nhật asset hiện có thay vì tạo mới.";
+                    return response;
+                }
+
                 // Tạo asset entity
 #pragma warning disable CS8601 // Possible null reference assignment
                 var assetFrontend = new AssetFrontend
                 {
                     NameImage = newAssetFrontend.NameImage,
-                    DescriptionImage = newAssetFrontend.DescriptionImage,
-                    AssetType = newAssetFrontend.AssetType,
-                    Order = newAssetFrontend.Order,
-                    IsActive = newAssetFrontend.IsActive
+                    AssetType = newAssetFrontend.AssetType
                 };
 
 
@@ -262,6 +204,20 @@ namespace LearningEnglish.Application.Service
                     return response;
                 }
 
+                // Nếu đang thay đổi AssetType, kiểm tra xem AssetType mới đã có asset chưa
+                if (updatedAssetFrontend.AssetType.HasValue && updatedAssetFrontend.AssetType.Value != existingAsset.AssetType)
+                {
+                    var assetWithNewType = await _assetFrontendRepository.GetAssetByType(updatedAssetFrontend.AssetType.Value);
+                    if (assetWithNewType != null && assetWithNewType.Id != existingAsset.Id)
+                    {
+                        response.Success = false;
+                        response.StatusCode = 400;
+                        response.Message = $"Đã tồn tại asset loại {updatedAssetFrontend.AssetType.Value}. Chỉ cho phép 1 asset mỗi loại.";
+                        response.Data = false;
+                        return response;
+                    }
+                }
+
                 string? oldImageKey = existingAsset.KeyImage;
                 string? committedImageKey = null;
 
@@ -338,5 +294,38 @@ namespace LearningEnglish.Application.Service
             }
             return response;
         }
+
+        // Public methods - chỉ lấy assets đang active
+        public async Task<ServiceResponse<List<AssetFrontendDto>>> GetAllActiveAssetFrontends()
+        {
+            var response = new ServiceResponse<List<AssetFrontendDto>>();
+            try
+            {
+                var assetFrontends = await _assetFrontendRepository.GetAllActiveAssetFrontend();
+                response.Data = _mapper.Map<List<AssetFrontendDto>>(assetFrontends);
+
+                // Thêm ImageUrl cho từng asset
+                foreach (var asset in response.Data)
+                {
+                    if (!string.IsNullOrWhiteSpace(asset.KeyImage))
+                    {
+                        asset.ImageUrl = _assetFrontendMediaService.BuildImageUrl(asset.KeyImage);
+                    }
+                }
+
+                response.Success = true;
+                response.StatusCode = 200;
+                response.Message = "Lấy danh sách Asset Frontend active thành công";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.StatusCode = 500;
+                response.Message = "Lỗi khi lấy danh sách Asset Frontend active";
+                _logger.LogError(ex, "Lỗi khi lấy danh sách Asset Frontend active");
+            }
+            return response;
+        }
+
     }
 }

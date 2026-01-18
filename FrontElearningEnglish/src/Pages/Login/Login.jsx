@@ -149,10 +149,13 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-container">
-      <Header />
+    <div className="auth-container d-flex align-items-center justify-content-center position-relative">
+      {/* Logo ở góc dưới bên trái */}
+      <div className="auth-logo-container">
+        <Header />
+      </div>
 
-      <Container>
+      <Container className="position-relative">
         <Row className="justify-content-center">
           <Col xs={12} sm={10} md={8} lg={6} xl={5}>
             <div className="auth-card">
@@ -227,42 +230,44 @@ export default function Login() {
               </Form>
 
               {/* Register */}
-              <p className="auth-footer text-center mt-3">
+              <p className="auth-footer text-center mt-4 mb-0">
                 Chưa có tài khoản?{" "}
                 <span className="auth-link" onClick={() => navigate("/register")}>
                   Đăng ký
                 </span>
               </p>
 
-              <div className="divider">HOẶC</div>
+              <div className="divider my-4">HOẶC</div>
 
               {/* Social login buttons */}
-              <SocialLoginButton
-                type="google"
-                icon={FcGoogle}
-                text="Đăng nhập bằng Google"
-                onClick={handleGoogleLogin}
-                disabled={loading}
-                loading={socialLoading.google}
-              />
+              <div className="d-flex flex-column gap-2">
+                <SocialLoginButton
+                  type="google"
+                  icon={FcGoogle}
+                  text="Đăng nhập bằng Google"
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  loading={socialLoading.google}
+                />
 
-              <SocialLoginButton
-                type="facebook"
-                icon={FaFacebookF}
-                text="Đăng nhập bằng Facebook"
-                onClick={handleFacebookLogin}
-                disabled={loading}
-                loading={socialLoading.facebook}
-              />
+                <SocialLoginButton
+                  type="facebook"
+                  icon={FaFacebookF}
+                  text="Đăng nhập bằng Facebook"
+                  onClick={handleFacebookLogin}
+                  disabled={loading}
+                  loading={socialLoading.facebook}
+                />
 
-              <SocialLoginButton
-                type="guest"
-                icon={FaUser}
-                text="Đăng nhập bằng khách"
-                onClick={handleGuestLogin}
-                disabled={loading}
-                loading={socialLoading.guest}
-              />
+                <SocialLoginButton
+                  type="guest"
+                  icon={FaUser}
+                  text="Đăng nhập bằng khách"
+                  onClick={handleGuestLogin}
+                  disabled={loading}
+                  loading={socialLoading.guest}
+                />
+              </div>
             </div>
           </Col>
         </Row>

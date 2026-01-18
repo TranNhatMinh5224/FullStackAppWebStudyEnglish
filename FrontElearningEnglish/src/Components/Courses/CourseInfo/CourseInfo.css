@@ -6,9 +6,8 @@
     margin-bottom: 30px;
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .course-info-section {
-    display: flex;
-    flex-direction: column;
     gap: 24px;
 }
 
@@ -19,9 +18,8 @@
     margin: 0 0 20px 0;
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .course-info-subsection {
-    display: flex;
-    flex-direction: column;
     gap: 12px;
 }
 

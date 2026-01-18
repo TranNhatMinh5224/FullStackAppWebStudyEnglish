@@ -76,6 +76,7 @@ if (string.IsNullOrWhiteSpace(jwtAudience))
 
 // Add controllers + Swagger
 builder.Services.AddControllers();
+   
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
@@ -385,11 +386,6 @@ builder.Services.AddScoped<TempFileCleanupJob>();
 // Payment Strategy Pattern (giống Scoring Strategy)
 builder.Services.AddScoped<IPaymentStrategy, CoursePaymentProcessor>();
 builder.Services.AddScoped<IPaymentStrategy, TeacherPackagePaymentProcessor>();
-
-// FluentValidation
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddFluentValidationClientsideAdapters();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateLectureDtoValidator>();
 
 // Scoring strategies
 builder.Services.AddScoped<IScoringStrategy, FillBlankScoringStrategy>();

@@ -10,24 +10,42 @@
 }
 
 .review-navigation {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
     margin-top: -20px;
+    width: 100%;
+    max-width: 800px;
 }
 
 .review-prev-button,
 .review-next-button {
-    padding: 14px 40px;
+    padding: 12px 24px;
     background: var(--color-secondary-cyan, #41d6e3);
     color: white;
     border: none;
     border-radius: 12px;
-    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
-    min-width: 150px;
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+/* Bootstrap responsive */
+@media (max-width: 575.98px) {
+    .review-prev-button,
+    .review-next-button {
+        padding: 10px 16px;
+        min-width: 100px;
+        font-size: 0.875rem;
+    }
+}
+
+@media (min-width: 576px) {
+    .review-prev-button,
+    .review-next-button {
+        padding: 12px 24px;
+        min-width: 150px;
+        font-size: 1rem;
+    }
 }
 
 .review-prev-button:disabled {

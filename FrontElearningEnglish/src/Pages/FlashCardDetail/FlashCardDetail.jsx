@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import MainHeader from "../../Components/Header/MainHeader";
+import Breadcrumb from "../../Components/Common/Breadcrumb/Breadcrumb";
 import FlashCardProgressBar from "../../Components/FlashCardDetail/FlashCardProgressBar/FlashCardProgressBar";
 import FlashCardViewer from "../../Components/FlashCardDetail/FlashCardViewer/FlashCardViewer";
 import { flashcardService } from "../../Services/flashcardService";
@@ -197,7 +198,7 @@ export default function FlashCardDetail() {
                 <MainHeader />
                 <div className="flashcard-detail-container">
                     <Container>
-                        <div className="flashcard-completion-screen">
+                        <div className="flashcard-completion-screen d-flex flex-column align-items-center justify-content-center">
                             <div className="completion-icon">
                                 <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <circle cx="12" cy="12" r="10" fill="#10b981" opacity="0.2"/>
@@ -229,27 +230,17 @@ export default function FlashCardDetail() {
             <MainHeader />
             <div className="flashcard-detail-container">
                 <Container>
-                    <div className="flashcard-detail-breadcrumb">
-                        <span onClick={() => navigate("/my-courses")} className="breadcrumb-link">
-                            Khóa học của tôi
-                        </span>
-                        <span className="breadcrumb-separator">/</span>
-                        <span onClick={() => navigate(`/course/${courseId}`)} className="breadcrumb-link">
-                            {courseTitle}
-                        </span>
-                        <span className="breadcrumb-separator">/</span>
-                        <span onClick={() => navigate(`/course/${courseId}/learn`)} className="breadcrumb-link">
-                            Lesson
-                        </span>
-                        <span className="breadcrumb-separator">/</span>
-                        <span onClick={() => navigate(`/course/${courseId}/lesson/${lessonId}`)} className="breadcrumb-link">
-                            {lessonTitle}
-                        </span>
-                        <span className="breadcrumb-separator">/</span>
-                        <span className="breadcrumb-current">{moduleName}</span>
-                    </div>
+                    <Breadcrumb
+                        items={[
+                            { label: "Khóa học của tôi", path: "/my-courses" },
+                            { label: courseTitle, path: `/course/${courseId}` },
+                            { label: "Lesson", path: `/course/${courseId}/learn` },
+                            { label: lessonTitle, path: `/course/${courseId}/lesson/${lessonId}` },
+                            { label: moduleName, isCurrent: true }
+                        ]}
+                    />
                 </Container>
-                <Container className="flashcard-content-container">
+                <Container className="flashcard-content-container d-flex flex-column align-items-center">
                     <FlashCardProgressBar 
                         current={currentIndex + 1} 
                         total={flashcards.length} 

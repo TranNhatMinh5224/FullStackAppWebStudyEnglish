@@ -9,7 +9,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 3000;
+    z-index: var(--z-index-success, 4000);
     animation: fadeIn 0.2s ease;
 }
 

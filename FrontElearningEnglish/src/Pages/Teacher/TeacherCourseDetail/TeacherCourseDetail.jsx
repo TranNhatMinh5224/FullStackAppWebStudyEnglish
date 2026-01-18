@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import "./TeacherCourseDetail.css";
 import TeacherHeader from "../../../Components/Header/TeacherHeader";
+import Breadcrumb from "../../../Components/Common/Breadcrumb/Breadcrumb";
 import { useAuth } from "../../../Context/AuthContext";
 import { teacherService } from "../../../Services/teacherService";
 import { teacherPackageService } from "../../../Services/teacherPackageService";
-import { mochiCourseTeacher, mochiLessonTeacher } from "../../../Assets/Logo";
+import { useAssets } from "../../../Context/AssetContext";
 import CreateCourseModal from "../../../Components/Teacher/CreateCourseModal/CreateCourseModal";
 import CreateLessonModal from "../../../Components/Teacher/CreateLessonModal/CreateLessonModal";
 import SuccessModal from "../../../Components/Common/SuccessModal/SuccessModal";
 import ConfirmModal from "../../../Components/Common/ConfirmModal/ConfirmModal";
 import LessonLimitModal from "../../../Components/Common/LessonLimitModal/LessonLimitModal";
 import ClassCodeModal from "../../../Components/Teacher/ClassCodeModal/ClassCodeModal";
-import { FaPlus, FaTrash, FaExpand } from "react-icons/fa";
+import { FaPlus, FaTrash, FaExpand, FaEdit } from "react-icons/fa";
 import { ROUTE_PATHS } from "../../../Routes/Paths";
 
 export default function TeacherCourseDetail() {
@@ -27,6 +30,7 @@ export default function TeacherCourseDetail() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showCreateLessonModal, setShowCreateLessonModal] = useState(false);
+  const [lessonToUpdate, setLessonToUpdate] = useState(null);
   const [showLessonSuccessModal, setShowLessonSuccessModal] = useState(false);
   const [showLessonLimitModal, setShowLessonLimitModal] = useState(false);
   const [maxLessonsLimit, setMaxLessonsLimit] = useState(0);
@@ -37,6 +41,7 @@ export default function TeacherCourseDetail() {
   const [showClassCodeModal, setShowClassCodeModal] = useState(false);
 
   const isTeacher = roles.includes("Teacher") || user?.teacherSubscription?.isTeacher === true;
+  const { getDefaultCourseImage, getDefaultLessonImage } = useAssets();
 
   const fetchCourseDetail = useCallback(async () => {
     try {
@@ -143,12 +148,20 @@ export default function TeacherCourseDetail() {
 
   const handleCreateLessonSuccess = () => {
     setShowCreateLessonModal(false);
+    setLessonToUpdate(null);
     setShowLessonSuccessModal(true);
     fetchLessons(); // Refresh lessons list
     fetchCourseDetail(); // Refresh course data to update totalLessons
   };
 
-  const handleDeleteClick = (lesson) => {
+  const handleUpdateLesson = (lesson, e) => {
+    e.stopPropagation();
+    setLessonToUpdate(lesson);
+    setShowCreateLessonModal(true);
+  };
+
+  const handleDeleteClick = (lesson, e) => {
+    e.stopPropagation();
     setLessonToDelete(lesson);
     setShowDeleteModal(true);
   };
@@ -205,7 +218,7 @@ export default function TeacherCourseDetail() {
 
   const courseTitle = course.title || course.Title || "Khóa học";
   const courseDescription = course.description || course.Description || "";
-  const courseImage = course.imageUrl || course.ImageUrl || mochiCourseTeacher;
+  const courseImage = course.imageUrl || course.ImageUrl || getDefaultCourseImage();
   const classCode = course.classCode || course.ClassCode || "";
   const totalLessons = course.totalLessons || course.TotalLessons || 0;
   const totalStudents = course.totalStudents || course.TotalStudents || 0;
@@ -215,16 +228,13 @@ export default function TeacherCourseDetail() {
       <TeacherHeader />
       <div className="teacher-course-detail-container">
         <div className="breadcrumb-section">
-          <span className="breadcrumb-text">
-            <span
-              className="breadcrumb-link"
-              onClick={() => navigate(ROUTE_PATHS.TEACHER_COURSE_MANAGEMENT)}
-            >
-              Quản lý khoá học
-            </span>
-            {" / "}
-            <span className="breadcrumb-current">{courseTitle}</span>
-          </span>
+          <Breadcrumb
+            items={[
+              { label: "Quản lý khoá học", path: ROUTE_PATHS.TEACHER_COURSE_MANAGEMENT },
+              { label: courseTitle, isCurrent: true }
+            ]}
+            showHomeIcon={false}
+          />
         </div>
 
         <Container fluid className="course-detail-content">
@@ -241,7 +251,15 @@ export default function TeacherCourseDetail() {
                 </div>
                 <div className="course-info-content">
                   <h2 className="course-title">{courseTitle}</h2>
-                  <p className="course-description">{courseDescription}</p>
+                  <div className="course-description">
+                    {courseDescription ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {courseDescription}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="text-muted">Khóa học này chưa có mô tả chi tiết.</p>
+                    )}
+                  </div>
 
                   <div className="course-details">
                     <div className="course-detail-item">
@@ -298,7 +316,7 @@ export default function TeacherCourseDetail() {
                   lessons.map((lesson, index) => {
                     const lessonId = lesson.lessonId || lesson.LessonId;
                     const lessonTitle = lesson.title || lesson.Title || `Lesson ${index + 1}`;
-                    const lessonImage = lesson.imageUrl || lesson.ImageUrl || mochiLessonTeacher;
+                    const lessonImage = lesson.imageUrl || lesson.ImageUrl || getDefaultLessonImage();
                     return (
                       <div 
                         key={lessonId || index} 
@@ -323,8 +341,16 @@ export default function TeacherCourseDetail() {
                             Thêm Module
                           </button>
                           <button
+                            className="update-lesson-btn"
+                            onClick={(e) => handleUpdateLesson(lesson, e)}
+                            title="Cập nhật bài học"
+                          >
+                            <FaEdit className="edit-icon" />
+                            Cập nhật
+                          </button>
+                          <button
                             className="delete-lesson-btn"
-                            onClick={() => handleDeleteClick(lesson)}
+                            onClick={(e) => handleDeleteClick(lesson, e)}
                             title="Xóa bài học"
                           >
                             <FaTrash />
@@ -339,7 +365,10 @@ export default function TeacherCourseDetail() {
 
                 <button
                   className="add-lesson-btn"
-                  onClick={handleCreateLesson}
+                  onClick={() => {
+                    setLessonToUpdate(null);
+                    handleCreateLesson();
+                  }}
                 >
                   <FaPlus className="add-icon" />
                   Thêm Lesson
@@ -372,12 +401,17 @@ export default function TeacherCourseDetail() {
         autoCloseDelay={1500}
       />
 
-      {/* Create Lesson Modal */}
+      {/* Create/Update Lesson Modal */}
       <CreateLessonModal
         show={showCreateLessonModal}
-        onClose={() => setShowCreateLessonModal(false)}
+        onClose={() => {
+          setShowCreateLessonModal(false);
+          setLessonToUpdate(null);
+        }}
         onSuccess={handleCreateLessonSuccess}
         courseId={courseId}
+        lessonData={lessonToUpdate}
+        isUpdateMode={!!lessonToUpdate}
       />
 
       {/* Success Modal for Lesson Creation */}

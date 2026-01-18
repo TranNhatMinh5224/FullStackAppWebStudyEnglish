@@ -5,6 +5,7 @@ import {
     FaFileAlt,
     FaEdit
 } from "react-icons/fa";
+import ImageWithIconFallback from "../../Common/ImageWithIconFallback/ImageWithIconFallback";
 import "./ModuleCard.css";
 
 export default function ModuleCard({ module, onClick, onPronunciationClick }) {
@@ -15,6 +16,8 @@ export default function ModuleCard({ module, onClick, onPronunciationClick }) {
         isCompleted = false,
         description = "",
         isPronunciationCompleted = false, // Thông tin về pronunciation completion
+        imageUrl = "",
+        ImageUrl = "",
     } = module || {};
 
     const finalName = name || "Module";
@@ -71,9 +74,15 @@ export default function ModuleCard({ module, onClick, onPronunciationClick }) {
             onClick={handleCardClick}
         >
             <div className="module-icon-wrapper">
-                <div className={`module-icon ${iconConfig.className}`}>
-                    {iconConfig.icon}
-                </div>
+                <ImageWithIconFallback
+                    imageUrl={imageUrl}
+                    ImageUrl={ImageUrl}
+                    icon={<div className={`module-icon ${iconConfig.className}`}>{iconConfig.icon}</div>}
+                    alt={finalName}
+                    className={`module-image ${iconConfig.className}`}
+                    iconClassName={`module-icon ${iconConfig.className}`}
+                    imageKey={module?.moduleId || module?.ModuleId}
+                />
             </div>
             <div className="module-content">
                 <h3 className="module-title">{finalName}</h3>

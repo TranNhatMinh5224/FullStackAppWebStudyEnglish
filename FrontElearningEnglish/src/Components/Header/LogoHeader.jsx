@@ -1,18 +1,20 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./LogoHeader.css";
-import { mochiWelcome } from "../../Assets";
+import { useAssets } from "../../Context/AssetContext";
 
 export default function Header() {
   const navigate = useNavigate();
+  const { getLogo } = useAssets();
+  const logo = getLogo();
 
   const handleLogoClick = () => {
-    navigate("/welcome");
+    navigate("/home");
   };
 
   return (
-    <div className="header" onClick={handleLogoClick} style={{ cursor: "pointer" }}>
-      <img src={mochiWelcome} alt="logo" className="header-logo" />
+    <div className="header d-flex align-items-center" onClick={handleLogoClick} style={{ cursor: "pointer" }}>
+      {logo && <img src={logo} alt="logo" className="header-logo" />}
       <span className="header-title">Catalunya English</span>
     </div>
   );

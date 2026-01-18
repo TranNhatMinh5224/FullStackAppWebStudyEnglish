@@ -1,6 +1,7 @@
 
 import React from "react";
-import { Row, Col, Card } from "react-bootstrap";
+import { Row, Col, Card, Badge } from "react-bootstrap";
+import { FaCheckCircle } from "react-icons/fa";
 import "./TrueFalseQuestion.css";
 
 export default function TrueFalseQuestion({ question, answer, onChange }) {
@@ -35,10 +36,21 @@ export default function TrueFalseQuestion({ question, answer, onChange }) {
                         <Card
                             className={`true-false-option${answer === trueOptionId ? " selected" : ""}`}
                             onClick={() => handleChange(trueOptionId)}
-                            style={{ cursor: "pointer", borderColor: answer === trueOptionId ? "#41d6e3" : undefined }}
+                            style={{ cursor: "pointer" }}
                         >
-                            <Card.Body className="d-flex align-items-center justify-content-center p-3">
-                                <span className="option-label">{trueText}</span>
+                            <Card.Body className="d-flex align-items-center justify-content-between p-4">
+                                <div className="d-flex align-items-center flex-grow-1 justify-content-center">
+                                    <div className={`option-radio me-3 ${answer === trueOptionId ? "selected" : ""}`}>
+                                        {answer === trueOptionId && <FaCheckCircle className="check-icon" />}
+                                    </div>
+                                    <span className="option-label fw-bold">{trueText}</span>
+                                </div>
+                                {answer === trueOptionId && (
+                                    <Badge bg="success" className="selected-badge">
+                                        <FaCheckCircle className="me-1" />
+                                        Đã chọn
+                                    </Badge>
+                                )}
                             </Card.Body>
                         </Card>
                     </Col>
@@ -48,10 +60,21 @@ export default function TrueFalseQuestion({ question, answer, onChange }) {
                         <Card
                             className={`true-false-option${answer === falseOptionId ? " selected" : ""}`}
                             onClick={() => handleChange(falseOptionId)}
-                            style={{ cursor: "pointer", borderColor: answer === falseOptionId ? "#41d6e3" : undefined }}
+                            style={{ cursor: "pointer" }}
                         >
-                            <Card.Body className="d-flex align-items-center justify-content-center p-3">
-                                <span className="option-label">{falseText}</span>
+                            <Card.Body className="d-flex align-items-center justify-content-between p-4">
+                                <div className="d-flex align-items-center flex-grow-1 justify-content-center">
+                                    <div className={`option-radio me-3 ${answer === falseOptionId ? "selected" : ""}`}>
+                                        {answer === falseOptionId && <FaCheckCircle className="check-icon" />}
+                                    </div>
+                                    <span className="option-label fw-bold">{falseText}</span>
+                                </div>
+                                {answer === falseOptionId && (
+                                    <Badge bg="success" className="selected-badge">
+                                        <FaCheckCircle className="me-1" />
+                                        Đã chọn
+                                    </Badge>
+                                )}
                             </Card.Body>
                         </Card>
                     </Col>

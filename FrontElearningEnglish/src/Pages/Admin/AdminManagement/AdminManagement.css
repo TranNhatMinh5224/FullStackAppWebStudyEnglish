@@ -12,6 +12,15 @@
   align-items: center;
   justify-content: center;
   color: white;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .table-hover tbody tr:hover {

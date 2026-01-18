@@ -40,11 +40,9 @@
     margin-bottom: 20px;
 }
 
+/* Bootstrap utilities: d-flex, flex-column, align-items-center */
 .results-score {
     margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     gap: 10px;
 }
 
@@ -86,9 +84,8 @@
     border-bottom: 2px solid var(--color-border-light, #e5e7eb);
 }
 
+/* Bootstrap utilities: d-flex, align-items-center */
 .summary-item {
-    display: flex;
-    align-items: center;
     gap: 16px;
     padding: 20px;
     background: var(--color-bg-primary, white);
@@ -137,9 +134,8 @@
     border-bottom: 2px solid var(--color-border-light, #e5e7eb);
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .answers-list {
-    display: flex;
-    flex-direction: column;
     gap: 16px;
 }
 
@@ -187,9 +183,8 @@
     margin-top: 8px;
 }
 
+/* Bootstrap utilities: d-flex, flex-wrap */
 .answer-list {
-    display: flex;
-    flex-wrap: wrap;
     gap: 8px;
 }
 
@@ -198,15 +193,13 @@
     padding: 8px 16px;
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .answer-object {
-    display: flex;
-    flex-direction: column;
     gap: 8px;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center */
 .answer-pair {
-    display: flex;
-    align-items: center;
     gap: 12px;
     padding: 8px 12px;
     background: rgba(16, 185, 129, 0.05);
@@ -218,9 +211,8 @@
     font-weight: 600;
 }
 
+/* Bootstrap utilities: d-flex, justify-content-center */
 .results-actions {
-    display: flex;
-    justify-content: center;
     gap: 16px;
     padding: 30px 20px;
     border-top: 2px solid var(--color-border-light, #e5e7eb);
@@ -252,10 +244,7 @@
         font-size: 36px;
     }
 
-    .results-actions {
-        flex-direction: column;
-    }
-
+    /* Bootstrap responsive tự xử lý - chỉ thêm styling */
     .results-actions .btn {
         width: 100%;
     }

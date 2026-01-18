@@ -1,0 +1,82 @@
+.asset-form-modal .modal-content {
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--color-bg-primary, white);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.asset-form-modal .modal-header {
+    background: linear-gradient(135deg, var(--color-secondary-cyan, #41d6e3) 0%, var(--color-secondary-pink, #d946ef) 100%);
+    color: white;
+    border-bottom: none;
+    padding: 20px 30px;
+}
+
+.asset-form-modal .modal-title {
+    color: white;
+    font-weight: 700;
+    font-size: clamp(1.25rem, 1rem + 1.25vw, 1.75rem);
+}
+
+.asset-form-modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.asset-form-modal .btn-close:hover {
+    opacity: 1;
+}
+
+.asset-form-modal .modal-body {
+    padding: 30px;
+    background: var(--color-bg-secondary, #f6f8fb);
+    color: var(--color-text-primary, #1f2937);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.asset-form-modal .modal-footer {
+    padding: 20px 30px;
+    border-top: 1px solid var(--color-border-light, #e5e7eb);
+    background: var(--color-bg-primary, white);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark theme */
+[data-theme="dark"] .asset-form-modal .modal-content {
+    background: var(--color-bg-primary, #1a1a1a);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--color-border-medium, #4a4a4a);
+}
+
+[data-theme="dark"] .asset-form-modal .modal-body {
+    background: var(--color-bg-secondary, #2d2d2d);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] .asset-form-modal .modal-footer {
+    background: var(--color-bg-primary, #1a1a1a);
+    border-top-color: var(--color-border-medium, #4a4a4a);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .asset-form-modal .modal-header {
+        padding: 15px 20px;
+    }
+
+    .asset-form-modal .modal-body {
+        padding: 20px;
+    }
+
+    .asset-form-modal .modal-footer {
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .asset-form-modal .modal-footer .btn {
+        width: 100%;
+    }
+}

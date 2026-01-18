@@ -311,7 +311,7 @@ export default function CreateCourseModal({ show, onClose, onSuccess, courseData
         backdrop="static"
         keyboard={false}
       >
-        <Modal.Header closeButton>
+        <Modal.Header>
           <Modal.Title>{isUpdateMode ? "Cập nhật lớp học" : "Tạo lớp học"}</Modal.Title>
         </Modal.Header>
       <Modal.Body>

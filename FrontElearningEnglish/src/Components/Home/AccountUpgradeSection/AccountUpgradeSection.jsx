@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { Row, Col } from "react-bootstrap";
 import UpgradeCard from "../UpgradeCard/UpgradeCard";
+import TeacherPackageDetailModal from "../TeacherPackageDetailModal/TeacherPackageDetailModal";
 import { teacherPackageService } from "../../../Services/teacherPackageService";
 import "./AccountUpgradeSection.css";
 
@@ -12,6 +14,8 @@ export default function AccountUpgradeSection({
     const [packages, setPackages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [selectedPackageId, setSelectedPackageId] = useState(null);
 
     useEffect(() => {
         const fetchPackages = async () => {
@@ -59,9 +63,11 @@ export default function AccountUpgradeSection({
                     Mở khoá toàn bộ tính năng, tham gia lớp học và đồng hành cùng học sinh
                     tốt hơn
                 </p>
-                <div className="package-grid">
-                    <div style={{ textAlign: "center", padding: "20px" }}>Đang tải...</div>
-                </div>
+                <Row className="package-grid g-2">
+                    <Col xs={12} sm={6}>
+                        <div style={{ textAlign: "center", padding: "20px" }}>Đang tải...</div>
+                    </Col>
+                </Row>
             </div>
         );
     }
@@ -74,9 +80,11 @@ export default function AccountUpgradeSection({
                     Mở khoá toàn bộ tính năng, tham gia lớp học và đồng hành cùng học sinh
                     tốt hơn
                 </p>
-                <div className="package-grid">
-                    <div style={{ textAlign: "center", padding: "20px", color: "red" }}>{error}</div>
-                </div>
+                <Row className="package-grid g-2">
+                    <Col xs={12} sm={6}>
+                        <div style={{ textAlign: "center", padding: "20px", color: "red" }}>{error}</div>
+                    </Col>
+                </Row>
             </div>
         );
     }
@@ -88,22 +96,36 @@ export default function AccountUpgradeSection({
                 Mở khoá toàn bộ tính năng, tham gia lớp học và đồng hành cùng học sinh
                 tốt hơn
             </p>
-            <div className="package-grid">
+            <Row className="package-grid g-2 align-items-stretch">
                 {packages.slice(0, 4).map((pkg) => (
-                    <UpgradeCard
-                        key={pkg.teacherPackageId}
-                        teacherPackageId={pkg.teacherPackageId}
-                        packageType={pkg.packageType}
-                        title={pkg.title}
-                        description={pkg.description}
-                        price={pkg.price}
-                        isSelected={selectedPackage === pkg.teacherPackageId}
-                        onMouseEnter={() => onPackageHover?.(pkg.teacherPackageId)}
-                        onMouseLeave={onPackageLeave}
-                        onUpgradeClick={onUpgradeClick}
-                    />
+                    <Col key={pkg.teacherPackageId} xs={12} sm={6}>
+                        <UpgradeCard
+                            teacherPackageId={pkg.teacherPackageId}
+                            packageType={pkg.packageType}
+                            title={pkg.title}
+                            description={pkg.description}
+                            price={pkg.price}
+                            isSelected={selectedPackage === pkg.teacherPackageId}
+                            onMouseEnter={() => onPackageHover?.(pkg.teacherPackageId)}
+                            onMouseLeave={onPackageLeave}
+                            onUpgradeClick={onUpgradeClick}
+                            onCardClick={(id) => {
+                                setSelectedPackageId(id);
+                                setShowDetailModal(true);
+                            }}
+                        />
+                    </Col>
                 ))}
-            </div>
+            </Row>
+
+            <TeacherPackageDetailModal
+                show={showDetailModal}
+                onHide={() => {
+                    setShowDetailModal(false);
+                    setSelectedPackageId(null);
+                }}
+                teacherPackageId={selectedPackageId}
+            />
         </div>
     );
 }

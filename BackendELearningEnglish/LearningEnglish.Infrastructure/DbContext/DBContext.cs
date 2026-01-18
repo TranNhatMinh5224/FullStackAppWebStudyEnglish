@@ -350,9 +350,6 @@ namespace LearningEnglish.Infrastructure.Data
                 e.Property(l => l.MarkdownContent)
                  .HasMaxLength(5000000);
 
-                e.Property(l => l.RenderedHtml)
-                 .IsRequired();
-
                 e.Property(l => l.MediaKey)
                  .HasMaxLength(500);
 
@@ -856,8 +853,9 @@ namespace LearningEnglish.Infrastructure.Data
                 e.ToTable("EssaySubmissions");
 
                 // Column constraints
+                // Cho phép nộp bài trống - TextContent có thể null và không giới hạn độ dài
                 e.Property(es => es.TextContent)
-                 .HasMaxLength(20000);
+                 .HasColumnType("text"); // Sử dụng text type để hỗ trợ nội dung dài (không giới hạn)
 
                 e.Property(es => es.AttachmentKey)
                  .HasMaxLength(500);

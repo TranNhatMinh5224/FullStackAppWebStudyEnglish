@@ -16,17 +16,8 @@ namespace LearningEnglish.Application.DTOs
         // URL công khai để truy cập ảnh
         public string? ImageUrl { get; set; }
 
-        // Mô tả/alt text cho SEO
-        public string? DescriptionImage { get; set; } = string.Empty;
-
-        // Loại asset: "banner", "hero", "logo", "icon", etc.
-        public AssetType AssetType { get; set; } = AssetType.Other;
-
-        // Thứ tự hiển thị
-        public int? Order { get; set; } = 0;
-
-        // Bật/tắt hiển thị
-        public bool? IsActive { get; set; } = true;
+        // Loại asset: Logo, DefaultCourse, DefaultLesson
+        public AssetType AssetType { get; set; } = AssetType.Logo;
 
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
@@ -37,10 +28,7 @@ namespace LearningEnglish.Application.DTOs
         public string NameImage { get; set; } = string.Empty;
         public string? ImageTempKey { get; set; } // Key của file tạm thời
         public string? ImageType { get; set; } // Loại file (image/jpeg, image/png, etc.)
-        public string? DescriptionImage { get; set; } = string.Empty;
-        public AssetType AssetType { get; set; } = AssetType.Other;
-        public int? Order { get; set; } = 0;
-        public bool? IsActive { get; set; } = true;
+        public AssetType AssetType { get; set; } = AssetType.Logo;
     }
 
     public class UpdateAssetFrontendDto
@@ -49,9 +37,6 @@ namespace LearningEnglish.Application.DTOs
         public string? NameImage { get; set; }
         public string? ImageTempKey { get; set; } // Key của file tạm thời mới (nếu có)
         public string? ImageType { get; set; } // Loại file mới
-        public string? DescriptionImage { get; set; }
         public AssetType? AssetType { get; set; }
-        public int? Order { get; set; }
-        public bool? IsActive { get; set; }
     }
 }

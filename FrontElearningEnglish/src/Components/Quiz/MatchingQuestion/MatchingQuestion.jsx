@@ -136,8 +136,8 @@ export default function MatchingQuestion({ question, answer, onChange }) {
                     </Card.Text>
                 </div>
                 <Row className="matching-container g-4">
-                    <Col md={6}>
-                        <div className="matching-column p-2 bg-light rounded">
+                    <Col md={6} className="px-2">
+                        <div className="matching-column d-flex flex-column p-3 bg-light rounded h-100">
                             <h6 className="column-title text-center mb-3 fw-bold text-secondary">Cột trái</h6>
                             {finalLeft.map((option, index) => {
                                 const matchedRightId = getMatchedRight(option.id);
@@ -149,7 +149,7 @@ export default function MatchingQuestion({ question, answer, onChange }) {
                                 return (
                                     <div key={option.id} className="position-relative mb-3">
                                         <Card
-                                            className={`matching-item left-item border-2 transition-all ${isSelected ? "border-primary bg-primary text-white" : ""} ${matchedRightId ? "border-success bg-success-light" : ""}`}
+                                            className={`matching-item left-item d-flex align-items-center border-2 transition-all ${isSelected ? "border-primary bg-primary text-white" : ""} ${matchedRightId ? "border-success bg-success-light" : ""}`}
                                             onClick={() => {
                                                 if (matchedRightId) removeMatch(option.id);
                                                 else handleLeftClick(option.id);
@@ -174,8 +174,8 @@ export default function MatchingQuestion({ question, answer, onChange }) {
                             })}
                         </div>
                     </Col>
-                    <Col md={6}>
-                        <div className="matching-column">
+                    <Col md={6} className="px-2">
+                        <div className="matching-column d-flex flex-column p-3 h-100">
                             <h6 className="column-title text-center mb-3 fw-bold text-secondary">Cột phải</h6>
                             {finalRight.map((option, index) => {
                                 const isMatched = isRightMatched(option.id);
@@ -183,7 +183,7 @@ export default function MatchingQuestion({ question, answer, onChange }) {
                                 return (
                                     <Card
                                         key={option.id}
-                                        className={`matching-item right-item mb-3 border-2 transition-all ${isSelected ? "border-primary bg-primary text-white" : ""} ${isMatched ? "opacity-50 grayscale border-dashed" : "border-white shadow-sm"}`}
+                                        className={`matching-item right-item d-flex align-items-center mb-3 border-2 transition-all ${isSelected ? "border-primary bg-primary text-white" : ""} ${isMatched ? "opacity-50 grayscale border-dashed" : "border-white shadow-sm"}`}
                                         onClick={() => {
                                             if (!isMatched) handleRightClick(option.id);
                                         }}

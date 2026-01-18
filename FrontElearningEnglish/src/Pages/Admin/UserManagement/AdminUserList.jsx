@@ -7,6 +7,8 @@ import UpgradeUserModal from "../../../Components/Admin/UserManagement/UpgradeUs
 import UserDetailModal from "../../../Components/Admin/UserManagement/UserDetailModal/UserDetailModal";
 import "./AdminUserList.css";
 import SuccessModal from "../../../Components/Common/SuccessModal/SuccessModal";
+import ConfirmModal from "../../../Components/Common/ConfirmModal/ConfirmModal";
+import NotificationModal from "../../../Components/Common/NotificationModal/NotificationModal";
 
 export default function AdminUserList() {
   const [activeTab, setActiveTab] = useState("all"); 
@@ -23,6 +25,18 @@ export default function AdminUserList() {
   const [upgradePackageId, setUpgradePackageId] = useState(1); 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  
+  // Confirm Modal State
+  const [showConfirmBlockModal, setShowConfirmBlockModal] = useState(false);
+  const [userToBlock, setUserToBlock] = useState(null);
+  const [isBlocking, setIsBlocking] = useState(false);
+  
+  // Notification Modal State
+  const [notification, setNotification] = useState({
+    isOpen: false,
+    type: "success", // "success", "error", "info"
+    message: ""
+  });
 
   useEffect(() => {
     fetchUserStats();
@@ -62,7 +76,8 @@ export default function AdminUserList() {
       }
 
       if (response.data && response.data.success) {
-        setUsers(response.data.data.items || []);
+        const usersData = response.data.data.items || [];
+        setUsers(usersData);
         setPagination({
           ...pagination,
           totalCount: response.data.data.totalCount
@@ -75,27 +90,77 @@ export default function AdminUserList() {
     }
   };
 
-  const handleViewDetail = (user) => {
-    setSelectedUser(user);
-    setShowDetailModal(true);
+  const handleViewDetail = async (user) => {
+    try {
+      const userId = user.userId || user.id || user.UserId;
+      if (!userId) {
+        // Fallback: dùng data từ danh sách nếu không có userId
+        setSelectedUser(user);
+        setShowDetailModal(true);
+        return;
+      }
+      
+      // Gọi API để lấy chi tiết user với đầy đủ thông tin (bao gồm avatar)
+      const response = await adminService.getUserById(userId);
+      if (response.data && response.data.success) {
+        const userData = response.data.data;
+        // Debug: log để kiểm tra avatarUrl
+        console.log("User data from API:", userData);
+        console.log("AvatarUrl:", userData.avatarUrl || userData.AvatarUrl);
+        setSelectedUser(userData);
+        setShowDetailModal(true);
+      } else {
+        // Fallback: dùng data từ danh sách nếu API lỗi
+        setSelectedUser(user);
+        setShowDetailModal(true);
+      }
+    } catch (error) {
+      console.error("Error fetching user detail:", error);
+      // Fallback: dùng data từ danh sách nếu API lỗi
+      setSelectedUser(user);
+      setShowDetailModal(true);
+    }
   };
 
-  const handleToggleStatus = async (user) => {
-    const isBlocked = user.status === 'Inactive' || user.status === 0;
-    const action = isBlocked ? 'Unblock' : 'Block';
-    
-    if (!window.confirm(`Are you sure you want to ${action} user ${user.email}?`)) return;
+  const handleToggleStatus = (user) => {
+    setUserToBlock(user);
+    setShowConfirmBlockModal(true);
+  };
 
+  const confirmToggleStatus = async () => {
+    if (!userToBlock) return;
+    
+    const isBlocked = userToBlock.status === 'Inactive' || userToBlock.status === 0;
+    const action = isBlocked ? 'Unblock' : 'Block';
+    const actionText = isBlocked ? 'Mở khóa' : 'Khóa';
+    
+    setIsBlocking(true);
     try {
       if (isBlocked) {
-        await adminService.unblockUser(user.userId || user.id);
+        await adminService.unblockUser(userToBlock.userId || userToBlock.id);
       } else {
-        await adminService.blockUser(user.userId || user.id);
+        await adminService.blockUser(userToBlock.userId || userToBlock.id);
       }
+      
+      setShowConfirmBlockModal(false);
+      setNotification({
+        isOpen: true,
+        type: "success",
+        message: `${actionText} tài khoản thành công!`
+      });
+      
       fetchUsers(); 
       fetchUserStats();
+      setUserToBlock(null);
     } catch (error) {
-      alert(`Failed to ${action} user`);
+      setNotification({
+        isOpen: true,
+        type: "error",
+        message: `Không thể ${actionText.toLowerCase()} tài khoản. Vui lòng thử lại.`
+      });
+      console.error(`Failed to ${action} user:`, error);
+    } finally {
+      setIsBlocking(false);
     }
   };
 
@@ -112,13 +177,17 @@ export default function AdminUserList() {
         email: selectedUser.email,
         teacherPackageId: parseInt(upgradePackageId)
       });
-      setSuccessMessage("User upgraded to Teacher successfully!");
+      setSuccessMessage("Nâng cấp người dùng thành Teacher thành công!");
       setShowSuccessModal(true);
       setShowUpgradeModal(false);
       fetchUsers();
       fetchUserStats();
     } catch (error) {
-      alert("Failed to upgrade user. Check if user is already a teacher.");
+      setNotification({
+        isOpen: true,
+        type: "error",
+        message: "Không thể nâng cấp người dùng. Người dùng có thể đã là Teacher hoặc đã xảy ra lỗi."
+      });
       console.error(error);
     }
   };
@@ -173,6 +242,33 @@ export default function AdminUserList() {
         onClose={() => setShowSuccessModal(false)}
         title="Thành công"
         message={successMessage}
+      />
+      
+      {/* Confirm Block/Unblock Modal */}
+      <ConfirmModal
+        isOpen={showConfirmBlockModal}
+        onClose={() => {
+          setShowConfirmBlockModal(false);
+          setUserToBlock(null);
+        }}
+        onConfirm={confirmToggleStatus}
+        title={userToBlock ? (userToBlock.status === 'Inactive' || userToBlock.status === 0 ? "Mở khóa tài khoản" : "Khóa tài khoản") : "Xác nhận"}
+        message={userToBlock ? `Bạn có chắc chắn muốn ${userToBlock.status === 'Inactive' || userToBlock.status === 0 ? 'mở khóa' : 'khóa'} tài khoản ${userToBlock.email || userToBlock.Email || ''}?` : ""}
+        confirmText={userToBlock ? (userToBlock.status === 'Inactive' || userToBlock.status === 0 ? "Mở khóa" : "Khóa") : "Xác nhận"}
+        cancelText="Hủy"
+        type={userToBlock && (userToBlock.status === 'Inactive' || userToBlock.status === 0) ? "warning" : "danger"}
+        loading={isBlocking}
+        disabled={isBlocking}
+      />
+      
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        type={notification.type}
+        message={notification.message}
+        autoClose={true}
+        autoCloseDelay={3000}
       />
     </div>
   );

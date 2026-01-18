@@ -1,6 +1,29 @@
-import React from "react";
+import React, { useState } from "react";
 import { MdBlock, MdCheckCircle, MdArrowUpward, MdVisibility } from "react-icons/md";
 import "./UserTable.css";
+
+// Component để hiển thị avatar - chỉ hiển thị nếu có avatarUrl
+const Avatar = ({ avatarUrl, displayName }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  // Chỉ hiển thị avatar nếu có avatarUrl và chưa lỗi
+  if (avatarUrl && avatarUrl.trim() && !imageError) {
+    return (
+      <img 
+        src={avatarUrl} 
+        className="rounded-circle me-2" 
+        width="40" 
+        height="40" 
+        alt={displayName}
+        style={{ objectFit: 'cover', flexShrink: 0 }}
+        onError={() => setImageError(true)}
+      />
+    );
+  }
+  
+  // Không hiển thị gì nếu không có avatar
+  return null;
+};
 
 export default function UserTable({ 
   users, 
@@ -45,30 +68,37 @@ export default function UserTable({
                 </td>
               </tr>
             ) : (
-              users.map((user) => (
-                <tr key={user.userId || user.id}>
+              users.map((user) => {
+                // Lấy avatarUrl từ API (check cả camelCase và PascalCase)
+                const avatarUrl = (user.avatarUrl || user.AvatarUrl || '').trim();
+                
+                const firstName = user.firstName || user.FirstName || '';
+                const lastName = user.lastName || user.LastName || '';
+                const email = user.email || user.Email || '';
+                const displayName = user.displayName || user.DisplayName || `${firstName} ${lastName}`.trim();
+                const userId = user.userId || user.id || user.UserId || 0;
+                
+                return (
+                <tr key={userId}>
                   <td>
                     <div className="d-flex align-items-center">
-                      <img 
-                        src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`} 
-                        className="rounded-circle me-2" 
-                        width="40" 
-                        height="40" 
-                        alt="Avatar"
+                      <Avatar 
+                        avatarUrl={avatarUrl}
+                        displayName={displayName}
                       />
                       <div>
-                        <div className="fw-bold">{user.firstName} {user.lastName}</div>
-                        <small className="text-muted" style={{fontSize: '0.75rem'}}>{user.email}</small>
+                        <div className="fw-bold">{displayName || 'N/A'}</div>
+                        <small className="text-muted" style={{fontSize: '0.75rem'}}>{email}</small>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <span className={`badge ${user.roles?.includes('Teacher') ? 'bg-primary' : 'bg-secondary'}`}>
-                      {user.roles?.[0] || 'Student'}
+                    <span className={`badge ${(user.roles || user.Roles || [])?.includes('Teacher') ? 'bg-primary' : 'bg-secondary'}`}>
+                      {(user.roles || user.Roles || [])?.[0] || 'Student'}
                     </span>
                   </td>
-                  <td className="text-muted">{user.phoneNumber || 'N/A'}</td>
-                  <td>{getStatusBadge(user.status)}</td>
+                  <td className="text-muted">{user.phoneNumber || user.PhoneNumber || 'N/A'}</td>
+                  <td>{getStatusBadge(user.status || user.Status)}</td>
                   <td>
                     <div className="d-flex gap-2">
                       <button 
@@ -79,7 +109,7 @@ export default function UserTable({
                         <MdVisibility />
                       </button>
 
-                      {!user.roles?.includes('Teacher') && (
+                      {!(user.roles || user.Roles || [])?.includes('Teacher') && (
                         <button 
                           className="btn btn-sm btn-light text-primary" 
                           title="Upgrade to Teacher"
@@ -91,10 +121,10 @@ export default function UserTable({
                       
                       <button 
                         className="btn btn-sm btn-light" 
-                        title={user.status === 'Active' || user.status === 1 ? "Block User" : "Unblock User"}
+                        title={(user.status || user.Status) === 'Active' || (user.status || user.Status) === 1 ? "Block User" : "Unblock User"}
                         onClick={() => onToggleStatus(user)}
                       >
-                        {user.status === 'Active' || user.status === 1 ? 
+                        {(user.status || user.Status) === 'Active' || (user.status || user.Status) === 1 ? 
                           <MdBlock className="text-danger" /> : 
                           <MdCheckCircle className="text-success" />
                         }
@@ -102,7 +132,8 @@ export default function UserTable({
                     </div>
                   </td>
                 </tr>
-              ))
+              );
+              })
             )}
           </tbody>
         </table>

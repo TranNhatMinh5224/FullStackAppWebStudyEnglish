@@ -3,15 +3,18 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
 import "./CourseDetail.css";
 import MainHeader from "../../Components/Header/MainHeader";
+import Breadcrumb from "../../Components/Common/Breadcrumb/Breadcrumb";
 import CourseBanner from "../../Components/Courses/CourseBanner/CourseBanner";
 import CourseInfo from "../../Components/Courses/CourseInfo/CourseInfo";
 import CourseSummaryCard from "../../Components/Courses/CourseSummaryCard/CourseSummaryCard";
 import EnrollmentModal from "../../Components/Common/EnrollmentModal/EnrollmentModal";
 import NotificationModal from "../../Components/Common/NotificationModal/NotificationModal";
+import SuccessModal from "../../Components/Common/SuccessModal/SuccessModal";
 import { courseService } from "../../Services/courseService";
 import { paymentService } from "../../Services/paymentService";
 import { useAuth } from "../../Context/AuthContext";
 import { useNotificationRefresh } from "../../Context/NotificationContext";
+import { useAssets } from "../../Context/AssetContext";
 import { ROUTE_PATHS } from "../../Routes/Paths";
 import LoginRequiredModal from "../../Components/Common/LoginRequiredModal/LoginRequiredModal";
 import SEO from "../../Components/SEO/SEO";
@@ -21,13 +24,20 @@ export default function CourseDetail() {
     const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
     const { refreshNotifications } = useNotificationRefresh();
+    const { getDefaultCourseImage } = useAssets();
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    // Modal states
     const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [notification, setNotification] = useState({ isOpen: false, type: "success", message: "" });
+    
+    // Notification states
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
         const fetchCourseDetail = async () => {
@@ -73,39 +83,43 @@ export default function CourseDetail() {
             });
 
             if (paymentResponse.data?.success) {
-                // Refresh course data to update enrollment status
-                const response = await courseService.getCourseById(courseId);
-                if (response.data?.success && response.data?.data) {
-                    setCourse(response.data.data);
-                }
-
-                // Refresh notifications để hiển thị thông báo mới ngay lập tức
-                refreshNotifications();
-
+                // Đóng modal và hiển thị thông báo ngay lập tức (không đợi gì cả)
                 setShowEnrollmentModal(false);
-                setNotification({
-                    isOpen: true,
-                    type: "success",
-                    message: "Đăng ký khóa học thành công!"
+                setIsProcessing(false); // Tắt loading ngay
+                
+                // Hiển thị SuccessModal ngay để user thấy kết quả
+                setSuccessMessage("Đăng ký khóa học thành công!");
+                setShowSuccessModal(true);
+
+                // Tất cả refresh ở background (không block UI)
+                Promise.all([
+                    // Refresh notifications ở header
+                    Promise.resolve(refreshNotifications()),
+                    // Refresh course data
+                    courseService.getCourseById(courseId)
+                        .then(response => {
+                            if (response.data?.success && response.data?.data) {
+                                setCourse(response.data.data);
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Error refreshing course data:", err);
+                        })
+                ]).catch(err => {
+                    console.error("Error in background refresh:", err);
                 });
             } else {
+                setIsProcessing(false);
                 const errorMsg = paymentResponse.data?.message || "Không thể đăng ký khóa học. Vui lòng thử lại.";
-                setNotification({
-                    isOpen: true,
-                    type: "error",
-                    message: errorMsg
-                });
+                setErrorMessage(errorMsg);
+                setShowErrorModal(true);
             }
         } catch (err) {
+            setIsProcessing(false);
             console.error("Error enrolling:", err);
             const errorMsg = err.response?.data?.message || "Không thể đăng ký khóa học. Vui lòng thử lại.";
-            setNotification({
-                isOpen: true,
-                type: "error",
-                message: errorMsg
-            });
-        } finally {
-            setIsProcessing(false);
+            setErrorMessage(errorMsg);
+            setShowErrorModal(true);
         }
     };
 
@@ -144,7 +158,7 @@ export default function CourseDetail() {
 
     const courseTitle = course?.title || course?.Title || "Khóa học";
     const courseDescription = course?.description || course?.descriptionMarkdown || "Khóa học tiếng Anh chất lượng tại Catalunya English";
-    const courseImage = course?.imageUrl || "/logo512.png";
+    const courseImage = course?.imageUrl || course?.ImageUrl || getDefaultCourseImage() || "/logo512.png";
 
     return (
         <>
@@ -160,13 +174,12 @@ export default function CourseDetail() {
                 <Container fluid>
                     <Row>
                         <Col>
-                            <div className="course-breadcrumb">
-                                <span onClick={() => navigate("/my-courses")} className="breadcrumb-link">
-                                    Khoá học của tôi
-                                </span>
-                                <span className="breadcrumb-separator">/</span>
-                                <span className="breadcrumb-current">{course.title}</span>
-                            </div>
+                            <Breadcrumb
+                                items={[
+                                    { label: "Khóa học của tôi", path: "/my-courses" },
+                                    { label: course.title, isCurrent: true }
+                                ]}
+                            />
                         </Col>
                     </Row>
 
@@ -194,6 +207,7 @@ export default function CourseDetail() {
                 </Container>
             </div>
 
+            {/* Modals */}
             <EnrollmentModal
                 isOpen={showEnrollmentModal}
                 onClose={() => !isProcessing && setShowEnrollmentModal(false)}
@@ -203,16 +217,27 @@ export default function CourseDetail() {
                 isProcessing={isProcessing}
             />
 
-            <NotificationModal
-                isOpen={notification.isOpen}
-                onClose={() => setNotification({ isOpen: false, type: "success", message: "" })}
-                type={notification.type}
-                message={notification.message}
-            />
-
             <LoginRequiredModal
                 isOpen={showLoginModal}
                 onClose={() => setShowLoginModal(false)}
+            />
+
+            <SuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+                title="Thành công"
+                message={successMessage}
+                autoClose={true}
+                autoCloseDelay={2000}
+            />
+
+            <NotificationModal
+                isOpen={showErrorModal}
+                onClose={() => setShowErrorModal(false)}
+                type="error"
+                message={errorMessage}
+                autoClose={true}
+                autoCloseDelay={3000}
             />
         </>
     );

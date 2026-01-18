@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import MainHeader from "../../Components/Header/MainHeader";
+import Breadcrumb from "../../Components/Common/Breadcrumb/Breadcrumb";
 import CourseLearnHeader from "../../Components/CourseLearn/CourseLearnHeader/CourseLearnHeader";
 import LessonCard from "../../Components/CourseLearn/LessonCard/LessonCard";
 import ProgressBar from "../../Components/CourseLearn/ProgressBar/ProgressBar";
@@ -120,17 +121,13 @@ export default function CourseLearn() {
             <MainHeader />
             <div className="course-learn-container">
                 <Container>
-                    <div className="course-learn-breadcrumb">
-                        <span onClick={() => navigate("/my-courses")} className="breadcrumb-link">
-                            Khóa học của tôi
-                        </span>
-                        <span className="breadcrumb-separator">/</span>
-                        <span onClick={() => navigate(`/course/${courseId}`)} className="breadcrumb-link">
-                            {course?.title || course?.Title || "Khóa học"}
-                        </span>
-                        <span className="breadcrumb-separator">/</span>
-                        <span className="breadcrumb-current">Lesson</span>
-                    </div>
+                    <Breadcrumb
+                        items={[
+                            { label: "Khóa học của tôi", path: "/my-courses" },
+                            { label: course?.title || course?.Title || "Khóa học", path: `/course/${courseId}` },
+                            { label: "Lesson", isCurrent: true }
+                        ]}
+                    />
                     <CourseLearnHeader courseTitle={course?.title || course?.Title || "Khóa học"} />
 
                     {progressData.total > 0 && (
@@ -141,7 +138,7 @@ export default function CourseLearn() {
                         />
                     )}
 
-                    <div className="lessons-list">
+                    <div className="lessons-list d-flex flex-column">
                         {lessons.length > 0 ? (
                             lessons.map((lesson, index) => {
                                 const lessonId = lesson.lessonId || lesson.LessonId;

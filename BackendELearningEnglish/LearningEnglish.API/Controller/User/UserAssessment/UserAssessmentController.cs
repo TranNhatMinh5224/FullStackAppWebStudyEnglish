@@ -7,7 +7,7 @@ namespace LearningEnglish.API.Controller.User
 {
     [Route("api/user/assessments")]
     [ApiController]
-    [Authorize(Roles = "Student")]
+    [Authorize(Roles = "Student,SuperAdmin,ContentAdmin,FinanceAdmin")]
     public class UserAssessmentController : ControllerBase
     {
         private readonly IUserAssessmentService _assessmentService;

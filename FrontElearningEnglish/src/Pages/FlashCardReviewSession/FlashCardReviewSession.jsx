@@ -225,8 +225,8 @@ export default function FlashCardReviewSession() {
 
     return (
         <>
-            <div className="flashcard-review-session-container">
-                <Container className="flashcard-content-container">
+            <div className="flashcard-review-session-container d-flex flex-column min-vh-100">
+                <Container className="flashcard-content-container d-flex flex-column align-items-center">
                     <FlashCardProgressBar
                         current={currentIndex + 1}
                         total={flashcards.length}
@@ -247,20 +247,25 @@ export default function FlashCardReviewSession() {
                         selectedQuality={selectedQuality}
                         onQualitySelect={handleQualitySelect}
                     />
-                    <div className="review-navigation">
+                    <div className="review-navigation d-flex justify-content-center flex-wrap gap-3 w-100">
                         <button
-                            className="review-prev-button"
+                            className="review-prev-button btn"
                             onClick={handlePrevious}
                             disabled={currentIndex === 0}
                         >
                             Từ trước
                         </button>
                         <button
-                            className="review-next-button"
+                            className="review-next-button btn"
                             onClick={handleNext}
                             disabled={!selectedQuality}
                         >
-                            {isLastCard ? "Hoàn thành ôn tập từ vựng" : "Từ tiếp theo"}
+                            <span className="d-none d-sm-inline">
+                                {isLastCard ? "Hoàn thành ôn tập từ vựng" : "Từ tiếp theo"}
+                            </span>
+                            <span className="d-sm-none">
+                                {isLastCard ? "Hoàn thành" : "Tiếp theo"}
+                            </span>
                         </button>
                     </div>
                 </Container>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Card, Spinner } from "react-bootstrap";
-import { FaClipboardCheck } from "react-icons/fa";
+import { Card, Spinner, Badge } from "react-bootstrap";
+import { FaClipboardCheck, FaClock, FaCalendarAlt } from "react-icons/fa";
 import { assessmentService } from "../../../../Services/assessmentService";
 import "./AssessmentList.css";
 
@@ -33,6 +33,17 @@ export default function AssessmentList({ moduleId, onSelect, isAdmin = false }) 
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   if (loading) {
     return (
       <div className="text-center py-5">
@@ -56,20 +67,55 @@ export default function AssessmentList({ moduleId, onSelect, isAdmin = false }) 
           {assessments.map((assessment) => {
             const assessmentId = assessment.assessmentId || assessment.AssessmentId;
             const title = assessment.title || assessment.Title || "Untitled Assessment";
+            const openAt = assessment.openAt || assessment.OpenAt;
+            const dueAt = assessment.dueAt || assessment.DueAt;
+            const timeLimit = assessment.timeLimit || assessment.TimeLimit;
+            const isPublished = assessment.isPublished !== undefined 
+              ? assessment.isPublished 
+              : assessment.IsPublished;
 
             return (
               <Card
                 key={assessmentId}
-                className="assessment-card"
+                className="assessment-card h-100"
                 onClick={() => onSelect(assessment)}
                 style={{ cursor: "pointer" }}
               >
-                <Card.Body className="d-flex align-items-center gap-3">
-                  <div className="assessment-icon">
-                    <FaClipboardCheck size={24} />
+                <Card.Body>
+                  <div className="d-flex align-items-start gap-3 mb-3">
+                    <div className="assessment-icon flex-shrink-0">
+                      <FaClipboardCheck size={24} />
+                    </div>
+                    <div className="flex-grow-1">
+                      <div className="d-flex justify-content-between align-items-start">
+                        <Card.Title className="assessment-title mb-1 text-break">{title}</Card.Title>
+                        <Badge bg={isPublished ? "success" : "secondary"} className="ms-2">
+                          {isPublished ? "Đã xuất bản" : "Nháp"}
+                        </Badge>
+                      </div>
+                      
+                      {timeLimit && (
+                        <div className="text-muted small d-flex align-items-center mt-1">
+                          <FaClock className="me-1" size={12} />
+                          {timeLimit}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-grow-1">
-                    <Card.Title className="assessment-title mb-0">{title}</Card.Title>
+
+                  <div className="border-top pt-2 mt-2">
+                    <div className="d-flex justify-content-between text-muted small">
+                      <div title="Thời gian mở">
+                        <FaCalendarAlt className="me-1" size={12} />
+                        Mở: {formatDate(openAt)}
+                      </div>
+                    </div>
+                    <div className="d-flex justify-content-between text-muted small mt-1">
+                      <div title="Hạn nộp" className="text-danger">
+                        <FaCalendarAlt className="me-1" size={12} />
+                        Đóng: {formatDate(dueAt)}
+                      </div>
+                    </div>
                   </div>
                 </Card.Body>
               </Card>

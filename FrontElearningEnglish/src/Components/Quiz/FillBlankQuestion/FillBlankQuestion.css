@@ -2,9 +2,8 @@
     margin-top: 16px;
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .fill-blank-question .options-list {
-    display: flex;
-    flex-direction: column;
     gap: 12px;
 }
 
@@ -14,9 +13,8 @@
 
 
 
+/* Bootstrap utilities: d-flex, flex-column */
 .fill-blank-question .option-content {
-    display: flex;
-    flex-direction: column;
     gap: 12px;
     width: 100%;
 }

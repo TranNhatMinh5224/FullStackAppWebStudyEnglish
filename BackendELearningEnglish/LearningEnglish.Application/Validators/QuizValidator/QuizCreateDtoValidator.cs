@@ -45,6 +45,11 @@ namespace LearningEnglish.Application.Validators.QuizValidator
                 .When(x => x.PassingScore.HasValue)
                 .WithMessage("Điểm đạt phải lớn hơn 0");
 
+            // TotalPossibleScore phải > 0
+            RuleFor(x => x.TotalPossibleScore)
+                .GreaterThan(0)
+                .WithMessage("Tổng điểm tối đa phải lớn hơn 0");
+
             // Duration phải > 0 nếu được set
             RuleFor(x => x.Duration)
                 .GreaterThan(0)
@@ -57,23 +62,11 @@ namespace LearningEnglish.Application.Validators.QuizValidator
                 .When(x => x.AvailableFrom.HasValue)
                 .WithMessage("Thời gian mở Quiz phải trong tương lai hoặc hiện tại");
 
-            // MaxAttempts phải > 0 nếu không unlimited
+            // MaxAttempts phải > 0 nếu có giá trị (null = không giới hạn)
             RuleFor(x => x.MaxAttempts)
                 .GreaterThan(0)
-                .When(x => x.AllowUnlimitedAttempts == false && x.MaxAttempts.HasValue)
+                .When(x => x.MaxAttempts.HasValue)
                 .WithMessage("Số lần làm tối đa phải lớn hơn 0");
-
-            // Nếu AllowUnlimitedAttempts = false thì phải có MaxAttempts
-            RuleFor(x => x.MaxAttempts)
-                .NotNull()
-                .When(x => x.AllowUnlimitedAttempts == false)
-                .WithMessage("Phải chỉ định số lần làm tối đa khi không cho phép làm không giới hạn");
-
-            // Nếu AllowUnlimitedAttempts = true thì MaxAttempts phải null
-            RuleFor(x => x.MaxAttempts)
-                .Null()
-                .When(x => x.AllowUnlimitedAttempts == true)
-                .WithMessage("MaxAttempts phải null khi cho phép làm không giới hạn");
         }
     }
 }

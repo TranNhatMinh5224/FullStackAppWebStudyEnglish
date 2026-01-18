@@ -14,12 +14,12 @@ namespace LearningEnglish.Application.Validators.AssessmentValidators
             RuleFor(x => x.Title)
                 .NotEmpty()
                 .WithMessage("Tiêu đề Assessment không được để trống")
-                .Length(1, 200)
-                .WithMessage("Tiêu đề Assessment phải có độ dài từ 1 đến 200 ký tự");
+                .Length(1, 255)
+                .WithMessage("Tiêu đề Assessment phải có độ dài từ 1 đến 255 ký tự");
 
             RuleFor(x => x.Description)
-                .MaximumLength(1000)
-                .WithMessage("Mô tả Assessment không được vượt quá 1000 ký tự")
+                .MaximumLength(2000)
+                .WithMessage("Mô tả Assessment không được vượt quá 2000 ký tự")
                 .When(x => !string.IsNullOrEmpty(x.Description));
 
 
@@ -45,7 +45,7 @@ namespace LearningEnglish.Application.Validators.AssessmentValidators
             if (!TimeSpan.TryParse(timeLimit, out var timespan))
                 return false;
 
-            return timespan > TimeSpan.Zero;
+            return timespan >= TimeSpan.Zero; // Allow 00:00:00 as valid (no time limit)
         }
     }
 }

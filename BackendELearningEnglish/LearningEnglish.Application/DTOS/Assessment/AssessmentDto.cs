@@ -32,7 +32,7 @@ namespace LearningEnglish.Application.DTOs
         // Time limit in format "HH:MM:SS" (e.g., "01:30:00" for 1 hour 30 minutes)
         public string? TimeLimit { get; set; }
 
-        public bool IsPublished { get; set; } = false;
+        public bool IsPublished { get; set; } = true;
     }
     public class UpdateAssessmentDto : CreateAssessmentDto
     {

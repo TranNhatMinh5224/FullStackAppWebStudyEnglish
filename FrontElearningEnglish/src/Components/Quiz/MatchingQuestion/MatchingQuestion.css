@@ -16,23 +16,29 @@
     font-style: italic;
 }
 
+/* Bootstrap utilities: d-flex, align-items-start */
 .matching-container {
     gap: 20px;
-    display: flex;
-    align-items: flex-start;
-    flex-wrap: wrap; /* allow stacking on small screens */
+    display: flex !important;
+    flex-wrap: nowrap !important;
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .matching-column {
-    display: flex;
-    flex-direction: column;
     gap: 12px;
+    flex: 1 1 50%;
+    min-width: 0;
 }
 
-/* Ensure columns sit side-by-side on wider screens */
+/* Ensure columns sit side-by-side on all screens >= 768px */
 @media (min-width: 768px) {
     .matching-container {
-        flex-wrap: nowrap;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+    }
+    .matching-container > .col-md-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
     }
     .matching-column {
         flex: 1 1 50%;
@@ -49,9 +55,8 @@
     border-bottom: 2px solid var(--color-border-light, #e5e7eb);
 }
 
+/* Bootstrap utilities: d-flex, align-items-center */
 .matching-item {
-    display: flex;
-    align-items: center;
     gap: 12px;
     padding: 14px 16px;
     border: 2px solid var(--color-border-light, #e5e7eb);
@@ -83,17 +88,15 @@
     background: rgba(239, 68, 68, 0.1);
 }
 
+/* Bootstrap utilities: d-flex, align-items-center, justify-content-center */
 .item-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 32px;
     height: 32px;
     border-radius: 50%;
     background: var(--color-secondary-cyan, #41d6e3);
     color: white;
     font-weight: 600;
-    font-size: 14px;
+    font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
     flex-shrink: 0;
 }
 
@@ -123,11 +126,8 @@
     text-align: left;
 }
 
-/* Override bootstrap utility that sets justify-content-between on Card.Body */
+/* Bootstrap utilities: d-flex, align-items-center, justify-content-start */
 .matching-column .matching-item .card-body {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start !important;
     padding-left: 12px !important;
     padding-right: 12px !important;
     gap: 12px;

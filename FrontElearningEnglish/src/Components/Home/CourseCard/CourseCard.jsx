@@ -1,26 +1,46 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { FaGraduationCap } from "react-icons/fa";
+import { useAssets } from "../../../Context/AssetContext";
+import ImageWithIconFallback from "../../Common/ImageWithIconFallback/ImageWithIconFallback";
 import "./CourseCard.css";
 
 export default function CourseCard({ course }) {
     const navigate = useNavigate();
+    const { getDefaultCourseImage } = useAssets();
     const {
         id,
+        courseId,
+        CourseId,
         title = "IELTS 6.5",
-        imageUrl = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+        Title,
+        imageUrl,
+        ImageUrl,
     } = course || {};
 
+    const finalId = id || courseId || CourseId;
+    const finalTitle = title || Title || "IELTS 6.5";
+    const defaultImage = getDefaultCourseImage();
+    const finalImageUrl = (imageUrl || ImageUrl) || defaultImage;
+
     const handleClick = () => {
-        if (id) {
-            navigate(`/course/${id}`);
+        if (finalId) {
+            navigate(`/course/${finalId}`);
         }
     };
 
     return (
         <div className="course-card" onClick={handleClick}>
-            <img src={imageUrl} alt={title} />
+            <ImageWithIconFallback
+                imageUrl={finalImageUrl}
+                icon={<FaGraduationCap size={48} />}
+                alt={finalTitle}
+                className="course-image"
+                iconClassName="course-icon-fallback"
+                imageKey={finalId}
+            />
             <div className="course-info">
-                <h3>{title}</h3>
+                <h3>{finalTitle}</h3>
             </div>
         </div>
     );

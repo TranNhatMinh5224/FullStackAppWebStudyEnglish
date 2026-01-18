@@ -26,11 +26,11 @@ export default function FlashCardFront({ flashcard, onAudioClick }) {
     };
 
     return (
-        <div className="flashcard-front">
-            <div className="flashcard-icons-top">
+        <div className="flashcard-front d-flex flex-column">
+            <div className="flashcard-icons-top d-flex justify-content-center align-items-center">
                 {audioUrl && (
                     <button 
-                        className="flashcard-audio-icon-btn"
+                        className="flashcard-audio-icon-btn d-flex align-items-center justify-content-center"
                         onClick={handleAudioClick}
                         title="Phát âm"
                     >
@@ -43,7 +43,7 @@ export default function FlashCardFront({ flashcard, onAudioClick }) {
                     <img src={imageUrl} alt={`Hình ảnh minh họa cho từ "${word}"`} />
                 </div>
             )}
-            <div className="flashcard-content">
+            <div className="flashcard-content d-flex flex-column align-items-center">
                 {shouldShowWord && word && (
                     <h2 className="flashcard-word-front">{word}</h2>
                 )}

@@ -1,9 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAssets } from "../../../Context/AssetContext";
 import "./SuggestedCourseCard.css";
 
 export default function SuggestedCourseCard({ course, isEnrolled = false, showEnrolledBadge = true }) {
     const navigate = useNavigate();
+    const { getDefaultCourseImage } = useAssets();
     const {
         id,
         courseId,
@@ -11,6 +13,11 @@ export default function SuggestedCourseCard({ course, isEnrolled = false, showEn
         imageUrl,
         price = 0,
     } = course || {};
+    
+    const defaultImage = getDefaultCourseImage();
+    const displayImageUrl = (imageUrl && imageUrl.trim() !== "") 
+        ? imageUrl 
+        : defaultImage || "https://via.placeholder.com/300x200";
 
     const handleClick = () => {
         const finalCourseId = courseId || id;
@@ -36,7 +43,7 @@ export default function SuggestedCourseCard({ course, isEnrolled = false, showEn
             )}
             <div className="course-image-wrapper">
                 <img 
-                    src={imageUrl || "https://via.placeholder.com/300x200"} 
+                    src={displayImageUrl} 
                     alt={`Ảnh khóa học ${title}`}
                     className="course-image"
                 />

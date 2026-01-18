@@ -10,9 +10,19 @@
 
 .select-field-error {
     display: block;
-    color: #ef4444;
+    color: var(--color-status-error, #ef4444);
     font-size: 13px;
     margin-top: 6px;
     margin-left: 4px;
     text-align: left;
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media (max-width: 576px) {
+    .select-field-wrapper {
+        margin-bottom: 12px;
+    }
 }

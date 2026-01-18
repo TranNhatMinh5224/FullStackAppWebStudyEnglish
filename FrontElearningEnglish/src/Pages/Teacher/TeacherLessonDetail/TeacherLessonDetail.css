@@ -1,13 +1,15 @@
 .teacher-lesson-detail-container {
+  padding: 2rem;
+  background-color: #f5f7fa;
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding: 20px;
-  padding-top: calc(20px + 70px);
+  padding-top: calc(2rem + 70px);
 }
 
 .breadcrumb-section {
-  margin-bottom: 20px;
-  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
 .breadcrumb-text {
@@ -78,21 +80,42 @@
   line-height: 1.6;
 }
 
-.update-lesson-btn {
-  width: 100%;
-  padding: 12px;
-  background-color: #e0e0e0;
+/* Common Update Button Style */
+.update-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background: #7259B6;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.update-lesson-btn:hover {
-  background-color: #d0d0d0;
+.update-btn .btn-icon {
+  font-size: 13px;
+}
+
+.update-btn:hover:not(:disabled) {
+  background: #5d47a3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(114, 89, 182, 0.3);
+}
+
+.update-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Lesson update button - full width variant */
+.update-lesson-btn {
+  width: 100%;
 }
 
 .modules-column {
@@ -102,8 +125,26 @@
 .modules-section {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+}
+
+.modules-header {
+  margin-bottom: 1.5rem;
+}
+
+.modules-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0;
+}
+
+.modules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .module-item {
@@ -111,26 +152,23 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  margin-bottom: 12px;
   background: #f7fafc;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
-  gap: 16px;
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .module-item:hover {
-  border-color: #74CEDE;
+  border-color: #667eea;
   background: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
 }
 
 .module-item-content {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 1rem;
   flex: 1;
 }
 
@@ -139,30 +177,31 @@
   height: 60px;
   object-fit: cover;
   border-radius: 8px;
+  border: 2px solid #e2e8f0;
   flex-shrink: 0;
 }
 
 .module-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .module-name {
-  font-size: 16px;
-  color: #333;
-  font-weight: 500;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 1.15rem;
 }
 
 .module-type {
-  font-size: 14px;
-  color: #666;
+  font-size: 0.85rem;
+  color: #718096;
 }
 
 .module-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   flex-shrink: 0;
 }
 
@@ -218,71 +257,48 @@
   box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
 }
 
-.module-update-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: white;
-  background: linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%);
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-  opacity: 0.8;
-}
-
-.module-update-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
-  opacity: 1;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
-}
-
-.module-update-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+/* Module update button inherits from .update-btn */
 
 .module-delete-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  color: white;
-  background-color: #dc3545;
+  padding: 0.625rem 0.875rem;
+  background: white;
+  border: 2px solid #ff6b6b;
+  border-radius: 8px;
+  color: #ff6b6b;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
 }
 
 .module-delete-btn:hover {
-  background-color: #c82333;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+  background: #ff6b6b;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
 }
 
 .add-module-btn-main {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px;
-  margin-top: 16px;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
   background: #74CEDE;
-  color: white;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+}
+
+.add-module-btn-main .add-icon {
+  font-size: 0.85rem;
 }
 
 .add-module-btn-main:hover {

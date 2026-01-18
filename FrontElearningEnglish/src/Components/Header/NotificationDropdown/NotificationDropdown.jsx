@@ -3,13 +3,13 @@ import { Dropdown } from "react-bootstrap";
 import { notificationService } from "../../../Services/notificationService";
 import { useAuth } from "../../../Context/AuthContext";
 import { useNotificationRefresh } from "../../../Context/NotificationContext";
-import { iconBell } from "../../../Assets";
 import { 
     FaGraduationCap, 
     FaCheckCircle, 
     FaBook, 
     FaFileAlt, 
-    FaCreditCard
+    FaCreditCard,
+    FaBell
 } from "react-icons/fa";
 import "./NotificationDropdown.css";
 
@@ -249,7 +249,7 @@ export default function NotificationDropdown() {
                 className={`notification-button ${unreadCount > 0 ? 'has-notifications' : ''}`}
                 id="notification-dropdown"
             >
-                <img src={iconBell} alt="Thông báo" className={`notification-icon ${unreadCount > 0 ? 'ringing' : ''}`} />
+                <FaBell className={`notification-icon ${unreadCount > 0 ? 'ringing' : ''}`} />
                 {unreadCount > 0 && (
                     <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
                 )}

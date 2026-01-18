@@ -1,3 +1,4 @@
+/* Bootstrap utilities: d-flex, flex-column */
 .flashcard-front {
     position: absolute;
     width: 100%;
@@ -5,30 +6,24 @@
     backface-visibility: hidden;
     border-radius: 20px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    display: flex;
-    flex-direction: column;
     background: #fffacd; /* Pale yellow background */
     padding: 25px 20px 20px 20px;
     box-sizing: border-box;
 }
 
+/* Bootstrap utilities: d-flex, justify-content-center, align-items-center */
 .flashcard-icons-top {
-    display: flex;
-    justify-content: center;
-    align-items: center;
     gap: 12px;
     margin-bottom: 20px;
     z-index: 10;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center, justify-content-center */
 .flashcard-audio-icon-btn {
     width: 44px;
     height: 44px;
     border-radius: 50%;
     border: 2px solid rgba(0, 0, 0, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
     background: #FFD700;
@@ -67,19 +62,16 @@
     display: block;
 }
 
+/* Bootstrap utilities: d-flex, flex-column, align-items-center */
 .flashcard-content {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
     padding: 0 25px 30px 25px;
     gap: 16px;
     position: relative;
 }
 
 .flashcard-word-front {
-    font-size: 36px;
+    font-size: clamp(1.5rem, 1.25rem + 1.25vw, 2.25rem);
     font-weight: 700;
     color: var(--color-text-primary, #1f2937);
     margin: 0;
@@ -87,11 +79,11 @@
 }
 
 .flashcard-example {
-    font-size: 17px;
+    font-size: clamp(0.875rem, 0.8rem + 0.375vw, 1.0625rem);
     line-height: 1.7;
     color: var(--color-text-primary, #1f2937);
     text-align: center;
-    padding: 18px 15px;
+    padding: clamp(0.75rem, 0.625rem + 0.625vw, 1.125rem) clamp(0.75rem, 0.625rem + 0.625vw, 0.9375rem);
     background: rgba(255, 255, 255, 0.6);
     border-radius: 10px;
     width: 100%;
@@ -111,12 +103,41 @@
     bottom: 15px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 14px;
+    font-size: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
     color: var(--color-text-tertiary, #9ca3af);
     margin: 0;
 }
 
-@media (max-width: 768px) {
+/* Bootstrap responsive breakpoints */
+@media (max-width: 575.98px) {
+    .flashcard-image {
+        height: 160px;
+        width: calc(100% - 20px);
+    }
+
+    .flashcard-icons-top {
+        margin-bottom: 8px;
+    }
+
+    .flashcard-audio-icon-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .flashcard-audio-icon-btn svg {
+        font-size: 16px;
+    }
+
+    .flashcard-front {
+        padding: 15px 12px 12px 12px;
+    }
+
+    .flashcard-content {
+        padding: 0 15px 20px 15px;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
     .flashcard-image {
         height: 180px;
         width: calc(100% - 30px);
@@ -130,14 +151,11 @@
         width: 35px;
         height: 35px;
     }
+}
 
-    .flashcard-word-front {
-        font-size: 28px;
-    }
-
-    .flashcard-example {
-        font-size: 16px;
-        padding: 12px;
+@media (min-width: 768px) {
+    .flashcard-image {
+        height: 220px;
     }
 }
 

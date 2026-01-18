@@ -11,7 +11,7 @@ export default function SocialLoginButton({
 }) {
     return (
         <button
-            className={`social-login-btn ${type}`}
+            className={`social-login-btn ${type} d-flex align-items-center justify-content-center`}
             onClick={onClick}
             disabled={disabled || loading}
             type="button"

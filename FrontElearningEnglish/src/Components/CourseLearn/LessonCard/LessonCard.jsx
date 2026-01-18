@@ -1,8 +1,11 @@
 import React from "react";
-import { FaCheckCircle } from "react-icons/fa";
+import { FaCheckCircle, FaBook } from "react-icons/fa";
+import { useAssets } from "../../../Context/AssetContext";
+import ImageWithIconFallback from "../../Common/ImageWithIconFallback/ImageWithIconFallback";
 import "./LessonCard.css";
 
 export default function LessonCard({ lesson, orderNumber, onClick }) {
+    const { getDefaultLessonImage } = useAssets();
     const {
         lessonId,
         LessonId,
@@ -20,11 +23,12 @@ export default function LessonCard({ lesson, orderNumber, onClick }) {
 
     const finalLessonId = lessonId || LessonId;
     const finalTitle = title || Title || "Bài học";
-    const finalImageUrl = imageUrl || ImageUrl;
     const finalIsCompleted = isCompleted || IsCompleted;
     const finalOrderIndex = orderIndex || OrderIndex;
     const finalDescription = description || Description;
     const displayOrder = orderNumber || finalOrderIndex || 1;
+    const defaultImage = getDefaultLessonImage();
+    const finalImageUrl = (imageUrl || ImageUrl) || defaultImage;
 
     const handleClick = () => {
         if (onClick && finalLessonId) {
@@ -35,17 +39,19 @@ export default function LessonCard({ lesson, orderNumber, onClick }) {
     return (
         <div className={`lesson-card ${finalIsCompleted ? "completed" : ""}`} onClick={handleClick}>
             <div className="lesson-image-wrapper">
-                {finalImageUrl ? (
-                    <img 
-                        src={finalImageUrl} 
-                        alt={finalTitle}
-                        className="lesson-image"
-                    />
-                ) : (
-                    <div className="lesson-image-placeholder">
-                        <span>{displayOrder}</span>
-                    </div>
-                )}
+                <ImageWithIconFallback
+                    imageUrl={finalImageUrl}
+                    icon={
+                        <div className="lesson-image-placeholder">
+                            <FaBook size={32} />
+                            <span>{displayOrder}</span>
+                        </div>
+                    }
+                    alt={finalTitle}
+                    className="lesson-image"
+                    iconClassName="lesson-image-placeholder"
+                    imageKey={finalLessonId}
+                />
                 {finalIsCompleted && (
                     <div className="lesson-completed-badge">
                         <FaCheckCircle />

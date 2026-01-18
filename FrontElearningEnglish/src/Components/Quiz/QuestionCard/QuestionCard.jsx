@@ -91,7 +91,7 @@ export default function QuestionCard({ question, answer, onChange, questionNumbe
     return (
         <Card className="question-card">
             <Card.Body>
-                <Row className="question-header align-items-center">
+                <Row className="question-header d-flex justify-content-between align-items-center flex-wrap">
                     <Col xs="auto" className="question-number">
                         Câu {questionNumber}/{totalQuestions}
                     </Col>
@@ -103,19 +103,34 @@ export default function QuestionCard({ question, answer, onChange, questionNumbe
                 </Row>
                 
                 {/* Display Group Information if available */}
-                {groupInfo && (groupInfo.groupName || groupInfo.groupImgUrl || groupInfo.groupVideoUrl) && (
-                    <div className="question-group-info mb-3">
-                        {groupInfo.groupName && (
-                            <div className="group-name mb-2">
-                                <strong>{groupInfo.groupName}</strong>
+                {groupInfo && (groupInfo.groupName || groupInfo.groupTitle || groupInfo.groupDescription || groupInfo.groupImgUrl || groupInfo.groupVideoUrl) && (
+                    <div className="question-group-info mb-4 p-3 bg-light rounded border">
+                        {(groupInfo.groupTitle || groupInfo.groupName) && (
+                            <div className="group-title mb-2">
+                                <h5 className="mb-1 fw-bold text-primary">
+                                    {groupInfo.groupTitle || groupInfo.groupName}
+                                </h5>
+                                {groupInfo.groupName && groupInfo.groupTitle && groupInfo.groupName !== groupInfo.groupTitle && (
+                                    <small className="text-muted">{groupInfo.groupName}</small>
+                                )}
+                            </div>
+                        )}
+                        {groupInfo.groupDescription && (
+                            <div className="group-description mb-2">
+                                <p className="text-muted mb-0">{groupInfo.groupDescription}</p>
+                            </div>
+                        )}
+                        {groupInfo.groupSumScore && (
+                            <div className="group-score mb-2">
+                                <Badge bg="info">Tổng điểm nhóm: {groupInfo.groupSumScore} điểm</Badge>
                             </div>
                         )}
                         {groupInfo.groupImgUrl && (
                             <div className="group-media mb-2">
                                 <img 
                                     src={groupInfo.groupImgUrl} 
-                                    alt="Group context" 
-                                    className="media-element group-img" 
+                                    alt={groupInfo.groupTitle || groupInfo.groupName || "Group context"} 
+                                    className="img-fluid rounded shadow-sm" 
                                     style={{ maxWidth: '100%', height: 'auto' }}
                                 />
                             </div>
@@ -125,8 +140,8 @@ export default function QuestionCard({ question, answer, onChange, questionNumbe
                                 <video 
                                     src={groupInfo.groupVideoUrl} 
                                     controls 
-                                    className="media-element group-video"
-                                    style={{ maxWidth: '100%', height: 'auto' }}
+                                    className="w-100 rounded shadow-sm"
+                                    style={{ maxHeight: '400px' }}
                                 />
                             </div>
                         )}

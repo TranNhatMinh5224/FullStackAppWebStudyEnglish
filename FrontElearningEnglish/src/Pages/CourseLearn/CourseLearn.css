@@ -1,14 +1,14 @@
 .course-learn-container {
-    padding: 30px 250px;
-    padding-top: calc(70px + 50px);
+    padding: var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem)) clamp(10rem, 8rem + 10vw, 15.625rem);
+    padding-top: calc(70px + clamp(2rem, 1.5rem + 2.5vw, 3.125rem));
     background: var(--color-bg-secondary, #f6f8fb);
     min-height: calc(100vh - 70px);
 }
 
 .course-learn-breadcrumb {
-    margin-bottom: 20px;
-    margin-top: 70px;
-    font-size: 18px;
+    margin-bottom: var(--spacing-lg, clamp(1rem, 0.8rem + 1vw, 1.5rem));
+    margin-top: clamp(3.5rem, 3rem + 2.5vw, 4.375rem);
+    font-size: var(--font-size-lg, clamp(1.125rem, 1rem + 0.625vw, 1.25rem));
     color: var(--color-text-secondary, #6b7280);
 }
 
@@ -23,7 +23,7 @@
 }
 
 .course-learn-breadcrumb .breadcrumb-separator {
-    margin: 0 8px;
+    margin: 0 var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem));
     color: var(--color-text-tertiary, #9ca3af);
 }
 
@@ -32,54 +32,96 @@
     font-weight: 500;
 }
 
-@media (max-width: 1600px) {
-    .course-learn-container {
-        padding: 30px 220px;
-    }
-}
-
-@media (max-width: 1400px) {
-    .course-learn-container {
-        padding: 30px 180px;
-    }
-}
-
-@media (max-width: 1200px) {
-    .course-learn-container {
-        padding: 30px 150px;
-    }
-}
-
-@media (max-width: 992px) {
-    .course-learn-container {
-        padding: 30px 100px;
-    }
-}
-
 .loading-message,
 .error-message,
 .no-lessons-message {
     text-align: center;
-    padding: 40px 20px;
+    padding: var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem)) var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem));
     color: var(--color-text-secondary, #6b7280);
-    font-size: 16px;
+    font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
 }
 
+/* Bootstrap utilities: d-flex, flex-column, gap-* */
 .lessons-list {
-    margin-top: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    margin-top: var(--spacing-xl, clamp(1.5rem, 1.2rem + 1.5vw, 2rem));
 }
 
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+/* Large Desktop: 1600px and below */
+@media (max-width: 1600px) {
+    .course-learn-container {
+        padding-left: clamp(8rem, 6rem + 10vw, 13.75rem);
+        padding-right: clamp(8rem, 6rem + 10vw, 13.75rem);
+    }
+}
+
+/* Desktop: 1400px and below */
+@media (max-width: 1400px) {
+    .course-learn-container {
+        padding-left: clamp(6rem, 4.5rem + 7.5vw, 11.25rem);
+        padding-right: clamp(6rem, 4.5rem + 7.5vw, 11.25rem);
+    }
+}
+
+/* Desktop: 1200px and below */
+@media (max-width: 1200px) {
+    .course-learn-container {
+        padding-left: clamp(5rem, 3.75rem + 6.25vw, 9.375rem);
+        padding-right: clamp(5rem, 3.75rem + 6.25vw, 9.375rem);
+    }
+}
+
+/* Tablet: 992px and below */
+@media (max-width: 992px) {
+    .course-learn-container {
+        padding-left: var(--padding-container-xl, clamp(2rem, 1.5rem + 2.5vw, 4rem));
+        padding-right: var(--padding-container-xl, clamp(2rem, 1.5rem + 2.5vw, 4rem));
+    }
+}
+
+/* Tablet: 768px and below */
 @media (max-width: 768px) {
     .course-learn-container {
-        padding: 20px 30px;
-        padding-top: calc(70px + 20px);
+        padding: var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem)) var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem));
+        padding-top: calc(70px + var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem)));
     }
     
     .course-learn-breadcrumb {
-        margin-top: 20px;
+        margin-top: var(--spacing-lg, clamp(1rem, 0.8rem + 1vw, 1.5rem));
+        font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
+    }
+
+    .lessons-list {
+        gap: var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
+    }
+}
+
+/* Mobile: 576px and below */
+@media (max-width: 576px) {
+    .course-learn-container {
+        padding: var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem)) var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem));
+        padding-top: calc(70px + var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem)));
+    }
+    
+    .course-learn-breadcrumb {
+        margin-top: var(--spacing-md, clamp(0.75rem, 0.6rem + 0.75vw, 1rem));
+        font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
+        margin-bottom: var(--spacing-md, clamp(0.75rem, 0.6rem + 0.75vw, 1rem));
+    }
+
+    .loading-message,
+    .error-message,
+    .no-lessons-message {
+        padding: var(--spacing-xl, clamp(1.5rem, 1.2rem + 1.5vw, 2rem)) var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
+        font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
+    }
+
+    .lessons-list {
+        margin-top: var(--spacing-lg, clamp(1rem, 0.8rem + 1vw, 1.5rem));
+        gap: var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem));
     }
 }
 

@@ -36,10 +36,8 @@
   margin: 0 auto;
 }
 
+/* Bootstrap utilities: d-flex, justify-content-between, align-items-center */
 .student-management-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 24px;
   padding: 0 4px;
 }
@@ -51,9 +49,8 @@
   margin: 0;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center */
 .add-student-btn {
-  display: flex;
-  align-items: center;
   gap: 8px;
   padding: 10px 20px;
   background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
@@ -74,8 +71,8 @@
   font-size: 14px;
 }
 
+/* Bootstrap utilities: d-flex */
 .search-bar {
-  display: flex;
   gap: 12px;
   margin-bottom: 24px;
   padding: 0 4px;
@@ -111,19 +108,16 @@
   background-color: #6fd5e0;
 }
 
+/* Bootstrap Row/Col được sử dụng trong JSX - responsive tự động */
 .students-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
   margin-bottom: 24px;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center */
 .student-card {
   background: white;
   border-radius: 12px;
   padding: 20px;
-  display: flex;
-  align-items: center;
   gap: 16px;
   cursor: pointer;
   transition: all 0.2s;
@@ -137,6 +131,7 @@
   border-color: #41d6e3;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center, justify-content-center */
 .student-avatar {
   width: 60px;
   height: 60px;
@@ -144,9 +139,6 @@
   overflow: hidden;
   flex-shrink: 0;
   background-color: #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .student-avatar img {
@@ -155,12 +147,10 @@
   object-fit: cover;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center, justify-content-center */
 .avatar-placeholder {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: #999;
   font-size: 24px;
 }
@@ -218,10 +208,8 @@
   color: #d32f2f;
 }
 
+/* Bootstrap utilities: d-flex, flex-column, align-items-center */
 .pagination-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   gap: 16px;
   margin-top: 32px;
 }
@@ -231,24 +219,10 @@
   color: #666;
 }
 
+/* Bootstrap responsive tự xử lý - chỉ thêm styling */
 @media (max-width: 768px) {
-  .student-management-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
   .add-student-btn {
     width: 100%;
-    justify-content: center;
-  }
-
-  .search-bar {
-    flex-direction: column;
-  }
-
-  .students-list {
-    grid-template-columns: 1fr;
   }
 }
 

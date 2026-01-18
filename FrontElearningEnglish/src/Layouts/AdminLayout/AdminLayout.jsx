@@ -14,7 +14,8 @@ import {
   MdLogout,
   MdSearch,
   MdInventory,
-  MdAdminPanelSettings
+  MdAdminPanelSettings,
+  MdImage
 } from "react-icons/md";
 import { useAuth } from "../../Context/AuthContext";
 
@@ -121,6 +122,14 @@ export default function AdminLayout() {
             onClick={(e) => handleNavClick(e, "/admin/admin-management", ["SuperAdmin"], "Admin Management")}
           >
             <MdAdminPanelSettings /> Admin Management
+          </NavLink>
+
+          <NavLink 
+            to={ROUTE_PATHS.ADMIN.ASSET_MANAGEMENT} 
+            className={({ isActive }) => isActive ? "menu-item active" : "menu-item"}
+            onClick={(e) => handleNavClick(e, ROUTE_PATHS.ADMIN.ASSET_MANAGEMENT, ["SuperAdmin", "ContentAdmin"], "Quản lý Assets")}
+          >
+            <MdImage /> Asset Management
           </NavLink>
 
           <NavLink 

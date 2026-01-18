@@ -3,7 +3,6 @@ import { ROUTE_PATHS } from "./Paths";
 
 // Import pages
 import Loading from "../Pages/Loading/Loading";
-import Welcome from "../Pages/Welcome/Welcome";
 import Login from "../Pages/Login/Login";
 import Register from "../Pages/Register/Register";
 import Home from "../Pages/Home/Home";
@@ -22,6 +21,7 @@ import PaymentHistory from "../Pages/PaymentHistory/PaymentHistory";
 import VocabularyReview from "../Pages/VocabularyReview/VocabularyReview";
 import FlashCardReviewSession from "../Pages/FlashCardReviewSession/FlashCardReviewSession";
 import VocabularyNotebook from "../Pages/VocabularyNotebook/VocabularyNotebook";
+import SearchResults from "../Pages/SearchResults/SearchResults";
 import GoogleCallback from "../Pages/AuthCallback/GoogleCallback";
 import FacebookCallback from "../Pages/AuthCallback/FacebookCallback";
 import CourseDetail from "../Pages/CourseDetail/CourseDetail";
@@ -63,6 +63,7 @@ import AdminQuestionManagement from "../Pages/Admin/AdminQuestionManagement/Admi
 import AdminSubmissionManagement from "../Pages/Admin/AdminSubmissionManagement/AdminSubmissionManagement";
 import PackageManagement from "../Pages/Admin/PackageManagement/PackageManagement";
 import AdminManagement from "../Pages/Admin/AdminManagement/AdminManagement";
+import AssetManagement from "../Pages/Admin/AssetManagement/AssetManagement";
 
 /**
  * Application Routes
@@ -73,7 +74,6 @@ export default function AppRoutes() {
     <Routes>
       {/* Public routes */}
       <Route path={ROUTE_PATHS.ROOT} element={<Loading />} />
-      <Route path={ROUTE_PATHS.WELCOME} element={<Welcome />} />
       <Route path={ROUTE_PATHS.LOGIN} element={<Login />} />
       <Route path={ROUTE_PATHS.REGISTER} element={<Register />} />
       <Route path={ROUTE_PATHS.OTP} element={<OTP />} />
@@ -98,6 +98,7 @@ export default function AppRoutes() {
       <Route path={ROUTE_PATHS.VOCABULARY_REVIEW} element={<VocabularyReview />} />
       <Route path="/vocabulary-review/session" element={<FlashCardReviewSession />} />
       <Route path={ROUTE_PATHS.VOCABULARY_NOTEBOOK} element={<VocabularyNotebook />} />
+      <Route path={ROUTE_PATHS.SEARCH} element={<SearchResults />} />
 
       {/* Course routes - specific routes first */}
       <Route path="/course/:courseId/lesson/:lessonId/module/:moduleId/lecture/:lectureId" element={<LectureDetail />} />
@@ -147,6 +148,7 @@ export default function AppRoutes() {
         <Route path="users" element={<AdminUserList />} />
         <Route path="packages" element={<PackageManagement />} />
         <Route path="admin-management" element={<AdminManagement />} />
+        <Route path="asset-management" element={<AssetManagement />} />
         <Route path="finance" element={<AdminDashboard />} />
         <Route path="submission-management" element={<AdminSubmissionManagement />} />
       </Route>

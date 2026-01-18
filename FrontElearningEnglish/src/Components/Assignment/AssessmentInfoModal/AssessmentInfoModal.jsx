@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Button } from "react-bootstrap";
+import { Modal, Button, Row, Col, Card } from "react-bootstrap";
 import { FaQuestionCircle, FaEdit, FaClock, FaCheckCircle, FaTimesCircle, FaList, FaRedo, FaRandom } from "react-icons/fa";
 import { useSubmissionStatus } from "../../../hooks/useSubmissionStatus";
 import { quizAttemptService } from "../../../Services/quizAttemptService";
 import { essayService } from "../../../Services/essayService";
 import { essaySubmissionService } from "../../../Services/essaySubmissionService";
 import { quizService } from "../../../Services/quizService";
+import ConfirmModal from "../../Common/ConfirmModal/ConfirmModal";
 import "./AssessmentInfoModal.css";
 
 export default function AssessmentInfoModal({ 
@@ -36,178 +37,96 @@ export default function AssessmentInfoModal({
             console.log("📥 [AssessmentInfoModal] CheckActive API Response:", response.data);
 
             // Only treat as in-progress when backend explicitly reports hasActiveAttempt === true
-            if (response.data?.success && response.data?.data && response.data.data.hasActiveAttempt) {
-                const activeAttempt = response.data.data;
-                const status = activeAttempt.Status !== undefined ? activeAttempt.Status : activeAttempt.status;
-
-                console.log("✅ [AssessmentInfoModal] Active attempt found in DB:", activeAttempt);
-
+            if (response.data?.success && response.data?.data?.hasActiveAttempt) {
+                const attemptData = response.data.data;
+                console.log("✅ [AssessmentInfoModal] Found active attempt:", attemptData);
                 setInProgressAttempt({
-                    attemptId: activeAttempt.attemptId || activeAttempt.AttemptId,
-                    quizId: activeAttempt.quizId || activeAttempt.QuizId || quizId,
-                    status: status,
-                    startedAt: activeAttempt.startedAt || activeAttempt.StartedAt || null,
-                    endTime: activeAttempt.endTime || activeAttempt.EndTime || null,
-                    timeRemainingSeconds: activeAttempt.timeRemainingSeconds ?? activeAttempt.TimeRemainingSeconds ?? null
+                    attemptId: attemptData.attemptId || attemptData.AttemptId,
+                    quizId: quizId,
+                    startedAt: attemptData.startedAt || attemptData.StartedAt,
+                    timeSpentSeconds: attemptData.timeSpentSeconds || attemptData.TimeSpentSeconds || 0
                 });
             } else {
-                console.log("ℹ️ [AssessmentInfoModal] No active attempt found for this user/quiz.");
+                console.log("ℹ️ [AssessmentInfoModal] No active attempt found");
                 setInProgressAttempt(null);
             }
         } catch (err) {
-            console.error("❌ [AssessmentInfoModal] Error calling checkActiveAttempt API:", err);
+            console.error("❌ [AssessmentInfoModal] Error checking quiz progress:", err);
             setInProgressAttempt(null);
         } finally {
             setCheckingProgress(false);
         }
     }, []);
 
-    const fetchBoth = useCallback(async (assessmentId) => {
-        // ... (Original logic for checking both)
-        // Check quiz
+    const checkEssaySubmission = useCallback(async (essayId) => {
         try {
-            const quizResponse = await quizService.getByAssessment(assessmentId);
-            if (quizResponse.data?.success && quizResponse.data?.data) {
-                const quizData = Array.isArray(quizResponse.data.data) ? quizResponse.data.data : [quizResponse.data.data];
-                if (quizData.length > 0) {
-                    setQuiz(quizData[0]);
-                    checkQuizProgress(quizData[0].quizId || quizData[0].QuizId);
-                    return; // Prioritize Quiz if found
-                }
-            }
-        } catch (e) {}
-
-        // Check essay
-        try {
-            const essayResponse = await essayService.getByAssessment(assessmentId);
-            if (essayResponse.data?.success && essayResponse.data?.data) {
-                const essayData = Array.isArray(essayResponse.data.data) ? essayResponse.data.data : [essayResponse.data.data];
-                if (essayData.length > 0) {
-                    setEssay(essayData[0]);
-                }
-            }
-        } catch (e) {}
-    }, [checkQuizProgress]);
-
-    const fetchAssessmentDetails = useCallback(async () => {
-        if (!assessment) return;
-
-        setLoading(true);
-        setError("");
-
-        try {
-            const assessmentId = assessment.assessmentId || assessment.AssessmentId;
-            const type = assessment.type; // 'quiz' or 'essay' passed from parent
-
-            // Check based on Type if available
-            if (type === 'quiz') {
-                try {
-                    // Fetch Quiz Info specifically
-                    // We already have the quiz object passed in 'assessment' prop (merged in parent)
-                    // But to be safe and get full details (like questions count, time limit from DB), we fetch by ID if possible
-                    // Or fetch by Assessment if we only have assessmentId
-                    
-                    const quizResponse = await quizService.getByAssessment(assessmentId);
-                    if (quizResponse.data?.success && quizResponse.data?.data) {
-                        const quizData = Array.isArray(quizResponse.data.data) ? quizResponse.data.data : [quizResponse.data.data];
-                        // Filter specific quiz if quizId is passed, otherwise take first
-                        const targetQuiz = assessment.quizId 
-                            ? quizData.find(q => (q.quizId || q.QuizId) === assessment.quizId) 
-                            : quizData[0];
-
-                        if (targetQuiz) {
-                            setQuiz(targetQuiz);
-                            // Check progress for this specific quiz
-                            checkQuizProgress(targetQuiz.quizId || targetQuiz.QuizId);
-                        } else {
-                            setError("Không tìm thấy thông tin quiz");
-                        }
-                    }
-                } catch (err) {
-                    console.error("Error fetching quiz:", err);
-                    setError("Lỗi tải thông tin quiz");
-                }
-            } else if (type === 'essay') {
-                try {
-                    const essayResponse = await essayService.getByAssessment(assessmentId);
-                    if (essayResponse.data?.success && essayResponse.data?.data) {
-                        const essayData = Array.isArray(essayResponse.data.data) ? essayResponse.data.data : [essayResponse.data.data];
-                        const targetEssay = assessment.essayId 
-                            ? essayData.find(e => (e.essayId || e.EssayId) === assessment.essayId)
-                            : essayData[0];
-
-                        if (targetEssay) {
-                            setEssay(targetEssay);
-                            // Check if user already submitted this essay
-                            try {
-                                const statusResp = await essaySubmissionService.getSubmissionStatus(targetEssay.essayId || targetEssay.EssayId);
-                                if (statusResp?.data?.success && statusResp.data?.data) {
-                                    setEssayHasSubmission(true);
-                                } else {
-                                    setEssayHasSubmission(false);
-                                }
-                            } catch (e) {
-                                setEssayHasSubmission(false);
-                            }
-                        } else {
-                            setError("Không tìm thấy thông tin essay");
-                        }
-                    }
-                } catch (err) {
-                    console.error("Error fetching essay:", err);
-                    setError("Lỗi tải thông tin essay");
+            const statusResponse = await essaySubmissionService.getSubmissionStatus(essayId);
+            if (statusResponse?.data?.success && statusResponse?.data?.data) {
+                const submission = statusResponse.data.data;
+                if (submission && (submission.submissionId || submission.SubmissionId)) {
+                    setEssayHasSubmission(true);
+                } else {
+                    setEssayHasSubmission(false);
                 }
             } else {
-                // Fallback: Check both (Legacy logic)
-                await fetchBoth(assessmentId);
+                setEssayHasSubmission(false);
             }
-
         } catch (err) {
-            console.error("Error fetching assessment details:", err);
-            setError("Không thể tải thông tin chi tiết");
-        } finally {
-            setLoading(false);
+            console.log("ℹ️ [AssessmentInfoModal] No essay submission found:", err);
+            setEssayHasSubmission(false);
         }
-    }, [assessment, checkQuizProgress, fetchBoth]);
+    }, []);
 
     useEffect(() => {
-        if (isOpen && assessment) {
-            fetchAssessmentDetails();
-        } else {
-            // Reset state when modal closes
+        if (!isOpen || !assessment) return;
+
+        const loadData = async () => {
+            setLoading(true);
+            setError("");
             setQuiz(null);
             setEssay(null);
             setInProgressAttempt(null);
-            setError("");
-            setCheckingProgress(false);
-        }
-    }, [isOpen, assessment, fetchAssessmentDetails]);
+            setEssayHasSubmission(false);
 
-    const formatTimeLimit = (timeLimit) => {
-        if (!timeLimit) return "Không giới hạn";
-        
-        // Nếu là số (duration từ quiz API - tính bằng phút)
-        if (typeof timeLimit === 'number') {
-            const hours = Math.floor(timeLimit / 60);
-            const minutes = timeLimit % 60;
-            if (hours > 0) {
-                return `${hours} giờ ${minutes} phút`;
+            try {
+                // Determine if this is a quiz or essay based on assessment data
+                // Check if assessment has quizId or essayId
+                const quizId = assessment.quizId || assessment.QuizId;
+                const essayId = assessment.essayId || assessment.EssayId;
+
+                if (quizId) {
+                    // Load quiz data
+                    const quizResponse = await quizService.getById(quizId);
+                    if (quizResponse.data?.success && quizResponse.data?.data) {
+                        setQuiz(quizResponse.data.data);
+                        // Check for in-progress attempt
+                        await checkQuizProgress(quizId);
+                    } else {
+                        setError("Không thể tải thông tin quiz");
+                    }
+                } else if (essayId) {
+                    // Load essay data
+                    const essayResponse = await essayService.getById(essayId);
+                    if (essayResponse.data?.success && essayResponse.data?.data) {
+                        setEssay(essayResponse.data.data);
+                        // Check for existing submission
+                        await checkEssaySubmission(essayId);
+                    } else {
+                        setError("Không thể tải thông tin essay");
+                    }
+                } else {
+                    setError("Không tìm thấy thông tin quiz hoặc essay");
+                }
+            } catch (err) {
+                console.error("Error loading assessment data:", err);
+                setError("Không thể tải dữ liệu");
+            } finally {
+                setLoading(false);
             }
-            return `${minutes} phút`;
-        }
-        
-        // Nếu là string (timeLimit từ assessment - format HH:mm:ss)
-        const parts = timeLimit.split(":");
-        if (parts.length === 3) {
-            const hours = parseInt(parts[0]);
-            const minutes = parseInt(parts[1]);
-            if (hours > 0) {
-                return `${hours} giờ ${minutes} phút`;
-            }
-            return `${minutes} phút`;
-        }
-        return timeLimit;
-    };
+        };
+
+        loadData();
+    }, [isOpen, assessment, checkQuizProgress, checkEssaySubmission]);
 
     const formatDate = (dateString) => {
         if (!dateString) return "Không có";
@@ -219,6 +138,30 @@ export default function AssessmentInfoModal({
             hour: "2-digit",
             minute: "2-digit"
         });
+    };
+
+    const formatTimeLimit = (timeLimit) => {
+        if (!timeLimit) return "Không giới hạn";
+        if (typeof timeLimit === 'string') {
+            // Parse TimeSpan string (e.g., "01:00:00" or "00:15:00")
+            const parts = timeLimit.split(':');
+            const hours = parseInt(parts[0]) || 0;
+            const minutes = parseInt(parts[1]) || 0;
+            if (hours > 0) {
+                return `${hours} giờ ${minutes} phút`;
+            }
+            return `${minutes} phút`;
+        }
+        // If it's a number (minutes)
+        if (typeof timeLimit === 'number') {
+            if (timeLimit >= 60) {
+                const hours = Math.floor(timeLimit / 60);
+                const mins = timeLimit % 60;
+                return mins > 0 ? `${hours} giờ ${mins} phút` : `${hours} giờ`;
+            }
+            return `${timeLimit} phút`;
+        }
+        return "Không giới hạn";
     };
 
     const handleStart = async (isNewAttempt = true) => {
@@ -298,223 +241,266 @@ export default function AssessmentInfoModal({
     const isQuiz = !!quiz;
 
     return (
-        <div className="modal-overlay assessment-info-modal-overlay" onClick={onClose}>
-            <div className="modal-content assessment-info-modal-content" onClick={(e) => e.stopPropagation()}>
-                <div className="assessment-info-header">
-                    <div className="assessment-info-icon">
-                        {isQuiz ? (
-                            <FaQuestionCircle className="icon-quiz" />
-                        ) : (
-                            <FaEdit className="icon-essay" />
-                        )}
-                    </div>
-                    <h2 className="assessment-info-title">{assessment.title}</h2>
-                </div>
-
-                {loading ? (
-                    <div className="assessment-info-loading">
-                        <p>Đang tải thông tin...</p>
-                    </div>
-                ) : (
-                    <>
-                        <div className="assessment-info-body">
-                            {/* Hiển thị title từ quiz nếu có, nếu không thì từ assessment */}
-                            {(quiz?.title || assessment.title) && (
-                                <div className="info-section">
-                                    <h3 className="info-section-title">Tiêu đề</h3>
-                                    <p className="info-section-content">{quiz?.title || assessment.title}</p>
-                                </div>
-                            )}
-
-                            {/* Hiển thị description từ quiz nếu có, nếu không thì từ assessment */}
-                            {(quiz?.description || assessment.description) && (
-                                <div className="info-section">
-                                    <h3 className="info-section-title">Mô tả</h3>
-                                    <p className="info-section-content">{quiz?.description || assessment.description}</p>
-                                </div>
-                            )}
-
-                            {/* Hiển thị instructions từ quiz */}
-                            {quiz?.instructions && (
-                                <div className="info-section">
-                                    <h3 className="info-section-title">Hướng dẫn</h3>
-                                    <p className="info-section-content">{quiz.instructions}</p>
-                                </div>
-                            )}
-
-                            <div className="info-grid">
-                                {/* Thời gian làm bài - ưu tiên từ quiz.duration, nếu không thì từ assessment.timeLimit */}
-                                {(quiz?.duration || assessment.timeLimit) && (
-                                    <div className="info-item">
-                                        <FaClock className="info-icon" />
-                                        <div className="info-item-content">
-                                            <span className="info-label">Thời gian làm bài</span>
-                                            <span className="info-value">
-                                                {formatTimeLimit(quiz?.duration || assessment.timeLimit)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Tổng số câu hỏi - từ quiz */}
-                                {quiz?.totalQuestions && (
-                                    <div className="info-item">
-                                        <FaList className="info-icon" />
-                                        <div className="info-item-content">
-                                            <span className="info-label">Tổng số câu hỏi</span>
-                                            <span className="info-value">{quiz.totalQuestions} câu</span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Điểm đạt - ưu tiên từ quiz.passingScore, nếu không thì từ assessment.passingScore */}
-                                {(quiz?.passingScore !== undefined || assessment.passingScore) && (
-                                    <div className="info-item">
-                                        <FaCheckCircle className="info-icon" />
-                                        <div className="info-item-content">
-                                            <span className="info-label">Điểm đạt</span>
-                                            <span className="info-value">
-                                                {quiz?.passingScore !== undefined ? quiz.passingScore : assessment.passingScore} điểm
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Tổng điểm - từ assessment */}
-                                {assessment.totalPoints && (
-                                    <div className="info-item">
-                                        <FaCheckCircle className="info-icon" />
-                                        <div className="info-item-content">
-                                            <span className="info-label">Tổng điểm</span>
-                                            <span className="info-value">{assessment.totalPoints} điểm</span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Số lần làm tối đa - từ quiz */}
-                                {quiz?.maxAttempts !== undefined && (
-                                    <div className="info-item">
-                                        <FaRedo className="info-icon" />
-                                        <div className="info-item-content">
-                                            <span className="info-label">Số lần làm tối đa</span>
-                                            <span className="info-value">
-                                                {quiz.allowUnlimitedAttempts ? "Không giới hạn" : `${quiz.maxAttempts} lần`}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Mở từ - ưu tiên từ quiz.availableFrom, nếu không thì từ assessment.openAt */}
-                                {(quiz?.availableFrom || assessment.openAt) && (
-                                    <div className="info-item">
-                                        <FaClock className="info-icon" />
-                                        <div className="info-item-content">
-                                            <span className="info-label">Mở từ</span>
-                                            <span className="info-value">
-                                                {formatDate(quiz?.availableFrom || assessment.openAt)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Hạn nộp - từ assessment */}
-                                {assessment.dueAt && (
-                                    <div className="info-item">
-                                        <FaTimesCircle className="info-icon" />
-                                        <div className="info-item-content">
-                                            <span className="info-label">Hạn nộp</span>
-                                            <span className="info-value">{formatDate(assessment.dueAt)}</span>
-                                        </div>
-                                    </div>
+        <>
+            <Modal
+                show={isOpen}
+                onHide={onClose}
+                centered
+                className="modal-modern assessment-info-modal"
+                dialogClassName="modal-lg-custom"
+                backdrop={loading || checkingProgress ? 'static' : true}
+                keyboard={!(loading || checkingProgress)}
+            >
+                <Modal.Header>
+                    <Modal.Title className="text-center w-100">
+                        <div className="d-flex flex-column align-items-center">
+                            <div className="mb-3">
+                                {isQuiz ? (
+                                    <FaQuestionCircle className="text-white" size={48} />
+                                ) : (
+                                    <FaEdit className="text-white" size={48} />
                                 )}
                             </div>
+                            <div>{assessment.title}</div>
+                        </div>
+                    </Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    {loading || checkingProgress ? (
+                        <div className="text-center py-5">
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Đang tải...</span>
+                            </div>
+                            <p className="mt-3 text-muted">Đang tải thông tin...</p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Tiêu đề */}
+                            {(quiz?.title || assessment.title) && (
+                                <div className="form-section-card mb-3">
+                                    <div className="form-section-title">
+                                        <FaEdit className="me-2" />
+                                        Tiêu đề
+                                    </div>
+                                    <div className="mt-2">
+                                        <p className="mb-0">{quiz?.title || assessment.title}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Mô tả */}
+                            {(quiz?.description || assessment.description) && (
+                                <div className="form-section-card mb-3">
+                                    <div className="form-section-title">
+                                        <FaEdit className="me-2" />
+                                        Mô tả
+                                    </div>
+                                    <div className="mt-2">
+                                        <p className="mb-0">{quiz?.description || assessment.description}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Hướng dẫn */}
+                            {quiz?.instructions && (
+                                <div className="form-section-card mb-3">
+                                    <div className="form-section-title">
+                                        <FaEdit className="me-2" />
+                                        Hướng dẫn
+                                    </div>
+                                    <div className="mt-2">
+                                        <p className="mb-0">{quiz.instructions}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Info Cards Grid */}
+                            <Row className="g-3 mb-3">
+                                {/* Thời gian làm bài */}
+                                {(quiz?.duration || assessment.timeLimit) && (
+                                    <Col md={6}>
+                                        <Card className="h-100 border-0 shadow-sm">
+                                            <Card.Body>
+                                                <div className="text-muted small mb-1">Thời gian làm bài</div>
+                                                <div className="fw-bold">
+                                                    {formatTimeLimit(quiz?.duration || assessment.timeLimit)}
+                                                </div>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                )}
+
+                                {/* Tổng số câu hỏi */}
+                                {quiz?.totalQuestions && (
+                                    <Col md={6}>
+                                        <Card className="h-100 border-0 shadow-sm">
+                                            <Card.Body>
+                                                <div className="text-muted small mb-1">Tổng số câu hỏi</div>
+                                                <div className="fw-bold">{quiz.totalQuestions} câu</div>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                )}
+
+                                {/* Điểm đạt */}
+                                {(quiz?.passingScore !== undefined || assessment.passingScore) && (
+                                    <Col md={6}>
+                                        <Card className="h-100 border-0 shadow-sm">
+                                            <Card.Body>
+                                                <div className="text-muted small mb-1">Điểm đạt</div>
+                                                <div className="fw-bold">
+                                                    {quiz?.passingScore !== undefined ? quiz.passingScore : assessment.passingScore} điểm
+                                                </div>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                )}
+
+                                {/* Tổng điểm */}
+                                {assessment.totalPoints && (
+                                    <Col md={6}>
+                                        <Card className="h-100 border-0 shadow-sm">
+                                            <Card.Body>
+                                                <div className="text-muted small mb-1">Tổng điểm</div>
+                                                <div className="fw-bold">{assessment.totalPoints} điểm</div>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                )}
+
+                                {/* Số lần làm tối đa */}
+                                {quiz?.maxAttempts !== undefined && (
+                                    <Col md={6}>
+                                        <Card className="h-100 border-0 shadow-sm">
+                                            <Card.Body>
+                                                <div className="text-muted small mb-1">Số lần làm tối đa</div>
+                                                <div className="fw-bold">
+                                                    {quiz.allowUnlimitedAttempts ? "Không giới hạn" : `${quiz.maxAttempts} lần`}
+                                                </div>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                )}
+
+                                {/* Mở từ */}
+                                {(quiz?.availableFrom || assessment.openAt) && (
+                                    <Col md={6}>
+                                        <Card className="h-100 border-0 shadow-sm">
+                                            <Card.Body>
+                                                <div className="text-muted small mb-1">Mở từ</div>
+                                                <div className="fw-bold">
+                                                    {formatDate(quiz?.availableFrom || assessment.openAt)}
+                                                </div>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                )}
+
+                                {/* Hạn nộp */}
+                                {assessment.dueAt && (
+                                    <Col md={6}>
+                                        <Card className="h-100 border-0 shadow-sm">
+                                            <Card.Body>
+                                                <div className="text-muted small mb-1">Hạn nộp</div>
+                                                <div className="fw-bold">{formatDate(assessment.dueAt)}</div>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                )}
+                            </Row>
 
                             {/* Thông tin bổ sung từ quiz */}
-                            {quiz && (
-                                <div className="quiz-additional-info">
-                                    <h4 className="additional-info-title">Thông tin bổ sung</h4>
-                                    <div className="additional-info-grid">
-                                        {quiz.shuffleQuestions && (
-                                            <div className="additional-info-item">
-                                                <FaRandom className="additional-info-icon" />
-                                                <span>Câu hỏi được xáo trộn</span>
-                                            </div>
-                                        )}
-                                        {quiz.shuffleAnswers && (
-                                            <div className="additional-info-item">
-                                                <FaRandom className="additional-info-icon" />
-                                                <span>Đáp án được xáo trộn</span>
-                                            </div>
-                                        )}
-                                        {quiz.showAnswersAfterSubmit && (
-                                            <div className="additional-info-item">
-                                                <FaCheckCircle className="additional-info-icon" />
-                                                <span>Hiển thị đáp án sau khi nộp</span>
-                                            </div>
-                                        )}
-                                        {quiz.showScoreImmediately && (
-                                            <div className="additional-info-item">
-                                                <FaCheckCircle className="additional-info-icon" />
-                                                <span>Hiển thị điểm ngay lập tức</span>
-                                            </div>
-                                        )}
+                            {quiz && (quiz.shuffleQuestions || quiz.shuffleAnswers || quiz.showAnswersAfterSubmit || quiz.showScoreImmediately) && (
+                                <div className="form-section-card mb-3">
+                                    <div className="form-section-title">
+                                        <FaCheckCircle className="me-2" />
+                                        Thông tin bổ sung
+                                    </div>
+                                    <div className="mt-2">
+                                        <div className="d-flex flex-wrap gap-2">
+                                            {quiz.shuffleQuestions && (
+                                                <span className="badge bg-primary">
+                                                    <FaRandom className="me-1" />
+                                                    Câu hỏi được xáo trộn
+                                                </span>
+                                            )}
+                                            {quiz.shuffleAnswers && (
+                                                <span className="badge bg-primary">
+                                                    <FaRandom className="me-1" />
+                                                    Đáp án được xáo trộn
+                                                </span>
+                                            )}
+                                            {quiz.showAnswersAfterSubmit && (
+                                                <span className="badge bg-success">
+                                                    <FaCheckCircle className="me-1" />
+                                                    Hiển thị đáp án sau khi nộp
+                                                </span>
+                                            )}
+                                            {quiz.showScoreImmediately && (
+                                                <span className="badge bg-success">
+                                                    <FaCheckCircle className="me-1" />
+                                                    Hiển thị điểm ngay lập tức
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             )}
 
                             {error && (
-                                <div className="assessment-info-error">
+                                <div className="alert alert-danger" role="alert">
                                     {error}
                                 </div>
                             )}
-                        </div>
+                        </>
+                    )}
+                </Modal.Body>
 
-                        <div className="assessment-info-footer">
-                            <div className="footer-buttons-vertical">
-                                {isQuiz && inProgressAttempt && (
-                                        <Button
-                                            variant="outline-primary"
-                                            className="assessment-continue-btn w-100 mb-2"
-                                            onClick={() => handleStart(false)}
-                                            disabled={loading || checkingProgress}
-                                        >
-                                            {loading || checkingProgress ? "Đang tải..." : "Tiếp tục bài đang làm"}
-                                        </Button>
-                                    )}
-                                <Button
-                                    variant="primary"
-                                    className={`assessment-start-btn ${isQuiz ? "btn-quiz" : "btn-essay"} w-100`}
-                                    onClick={() => handleStart(true)}
-                                    disabled={loading || checkingProgress || (!quiz && !essay)}
-                                >
-                                    {loading || checkingProgress ? "Đang tải..." : (isQuiz ? "Bắt đầu làm bài mới" : (essayHasSubmission ? "Cập nhật Essay" : "Bắt đầu viết Essay"))}
-                                </Button>
-                                <Button
-                                    variant="outline-secondary"
-                                    className="footer-cancel-btn w-100 mt-2"
-                                    onClick={onClose}
-                                >
-                                    Hủy
-                                </Button>
-                            </div>
-                        </div>
-                    </>
-                )}
-            </div>
-            {/* Centered modal shown when user tries to start a new quiz but has an active attempt */}
-            {showCannotStartModal && (
-                <div className="cannot-start-modal-overlay" onClick={() => setShowCannotStartModal(false)}>
-                    <div className="cannot-start-modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h4>Bạn không thể bắt đầu bài quiz mới</h4>
-                        <p className="text-muted">Bạn đang có một bài quiz chưa hoàn thành. Vui lòng tiếp tục bài đang làm hoặc nộp bài trước khi bắt đầu bài mới.</p>
-                        <div className="d-flex gap-2 mt-3 justify-content-end">
-                            <Button variant="outline-secondary" onClick={() => setShowCannotStartModal(false)}>Đóng</Button>
-                            <Button variant="primary" onClick={() => { setShowCannotStartModal(false); handleStart(false); }}>Tiếp tục bài đang làm</Button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+                <Modal.Footer className="d-flex flex-column gap-2">
+                    {isQuiz && inProgressAttempt && (
+                        <Button
+                            variant="outline-primary"
+                            className="w-100"
+                            onClick={() => handleStart(false)}
+                            disabled={loading || checkingProgress}
+                        >
+                            {loading || checkingProgress ? "Đang tải..." : "Tiếp tục bài đang làm"}
+                        </Button>
+                    )}
+                    <Button
+                        variant="primary"
+                        className={`w-100 ${isQuiz ? "btn-quiz" : "btn-essay"}`}
+                        onClick={() => handleStart(true)}
+                        disabled={loading || checkingProgress || (!quiz && !essay)}
+                    >
+                        {loading || checkingProgress ? "Đang tải..." : (isQuiz ? "Bắt đầu làm bài" : (essayHasSubmission ? "Cập nhật Essay" : "Bắt đầu viết Essay"))}
+                    </Button>
+                    <Button
+                        variant="outline-secondary"
+                        className="w-100"
+                        onClick={onClose}
+                        disabled={loading || checkingProgress}
+                    >
+                        Hủy
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Cannot Start Modal */}
+            <ConfirmModal
+                isOpen={showCannotStartModal}
+                onClose={() => setShowCannotStartModal(false)}
+                onConfirm={() => {
+                    setShowCannotStartModal(false);
+                    handleStart(false);
+                }}
+                title="Không thể bắt đầu bài quiz mới"
+                message="Bạn đang có một bài quiz chưa hoàn thành. Vui lòng tiếp tục bài đang làm hoặc nộp bài trước khi bắt đầu bài mới."
+                confirmText="Tiếp tục bài đang làm"
+                cancelText="Đóng"
+                type="warning"
+            />
+        </>
     );
 }
-

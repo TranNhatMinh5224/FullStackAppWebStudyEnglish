@@ -1,7 +1,5 @@
-/* Header */
+/* Bootstrap utilities: d-flex, align-items-center */
 .header {
-  display: flex;
-  align-items: center;
   gap: 12px;
 }
 
@@ -13,7 +11,37 @@
 }
 
 .header-title {
-  color: white;
+  color: var(--color-text-white, white);
   font-size: 20px;
   font-weight: 600;
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media (max-width: 768px) {
+  .header-logo {
+    width: 38px;
+    height: 38px;
+  }
+
+  .header-title {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 576px) {
+  .header {
+    gap: 10px;
+  }
+
+  .header-logo {
+    width: 36px;
+    height: 36px;
+  }
+
+  .header-title {
+    font-size: 16px;
+  }
 }

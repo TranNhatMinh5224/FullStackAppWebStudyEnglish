@@ -12,12 +12,15 @@ export default function ProgressBar({ completed, total, percentage }) {
 
     // Ưu tiên dùng percentage từ props, nếu không hợp lệ thì tính từ completed/total
     const finalPercentage = percentage > 0 ? safePercentage : calculatedPercentage;
+    
+    // Làm tròn đến 1 chữ số thập phân cho hiển thị
+    const displayPercentage = Number(finalPercentage.toFixed(1));
 
     return (
         <div className="course-progress-bar">
             <div className="progress-header">
                 <span className="progress-label">Tiến độ khóa học</span>
-                <span className="progress-percentage">{finalPercentage}%</span>
+                <span className="progress-percentage">{displayPercentage}%</span>
             </div>
             <div className="progress-track">
                 <div

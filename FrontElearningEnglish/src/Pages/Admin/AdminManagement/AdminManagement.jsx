@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Container, Button, Pagination, Badge } from "react-bootstrap";
-import { FaPlus, FaUser, FaEdit, FaTrash, FaKey, FaEnvelope } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash, FaKey, FaEnvelope } from "react-icons/fa";
 import { MdAdminPanelSettings } from "react-icons/md";
 import { useAuth } from "../../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -235,14 +235,17 @@ export default function AdminManagement() {
                         const phone = admin.phoneNumber || admin.PhoneNumber || "N/A";
                         const roles = admin.roles || admin.Roles || [];
                         const createdAt = admin.createdAt || admin.CreatedAt;
+                        const avatarUrl = admin.avatarUrl || admin.AvatarUrl;
 
                         return (
                           <tr key={userId}>
                             <td className="px-4 py-3">
                               <div className="d-flex align-items-center">
-                                <div className="avatar-circle me-3">
-                                  <FaUser size={16} />
-                                </div>
+                                {avatarUrl && avatarUrl.trim() && (
+                                  <div className="avatar-circle me-3">
+                                    <img src={avatarUrl} alt={fullName} />
+                                  </div>
+                                )}
                                 <span className="fw-medium">{fullName}</span>
                               </div>
                             </td>

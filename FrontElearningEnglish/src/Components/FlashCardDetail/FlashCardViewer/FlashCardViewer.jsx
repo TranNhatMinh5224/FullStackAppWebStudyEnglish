@@ -19,7 +19,7 @@ export default function FlashCardViewer({ flashcard, onPrevious, onNext, canGoPr
     }, [flashcard?.flashCardId]);
 
     if (!flashcard) {
-        return <div className="flashcard-viewer-empty">Không có flashcard</div>;
+        return <div className="flashcard-viewer-empty d-flex align-items-center justify-content-center">Không có flashcard</div>;
     }
 
     const audioUrl = flashcard.audioUrl || "";
@@ -99,10 +99,10 @@ export default function FlashCardViewer({ flashcard, onPrevious, onNext, canGoPr
 
     return (
         <>
-            <div className="flashcard-viewer-wrapper">
+            <div className="flashcard-viewer-wrapper d-flex align-items-center justify-content-center">
                 {!hideNavigation && (
                     <button
-                        className={`flashcard-nav-button prev-button ${!canGoPrevious ? "disabled" : ""}`}
+                        className={`flashcard-nav-button prev-button d-flex align-items-center justify-content-center ${!canGoPrevious ? "disabled" : ""}`}
                         onClick={(e) => handleNavClick(e, "prev")}
                         disabled={!canGoPrevious}
                     >
@@ -130,7 +130,7 @@ export default function FlashCardViewer({ flashcard, onPrevious, onNext, canGoPr
             </div>
             {isLastCard && (
                 <button
-                    className="flashcard-complete-button"
+                    className="flashcard-complete-button d-flex align-items-center justify-content-center"
                     onClick={(e) => {
                         e.stopPropagation();
                         if (onComplete) {

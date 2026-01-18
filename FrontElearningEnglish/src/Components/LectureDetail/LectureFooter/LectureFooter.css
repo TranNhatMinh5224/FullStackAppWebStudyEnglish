@@ -1,0 +1,88 @@
+/* ============================================
+   LECTURE FOOTER COMPONENT
+   ============================================ */
+
+.lecture-footer {
+    flex-shrink: 0;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background-color: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    z-index: 10;
+}
+
+[data-theme="dark"] .lecture-footer {
+    background-color: #2d2d2d;
+    border-top-color: #404040;
+}
+
+.nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .nav-btn {
+    background-color: #2d2d2d;
+    border-color: #404040;
+    color: #e5e7eb;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+}
+
+[data-theme="dark"] .nav-btn:hover:not(:disabled) {
+    background-color: #404040;
+    border-color: #525252;
+}
+
+.nav-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.nav-btn-prev {
+    margin-right: auto;
+}
+
+.nav-btn-next {
+    margin-left: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .lecture-footer {
+        padding: 0 16px;
+        height: 64px;
+    }
+
+    .nav-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-btn span {
+        display: none;
+    }
+}

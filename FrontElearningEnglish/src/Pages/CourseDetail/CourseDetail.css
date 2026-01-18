@@ -1,6 +1,6 @@
 .course-detail-container {
-    padding: 30px 0;
-    padding-top: calc(30px + 70px);
+    padding: var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem)) 0;
+    padding-top: calc(var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem)) + 70px);
     background: var(--color-bg-secondary, #f6f8fb);
     min-height: calc(100vh - 70px);
 }
@@ -8,13 +8,13 @@
 .course-detail-container .container-fluid {
     max-width: 1400px;
     margin: 0 auto;
-    padding-left: 80px;
-    padding-right: 80px;
+    padding-left: var(--padding-container-xl, clamp(2rem, 1.5rem + 2.5vw, 4rem));
+    padding-right: var(--padding-container-xl, clamp(2rem, 1.5rem + 2.5vw, 4rem));
 }
 
 .course-breadcrumb {
-    margin-bottom: 20px;
-    font-size: 18px;
+    margin-bottom: var(--spacing-lg, clamp(1rem, 0.8rem + 1vw, 1.5rem));
+    font-size: var(--font-size-lg, clamp(1.125rem, 1rem + 0.625vw, 1.25rem));
     color: var(--color-text-secondary, #6b7280);
 }
 
@@ -29,7 +29,7 @@
 }
 
 .breadcrumb-separator {
-    margin: 0 8px;
+    margin: 0 var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem));
     color: var(--color-text-tertiary, #9ca3af);
 }
 
@@ -41,38 +41,73 @@
 .loading-message,
 .error-message {
     text-align: center;
-    padding: 60px 20px;
+    padding: clamp(2.5rem, 2rem + 2.5vw, 3.75rem) var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem));
     color: var(--color-text-secondary, #6b7280);
-    font-size: 16px;
+    font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
 }
 
 .error-message {
     color: var(--color-status-error, #ef4444);
 }
 
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+/* Desktop: 1200px and below */
 @media (max-width: 1200px) {
     .course-detail-container .container-fluid {
-        padding-left: 60px;
-        padding-right: 60px;
+        padding-left: clamp(2.5rem, 2rem + 2.5vw, 3.75rem);
+        padding-right: clamp(2.5rem, 2rem + 2.5vw, 3.75rem);
     }
 }
 
+/* Tablet: 992px and below */
 @media (max-width: 992px) {
     .course-detail-container .container-fluid {
-        padding-left: 40px;
-        padding-right: 40px;
+        padding-left: var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem));
+        padding-right: var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem));
     }
 }
 
+/* Tablet: 768px and below */
 @media (max-width: 768px) {
     .course-detail-container {
-        padding: 20px 0;
-        padding-top: calc(20px + 70px);
+        padding: var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem)) 0;
+        padding-top: calc(var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem)) + 70px);
     }
 
     .course-detail-container .container-fluid {
-        padding-left: 20px;
-        padding-right: 20px;
+        padding-left: var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem));
+        padding-right: var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem));
+    }
+
+    .course-breadcrumb {
+        font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
+    }
+}
+
+/* Mobile: 576px and below */
+@media (max-width: 576px) {
+    .course-detail-container {
+        padding: var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem)) 0;
+        padding-top: calc(var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem)) + 70px);
+    }
+
+    .course-detail-container .container-fluid {
+        padding-left: var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
+        padding-right: var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
+    }
+
+    .course-breadcrumb {
+        font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
+        margin-bottom: var(--spacing-md, clamp(0.75rem, 0.6rem + 0.75vw, 1rem));
+    }
+
+    .loading-message,
+    .error-message {
+        padding: var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem)) var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
+        font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
     }
 }
 

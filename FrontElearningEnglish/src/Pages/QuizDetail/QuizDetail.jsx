@@ -32,6 +32,8 @@ export default function QuizDetail() {
     const [remainingTime, setRemainingTime] = useState(null); // State để update timer real-time
     const endTimeRef = useRef(null); // Lưu endTime được tính từ startedAt + Duration
     const autoSubmitCalledRef = useRef(false); // Để tránh gọi auto-submit nhiều lần
+    const saveAnswerTimeoutRef = useRef({}); // Debounce timers cho từng questionId
+    const savingAnswersRef = useRef(new Set()); // Track các answer đang được save
 
     // Flatten all questions from sections and groups
     const getAllQuestions = () => {
@@ -70,8 +72,11 @@ export default function QuizDetail() {
                             // Attach group info to each question in the group
                             const groupInfo = {
                                 groupName: item.Name || item.name,
+                                groupTitle: item.Title || item.title,
+                                groupDescription: item.Description || item.description,
                                 groupImgUrl: item.ImgUrl || item.imgUrl,
-                                groupVideoUrl: item.VideoUrl || item.videoUrl
+                                groupVideoUrl: item.VideoUrl || item.videoUrl,
+                                groupSumScore: item.SumScore || item.sumScore
                             };
                             
                             groupQuestions.forEach(q => {
@@ -101,8 +106,11 @@ export default function QuizDetail() {
                             // Attach group info to legacy structure as well
                             const groupInfo = {
                                 groupName: group.Name || group.name,
+                                groupTitle: group.Title || group.title,
+                                groupDescription: group.Description || group.description,
                                 groupImgUrl: group.ImgUrl || group.imgUrl,
-                                groupVideoUrl: group.VideoUrl || group.videoUrl
+                                groupVideoUrl: group.VideoUrl || group.videoUrl,
+                                groupSumScore: group.SumScore || group.sumScore
                             };
                             
                             groupQuestions.forEach(q => {
@@ -217,6 +225,18 @@ export default function QuizDetail() {
             }
         }
     }, [quizAttempt, quizId, courseId, lessonId, moduleId, attemptId]);
+
+    // Cleanup: Clear all debounce timers khi component unmount
+    useEffect(() => {
+        return () => {
+            // Clear tất cả debounce timers
+            Object.values(saveAnswerTimeoutRef.current).forEach(timeout => {
+                if (timeout) clearTimeout(timeout);
+            });
+            saveAnswerTimeoutRef.current = {};
+            savingAnswersRef.current.clear();
+        };
+    }, []);
 
     const fetchQuizAttempt = async () => {
         try {
@@ -578,13 +598,29 @@ export default function QuizDetail() {
                 timerIntervalRef.current = null;
             }
             
-            // Submit answer của câu hiện tại trước khi nộp bài
+            // Clear tất cả debounce timers
+            Object.values(saveAnswerTimeoutRef.current).forEach(timeout => {
+                if (timeout) clearTimeout(timeout);
+            });
+            saveAnswerTimeoutRef.current = {};
+
+            // Đợi tất cả các answer đang save hoàn thành
+            const waitForSaving = async () => {
+                let retries = 0;
+                while (savingAnswersRef.current.size > 0 && retries < 20) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    retries++;
+                }
+            };
+            await waitForSaving();
+            
+            // Submit answer của câu hiện tại trước khi nộp bài (nếu chưa được save)
             if (currentQuestion) {
                 const questionId = currentQuestion.questionId || currentQuestion.QuestionId;
                 const currentAnswer = answers[questionId];
                 
-                // Nếu có đáp án, submit lên API
-                if (currentAnswer !== undefined && currentAnswer !== null) {
+                // Nếu có đáp án và chưa được save, submit ngay
+                if (currentAnswer !== undefined && currentAnswer !== null && !savingAnswersRef.current.has(questionId)) {
                     await handleSubmitAnswer(questionId, currentAnswer);
                 }
             }
@@ -825,21 +861,81 @@ export default function QuizDetail() {
     }, [quizAttempt, quiz, calculateEndTime, calculateAndUpdateRemainingTime, startTimer]);
 
     const handleAnswerChange = (questionId, answer) => {
-        // Chỉ cập nhật local state, chưa submit lên API
+        // Cập nhật local state ngay lập tức để UI responsive
         setAnswers(prev => ({
             ...prev,
             [questionId]: answer
         }));
+
+        // Auto-save với debounce (500ms) - Backend sẽ chấm điểm ngay lập tức
+        const currentAttemptId = quizAttempt?.attemptId || quizAttempt?.AttemptId || attemptId;
+        if (!currentAttemptId || !questionId) {
+            return;
+        }
+
+        // Clear timeout cũ nếu có
+        if (saveAnswerTimeoutRef.current[questionId]) {
+            clearTimeout(saveAnswerTimeoutRef.current[questionId]);
+        }
+
+        // Nếu đang save answer này, skip
+        if (savingAnswersRef.current.has(questionId)) {
+            return;
+        }
+
+        // Debounce: Đợi 500ms sau khi user ngừng thay đổi
+        saveAnswerTimeoutRef.current[questionId] = setTimeout(async () => {
+            try {
+                savingAnswersRef.current.add(questionId);
+                
+                console.log(`💾 [AutoSave] Saving answer for question ${questionId}:`, answer);
+                const response = await quizAttemptService.updateAnswer(currentAttemptId, {
+                    questionId,
+                    userAnswer: answer
+                });
+
+                if (response.data?.success) {
+                    const newScore = response.data?.data; // Backend trả về score của câu này
+                    console.log(`✅ [AutoSave] Answer saved successfully. Score: ${newScore}`);
+                    // Không cần update state vì đã update ở trên
+                } else {
+                    console.error("❌ [AutoSave] Error saving answer:", response.data?.message);
+                    // Không hiển thị notification để tránh làm phiền user
+                    // Chỉ log để debug
+                }
+            } catch (err) {
+                console.error("❌ [AutoSave] Error saving answer:", err);
+                // Không hiển thị notification để tránh làm phiền user
+            } finally {
+                savingAnswersRef.current.delete(questionId);
+                delete saveAnswerTimeoutRef.current[questionId];
+            }
+        }, 500); // Debounce 500ms
     };
 
     const handleNext = async () => {
-        // Submit answer của câu hiện tại trước khi chuyển câu
+        // Clear debounce timer cho câu hiện tại và đợi save hoàn thành
         if (currentQuestion) {
             const questionId = currentQuestion.questionId || currentQuestion.QuestionId;
-            const currentAnswer = answers[questionId];
             
-            // Nếu có đáp án, submit lên API
-            if (currentAnswer !== undefined && currentAnswer !== null) {
+            // Clear debounce timer nếu có
+            if (saveAnswerTimeoutRef.current[questionId]) {
+                clearTimeout(saveAnswerTimeoutRef.current[questionId]);
+                delete saveAnswerTimeoutRef.current[questionId];
+            }
+
+            // Đợi answer này save xong (nếu đang save)
+            if (savingAnswersRef.current.has(questionId)) {
+                let retries = 0;
+                while (savingAnswersRef.current.has(questionId) && retries < 10) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    retries++;
+                }
+            }
+
+            // Nếu answer chưa được save, save ngay
+            const currentAnswer = answers[questionId];
+            if (currentAnswer !== undefined && currentAnswer !== null && !savingAnswersRef.current.has(questionId)) {
                 await handleSubmitAnswer(questionId, currentAnswer);
             }
         }
@@ -851,13 +947,28 @@ export default function QuizDetail() {
     };
 
     const handlePrevious = async () => {
-        // Submit answer của câu hiện tại trước khi chuyển câu
+        // Clear debounce timer cho câu hiện tại và đợi save hoàn thành
         if (currentQuestion) {
             const questionId = currentQuestion.questionId || currentQuestion.QuestionId;
-            const currentAnswer = answers[questionId];
             
-            // Nếu có đáp án, submit lên API
-            if (currentAnswer !== undefined && currentAnswer !== null) {
+            // Clear debounce timer nếu có
+            if (saveAnswerTimeoutRef.current[questionId]) {
+                clearTimeout(saveAnswerTimeoutRef.current[questionId]);
+                delete saveAnswerTimeoutRef.current[questionId];
+            }
+
+            // Đợi answer này save xong (nếu đang save)
+            if (savingAnswersRef.current.has(questionId)) {
+                let retries = 0;
+                while (savingAnswersRef.current.has(questionId) && retries < 10) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    retries++;
+                }
+            }
+
+            // Nếu answer chưa được save, save ngay
+            const currentAnswer = answers[questionId];
+            if (currentAnswer !== undefined && currentAnswer !== null && !savingAnswersRef.current.has(questionId)) {
                 await handleSubmitAnswer(questionId, currentAnswer);
             }
         }
@@ -869,13 +980,28 @@ export default function QuizDetail() {
     };
 
     const handleGoToQuestion = async (index) => {
-        // Submit answer của câu hiện tại trước khi chuyển câu
+        // Clear debounce timer cho câu hiện tại và đợi save hoàn thành
         if (currentQuestion && index !== currentQuestionIndex) {
             const questionId = currentQuestion.questionId || currentQuestion.QuestionId;
-            const currentAnswer = answers[questionId];
             
-            // Nếu có đáp án, submit lên API
-            if (currentAnswer !== undefined && currentAnswer !== null) {
+            // Clear debounce timer nếu có
+            if (saveAnswerTimeoutRef.current[questionId]) {
+                clearTimeout(saveAnswerTimeoutRef.current[questionId]);
+                delete saveAnswerTimeoutRef.current[questionId];
+            }
+
+            // Đợi answer này save xong (nếu đang save)
+            if (savingAnswersRef.current.has(questionId)) {
+                let retries = 0;
+                while (savingAnswersRef.current.has(questionId) && retries < 10) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    retries++;
+                }
+            }
+
+            // Nếu answer chưa được save, save ngay
+            const currentAnswer = answers[questionId];
+            if (currentAnswer !== undefined && currentAnswer !== null && !savingAnswersRef.current.has(questionId)) {
                 await handleSubmitAnswer(questionId, currentAnswer);
             }
         }
@@ -978,7 +1104,7 @@ export default function QuizDetail() {
                                     </div>
                                 )}
 
-                                <div className="quiz-navigation-buttons">
+                                <div className="quiz-navigation-buttons d-flex justify-content-between">
                                     <Button
                                         variant="outline-secondary"
                                         onClick={handlePrevious}
@@ -1005,7 +1131,7 @@ export default function QuizDetail() {
                             </div>
                         </Col>
                         <Col lg={3}>
-                            <div className="quiz-sidebar">
+                            <div className="quiz-sidebar d-flex flex-column">
                                 <QuizTimer
                                     timeLimit={timeLimit}
                                     remainingTime={remainingTime}

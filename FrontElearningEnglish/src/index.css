@@ -1,5 +1,8 @@
 /* Import theme colors (CSS variables) */
 @import './Theme/colors.css';
+@import './Theme/responsive-typography.css';
+@import './Theme/z-index.css';
+@import './Theme/dark-theme-overrides.css';
 
 body {
   margin: 0;
@@ -8,6 +11,11 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  background-color: var(--color-bg-primary, #ffffff);
+  color: var(--color-text-primary, #1f2937);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 code {

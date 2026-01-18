@@ -10,6 +10,10 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
   const { getEnumOptions, loading: enumsLoading } = useEnums();
   const isUpdateMode = !!quizToUpdate;
   
+  // Get enum options with fallback
+  const quizTypeOptions = getEnumOptions('QuizType');
+  const quizStatusOptions = getEnumOptions('QuizStatus');
+  
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -18,13 +22,13 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
   const [status, setStatus] = useState(1); // Open
   const [totalQuestions, setTotalQuestions] = useState("");
   const [passingScore, setPassingScore] = useState("");
+  const [totalPossibleScore, setTotalPossibleScore] = useState(""); // Tổng điểm tối đa
   const [duration, setDuration] = useState("");
   const [availableFrom, setAvailableFrom] = useState(null);
   const [showAnswersAfterSubmit, setShowAnswersAfterSubmit] = useState(true);
   const [showScoreImmediately, setShowScoreImmediately] = useState(true);
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
   const [shuffleAnswers, setShuffleAnswers] = useState(true);
-  const [allowUnlimitedAttempts, setAllowUnlimitedAttempts] = useState(false);
   const [maxAttempts, setMaxAttempts] = useState("");
 
   // Validation errors
@@ -40,6 +44,7 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
     if (show && isUpdateMode && quizToUpdate) {
       loadQuizData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, isUpdateMode, quizToUpdate]);
 
   const loadQuizData = async () => {
@@ -61,6 +66,7 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
         setStatus(quiz.status !== undefined ? quiz.status : (quiz.Status !== undefined ? quiz.Status : 1));
         setTotalQuestions((quiz.totalQuestions !== undefined ? quiz.totalQuestions : (quiz.TotalQuestions !== undefined ? quiz.TotalQuestions : "")).toString());
         setPassingScore((quiz.passingScore !== undefined ? quiz.passingScore : (quiz.PassingScore !== undefined ? quiz.PassingScore : "")).toString());
+        setTotalPossibleScore((quiz.totalPossibleScore !== undefined ? quiz.totalPossibleScore : (quiz.TotalPossibleScore !== undefined ? quiz.TotalPossibleScore : "")).toString());
         setDuration((quiz.duration !== undefined ? quiz.duration : (quiz.Duration !== undefined ? quiz.Duration : "")).toString());
         
         const availableFromValue = quiz.availableFrom || quiz.AvailableFrom;
@@ -71,11 +77,8 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
         setShuffleQuestions(quiz.shuffleQuestions !== undefined ? quiz.shuffleQuestions : (quiz.ShuffleQuestions !== undefined ? quiz.ShuffleQuestions : true));
         setShuffleAnswers(quiz.shuffleAnswers !== undefined ? quiz.shuffleAnswers : (quiz.ShuffleAnswers !== undefined ? quiz.ShuffleAnswers : true));
         
-        const allowUnlimited = quiz.allowUnlimitedAttempts !== undefined ? quiz.allowUnlimitedAttempts : (quiz.AllowUnlimitedAttempts !== undefined ? quiz.AllowUnlimitedAttempts : false);
-        setAllowUnlimitedAttempts(allowUnlimited);
-        
         const maxAttemptsValue = quiz.maxAttempts !== undefined ? quiz.maxAttempts : (quiz.MaxAttempts !== undefined ? quiz.MaxAttempts : null);
-        setMaxAttempts(allowUnlimited ? "" : (maxAttemptsValue ? maxAttemptsValue.toString() : ""));
+        setMaxAttempts(maxAttemptsValue ? maxAttemptsValue.toString() : "");
       }
     } catch (error) {
       console.error("Error loading quiz data:", error);
@@ -95,25 +98,42 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
       setStatus(1);
       setTotalQuestions("");
       setPassingScore("");
+      setTotalPossibleScore("");
       setDuration("");
       setAvailableFrom(null);
       setShowAnswersAfterSubmit(true);
       setShowScoreImmediately(true);
       setShuffleQuestions(true);
       setShuffleAnswers(true);
-      setAllowUnlimitedAttempts(false);
       setMaxAttempts("");
       setErrors({});
       setShowConfirmClose(false);
     }
   }, [show]);
 
-  // Check if form has data
+  // Check if form has data or has been modified
   const hasFormData = () => {
+    if (isUpdateMode && quizToUpdate) {
+      // In update mode, check if data changed from original
+      // This is a simplified check - in a real scenario, you'd compare with loaded quiz data
+      return (
+        title.trim() !== "" ||
+        description.trim() !== "" ||
+        instructions.trim() !== "" ||
+        duration !== "" ||
+        totalQuestions !== "" ||
+        totalPossibleScore !== "" ||
+        passingScore !== ""
+      );
+    }
+    // In create mode, check if any field has data
     return (
       title.trim() !== "" ||
       description.trim() !== "" ||
-      instructions.trim() !== ""
+      instructions.trim() !== "" ||
+      duration !== "" ||
+      totalQuestions !== "" ||
+      passingScore !== ""
     );
   };
 
@@ -135,24 +155,66 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
   const validateForm = () => {
     const newErrors = {};
 
+    // Title: NotEmpty, MaxLength(200) - BẮT BUỘC
     if (!title.trim()) {
-      newErrors.title = "Tiêu đề là bắt buộc";
+      newErrors.title = "Tiêu đề Quiz không được để trống";
+    } else if (title.trim().length > 200) {
+      newErrors.title = "Tiêu đề Quiz không được vượt quá 200 ký tự";
     }
 
-    if (!totalQuestions || parseInt(totalQuestions) <= 0) {
-      newErrors.totalQuestions = "Tổng số câu hỏi phải lớn hơn 0";
+    // Description: MaxLength(1000) - TÙY CHỌN
+    if (description && description.trim().length > 1000) {
+      newErrors.description = "Mô tả không được vượt quá 1000 ký tự";
     }
 
-    if (!passingScore || parseInt(passingScore) < 0) {
-      newErrors.passingScore = "Điểm đạt yêu cầu không được để trống";
+    // Instructions: MaxLength(2000) - TÙY CHỌN
+    if (instructions && instructions.trim().length > 2000) {
+      newErrors.instructions = "Hướng dẫn không được vượt quá 2000 ký tự";
     }
 
-    if (!duration || parseInt(duration) <= 0) {
-      newErrors.duration = "Thời gian làm bài (phút) phải lớn hơn 0";
+    // Type: IsInEnum - BẮT BUỘC (đã có default value)
+    // Status: IsInEnum - BẮT BUỘC (đã có default value)
+
+    // TotalQuestions: >= 0 - BẮT BUỘC
+    if (!totalQuestions || totalQuestions === "" || isNaN(parseInt(totalQuestions))) {
+      newErrors.totalQuestions = "Tổng số câu hỏi là bắt buộc";
+    } else if (parseInt(totalQuestions) < 0) {
+      newErrors.totalQuestions = "Tổng số câu hỏi phải >= 0";
     }
 
-    if (!allowUnlimitedAttempts && (!maxAttempts || parseInt(maxAttempts) <= 0)) {
-      newErrors.maxAttempts = "Số lần làm tối đa phải lớn hơn 0 khi không cho phép làm lại không giới hạn";
+    // TotalPossibleScore: > 0 - BẮT BUỘC
+    if (!totalPossibleScore || totalPossibleScore === "" || isNaN(parseFloat(totalPossibleScore))) {
+      newErrors.totalPossibleScore = "Thang điểm bài kiểm tra là bắt buộc";
+    } else if (parseFloat(totalPossibleScore) <= 0) {
+      newErrors.totalPossibleScore = "Thang điểm bài kiểm tra phải lớn hơn 0";
+    }
+
+    // PassingScore: > 0 nếu có value - TÙY CHỌN
+    if (passingScore !== "" && passingScore !== null) {
+      const passingScoreNum = parseInt(passingScore);
+      if (isNaN(passingScoreNum) || passingScoreNum <= 0) {
+        newErrors.passingScore = "Điểm đạt phải lớn hơn 0";
+      }
+    }
+
+    // Duration: > 0 nếu có value - TÙY CHỌN (nhưng frontend yêu cầu bắt buộc)
+    if (!duration || duration === "" || isNaN(parseInt(duration))) {
+      newErrors.duration = "Thời gian làm bài là bắt buộc";
+    } else if (parseInt(duration) <= 0) {
+      newErrors.duration = "Thời gian làm bài phải lớn hơn 0 phút";
+    }
+
+    // AvailableFrom: >= now nếu có value - TÙY CHỌN
+    if (availableFrom && availableFrom < now) {
+      newErrors.availableFrom = "Thời gian mở Quiz phải trong tương lai hoặc hiện tại";
+    }
+
+    // MaxAttempts: tùy chọn, nếu có giá trị thì phải > 0 (null = không giới hạn)
+    if (maxAttempts !== "" && maxAttempts !== null) {
+      const maxAttemptsNum = parseInt(maxAttempts);
+      if (isNaN(maxAttemptsNum) || maxAttemptsNum <= 0) {
+        newErrors.maxAttempts = "Số lần làm tối đa phải lớn hơn 0";
+      }
     }
 
     setErrors(newErrors);
@@ -177,15 +239,24 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
         type: parseInt(type),
         status: parseInt(status),
         totalQuestions: parseInt(totalQuestions),
-        passingScore: parseInt(passingScore),
-        duration: parseInt(duration),
+        totalPossibleScore: parseFloat(totalPossibleScore),
+        // PassingScore: null nếu không có giá trị, hoặc int nếu có
+        passingScore: passingScore && passingScore !== "" && !isNaN(parseInt(passingScore)) 
+          ? parseInt(passingScore) 
+          : null,
+        // Duration: null nếu không có giá trị, hoặc int nếu có (nhưng frontend yêu cầu bắt buộc)
+        duration: duration && duration !== "" && !isNaN(parseInt(duration)) 
+          ? parseInt(duration) 
+          : null,
         availableFrom: availableFrom ? availableFrom.toISOString() : null,
         showAnswersAfterSubmit: showAnswersAfterSubmit,
         showScoreImmediately: showScoreImmediately,
         shuffleQuestions: shuffleQuestions,
         shuffleAnswers: shuffleAnswers,
-        allowUnlimitedAttempts: allowUnlimitedAttempts,
-        maxAttempts: allowUnlimitedAttempts ? null : parseInt(maxAttempts),
+        // MaxAttempts: null nếu không có giá trị (không giới hạn), hoặc int nếu có giới hạn
+        maxAttempts: maxAttempts && maxAttempts !== "" && !isNaN(parseInt(maxAttempts)) 
+          ? parseInt(maxAttempts) 
+          : null,
       };
 
       let response;
@@ -219,28 +290,37 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
   const now = new Date();
   now.setSeconds(0, 0);
 
+  // Form validation check - khớp với backend validator
   const isFormValid = 
     title.trim() && 
+    title.trim().length <= 200 &&
+    (!description || description.trim().length <= 1000) &&
+    (!instructions || instructions.trim().length <= 2000) &&
     totalQuestions && 
-    parseInt(totalQuestions) > 0 &&
-    passingScore !== "" && 
-    parseInt(passingScore) >= 0 &&
+    !isNaN(parseInt(totalQuestions)) &&
+    parseInt(totalQuestions) >= 0 &&
+    totalPossibleScore && 
+    !isNaN(parseFloat(totalPossibleScore)) &&
+    parseFloat(totalPossibleScore) > 0 &&
+    (passingScore === "" || (passingScore !== "" && !isNaN(parseInt(passingScore)) && parseInt(passingScore) > 0)) &&
     duration && 
+    !isNaN(parseInt(duration)) &&
     parseInt(duration) > 0 &&
-    (allowUnlimitedAttempts || (maxAttempts && parseInt(maxAttempts) > 0));
+    (!availableFrom || availableFrom >= now) &&
+    (maxAttempts === "" || (maxAttempts && !isNaN(parseInt(maxAttempts)) && parseInt(maxAttempts) > 0));
 
   return (
     <>
     <Modal 
       show={show} 
-      onHide={handleClose} 
+      onHide={handleClose}
+      backdrop={submitting ? "static" : true}
+      keyboard={!submitting}
       centered 
       className="create-quiz-modal modal-modern" 
       dialogClassName="create-quiz-modal-dialog"
-      backdrop="static"
-      keyboard={false}
     >
-      <Modal.Header closeButton>
+      <Modal.Header>
         <Modal.Title>{isUpdateMode ? "Cập nhật Quiz" : "Tạo Quiz mới"}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
@@ -251,7 +331,10 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit(e);
+          }}>
           {/* Tiêu đề */}
           <div className="mb-3">
             <label className="form-label required">Tiêu đề</label>
@@ -312,16 +395,27 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
                   className={`form-select ${errors.type ? "is-invalid" : ""}`}
                   value={type}
                   onChange={(e) => {
-                    setType(parseInt(e.target.value));
+                    const newValue = parseInt(e.target.value);
+                    setType(newValue);
                     setErrors({ ...errors, type: null });
                   }}
                   disabled={enumsLoading}
                 >
-                  {getEnumOptions('QuizType').map((qt) => (
-                    <option key={qt.value} value={qt.value}>
-                      {qt.label}
-                    </option>
-                  ))}
+                  {enumsLoading ? (
+                    <option value={type}>Đang tải...</option>
+                  ) : quizTypeOptions.length > 0 ? (
+                    quizTypeOptions.map((qt) => (
+                      <option key={qt.value} value={qt.value}>
+                        {qt.label}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value={1}>Practice</option>
+                      <option value={2}>MiniTest</option>
+                      <option value={3}>FinalExam</option>
+                    </>
+                  )}
                 </select>
                 {errors.type && <div className="invalid-feedback">{errors.type}</div>}
                 <div className="form-text">*Bắt buộc</div>
@@ -335,16 +429,28 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
                   className={`form-select ${errors.status ? "is-invalid" : ""}`}
                   value={status}
                   onChange={(e) => {
-                    setStatus(parseInt(e.target.value));
+                    const newValue = parseInt(e.target.value);
+                    setStatus(newValue);
                     setErrors({ ...errors, status: null });
                   }}
                   disabled={enumsLoading}
                 >
-                  {getEnumOptions('QuizStatus').map((qs) => (
-                    <option key={qs.value} value={qs.value}>
-                      {qs.label}
-                    </option>
-                  ))}
+                  {enumsLoading ? (
+                    <option value={status}>Đang tải...</option>
+                  ) : quizStatusOptions.length > 0 ? (
+                    quizStatusOptions.map((qs) => (
+                      <option key={qs.value} value={qs.value}>
+                        {qs.label}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value={0}>Draft</option>
+                      <option value={1}>Open</option>
+                      <option value={2}>Closed</option>
+                      <option value={3}>Archived</option>
+                    </>
+                  )}
                 </select>
                 {errors.status && <div className="invalid-feedback">{errors.status}</div>}
                 <div className="form-text">*Bắt buộc</div>
@@ -352,7 +458,7 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
             </Col>
           </Row>
 
-          {/* Tổng số câu hỏi và Điểm đạt yêu cầu */}
+          {/* Tổng số câu hỏi và Tổng điểm tối đa */}
           <Row className="g-3 mb-3">
             <Col md={6}>
               <div className="mb-3">
@@ -375,29 +481,96 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
 
             <Col md={6}>
               <div className="mb-3">
-                <label className="form-label required">Điểm đạt yêu cầu</label>
+                <label className="form-label required">Thang điểm bài kiểm tra</label>
                 <input
-                  type="number"
-                  className={`form-control ${errors.passingScore ? "is-invalid" : ""}`}
-                  value={passingScore}
+                  type="text"
+                  inputMode="decimal"
+                  className={`form-control ${errors.totalPossibleScore ? "is-invalid" : ""}`}
+                  value={totalPossibleScore}
                   onChange={(e) => {
-                    setPassingScore(e.target.value);
-                    setErrors({ ...errors, passingScore: null });
+                    let value = e.target.value.trim();
+                    // Cho phép rỗng để user có thể xóa
+                    if (value === '') {
+                      setTotalPossibleScore('');
+                      setErrors({ ...errors, totalPossibleScore: null });
+                      return;
+                    }
+                    // Chỉ cho phép số và dấu chấm thập phân
+                    const numValue = value.replace(/[^\d.]/g, '');
+                    // Chỉ cho phép 1 dấu chấm
+                    const parts = numValue.split('.');
+                    if (parts.length <= 2) {
+                      // Giữ nguyên giá trị user nhập
+                      setTotalPossibleScore(numValue);
+                      setErrors({ ...errors, totalPossibleScore: null });
+                    }
                   }}
-                  placeholder="Nhập điểm đạt yêu cầu"
-                  min="0"
+                  onBlur={(e) => {
+                    // Validate khi blur
+                    const value = e.target.value.trim();
+                    if (value === '') {
+                      return;
+                    }
+                    const num = parseFloat(value);
+                    if (isNaN(num) || num <= 0) {
+                      return;
+                    }
+                    // Nếu là số nguyên, giữ nguyên (không thêm .0)
+                    if (num % 1 === 0) {
+                      setTotalPossibleScore(num.toString());
+                    } else {
+                      // Nếu có số thập phân, giữ nguyên format user nhập
+                      setTotalPossibleScore(value);
+                    }
+                  }}
+                  placeholder="Ví dụ: 10"
                 />
-                {errors.passingScore && <div className="invalid-feedback">{errors.passingScore}</div>}
-                <div className="form-text">*Bắt buộc</div>
+                {errors.totalPossibleScore && <div className="invalid-feedback">{errors.totalPossibleScore}</div>}
+                <div className="form-text">*Bắt buộc. Tổng điểm tối đa của bài kiểm tra (ví dụ: 10 điểm). Sau đó bạn sẽ phân bổ điểm cho từng câu hỏi.</div>
               </div>
             </Col>
           </Row>
 
-          {/* Thời gian làm bài và Thời gian có thể làm */}
-          <Row className="g-3 mb-3">
-            <Col md={6}>
-              <div className="mb-3">
-                <label className="form-label required">Thời gian làm bài (phút)</label>
+          {/* Điểm đạt yêu cầu */}
+          <div className="mb-3">
+            <label className="form-label">Điểm đạt yêu cầu</label>
+            <input
+              type="number"
+              className={`form-control ${errors.passingScore ? "is-invalid" : ""}`}
+              value={passingScore}
+              onChange={(e) => {
+                setPassingScore(e.target.value);
+                setErrors({ ...errors, passingScore: null });
+              }}
+              placeholder="Nhập điểm đạt yêu cầu"
+              min="0"
+            />
+            {errors.passingScore && <div className="invalid-feedback">{errors.passingScore}</div>}
+            <div className="form-text">Không bắt buộc. Điểm tối thiểu để đạt yêu cầu</div>
+          </div>
+
+          {/* Thời gian làm bài */}
+          <div className="mb-4">
+            <label className="form-label required mb-3">Thời gian làm bài</label>
+            <div className="duration-presets mb-3">
+              <div className="preset-buttons d-flex flex-wrap gap-2">
+                {[15, 30, 45, 60, 90, 120].map((minutes) => (
+                  <button
+                    key={minutes}
+                    type="button"
+                    className={`preset-btn ${duration === minutes.toString() ? "active" : ""}`}
+                    onClick={() => {
+                      setDuration(minutes.toString());
+                      setErrors({ ...errors, duration: null });
+                    }}
+                  >
+                    {minutes} phút
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="duration-input-wrapper">
+              <div className="input-group">
                 <input
                   type="number"
                   className={`form-control ${errors.duration ? "is-invalid" : ""}`}
@@ -406,37 +579,42 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
                     setDuration(e.target.value);
                     setErrors({ ...errors, duration: null });
                   }}
-                  placeholder="Nhập thời gian làm bài (phút)"
+                  placeholder="Hoặc nhập số phút tùy chỉnh"
                   min="1"
                 />
-                {errors.duration && <div className="invalid-feedback">{errors.duration}</div>}
-                <div className="form-text">*Bắt buộc</div>
+                <span className="input-group-text">phút</span>
               </div>
-            </Col>
+              {errors.duration && <div className="invalid-feedback d-block">{errors.duration}</div>}
+              <div className="form-text mt-2">
+                *Bắt buộc. Thời gian tối đa học sinh có thể làm bài quiz này
+              </div>
+            </div>
+          </div>
 
-            <Col md={6}>
-              <div className="mb-3">
-                <DateTimePicker
-                  value={availableFrom}
-                  onChange={(date) => {
-                    setAvailableFrom(date);
-                    setErrors({ ...errors, availableFrom: null });
-                  }}
-                  min={now}
-                  placeholder="dd/mm/yyyy HH:mm"
-                  hasError={!!errors.availableFrom}
-                  label="Thời gian có thể làm (tùy chọn)"
-                  required={false}
-                />
-                {errors.availableFrom && <div className="invalid-feedback" style={{ marginTop: "4px" }}>{errors.availableFrom}</div>}
-                <div className="form-text">Không bắt buộc</div>
-              </div>
-            </Col>
-          </Row>
+          {/* Thời gian có thể làm */}
+          <div className="mb-4">
+            <DateTimePicker
+              value={availableFrom}
+              onChange={(date) => {
+                setAvailableFrom(date);
+                setErrors({ ...errors, availableFrom: null });
+              }}
+              min={now}
+              placeholder="dd/mm/yyyy"
+              hasError={!!errors.availableFrom}
+              label="Thời gian có thể làm bài (tùy chọn)"
+              required={false}
+              dateOnly={true}
+            />
+            {errors.availableFrom && <div className="invalid-feedback d-block" style={{ marginTop: "4px" }}>{errors.availableFrom}</div>}
+            <div className="form-text mt-2">
+              Không bắt buộc. Nếu không chọn, học sinh có thể làm bài ngay sau khi quiz được tạo
+            </div>
+          </div>
 
           {/* Cài đặt hiển thị */}
-          <div className="card bg-light border rounded-3 p-4 mb-3">
-            <h5 className="fw-semibold mb-3">Cài đặt hiển thị</h5>
+          <div className="form-section-card mb-4">
+            <div className="form-section-title">Cài đặt hiển thị</div>
             <div className="d-flex flex-column gap-3">
               <div className="form-check">
                 <input
@@ -466,8 +644,8 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
           </div>
 
           {/* Cài đặt xáo trộn */}
-          <div className="card bg-light border rounded-3 p-4 mb-3">
-            <h5 className="fw-semibold mb-3">Cài đặt xáo trộn</h5>
+          <div className="form-section-card mb-4">
+            <div className="form-section-title">Cài đặt xáo trộn</div>
             <div className="d-flex flex-column gap-3">
               <div className="form-check">
                 <input
@@ -497,44 +675,26 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
           </div>
 
           {/* Cài đặt số lần làm */}
-          <div className="card bg-light border rounded-3 p-4 mb-3">
-            <h5 className="fw-semibold mb-3">Cài đặt số lần làm</h5>
-            <div className="form-check mb-3">
+          <div className="form-section-card mb-4">
+            <div className="form-section-title">Cài đặt số lần làm</div>
+            <div className="mb-3">
+              <label className="form-label">Số lần làm tối đa</label>
               <input
-                className="form-check-input"
-                type="checkbox"
-                id="allowUnlimitedAttempts"
-                checked={allowUnlimitedAttempts}
+                type="number"
+                className={`form-control ${errors.maxAttempts ? "is-invalid" : ""}`}
+                value={maxAttempts}
                 onChange={(e) => {
-                  setAllowUnlimitedAttempts(e.target.checked);
-                  if (e.target.checked) {
-                    setMaxAttempts("");
-                  }
+                  setMaxAttempts(e.target.value);
                   setErrors({ ...errors, maxAttempts: null });
                 }}
+                placeholder="Để trống = không giới hạn"
+                min="1"
               />
-              <label className="form-check-label" htmlFor="allowUnlimitedAttempts">
-                Cho phép làm lại không giới hạn
-              </label>
-            </div>
-            {!allowUnlimitedAttempts && (
-              <div className="mb-3">
-                <label className="form-label required">Số lần làm tối đa</label>
-                <input
-                  type="number"
-                  className={`form-control ${errors.maxAttempts ? "is-invalid" : ""}`}
-                  value={maxAttempts}
-                  onChange={(e) => {
-                    setMaxAttempts(e.target.value);
-                    setErrors({ ...errors, maxAttempts: null });
-                  }}
-                  placeholder="Nhập số lần làm tối đa"
-                  min="1"
-                />
-                {errors.maxAttempts && <div className="invalid-feedback">{errors.maxAttempts}</div>}
-                <div className="form-text">*Bắt buộc khi không cho phép làm lại không giới hạn</div>
+              {errors.maxAttempts && <div className="invalid-feedback">{errors.maxAttempts}</div>}
+              <div className="form-text">
+                Tùy chọn. Để trống nếu muốn cho phép làm lại không giới hạn. Nếu nhập số, học sinh chỉ được làm tối đa số lần đó.
               </div>
-            )}
+            </div>
           </div>
 
           {/* Submit error */}
@@ -545,13 +705,19 @@ export default function CreateQuizModal({ show, onClose, onSuccess, assessmentId
         )}
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose} disabled={submitting}>
+        <Button 
+          variant="secondary" 
+          onClick={handleClose} 
+          disabled={submitting}
+          type="button"
+        >
           Huỷ
         </Button>
         <Button
           variant="primary"
           onClick={handleSubmit}
           disabled={!isFormValid || submitting || loadingQuiz}
+          type="button"
         >
           {submitting ? (isUpdateMode ? "Đang cập nhật..." : "Đang tạo...") : (isUpdateMode ? "Cập nhật" : "Tạo")}
         </Button>

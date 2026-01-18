@@ -3,14 +3,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import "./MarkdownViewer.css";
 
-export default function MarkdownViewer({ lecture }) {
+function MarkdownViewer({ lecture }) {
     const title = lecture?.title || lecture?.Title || "";
     const markdownContent = lecture?.markdownContent || lecture?.MarkdownContent || "";
-    const renderedHtml = lecture?.renderedHtml || lecture?.RenderedHtml || "";
-
-    // Prefer markdownContent for better rendering with react-markdown
-    // Only use renderedHtml if markdownContent is not available
-    const useMarkdown = markdownContent && markdownContent.trim().length > 0;
 
     return (
         <div className="markdown-viewer">
@@ -18,19 +13,12 @@ export default function MarkdownViewer({ lecture }) {
                 <h1 className="lecture-title">{title}</h1>
             </header>
             <div className="lecture-content">
-                {useMarkdown ? (
+                {markdownContent && markdownContent.trim().length > 0 ? (
                     <div className="markdown-content">
-                        <ReactMarkdown 
-                            remarkPlugins={[remarkGfm]}
-                        >
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {markdownContent}
                         </ReactMarkdown>
                     </div>
-                ) : renderedHtml ? (
-                    <div 
-                        className="markdown-html-content"
-                        dangerouslySetInnerHTML={{ __html: renderedHtml }}
-                    />
                 ) : (
                     <div className="no-content-message">
                         <p>Nội dung bài giảng đang được cập nhật...</p>
@@ -41,3 +29,6 @@ export default function MarkdownViewer({ lecture }) {
     );
 }
 
+MarkdownViewer.displayName = "MarkdownViewer";
+
+export default MarkdownViewer;

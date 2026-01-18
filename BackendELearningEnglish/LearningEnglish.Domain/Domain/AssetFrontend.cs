@@ -13,17 +13,8 @@ namespace LearningEnglish.Domain.Entities
         // Key/path lưu trong MinIO
         public string KeyImage { get; set; } = string.Empty;
         
-        // Mô tả/alt text cho SEO
-        public string DescriptionImage { get; set; } = string.Empty;
-        
-        // Loại asset: "banner", "hero", "logo", "icon", etc.
+        // Loại asset: Logo, DefaultCourse, DefaultLesson
         public AssetType AssetType { get; set; }
-        
-        // Thứ tự hiển thị
-        public int? Order { get; set; } = 0;
-        
-        // Bật/tắt hiển thị
-        public bool? IsActive { get; set; } = true;
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

@@ -22,11 +22,11 @@ export default function FlashCardBack({ flashcard, onAudioClick }) {
     };
 
     return (
-        <div className="flashcard-back">
-            <div className="flashcard-icons-top">
+        <div className="flashcard-back d-flex flex-column">
+            <div className="flashcard-icons-top d-flex justify-content-center align-items-center">
                 {audioUrl && (
                     <button 
-                        className="flashcard-audio-icon-btn"
+                        className="flashcard-audio-icon-btn d-flex align-items-center justify-content-center"
                         onClick={handleAudioClick}
                         title="Phát âm"
                     >
@@ -34,7 +34,7 @@ export default function FlashCardBack({ flashcard, onAudioClick }) {
                     </button>
                 )}
             </div>
-            <div className="flashcard-back-content">
+            <div className="flashcard-back-content d-flex flex-column align-items-center justify-content-center">
                 <h2 className="flashcard-word">{word}</h2>
                 {pronunciation && (
                     <p className="flashcard-pronunciation">{pronunciation}</p>

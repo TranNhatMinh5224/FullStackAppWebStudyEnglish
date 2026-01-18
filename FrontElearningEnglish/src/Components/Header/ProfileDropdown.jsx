@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Dropdown } from "react-bootstrap";
+import { FaUserCircle } from "react-icons/fa";
 import { useAuth } from "../../Context/AuthContext";
 import { ROUTE_PATHS } from "../../Routes/Paths";
 
@@ -31,20 +32,18 @@ export default function ProfileDropdown() {
     <Dropdown className="profile-wrapper" align="end">
       <Dropdown.Toggle
         as="div"
-        className="profile-trigger"
+        className="profile-trigger d-flex align-items-center"
         id="profile-dropdown"
       >
-        <div className="avatar">
-          {isGuest ? (
-            "👤"
-          ) : user?.avatarUrl ? (
+        <div className="avatar d-flex align-items-center justify-content-center">
+          {!isGuest && user?.avatarUrl ? (
             <img src={user.avatarUrl} alt={`Avatar của ${user.fullName || 'người dùng'}`} className="avatar-img" />
           ) : (
-            user?.fullName?.charAt(0)
+            <FaUserCircle className="avatar-default-icon" />
           )}
         </div>
         {!isGuest && (
-          <div className="user-info">
+          <div className="user-info d-flex flex-column">
             <span className="name">
               {user?.fullName && user.fullName.length > 12
                 ? `${user.fullName.substring(0, 12)}...`
@@ -85,7 +84,7 @@ export default function ProfileDropdown() {
               <>
                 <Dropdown.Divider />
                 <div className="teacher-package-info">
-                  <div className="teacher-package-header">
+                  <div className="teacher-package-header d-flex justify-content-between align-items-center">
                     <span className="teacher-package-label">Gói giáo viên</span>
                     <span className={`teacher-package-badge ${isPremium ? "premium" : "basic"}`}>
                       {isPremium ? "Premium" : "Cơ bản"}

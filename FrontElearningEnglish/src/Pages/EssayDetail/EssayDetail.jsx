@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Row, Col, Button, Form } from "react-bootstrap";
+import { Container, Row, Col, Button, Form, Card } from "react-bootstrap";
 import MainHeader from "../../Components/Header/MainHeader";
+import Breadcrumb from "../../Components/Common/Breadcrumb/Breadcrumb";
 import NotificationModal from "../../Components/Common/NotificationModal/NotificationModal";
 import ConfirmModal from "../../Components/Common/ConfirmModal/ConfirmModal";
 import StudentEssayResultModal from "../../Components/Common/StudentEssayResultModal/StudentEssayResultModal";
@@ -13,7 +14,7 @@ import { moduleService } from "../../Services/moduleService";
 import { courseService } from "../../Services/courseService";
 import { lessonService } from "../../Services/lessonService";
 import { assessmentService } from "../../Services/assessmentService";
-import { FaFileUpload, FaTimes, FaEdit, FaClock, FaCheckCircle, FaTimesCircle, FaStar } from "react-icons/fa";
+import { FaFileUpload, FaTimes, FaEdit, FaClock, FaCheckCircle, FaTimesCircle, FaStar, FaInfoCircle } from "react-icons/fa";
 import "./EssayDetail.css";
 
 export default function EssayDetail() {
@@ -38,7 +39,6 @@ export default function EssayDetail() {
     // Form state
     const [textContent, setTextContent] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
-    const [filePreview, setFilePreview] = useState(null);
     const [attachmentTempKey, setAttachmentTempKey] = useState(null);
     const [attachmentType, setAttachmentType] = useState(null);
     const [existingAttachmentUrl, setExistingAttachmentUrl] = useState(null);
@@ -219,15 +219,11 @@ export default function EssayDetail() {
             setSelectedFile(file);
             setAttachmentTempKey(null); // Reset temp key when new file is selected
             setAttachmentType(file.type || 'application/octet-stream'); // Default type if not detected
-
-            // No preview for text/word files
-            setFilePreview(null);
         }
     };
 
     const handleRemoveFile = () => {
         setSelectedFile(null);
-        setFilePreview(null);
         setAttachmentTempKey(null);
         setAttachmentType(null);
         if (fileInputRef.current) {
@@ -365,18 +361,7 @@ export default function EssayDetail() {
             return;
         }
 
-        // Validate: must have either text content OR file attachment
-        const hasTextContent = textContent.trim().length > 0;
-        const hasAttachment = attachmentTempKey || existingAttachmentUrl;
-        
-        if (!hasTextContent && !hasAttachment) {
-            setNotification({
-                isOpen: true,
-                type: "error",
-                message: "Vui lòng nhập nội dung essay hoặc đính kèm file"
-            });
-            return;
-        }
+        // Cho phép nộp bài trống - không validate bắt buộc
 
         // If file is selected but not uploaded, upload it first (optional)
         if (selectedFile && !attachmentTempKey && !existingAttachmentUrl) {
@@ -398,7 +383,7 @@ export default function EssayDetail() {
 
                 // Backend expects PascalCase: TextContent, AttachmentTempKey, AttachmentType
                 const updateData = {
-                    TextContent: textContent.trim(),
+                    TextContent: textContent && textContent.trim() ? textContent.trim() : null, // Cho phép null/empty
                 };
 
                 // Only add attachment fields if new file is uploaded
@@ -449,7 +434,7 @@ export default function EssayDetail() {
                 // Backend expects PascalCase: EssayId, TextContent, AttachmentTempKey, AttachmentType
                 const submissionData = {
                     EssayId: essay.essayId || essay.EssayId,
-                    TextContent: textContent.trim(),
+                    TextContent: textContent && textContent.trim() ? textContent.trim() : null, // Cho phép null/empty
                 };
 
                 // Only add attachment fields if they exist
@@ -561,7 +546,6 @@ export default function EssayDetail() {
                 setCurrentSubmission(null);
                 setTextContent("");
                 setSelectedFile(null);
-                setFilePreview(null);
                 setAttachmentTempKey(null);
                 setAttachmentType(null);
                 setExistingAttachmentUrl(null);
@@ -600,6 +584,21 @@ export default function EssayDetail() {
         });
     };
 
+    const formatTimeLimit = (timeLimit) => {
+        if (!timeLimit) return "Không giới hạn";
+        if (typeof timeLimit === 'string') {
+            // Parse TimeSpan string (e.g., "01:00:00" or "00:15:00")
+            const parts = timeLimit.split(':');
+            const hours = parseInt(parts[0]) || 0;
+            const minutes = parseInt(parts[1]) || 0;
+            if (hours > 0) {
+                return `${hours} giờ ${minutes} phút`;
+            }
+            return `${minutes} phút`;
+        }
+        return "Không giới hạn";
+    };
+
     const formatFileSize = (bytes) => {
         if (bytes === 0) return "0 Bytes";
         const k = 1024;
@@ -633,7 +632,13 @@ export default function EssayDetail() {
             <>
                 <MainHeader />
                 <div className="essay-detail-container">
-                    <div className="loading-message">Đang tải...</div>
+                    <Container>
+                        <div className="text-center py-5">
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Đang tải...</span>
+                            </div>
+                        </div>
+                    </Container>
                 </div>
             </>
         );
@@ -644,12 +649,14 @@ export default function EssayDetail() {
             <>
                 <MainHeader />
                 <div className="essay-detail-container">
-                    <div className="error-message">{error}</div>
-                    <div style={{ marginTop: "20px", textAlign: "center" }}>
-                        <Button variant="primary" onClick={handleBackClick}>
-                            Quay lại
-                        </Button>
-                    </div>
+                    <Container>
+                        <div className="alert alert-danger">{error}</div>
+                        <div className="text-center mt-3">
+                            <Button variant="primary" onClick={handleBackClick}>
+                                Quay lại
+                            </Button>
+                        </div>
+                    </Container>
                 </div>
             </>
         );
@@ -665,7 +672,13 @@ export default function EssayDetail() {
             <>
                 <MainHeader />
                 <div className="essay-detail-container">
-                    <div className="loading-message">Đang tải...</div>
+                    <Container>
+                        <div className="text-center py-5">
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Đang tải...</span>
+                            </div>
+                        </div>
+                    </Container>
                 </div>
             </>
         );
@@ -675,75 +688,69 @@ export default function EssayDetail() {
         <>
             <MainHeader />
             <div className="essay-detail-container">
-                <Container fluid>
-                    <Row>
+                <Container>
+                    <Row className="mb-3">
                         <Col>
-                            <div className="essay-breadcrumb">
-                                <span onClick={() => navigate("/my-courses")} className="breadcrumb-link">
-                                    Khóa học của tôi
-                                </span>
-                                <span className="breadcrumb-separator">/</span>
-                                <span onClick={() => navigate(`/course/${courseId}`)} className="breadcrumb-link">
-                                    {courseTitle}
-                                </span>
-                                <span className="breadcrumb-separator">/</span>
-                                <span onClick={() => navigate(`/course/${courseId}/learn`)} className="breadcrumb-link">
-                                    Lesson
-                                </span>
-                                <span className="breadcrumb-separator">/</span>
-                                <span onClick={() => navigate(`/course/${courseId}/lesson/${lessonId}`)} className="breadcrumb-link">
-                                    {lessonTitle}
-                                </span>
-                                <span className="breadcrumb-separator">/</span>
-                                <span className="breadcrumb-current">{essayTitle}</span>
-                            </div>
-                        </Col>
-                    </Row>
-
-                    <Row>
-                        <Col>
-                            <div className="essay-header">
-                                <h1 className="essay-title">{essayTitle}</h1>
-                                {essay?.description && (
-                                    <p className="essay-description">{essay.description || essay.Description}</p>
-                                )}
-                                {essay?.audioUrl && (
-                                    <div className="essay-audio-player" style={{ marginTop: '16px', marginBottom: '20px' }}>
-                                        <audio 
-                                            ref={audioRef}
-                                            controls 
-                                            controlsList="nodownload"
-                                            style={{ width: '100%', maxWidth: '500px' }}
-                                            src={audioBlobUrl || essay.audioUrl || essay.AudioUrl}
-                                        >
-                                            Trình duyệt của bạn không hỗ trợ phát audio.
-                                        </audio>
-                                    </div>
-                                )}
-                                {essay?.imageUrl && (
-                                    <div className="essay-image-container">
-                                        <img 
-                                            src={essay.imageUrl} 
-                                            alt={essayTitle || "Essay image"} 
-                                            className="essay-image"
-                                        />
-                                    </div>
-                                )}
-                            </div>
+                            <Breadcrumb
+                                items={[
+                                    { label: "Khóa học của tôi", path: "/my-courses" },
+                                    { label: courseTitle, path: `/course/${courseId}` },
+                                    { label: "Lesson", path: `/course/${courseId}/learn` },
+                                    { label: lessonTitle, path: `/course/${courseId}/lesson/${lessonId}` },
+                                    { label: essayTitle, isCurrent: true }
+                                ]}
+                            />
                         </Col>
                     </Row>
 
                     <Row>
                         <Col lg={8}>
-                            <div className="essay-form-section">
-                                {/* Check if student has been graded */}
-                                {currentSubmission && ((currentSubmission.teacherScore !== null && currentSubmission.teacherScore !== undefined) || 
-                                 (currentSubmission.TeacherScore !== null && currentSubmission.TeacherScore !== undefined) ||
-                                 (currentSubmission.score !== null && currentSubmission.score !== undefined) ||
-                                 (currentSubmission.Score !== null && currentSubmission.Score !== undefined)) ? (
-                                    // Student has been graded - Show result view
-                                    <div className="graded-essay-view">
-                                        <div className="text-center p-5">
+                            <Card className="mb-4 border-0 shadow-sm">
+                                <Card.Body className="bg-white">
+                                    <div className="text-center mb-4">
+                                        <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ width: '80px', height: '80px' }}>
+                                            <FaEdit className="text-primary" size={40} style={{ color: '#d946ef' }} />
+                                        </div>
+                                        <h1 className="h3 mb-3 fw-bold">{essayTitle}</h1>
+                                    </div>
+                                    {essay?.description && (
+                                        <p className="text-muted mb-3">{essay.description || essay.Description}</p>
+                                    )}
+                                    {essay?.audioUrl && (
+                                        <div className="mb-3">
+                                            <audio 
+                                                ref={audioRef}
+                                                controls 
+                                                controlsList="nodownload"
+                                                className="w-100"
+                                                style={{ maxWidth: '500px' }}
+                                                src={audioBlobUrl || essay.audioUrl || essay.AudioUrl}
+                                            >
+                                                Trình duyệt của bạn không hỗ trợ phát audio.
+                                            </audio>
+                                        </div>
+                                    )}
+                                    {essay?.imageUrl && (
+                                        <div className="mb-3">
+                                            <img 
+                                                src={essay.imageUrl} 
+                                                alt={essayTitle || "Essay image"} 
+                                                className="img-fluid rounded"
+                                            />
+                                        </div>
+                                    )}
+                                </Card.Body>
+                            </Card>
+
+                            <Card className="border-0 shadow-sm">
+                                <Card.Body className="bg-white">
+                                    {/* Check if student has been graded */}
+                                    {currentSubmission && ((currentSubmission.teacherScore !== null && currentSubmission.teacherScore !== undefined) || 
+                                     (currentSubmission.TeacherScore !== null && currentSubmission.TeacherScore !== undefined) ||
+                                     (currentSubmission.score !== null && currentSubmission.score !== undefined) ||
+                                     (currentSubmission.Score !== null && currentSubmission.Score !== undefined)) ? (
+                                        // Student has been graded - Show result view
+                                        <div className="text-center py-5">
                                             <FaStar size={64} className="text-warning mb-3" />
                                             <h2 className="mb-3">Bài essay của bạn đã được chấm điểm!</h2>
                                             <p className="text-muted mb-4">
@@ -759,255 +766,234 @@ export default function EssayDetail() {
                                                 Xem điểm và nhận xét
                                             </Button>
                                         </div>
-                                    </div>
-                                ) : (
-                                    // Student hasn't been graded - Show normal form
-                                    <>
-                                <h2 className="section-title">
-                                    {currentSubmission ? "Cập nhật bài Essay" : "Nộp bài Essay"}
-                                </h2>
+                                    ) : (
+                                        // Student hasn't been graded - Show normal form
+                                        <>
+                                            <h2 className="h4 mb-4">
+                                                {currentSubmission ? "Cập nhật bài Essay" : "Nộp bài Essay"}
+                                            </h2>
 
-                                {currentSubmission && (
-                                    <div className="alert alert-info mb-3" role="alert">
-                                        <FaCheckCircle className="me-2" />
-                                        Bạn đã nộp bài essay này. Bạn có thể cập nhật hoặc xóa bài nộp.
-                                        {currentSubmission.submittedAt && (
-                                            <div className="mt-2">
-                                                <small>Nộp lúc: {formatDate(currentSubmission.submittedAt || currentSubmission.SubmittedAt)}</small>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                            {currentSubmission && (
+                                                <div className="alert alert-info mb-3" role="alert">
+                                                    <FaCheckCircle className="me-2" />
+                                                    Bạn đã nộp bài essay này. Bạn có thể cập nhật hoặc xóa bài nộp.
+                                                    {currentSubmission.submittedAt && (
+                                                        <div className="mt-2">
+                                                            <small>Nộp lúc: {formatDate(currentSubmission.submittedAt || currentSubmission.SubmittedAt)}</small>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
 
-                                <Form>
-                                    <Form.Group className="mb-4">
-                                        <Form.Label className="form-label">
-                                            <FaEdit className="label-icon" />
-                                            Nội dung Essay <span className="text-danger">*</span>
-                                        </Form.Label>
-                                        <Form.Control
-                                            as="textarea"
-                                            rows={12}
-                                            value={textContent}
-                                            onChange={(e) => setTextContent(e.target.value)}
-                                            placeholder="Nhập nội dung essay của bạn ở đây..."
-                                            className="essay-textarea"
-                                        />
-                                        <Form.Text className="text-muted">
-                                            Số ký tự: {textContent.length}
-                                        </Form.Text>
-                                    </Form.Group>
+                                            <Form>
+                                                {/* Tiêu đề Essay (read-only) */}
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className="d-flex align-items-center">
+                                                        <FaEdit className="me-2 text-primary" />
+                                                        Tiêu đề
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        type="text"
+                                                        value={essayTitle}
+                                                        readOnly
+                                                        className="bg-light"
+                                                    />
+                                                    <div className="d-flex justify-content-end mt-2">
+                                                        <span className="badge bg-success">Tự luận (Essay)</span>
+                                                    </div>
+                                                </Form.Group>
 
-                                    <Form.Group className="mb-4">
-                                        <Form.Label className="form-label">
-                                            <FaFileUpload className="label-icon" />
-                                            File đính kèm (tùy chọn)
-                                        </Form.Label>
-                                        <div className="file-upload-section">
-                                            {existingAttachmentUrl && !selectedFile && (
-                                                <div className="existing-file-section mb-3">
-                                                    <div className="file-preview-card">
-                                                        <div className="file-preview-info">
-                                                            <FaFileUpload className="file-icon" />
-                                                            <div className="file-info">
-                                                                <div className="file-name">File đính kèm hiện tại</div>
-                                                                <div className="file-size">
-                                                                    <a href={existingAttachmentUrl} target="_blank" rel="noopener noreferrer" className="text-primary">
-                                                                        Xem file
-                                                                    </a>
+                                                {/* Mô tả Essay (read-only) */}
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className="d-flex align-items-center">
+                                                        <FaEdit className="me-2 text-primary" />
+                                                        Mô tả
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        as="textarea"
+                                                        rows={3}
+                                                        value={essay?.description || essay?.Description || ""}
+                                                        readOnly
+                                                        className="bg-light"
+                                                    />
+                                                </Form.Group>
+
+                                                {/* Nội dung Essay (editable) */}
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className="d-flex align-items-center">
+                                                        <FaEdit className="me-2 text-primary" />
+                                                        Nội dung Essay <span className="text-danger">*</span>
+                                                    </Form.Label>
+                                                    <Form.Control
+                                                        as="textarea"
+                                                        rows={12}
+                                                        value={textContent}
+                                                        onChange={(e) => setTextContent(e.target.value)}
+                                                        placeholder="Nhập nội dung essay của bạn ở đây..."
+                                                    />
+                                                    <Form.Text className="text-muted">
+                                                        Số ký tự: {textContent.length}
+                                                    </Form.Text>
+                                                </Form.Group>
+
+                                                {/* File đính kèm */}
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className="d-flex align-items-center">
+                                                        <FaFileUpload className="me-2 text-primary" />
+                                                        File đính kèm (tùy chọn)
+                                                    </Form.Label>
+                                                    {existingAttachmentUrl && !selectedFile && (
+                                                        <div className="mb-3 p-3 border rounded bg-light">
+                                                            <div className="d-flex align-items-center justify-content-between">
+                                                                <div>
+                                                                    <FaFileUpload className="me-2 text-primary" />
+                                                                    <span>File đính kèm hiện tại</span>
+                                                                </div>
+                                                                <a href={existingAttachmentUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
+                                                                    Xem file
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {selectedFile ? (
+                                                        <div className="p-3 border rounded">
+                                                            <div className="d-flex align-items-center justify-content-between mb-2">
+                                                                <div>
+                                                                    <FaFileUpload className="me-2 text-primary" />
+                                                                    <strong>{selectedFile?.name || "Unknown file"}</strong>
+                                                                    <small className="text-muted ms-2">({formatFileSize(selectedFile?.size || 0)})</small>
+                                                                </div>
+                                                                <div>
+                                                                    {!attachmentTempKey && (
+                                                                        <Button
+                                                                            variant="primary"
+                                                                            size="sm"
+                                                                            onClick={handleUploadFile}
+                                                                            disabled={uploadingFile}
+                                                                            className="me-2"
+                                                                        >
+                                                                            {uploadingFile ? "Đang upload..." : "Upload file"}
+                                                                        </Button>
+                                                                    )}
+                                                                    {attachmentTempKey && (
+                                                                        <span className="badge bg-success me-2">
+                                                                            <FaCheckCircle className="me-1" /> Đã upload
+                                                                        </span>
+                                                                    )}
+                                                                    <Button
+                                                                        variant="outline-danger"
+                                                                        size="sm"
+                                                                        onClick={handleRemoveFile}
+                                                                    >
+                                                                        <FaTimes /> Xóa
+                                                                    </Button>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="file-actions">
-                                                            <span className="upload-success">
-                                                                <FaCheckCircle /> Đã có file
-                                                            </span>
+                                                    ) : (
+                                                        <div className="border border-dashed rounded p-4 text-center">
+                                                            <input
+                                                                ref={fileInputRef}
+                                                                type="file"
+                                                                id="file-input"
+                                                                className="d-none"
+                                                                onChange={handleFileSelect}
+                                                                accept=".pdf,.doc,.docx,.txt,.docm,.dotx,.dotm"
+                                                            />
+                                                            <label htmlFor="file-input" className="cursor-pointer">
+                                                                <FaFileUpload size={32} className="text-primary mb-2" />
+                                                                <div>Chọn file để upload</div>
+                                                                <small className="text-muted">(PDF, DOC, DOCX, TXT, DOCM, DOTX, DOTM - tối đa 10MB)</small>
+                                                            </label>
                                                         </div>
-                                                    </div>
-                                                </div>
-                                            )}
+                                                    )}
+                                                </Form.Group>
+                                            </Form>
 
-                                            {selectedFile ? (
-                                                <div className="file-preview-section">
-                                                    <div className="file-preview-card">
-                                                        <div className="file-preview-info">
-                                                            <FaFileUpload className="file-icon" />
-                                                            <div className="file-info">
-                                                                <div className="file-name">{selectedFile?.name || "Unknown file"}</div>
-                                                                <div className="file-size">{formatFileSize(selectedFile?.size || 0)}</div>
-                                                            </div>
-                                                        </div>
-                                                        {filePreview && (
-                                                            <div className="file-preview-image">
-                                                                <img src={filePreview} alt="Preview" />
-                                                            </div>
-                                                        )}
-                                                        <div className="file-actions">
-                                                            {!attachmentTempKey && (
-                                                                <Button
-                                                                    variant="primary"
-                                                                    size="sm"
-                                                                    onClick={handleUploadFile}
-                                                                    disabled={uploadingFile}
-                                                                >
-                                                                    {uploadingFile ? "Đang upload..." : "Upload file"}
-                                                                </Button>
-                                                            )}
-                                                            {attachmentTempKey && (
-                                                                <span className="upload-success">
-                                                                    <FaCheckCircle /> Đã upload
-                                                                </span>
-                                                            )}
-                                                            <Button
-                                                                variant="outline-danger"
-                                                                size="sm"
-                                                                onClick={handleRemoveFile}
-                                                            >
-                                                                <FaTimes /> Xóa
-                                                            </Button>
-                                                        </div>
-                                                    </div>
+                                            {!isPastDue() ? (
+                                                <div className="d-flex gap-2 mt-4">
+                                                    <Button
+                                                        variant="primary"
+                                                        size="lg"
+                                                        onClick={() => setShowSubmitModal(true)}
+                                                        disabled={submitting || isUpdating}
+                                                        className="flex-fill"
+                                                    >
+                                                        {isUpdating ? "Đang cập nhật..." : submitting ? "Đang nộp bài..." : currentSubmission ? "Cập nhật bài" : "Nộp bài"}
+                                                    </Button>
+                                                    {currentSubmission && (
+                                                        <Button
+                                                            variant="outline-danger"
+                                                            size="lg"
+                                                            onClick={() => setShowDeleteModal(true)}
+                                                            disabled={isDeleting}
+                                                        >
+                                                            {isDeleting ? "Đang xóa..." : "Xóa bài"}
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             ) : (
-                                                <div className="file-upload-area">
-                                                    <input
-                                                        ref={fileInputRef}
-                                                        type="file"
-                                                        id="file-input"
-                                                        className="file-input"
-                                                        onChange={handleFileSelect}
-                                                        accept=".pdf,.doc,.docx,.txt,.docm,.dotx,.dotm"
-                                                    />
-                                                    <label htmlFor="file-input" className="file-upload-label">
-                                                        <FaFileUpload className="upload-icon" />
-                                                        <span>Chọn file để upload</span>
-                                                        <small>(PDF, DOC, DOCX, TXT, DOCM, DOTX, DOTM - tối đa 10MB)</small>
-                                                    </label>
+                                                <div className="alert alert-warning mt-3" role="alert">
+                                                    <FaTimesCircle className="me-2" />
+                                                    Đã quá hạn nộp bài. Bạn không thể nộp hoặc cập nhật bài essay này.
                                                 </div>
                                             )}
-                                        </div>
-                                    </Form.Group>
-                                </Form>
 
-                                {!isPastDue() ? (
-                                    <div className="essay-submit-section d-flex gap-2">
-                                        <Button
-                                            variant="primary"
-                                            size="lg"
-                                            className="submit-essay-btn"
-                                            onClick={() => setShowSubmitModal(true)}
-                                            disabled={(submitting || isUpdating) || (!textContent.trim() && !attachmentTempKey && !existingAttachmentUrl)}
-                                            style={{
-                                                backgroundColor: '#41d6e3',
-                                                borderColor: '#41d6e3',
-                                                color: '#fff'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                const canSubmit = textContent.trim() || attachmentTempKey || existingAttachmentUrl;
-                                                if (!submitting && !isUpdating && canSubmit) {
-                                                    e.target.style.backgroundColor = '#35b8c4';
-                                                    e.target.style.borderColor = '#35b8c4';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                const canSubmit = textContent.trim() || attachmentTempKey || existingAttachmentUrl;
-                                                if (!submitting && !isUpdating && canSubmit) {
-                                                    e.target.style.backgroundColor = '#41d6e3';
-                                                    e.target.style.borderColor = '#41d6e3';
-                                                }
-                                            }}
-                                        >
-                                            {isUpdating ? "Đang cập nhật..." : submitting ? "Đang nộp bài..." : currentSubmission ? "Cập nhật bài" : "Nộp bài"}
-                                        </Button>
-                                        {currentSubmission && (
-                                            <Button
-                                                variant="outline-danger"
-                                                size="lg"
-                                                onClick={() => setShowDeleteModal(true)}
-                                                disabled={isDeleting}
-                                            >
-                                                {isDeleting ? "Đang xóa..." : "Xóa bài"}
-                                            </Button>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="alert alert-warning mt-3" role="alert">
-                                        <FaTimesCircle className="me-2" />
-                                        Đã quá hạn nộp bài. Bạn không thể nộp hoặc cập nhật bài essay này.
-                                    </div>
-                                )}
-                            </>
-                            )}
-                            </div>
-                        </Col>
+                                            {/* Thông tin Essay Cards */}
+                                            <Row className="g-3 mt-4">
+                                                <Col md={6}>
+                                                    <Card className="h-100">
+                                                        <Card.Body>
+                                                            <div className="text-muted small mb-1">Thời gian làm bài</div>
+                                                            <div className="fw-bold">
+                                                                {formatTimeLimit(assessment?.timeLimit || assessment?.TimeLimit)}
+                                                            </div>
+                                                        </Card.Body>
+                                                    </Card>
+                                                </Col>
 
-                        <Col lg={4}>
-                            <div className="essay-info-section">
-                                <h3 className="info-section-title">Thông tin Essay</h3>
+                                                <Col md={6}>
+                                                    <Card className="h-100">
+                                                        <Card.Body>
+                                                            <div className="text-muted small mb-1">Tổng điểm</div>
+                                                            <div className="fw-bold">
+                                                                {essay?.totalPoints || essay?.TotalPoints || 0} điểm
+                                                            </div>
+                                                        </Card.Body>
+                                                    </Card>
+                                                </Col>
 
-                                <div className="info-item">
-                                    <FaClock className="info-icon" />
-                                    <div className="info-content">
-                                        <div className="info-label">Hạn nộp</div>
-                                        <div className="info-value">
-                                            {assessment?.dueAt || assessment?.DueAt
-                                                ? formatDate(assessment?.dueAt || assessment?.DueAt)
-                                                : "Không có hạn nộp"}
-                                        </div>
-                                        {assessment?.dueAt || assessment?.DueAt ? (
-                                            <div className="info-value" style={{ marginTop: "4px", fontSize: "0.85em" }}>
-                                                {isPastDue() ? (
-                                                    <span className="text-danger">
-                                                        <FaTimesCircle className="me-1" />
-                                                        Đã quá hạn
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-success">
-                                                        <FaCheckCircle className="me-1" />
-                                                        Còn hạn nộp
-                                                    </span>
-                                                )}
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                </div>
+                                                <Col md={6}>
+                                                    <Card className="h-100">
+                                                        <Card.Body>
+                                                            <div className="text-muted small mb-1">Mở từ</div>
+                                                            <div className="fw-bold">
+                                                                {assessment?.openAt || assessment?.OpenAt
+                                                                    ? formatDate(assessment?.openAt || assessment?.OpenAt)
+                                                                    : "Không có"}
+                                                            </div>
+                                                        </Card.Body>
+                                                    </Card>
+                                                </Col>
 
-                                <div className="info-item">
-                                    <FaCheckCircle className="info-icon" />
-                                    <div className="info-content">
-                                        <div className="info-label">Trạng thái</div>
-                                        <div className="info-value">
-                                            {currentSubmission ? (
-                                                <span className="text-success">
-                                                    <FaCheckCircle className="me-1" />
-                                                    Đã nộp
-                                                </span>
-                                            ) : (
-                                                "Chưa nộp"
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {currentSubmission && currentSubmission.submittedAt && (
-                                    <div className="info-item">
-                                        <FaClock className="info-icon" />
-                                        <div className="info-content">
-                                            <div className="info-label">Thời gian nộp</div>
-                                            <div className="info-value">
-                                                {formatDate(currentSubmission.submittedAt || currentSubmission.SubmittedAt)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {essay?.description && (
-                                    <div className="info-description">
-                                        <h4>Mô tả</h4>
-                                        <p>{essay.description || essay.Description}</p>
-                                    </div>
-                                )}
-                            </div>
+                                                <Col md={6}>
+                                                    <Card className="h-100">
+                                                        <Card.Body>
+                                                            <div className="text-muted small mb-1">Hạn nộp</div>
+                                                            <div className="fw-bold">
+                                                                {assessment?.dueAt || assessment?.DueAt
+                                                                    ? formatDate(assessment?.dueAt || assessment?.DueAt)
+                                                                    : "Không có hạn nộp"}
+                                                            </div>
+                                                        </Card.Body>
+                                                    </Card>
+                                                </Col>
+                                            </Row>
+                                        </>
+                                    )}
+                                </Card.Body>
+                            </Card>
                         </Col>
                     </Row>
                 </Container>
@@ -1052,4 +1038,3 @@ export default function EssayDetail() {
         </>
     );
 }
-

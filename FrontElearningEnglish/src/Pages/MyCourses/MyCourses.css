@@ -1,80 +1,13 @@
 .my-courses-container {
-    padding: 30px 80px;
-    padding-top: calc(30px + 70px);
+    padding: var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem)) var(--padding-container-xl, clamp(2rem, 1.5rem + 2.5vw, 4rem));
+    padding-top: calc(var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem)) + 70px);
     background: var(--color-bg-secondary, #f6f8fb);
     min-height: calc(100vh - 70px);
 }
 
-.my-courses-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 20px;
-}
+/* Bootstrap utilities được sử dụng trong JSX - không cần CSS này nữa */
 
-.my-courses-welcome-section {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    text-align: left;
-    flex: 1 1 auto;
-}
-
-.my-courses-welcome-section h1 {
-    font-size: 32px;
-    font-weight: 800;
-    margin: 0;
-    text-align: left;
-    width: 100%;
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    animation: fadeInDown 0.8s ease-out, gradientTextShift 4s ease-in-out infinite;
-    background: linear-gradient(135deg, #41d6e3 0%, #d946ef 50%, #41d6e3 100%);
-    background-size: 300% 300%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 0 40px rgba(65, 214, 227, 0.5), 0 0 80px rgba(217, 70, 239, 0.3);
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-    padding-right: 32px;
-}
-
-.my-courses-welcome-section h1::after {
-    content: '🔥';
-    font-size: 24px;
-    animation: fireFlicker 1.5s ease-in-out infinite;
-    filter: drop-shadow(0 0 8px rgba(255, 87, 34, 0.8)) drop-shadow(0 0 16px rgba(255, 152, 0, 0.6));
-    flex-shrink: 0;
-}
-
-.welcome-message {
-    font-size: 16px;
-    color: var(--color-text-secondary, #6b7280);
-    margin-top: 12px;
-    margin: 0;
-    font-weight: 500;
-    text-align: left;
-    width: 100%;
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    animation: fadeInUp 0.8s ease-out 0.3s both, floatText 3s ease-in-out infinite;
-    padding-right: 28px;
-}
-
-.welcome-message::after {
-    content: '🔥';
-    font-size: 18px;
-    animation: fireFlicker 1.8s ease-in-out infinite;
-    filter: drop-shadow(0 0 6px rgba(255, 87, 34, 0.6)) drop-shadow(0 0 12px rgba(255, 152, 0, 0.4));
-    flex-shrink: 0;
-}
+/* Welcome Section được import từ WelcomeSection component - không cần CSS riêng */
 
 @keyframes fadeInDown {
     from {
@@ -137,14 +70,7 @@
     }
 }
 
-.header-actions {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    flex-shrink: 0;
-    flex-grow: 0;
-    margin-left: auto;
-}
+/* Bootstrap utilities được sử dụng trong JSX - không cần CSS này nữa */
 
 .search-box {
     position: relative;
@@ -154,17 +80,17 @@
 
 .search-icon {
     position: absolute;
-    left: 14px;
+    left: var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
     color: var(--color-text-tertiary, #9ca3af);
-    font-size: 16px;
+    font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
 }
 
 .search-box input {
-    width: 300px;
-    padding: 12px 16px 12px 42px;
+    width: clamp(250px, 15.625rem + 2vw, 300px);
+    padding: var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem)) var(--spacing-md, clamp(0.75rem, 0.6rem + 0.75vw, 1rem)) var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem)) clamp(2.5rem, 1.5rem + 1vw, 2.625rem);
     border: 1px solid var(--color-border-medium, #d1d5db);
-    border-radius: 12px;
-    font-size: 15px;
+    border-radius: var(--radius-md, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
+    font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
     background: var(--color-bg-primary, white);
     box-sizing: border-box;
     transition: border-color 0.2s ease;
@@ -180,16 +106,15 @@
     color: var(--color-text-tertiary, #9ca3af);
 }
 
+/* Bootstrap utilities: d-flex, align-items-center */
 .join-class-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
+    gap: var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem));
+    padding: var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem)) var(--spacing-lg, clamp(1rem, 0.8rem + 1vw, 1.5rem));
     background: var(--color-secondary-cyan, #41d6e3);
     color: var(--color-text-white, white);
     border: none;
-    border-radius: 12px;
-    font-size: 15px;
+    border-radius: var(--radius-md, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
+    font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
     font-weight: 600;
     cursor: pointer;
     transition: opacity 0.2s ease, transform 0.1s ease;
@@ -204,78 +129,92 @@
     transform: translateY(0);
 }
 
-/* Main content layout: 2 columns */
-.my-courses-main-content {
-    display: grid;
-    grid-template-columns: 7fr 3fr;
-    gap: 30px;
-    margin-top: 20px;
-}
+/* Bootstrap Grid được sử dụng trong JSX - không cần CSS grid nữa */
+/* .my-courses-main-content đã được thay bằng Bootstrap row/col */
 
 .courses-section {
-    margin-bottom: 40px;
+    margin-bottom: var(--padding-container-xl, clamp(2rem, 1.5rem + 2.5vw, 4rem));
 }
 
 /* Suggested courses section style (tái sử dụng từ SuggestedCoursesSection) */
 .suggested-courses-section h2 {
-    font-size: 26px;
-    margin-bottom: 24px;
-    color: var(--color-text-primary, #1f2937);
-    font-weight: 700;
+    font-size: var(--font-size-3xl, clamp(1.875rem, 1.5rem + 1.875vw, 2.25rem));
+    margin-bottom: var(--spacing-lg, clamp(1rem, 0.8rem + 1vw, 1.5rem));
+    margin-left: 0;
+    font-weight: 800;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem));
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    padding: var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem)) var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
+    border-radius: var(--radius-md, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
+    animation: fadeInLeft 0.8s ease-out;
+    color: #7c3aed;
+    line-height: 1.2;
 }
 
-.suggested-courses-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-    margin-bottom: 40px;
+.suggested-courses-section h2::after {
+    content: '🎯';
+    font-size: var(--font-size-xl, clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem));
+    animation: bounceTarget 2s ease-in-out infinite, pulseTarget 1.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(65, 214, 227, 0.6));
 }
 
-@media (max-width: 1200px) {
-    .suggested-courses-grid {
-        grid-template-columns: repeat(3, 1fr);
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-40px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
     }
 }
 
-@media (max-width: 992px) {
-    .suggested-courses-grid {
-        grid-template-columns: repeat(2, 1fr);
+@keyframes bounceTarget {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    25% {
+        transform: translateY(-8px) scale(1.1);
+    }
+    50% {
+        transform: translateY(-4px) scale(1.05);
+    }
+    75% {
+        transform: translateY(-6px) scale(1.08);
     }
 }
 
-@media (max-width: 576px) {
-    .suggested-courses-grid {
-        grid-template-columns: 1fr;
+@keyframes pulseTarget {
+    0%, 100% {
+        filter: drop-shadow(0 0 8px rgba(65, 214, 227, 0.6));
+    }
+    50% {
+        filter: drop-shadow(0 0 15px rgba(217, 70, 239, 0.8));
     }
 }
+
+.suggested-courses-section h2:hover {
+    color: #6d28d9;
+    transform: translateX(clamp(0.375rem, 0.3rem + 0.375vw, 0.5rem)) scale(1.05);
+}
+
+/* Bootstrap Grid được sử dụng trong JSX - không cần CSS grid nữa */
+/* .suggested-courses-grid đã được thay bằng Bootstrap row/col */
 
 .courses-section h2 {
-    font-size: 20px;
+    font-size: var(--font-size-xl, clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem));
     font-weight: 700;
     color: var(--color-text-primary, #1f2937);
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-lg, clamp(1rem, 0.8rem + 1vw, 1.5rem));
 }
 
-/* Grid 5x5 layout */
-.courses-grid-5x5 {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 24px;
-    margin-bottom: 40px;
-}
-
-/* Pagination */
-.pagination-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 40px;
-    padding-top: 30px;
-    border-top: 1px solid var(--color-border-light, #e5e7eb);
-}
+/* Bootstrap utilities được sử dụng trong JSX - không cần CSS này nữa */
 
 .pagination-info {
-    font-size: 14px;
+    font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
     color: var(--color-text-secondary, #6b7280);
 }
 
@@ -316,70 +255,21 @@
     color: var(--color-text-primary, #1f2937);
 }
 
-/* Responsive: Grid columns */
-@media (max-width: 1400px) {
-    .courses-grid-5x5 {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-@media (max-width: 1200px) {
-    .courses-grid-5x5 {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 968px) {
-    .courses-grid-5x5 {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-    
-    .pagination-wrapper {
-        flex-direction: column;
-        gap: 20px;
-        align-items: center;
-    }
-    
-    .pagination-info {
-        text-align: center;
-    }
-}
-
-@media (max-width: 576px) {
-    .courses-grid-5x5 {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-}
+/* Bootstrap Grid được sử dụng - không cần CSS grid nữa */
 
 .loading-message,
 .error-message,
 .no-courses-message {
     text-align: center;
-    padding: 40px 20px;
+    padding: var(--padding-container-xl, clamp(2rem, 1.5rem + 2.5vw, 4rem)) var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem));
     color: var(--color-text-secondary, #6b7280);
-    font-size: 16px;
+    font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
 }
 
-@media (max-width: 1024px) {
-    .my-courses-main-content {
-        grid-template-columns: 1fr;
-        gap: 30px;
-    }
-}
+/* Bootstrap Grid được sử dụng - không cần media query này nữa */
 
+/* Bootstrap utilities được sử dụng trong JSX - responsive tự động */
 @media (max-width: 968px) {
-    .my-courses-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .header-actions {
-        width: 100%;
-        flex-direction: column;
-    }
-
     .search-box input {
         width: 100%;
     }
@@ -390,10 +280,25 @@
     }
 }
 
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+/* Bootstrap Grid được sử dụng - không cần CSS grid nữa */
+
+/* ===========================
+   RESPONSIVE - Professional Pattern
+=========================== */
+
+/* Bootstrap Grid được sử dụng - không cần media query này nữa */
+
+/* Bootstrap utilities được sử dụng trong JSX - responsive tự động */
+
+/* Tablet: 768px and below */
 @media (max-width: 768px) {
     .my-courses-container {
-        padding: 20px 30px;
-        padding-top: calc(20px + 70px);
+        padding: var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem)) var(--padding-container-lg, clamp(1.5rem, 1rem + 2.5vw, 3rem));
+        padding-top: calc(var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem)) + 70px);
     }
     
     .custom-pagination {
@@ -402,7 +307,30 @@
     }
     
     .custom-pagination .page-link {
-        padding: 6px 10px;
-        font-size: 14px;
+        padding: var(--spacing-xs, clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem)) var(--spacing-sm, clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem));
+        font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
+    }
+}
+
+/* Mobile: 576px and below */
+@media (max-width: 576px) {
+    .my-courses-container {
+        padding: var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem)) var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem));
+        padding-top: calc(var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem)) + 70px);
+    }
+
+    .loading-message,
+    .error-message,
+    .no-courses-message {
+        padding: var(--spacing-xl, clamp(1.5rem, 1.2rem + 1.5vw, 2rem)) var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
+        font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
+    }
+}
+
+/* Small Mobile: 480px and below */
+@media (max-width: 480px) {
+    .my-courses-container {
+        padding: var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
+        padding-top: calc(var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem)) + 70px);
     }
 }

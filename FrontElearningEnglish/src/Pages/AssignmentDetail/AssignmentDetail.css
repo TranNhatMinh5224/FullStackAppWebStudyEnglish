@@ -65,9 +65,8 @@
     margin: 0 0 20px 0;
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .assessment-cards {
-    display: flex;
-    flex-direction: column;
     gap: 16px;
 }
 

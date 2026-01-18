@@ -4,9 +4,9 @@ import "./FlashCardNavigation.css";
 
 export default function FlashCardNavigation({ onPrevious, onNext, canGoPrevious, canGoNext }) {
     return (
-        <div className="flashcard-navigation">
+        <div className="flashcard-navigation d-flex align-items-center">
             <button
-                className={`nav-button prev-button ${!canGoPrevious ? "disabled" : ""}`}
+                className={`nav-button prev-button d-flex align-items-center justify-content-center ${!canGoPrevious ? "disabled" : ""}`}
                 onClick={onPrevious}
                 disabled={!canGoPrevious}
             >

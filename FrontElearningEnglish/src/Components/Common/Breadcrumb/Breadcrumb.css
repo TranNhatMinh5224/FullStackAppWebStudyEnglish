@@ -1,0 +1,93 @@
+/* ============================================
+   BREADCRUMB COMPONENT - Reusable
+   ============================================ */
+
+.custom-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    overflow: hidden;
+}
+
+.breadcrumb-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    color: #6b7280;
+    font-size: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.breadcrumb-item.breadcrumb-link:hover {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+[data-theme="dark"] .breadcrumb-item {
+    color: #9ca3af;
+}
+
+[data-theme="dark"] .breadcrumb-item.breadcrumb-link:hover {
+    background-color: #404040;
+    color: #ffffff;
+}
+
+.breadcrumb-item.breadcrumb-current {
+    color: #374151;
+    cursor: default;
+    font-weight: 500;
+}
+
+[data-theme="dark"] .breadcrumb-item.breadcrumb-current {
+    color: #e5e7eb;
+}
+
+.breadcrumb-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.breadcrumb-separator {
+    color: #d1d5db;
+    font-size: 14px;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+[data-theme="dark"] .breadcrumb-separator {
+    color: #4b5563;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .custom-breadcrumb {
+        font-size: 12px;
+        gap: 6px;
+    }
+
+    .breadcrumb-item {
+        padding: 4px 6px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .custom-breadcrumb {
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        flex-wrap: nowrap;
+    }
+
+    .custom-breadcrumb::-webkit-scrollbar {
+        display: none;
+    }
+}

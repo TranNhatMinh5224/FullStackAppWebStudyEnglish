@@ -60,11 +60,16 @@
 .streak-wrapper .streak-icon {
     width: 18px !important;
     height: 18px !important;
-    object-fit: contain !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #fff !important;
+    font-size: 1.125rem !important;
     filter: drop-shadow(0 0 4px rgba(255, 215, 102, 0.8)) drop-shadow(0 0 8px rgba(255, 107, 53, 0.6));
     animation: fireFlicker 1.5s ease-in-out infinite;
     position: relative;
     z-index: 1;
+    flex-shrink: 0;
 }
 
 @keyframes gradientShift {
@@ -202,6 +207,16 @@
     opacity: 0.6;
     animation: gradientShift 3s ease infinite, pulseRing 2s ease-in-out infinite;
     filter: blur(8px);
+}
+
+.streak-icon-large svg {
+    width: 48px;
+    height: 48px;
+    color: #fff;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 102, 0.8)) drop-shadow(0 0 16px rgba(255, 107, 53, 0.6));
+    animation: fireRotate 3s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
 }
 
 .streak-icon-large img {
@@ -356,6 +371,7 @@
         height: 56px;
     }
     
+    .streak-icon-large svg,
     .streak-icon-large img {
         width: 36px;
         height: 36px;

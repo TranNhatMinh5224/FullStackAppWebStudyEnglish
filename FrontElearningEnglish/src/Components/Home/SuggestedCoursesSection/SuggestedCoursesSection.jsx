@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SuggestedCourseCard from "../SuggestedCourseCard/SuggestedCourseCard";
 import { courseService } from "../../../Services/courseService";
-import { mochiKhoaHoc as mochiKhoaHocImage } from "../../../Assets";
+import { useAssets } from "../../../Context/AssetContext";
 import { useAuth } from "../../../Context/AuthContext";
 import "./SuggestedCoursesSection.css";
 
@@ -10,6 +10,7 @@ export default function SuggestedCoursesSection({ courses = [] }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { isGuest } = useAuth();
+    const { getDefaultCourseImage } = useAssets();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -29,7 +30,7 @@ export default function SuggestedCoursesSection({ courses = [] }) {
                         title: course.title,
                         imageUrl: course.imageUrl && course.imageUrl.trim() !== "" 
                             ? course.imageUrl 
-                            : mochiKhoaHocImage,
+                            : getDefaultCourseImage(),
                         price: course.price || 0,
                         isEnrolled: course.isEnrolled || course.IsEnrolled || false, // Lấy từ API response
                     }));
@@ -58,20 +59,21 @@ export default function SuggestedCoursesSection({ courses = [] }) {
 
     return (
         <div className="suggested-courses-section">
-            <h2>Catalunya English - Hệ Thống Khóa học Số 1 Việt Nam </h2>
+            <h3 className="fs-3">Catalunya English -Tiếng Anh Số 1 Việt Nam </h3>
             {loading ? (
                 <div className="loading-message">Đang tải khóa học...</div>
             ) : error ? (
                 <div className="error-message">{error}</div>
             ) : displayCourses.length > 0 ? (
-                <div className="suggested-courses-grid">
+                <div className="row g-3 g-md-4">
                     {displayCourses.map((course, index) => (
-                        <SuggestedCourseCard
-                            key={course.id || index}
-                            course={course}
-                            isEnrolled={course.isEnrolled || false} // Sử dụng IsEnrolled từ API
-                            showEnrolledBadge={true} // Hiển thị badge ở trang chủ
-                        />
+                        <div key={course.id || index} className="col-12 col-sm-6 col-lg-4 col-xl-3">
+                            <SuggestedCourseCard
+                                course={course}
+                                isEnrolled={course.isEnrolled || false} // Sử dụng IsEnrolled từ API
+                                showEnrolledBadge={true} // Hiển thị badge ở trang chủ
+                            />
+                        </div>
                     ))}
                 </div>
             ) : (

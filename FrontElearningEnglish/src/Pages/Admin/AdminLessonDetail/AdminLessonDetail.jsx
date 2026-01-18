@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
 import "./AdminLessonDetail.css";
+import Breadcrumb from "../../../Components/Common/Breadcrumb/Breadcrumb";
 import { useAuth } from "../../../Context/AuthContext";
 import { useModuleTypes } from "../../../hooks/useModuleTypes";
 import { adminService } from "../../../Services/adminService";
@@ -10,7 +11,7 @@ import { flashcardService } from "../../../Services/flashcardService";
 import { assessmentService } from "../../../Services/assessmentService";
 import { quizService } from "../../../Services/quizService";
 import { essayService } from "../../../Services/essayService";
-import { mochiLessonTeacher, mochiModuleTeacher } from "../../../Assets/Logo";
+import { useAssets } from "../../../Context/AssetContext";
 import CreateLessonModal from "../../../Components/Teacher/CreateLessonModal/CreateLessonModal";
 import CreateModuleModal from "../../../Components/Teacher/CreateModuleModal/CreateModuleModal";
 import CreateAssessmentModal from "../../../Components/Teacher/CreateAssessmentModal/CreateAssessmentModal";
@@ -23,6 +24,7 @@ export default function AdminLessonDetail() {
   const navigate = useNavigate();
   const { roles, isAuthenticated } = useAuth();
   const { isLecture, isFlashCard, isAssessment, isClickable, getModuleTypePath } = useModuleTypes();
+  const { getDefaultLessonImage } = useAssets();
   const [course, setCourse] = useState(null);
   const [lesson, setLesson] = useState(null);
   const [modules, setModules] = useState([]);
@@ -307,29 +309,20 @@ export default function AdminLessonDetail() {
 
   const lessonTitle = lesson.title || lesson.Title || "Bài học";
   const lessonDescription = lesson.description || lesson.Description || "";
-  const lessonImage = lesson.imageUrl || lesson.ImageUrl || mochiLessonTeacher;
+  const lessonImage = lesson.imageUrl || lesson.ImageUrl || getDefaultLessonImage();
 
   return (
     <>
       <div className="admin-lesson-detail-container">
         <div className="breadcrumb-section">
-          <span className="breadcrumb-text">
-            <span
-              className="breadcrumb-link"
-              onClick={() => navigate("/admin/course-management")}
-            >
-              Quản lý khoá học
-            </span>
-            {" / "}
-            <span
-              className="breadcrumb-link"
-              onClick={() => navigate(`/admin/courses/${courseId}`)}
-            >
-              {course?.title || course?.Title || courseId}
-            </span>
-            {" / "}
-            <span className="breadcrumb-current">{lessonTitle}</span>
-          </span>
+          <Breadcrumb
+            items={[
+              { label: "Quản lý khoá học", path: "/admin/course-management" },
+              { label: course?.title || course?.Title || courseId, path: `/admin/courses/${courseId}` },
+              { label: lessonTitle, isCurrent: true }
+            ]}
+            showHomeIcon={false}
+          />
         </div>
 
         <Container fluid className="lesson-detail-content">
@@ -633,7 +626,7 @@ export default function AdminLessonDetail() {
                     modules.map((module, index) => {
                       const moduleId = module.moduleId || module.ModuleId;
                       const moduleName = module.name || module.Name || `Module ${index + 1}`;
-                      const moduleImage = module.imageUrl || module.ImageUrl || mochiModuleTeacher;
+                      const moduleImage = module.imageUrl || module.ImageUrl || null; // Module dùng React icon, không cần default image
 
                       // Get contentType - could be number (enum) or string (ContentTypeName)
                       const contentTypeValue = module.contentType || module.ContentType;

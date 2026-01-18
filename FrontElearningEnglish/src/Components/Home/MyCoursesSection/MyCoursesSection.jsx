@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import CourseCard from "../CourseCard/CourseCard";
 import { courseService } from "../../../Services/courseService";
-import { mochiKhoaHoc as mochiKhoaHocImage } from "../../../Assets";
+import { useAssets } from "../../../Context/AssetContext";
 import "./MyCoursesSection.css";
 
 export default function MyCoursesSection({ courses = [] }) {
     const [systemCourses, setSystemCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { getDefaultCourseImage } = useAssets();
     const scrollContainerRef = useRef(null);
     const [showLeftButton, setShowLeftButton] = useState(false);
     const [showRightButton, setShowRightButton] = useState(true);
@@ -33,7 +34,7 @@ export default function MyCoursesSection({ courses = [] }) {
                         title: course.title,
                         imageUrl: course.imageUrl && course.imageUrl.trim() !== "" 
                             ? course.imageUrl 
-                            : mochiKhoaHocImage,
+                            : getDefaultCourseImage(),
                         progress: 0, // System courses don't have progress initially
                     }));
                     setSystemCourses(mappedCourses);

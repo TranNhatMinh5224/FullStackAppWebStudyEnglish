@@ -240,17 +240,33 @@ export default function CreateFlashCardModal({ show, onClose, onSuccess, moduleI
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Validate
-    if (!word.trim() || !meaning.trim() || !pronunciation.trim() || !partOfSpeech.trim()) {
-        setErrors({submit: "Vui lòng điền đầy đủ các trường bắt buộc (*)"});
-        return;
+    
+    // Clear previous errors
+    const newErrors = {};
+    
+    // Validate required fields
+    if (!word.trim()) {
+        newErrors.word = "Từ vựng là bắt buộc";
+    }
+    if (!meaning.trim()) {
+        newErrors.meaning = "Nghĩa là bắt buộc";
+    }
+    if (!pronunciation.trim()) {
+        newErrors.pronunciation = "Phiên âm là bắt buộc";
+    }
+    if (!partOfSpeech.trim()) {
+        newErrors.partOfSpeech = "Từ loại là bắt buộc";
     }
     if (!imagePreview && !imageTempKey) {
-        setErrors({image: "Ảnh là bắt buộc"});
-        return;
+        newErrors.image = "Ảnh là bắt buộc";
     }
     if (!audioPreview && !audioTempKey) {
-        setErrors({audio: "Âm thanh là bắt buộc"});
+        newErrors.audio = "Âm thanh là bắt buộc";
+    }
+    
+    // If there are errors, set them and return
+    if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
         return;
     }
 
@@ -323,7 +339,10 @@ export default function CreateFlashCardModal({ show, onClose, onSuccess, moduleI
                         <Form.Control
                             type="text"
                             value={word}
-                            onChange={e => setWord(e.target.value)}
+                            onChange={e => {
+                                setWord(e.target.value);
+                                if (errors.word) setErrors({...errors, word: null});
+                            }}
                             placeholder="Nhập từ vựng tiếng Anh"
                             isInvalid={!!errors.word}
                         />
@@ -334,7 +353,10 @@ export default function CreateFlashCardModal({ show, onClose, onSuccess, moduleI
                         <Form.Control
                             type="text"
                             value={pronunciation}
-                            onChange={e => setPronunciation(e.target.value)}
+                            onChange={e => {
+                                setPronunciation(e.target.value);
+                                if (errors.pronunciation) setErrors({...errors, pronunciation: null});
+                            }}
                             placeholder="Nhập phiên âm IPA (VD: /ˈæp.l/)"
                             isInvalid={!!errors.pronunciation}
                         />
@@ -345,7 +367,10 @@ export default function CreateFlashCardModal({ show, onClose, onSuccess, moduleI
                         <Form.Control
                             type="text"
                             value={meaning}
-                            onChange={e => setMeaning(e.target.value)}
+                            onChange={e => {
+                                setMeaning(e.target.value);
+                                if (errors.meaning) setErrors({...errors, meaning: null});
+                            }}
                             placeholder="Nhập nghĩa tiếng Việt"
                             isInvalid={!!errors.meaning}
                         />
@@ -356,7 +381,10 @@ export default function CreateFlashCardModal({ show, onClose, onSuccess, moduleI
                         <Form.Control
                             type="text"
                             value={partOfSpeech}
-                            onChange={e => setPartOfSpeech(e.target.value)}
+                            onChange={e => {
+                                setPartOfSpeech(e.target.value);
+                                if (errors.partOfSpeech) setErrors({...errors, partOfSpeech: null});
+                            }}
                             placeholder="Nhập từ loại (VD: Noun, Verb, Adjective)"
                             isInvalid={!!errors.partOfSpeech}
                         />

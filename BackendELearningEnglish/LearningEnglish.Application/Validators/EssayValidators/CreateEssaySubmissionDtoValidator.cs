@@ -10,17 +10,25 @@ namespace LearningEnglish.Application.Validators.EssayValidators
             RuleFor(x => x.EssayId)
                 .GreaterThan(0).WithMessage("Essay ID phải lớn hơn 0");
 
-            // TextContent hoặc AttachmentTempKey phải có ít nhất 1
-            RuleFor(x => x)
-                .Must(x => !string.IsNullOrWhiteSpace(x.TextContent) || !string.IsNullOrWhiteSpace(x.AttachmentTempKey))
-                .WithMessage("Phải có ít nhất nội dung văn bản hoặc file đính kèm");
-
+            // Cho phép nộp bài trống - không yêu cầu TextContent hoặc AttachmentTempKey
+            // Chỉ validate maximum length nếu có TextContent
             RuleFor(x => x.TextContent)
-                .MinimumLength(10).WithMessage("Nội dung bài làm phải có ít nhất 10 ký tự")
-                .MaximumLength(1000000).WithMessage("Nội dung bài làm không được quá 10000 ký tự")
+                .MaximumLength(1000000).WithMessage("Nội dung bài làm không được quá 1,000,000 ký tự")
                 .When(x => !string.IsNullOrWhiteSpace(x.TextContent));
 
-         
+            // Validate file type nếu có AttachmentTempKey
+            RuleFor(x => x.AttachmentType)
+                .NotEmpty()
+                .WithMessage("Phải chỉ định loại file đính kèm")
+                .Must(type => type == "application/pdf" || 
+                             type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                             type == "application/msword" ||
+                             type == "text/plain" ||
+                             type == "application/vnd.ms-word.document.macroEnabled.12" ||
+                             type == "application/vnd.openxmlformats-officedocument.wordprocessingml.template" ||
+                             type == "application/vnd.ms-word.template.macroEnabled.12")
+                .WithMessage("Chỉ chấp nhận file PDF, Word (.doc, .docx), hoặc Text (.txt)")
+                .When(x => !string.IsNullOrWhiteSpace(x.AttachmentTempKey));
         }
     }
 }

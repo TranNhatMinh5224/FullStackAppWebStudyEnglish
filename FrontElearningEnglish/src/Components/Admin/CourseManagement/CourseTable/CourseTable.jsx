@@ -1,6 +1,7 @@
 import React from "react";
 import { Pagination } from "react-bootstrap";
 import { MdEdit, MdDelete, MdVisibility, MdMenuBook } from "react-icons/md";
+import { useAssets } from "../../../../Context/AssetContext";
 import "./CourseTable.css";
 
 export default function CourseTable({ 
@@ -15,6 +16,9 @@ export default function CourseTable({
   pageSize = 10,
   onPageChange
 }) {
+  const { getDefaultCourseImage } = useAssets();
+  const defaultCourseImage = getDefaultCourseImage();
+  
   const formatPrice = (price) => {
     if (price === 0 || !price) {
       return <span className="price-free">Free</span>;
@@ -67,9 +71,9 @@ export default function CourseTable({
                 >
                   <td>
                     <div className="course-info">
-                      {course.imageUrl ? (
+                      {(course.imageUrl || defaultCourseImage) ? (
                         <img 
-                          src={course.imageUrl} 
+                          src={course.imageUrl || defaultCourseImage} 
                           alt="Course" 
                           className="course-thumbnail"
                         />

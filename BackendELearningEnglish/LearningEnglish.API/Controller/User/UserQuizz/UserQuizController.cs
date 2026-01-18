@@ -8,7 +8,7 @@ namespace LearningEnglish.API.Controller.User
 {
     [ApiController]
     [Route("api/user/quizzes")]
-    [Authorize(Roles = "Student")]
+    [Authorize(Roles = "Student,SuperAdmin,ContentAdmin,FinanceAdmin")]
     public class UserQuizController : ControllerBase
     {
         private readonly IUserQuizService _quizService;

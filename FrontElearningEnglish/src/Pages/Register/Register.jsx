@@ -348,7 +348,7 @@ export default function Register() {
 
                 {/* Date of Birth */}
                 <Form.Group className="mb-3">
-                  <div className="date-picker-wrapper">
+                  <div className="date-picker-wrapper d-flex flex-column">
                     <DatePicker
                       value={formData.dateOfBirth}
                       onChange={handleDateChange}

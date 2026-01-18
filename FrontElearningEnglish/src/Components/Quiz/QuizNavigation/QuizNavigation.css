@@ -1,31 +1,26 @@
 
 
+/* Bootstrap utilities: d-flex, justify-content-between, align-items-center */
 .navigation-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 16px;
     padding-bottom: 12px;
     border-bottom: 2px solid var(--color-border-light, #e5e7eb);
 }
 
 .navigation-title {
-    font-size: 16px;
+    font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
     font-weight: 600;
     color: var(--color-text-primary, #1f2937);
     margin: 0;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center */
 .navigation-stats {
-    display: flex;
-    align-items: center;
     gap: 12px;
 }
 
-/* Combined stat panel */
+/* Bootstrap utilities: d-flex, align-items-center */
 .stat-panel {
-    display: flex;
-    align-items: center;
     gap: 12px;
     background: var(--color-bg-secondary, #f6f8fb);
     padding: 10px 14px;
@@ -33,9 +28,8 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.03);
 }
 
+/* Bootstrap utilities: d-flex, align-items-center */
 .stat-content {
-    display: flex;
-    align-items: center;
     gap: 10px;
 }
 
@@ -76,12 +70,10 @@
 }
 
 .navigation-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
+    /* Bootstrap utilities được sử dụng trong JSX - responsive tự động */
 }
 
+/* Bootstrap utilities: d-flex, align-items-center, justify-content-center */
 .navigation-item {
     aspect-ratio: 1;
     border: 2px solid var(--color-border-light, #e5e7eb);
@@ -89,12 +81,10 @@
     background: var(--color-bg-primary, white);
     color: var(--color-text-primary, #1f2937);
     font-weight: 600;
-    font-size: 14px;
+    font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
     cursor: pointer;
     transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    min-height: 40px;
 }
 
 .navigation-item:hover {
@@ -120,17 +110,15 @@
     background: var(--color-bg-primary, white);
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .navigation-legend {
-    display: flex;
-    flex-direction: column;
     gap: 8px;
     padding-top: 12px;
     border-top: 2px solid var(--color-border-light, #e5e7eb);
 }
 
+/* Bootstrap utilities: d-flex, align-items-center */
 .legend-item {
-    display: flex;
-    align-items: center;
     gap: 8px;
     font-size: 12px;
     color: var(--color-text-secondary, #6b7280);
@@ -158,9 +146,5 @@
     border-color: var(--color-border-light, #e5e7eb);
 }
 
-@media (max-width: 768px) {
-    .navigation-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
+/* Bootstrap utilities được sử dụng trong JSX - responsive tự động */
 

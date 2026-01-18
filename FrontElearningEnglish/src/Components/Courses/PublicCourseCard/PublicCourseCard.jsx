@@ -9,7 +9,7 @@ export default function PublicCourseCard({ course, onStart }) {
 
     return (
         <div className="public-course-card">
-            <img src={imageUrl} alt={title} />
+            <img src={displayImageUrl} alt={title} />
             <div className="course-info">
                 <h3>{title}</h3>
                 <button className="start-btn" onClick={() => onStart?.(course)}>

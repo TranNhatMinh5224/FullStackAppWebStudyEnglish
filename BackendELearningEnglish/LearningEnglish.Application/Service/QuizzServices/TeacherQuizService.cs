@@ -214,14 +214,8 @@ namespace LearningEnglish.Application.Service
                 }
 
                 var quiz = _mapper.Map<Quiz>(quizDto);
+                // TotalPossibleScore được nhập từ DTO, không tự động tính
                 await _quizRepository.AddQuizAsync(quiz);
-
-                var fullQuiz = await _quizRepository.GetFullQuizAsync(quiz.QuizId);
-                if (fullQuiz != null)
-                {
-                    quiz.TotalPossibleScore = QuizScoreCalculator.CalculateTotalPossibleScore(fullQuiz);
-                    await _quizRepository.UpdateQuizAsync(quiz);
-                }
 
                 response.Data = _mapper.Map<QuizDto>(quiz);
                 response.StatusCode = 201;
@@ -260,14 +254,8 @@ namespace LearningEnglish.Application.Service
                 }
 
                 _mapper.Map(quizDto, existingQuiz);
+                // TotalPossibleScore được cập nhật từ DTO, không tự động tính
                 await _quizRepository.UpdateQuizAsync(existingQuiz);
-
-                var fullQuiz = await _quizRepository.GetFullQuizAsync(existingQuiz.QuizId);
-                if (fullQuiz != null)
-                {
-                    existingQuiz.TotalPossibleScore = QuizScoreCalculator.CalculateTotalPossibleScore(fullQuiz);
-                    await _quizRepository.UpdateQuizAsync(existingQuiz);
-                }
 
                 response.Data = _mapper.Map<QuizDto>(existingQuiz);
                 response.StatusCode = 200;

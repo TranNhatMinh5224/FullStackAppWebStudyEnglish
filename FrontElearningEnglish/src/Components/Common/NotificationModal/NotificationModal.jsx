@@ -25,13 +25,13 @@ export default function NotificationModal({
     const getIcon = () => {
         switch (type) {
             case "success":
-                return <FaCheckCircle className="notification-icon notification-icon-success" />;
+                return <FaCheckCircle className="notification-modal-icon notification-modal-icon--success" />;
             case "error":
-                return <FaTimesCircle className="notification-icon notification-icon-error" />;
+                return <FaTimesCircle className="notification-modal-icon notification-modal-icon--error" />;
             case "info":
-                return <FaInfoCircle className="notification-icon notification-icon-info" />;
+                return <FaInfoCircle className="notification-modal-icon notification-modal-icon--info" />;
             default:
-                return <FaInfoCircle className="notification-icon notification-icon-info" />;
+                return <FaInfoCircle className="notification-modal-icon notification-modal-icon--info" />;
         }
     };
 
@@ -52,8 +52,10 @@ export default function NotificationModal({
     return (
         <div className="modal-overlay notification-modal-overlay" onClick={onClose}>
             <div className="modal-content notification-modal-content" onClick={(e) => e.stopPropagation()}>
-                <div className="notification-modal-header">
-                    {getIcon()}
+                <div className={`notification-modal-header notification-modal-header--${type}`}>
+                    <div className={`notification-modal-icon-wrapper notification-modal-icon-wrapper--${type}`}>
+                        {getIcon()}
+                    </div>
                     <h2 className="notification-modal-title">{getTitle()}</h2>
                 </div>
                 
@@ -64,7 +66,7 @@ export default function NotificationModal({
                 <div className="notification-modal-footer">
                     <button
                         type="button"
-                        className={`modal-btn notification-btn notification-btn-${type}`}
+                        className={`notification-modal-btn notification-modal-btn--${type}`}
                         onClick={onClose}
                     >
                         Đóng

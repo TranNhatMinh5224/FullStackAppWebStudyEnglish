@@ -4,16 +4,13 @@
     margin-bottom: -30px;
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .progress-container {
-    display: flex;
-    flex-direction: column;
     gap: 12px;
 }
 
+/* Bootstrap utilities: d-flex, justify-content-between, align-items-center */
 .progress-top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .progress-label {
@@ -28,12 +25,12 @@
     color: var(--color-text-primary, #1f2937);
 }
 
+/* Bootstrap utilities: d-flex, align-items-center */
 .progress-bottom-row {
-    display: flex;
-    align-items: center;
     gap: 12px;
 }
 
+/* Bootstrap utilities: d-flex, align-items-center, justify-content-center */
 .progress-close-btn {
     width: 32px;
     height: 32px;
@@ -41,12 +38,9 @@
     border: none;
     background: var(--color-border-light, #e5e7eb);
     color: var(--color-text-secondary, #6b7280);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 14px;
+    font-size: var(--font-size-sm, clamp(0.875rem, 0.8rem + 0.375vw, 1rem));
     flex-shrink: 0;
 }
 

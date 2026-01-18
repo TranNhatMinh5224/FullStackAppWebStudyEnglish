@@ -1,0 +1,228 @@
+/**
+ * Bootstrap Override - Giữ nguyên màu sắc custom, không dùng màu Bootstrap
+ * File này override các màu mặc định của Bootstrap để sử dụng màu từ theme
+ */
+
+/* ============================================
+   BUTTON OVERRIDES - Giữ màu custom
+   ============================================ */
+
+/* ============================================
+   BUTTON OVERRIDES - Giữ màu custom
+   ============================================ */
+
+/* Override Bootstrap primary button - KHÔNG dùng màu Bootstrap mặc định */
+/* Màu sẽ được set cụ thể trong từng component với class cụ thể */
+/* Ví dụ: .auth-btn.btn-primary, .modal-footer .btn-primary */
+
+/* Override Bootstrap secondary button */
+/* Màu sẽ được set cụ thể trong từng component */
+
+/* Override Bootstrap success button */
+.btn-success {
+  background-color: var(--color-status-success, #10b981);
+  border-color: var(--color-status-success, #10b981);
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+/* Override Bootstrap danger button */
+.btn-danger {
+  background-color: var(--color-status-error, #ef4444);
+  border-color: var(--color-status-error, #ef4444);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+/* Override Bootstrap warning button */
+.btn-warning {
+  background-color: var(--color-status-warning, #f59e0b);
+  border-color: var(--color-status-warning, #f59e0b);
+  color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background-color: #d97706;
+  border-color: #d97706;
+}
+
+/* Override Bootstrap info button */
+.btn-info {
+  background-color: var(--color-status-info, #3b82f6);
+  border-color: var(--color-status-info, #3b82f6);
+  color: white;
+}
+
+.btn-info:hover:not(:disabled) {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+/* ============================================
+   BACKGROUND OVERRIDES
+   ============================================ */
+
+/* Override Bootstrap background utilities - KHÔNG dùng màu Bootstrap */
+.bg-primary {
+  /* Màu sẽ được set cụ thể trong từng component */
+}
+
+.bg-secondary {
+  /* Màu sẽ được set cụ thể trong từng component */
+}
+
+.bg-success {
+  background-color: var(--color-status-success, #10b981) !important;
+}
+
+.bg-danger {
+  background-color: var(--color-status-error, #ef4444) !important;
+}
+
+.bg-warning {
+  background-color: var(--color-status-warning, #f59e0b) !important;
+}
+
+.bg-info {
+  background-color: var(--color-status-info, #3b82f6) !important;
+}
+
+/* ============================================
+   TEXT OVERRIDES
+   ============================================ */
+
+/* Override Bootstrap text utilities - KHÔNG dùng màu Bootstrap */
+.text-primary {
+  /* Màu sẽ được set cụ thể trong từng component */
+}
+
+.text-secondary {
+  color: var(--color-text-secondary, #6b7280) !important;
+}
+
+.text-success {
+  color: var(--color-status-success, #10b981) !important;
+}
+
+.text-danger {
+  color: var(--color-status-error, #ef4444) !important;
+}
+
+.text-warning {
+  color: var(--color-status-warning, #f59e0b) !important;
+}
+
+.text-info {
+  color: var(--color-status-info, #3b82f6) !important;
+}
+
+/* ============================================
+   BORDER OVERRIDES
+   ============================================ */
+
+.border-primary {
+  /* Màu sẽ được set cụ thể trong từng component */
+}
+
+.border-secondary {
+  border-color: var(--color-border-medium, #d1d5db) !important;
+}
+
+.border-success {
+  border-color: var(--color-status-success, #10b981) !important;
+}
+
+.border-danger {
+  border-color: var(--color-status-error, #ef4444) !important;
+}
+
+.border-warning {
+  border-color: var(--color-status-warning, #f59e0b) !important;
+}
+
+.border-info {
+  border-color: var(--color-status-info, #3b82f6) !important;
+}
+
+/* ============================================
+   ALERT OVERRIDES
+   ============================================ */
+
+.alert-success {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: var(--color-status-success, #10b981);
+}
+
+.alert-danger {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--color-status-error, #ef4444);
+}
+
+.alert-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.2);
+  color: var(--color-status-warning, #f59e0b);
+}
+
+.alert-info {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.2);
+  color: var(--color-status-info, #3b82f6);
+}
+
+/* ============================================
+   BADGE OVERRIDES
+   ============================================ */
+
+.badge-success {
+  background-color: var(--color-status-success, #10b981);
+}
+
+.badge-danger {
+  background-color: var(--color-status-error, #ef4444);
+}
+
+.badge-warning {
+  background-color: var(--color-status-warning, #f59e0b);
+}
+
+.badge-info {
+  background-color: var(--color-status-info, #3b82f6);
+}
+
+/* ============================================
+   PROGRESS BAR OVERRIDES
+   ============================================ */
+
+.progress-bar.bg-success {
+  background-color: var(--color-status-success, #10b981) !important;
+}
+
+.progress-bar.bg-danger {
+  background-color: var(--color-status-error, #ef4444) !important;
+}
+
+.progress-bar.bg-warning {
+  background-color: var(--color-status-warning, #f59e0b) !important;
+}
+
+.progress-bar.bg-info {
+  background-color: var(--color-status-info, #3b82f6) !important;
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES - Giữ nguyên Bootstrap
+   ============================================ */
+
+/* Bootstrap responsive utilities được giữ nguyên */
+/* Chỉ override màu sắc, không override responsive behavior */

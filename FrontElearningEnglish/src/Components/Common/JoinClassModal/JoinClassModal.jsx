@@ -28,7 +28,7 @@ export default function JoinClassModal({ isOpen, onClose, onJoin }) {
 
     return (
         <div className="join-class-modal-overlay" onClick={handleClose}>
-            <div className="join-class-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="join-class-modal join-class-modal-content" onClick={(e) => e.stopPropagation()}>
                 <h2 className="modal-title">Nhập mã lớp học</h2>
 
                 <form onSubmit={handleSubmit}>

@@ -3,16 +3,19 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Container, Navbar, Nav } from "react-bootstrap";
 import "./Header.css";
-import { mochiWelcome as logo } from "../../Assets";
+import { useAssets } from "../../Context/AssetContext";
 import ProfileDropdown from "./ProfileDropdown";
 import { useAuth } from "../../Context/AuthContext";
 import LoginRequiredModal from "../Common/LoginRequiredModal/LoginRequiredModal";
 import { FaUserCog, FaChalkboardTeacher } from "react-icons/fa";
+import { ROUTE_PATHS } from "../../Routes/Paths";
 
 export default function TeacherHeader() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { getLogo } = useAssets();
+  const logo = getLogo();
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const isActive = (path) => {
@@ -41,7 +44,7 @@ export default function TeacherHeader() {
           onClick={() => navigate("/teacher/course-management")}
           style={{ cursor: "pointer" }}
         >
-          <img src={logo} alt="Catalunya English - Logo Giáo Viên" className="main-header__logo" />
+          {logo && <img src={logo} alt="Catalunya English - Logo Giáo Viên" className="main-header__logo" />}
           <span className="main-header__brand">Catalunya English</span>
         </Navbar.Brand>
 
@@ -50,20 +53,20 @@ export default function TeacherHeader() {
 
         <Navbar.Collapse id="teacher-navbar">
           {/* CENTER: navigation */}
-          <Nav className="main-header__nav teacher-nav" style={{ marginLeft: "auto", marginRight: "auto", transform: "translateX(-150px)" }}>
+          <Nav className="main-header__nav teacher-nav mx-auto">
             <Nav.Item
               onClick={() => handleNavigation("/teacher/course-management", true)}
-              className={`nav-item ${isActive("/teacher/course-management") ? "active" : ""}`}
+              className={`nav-item d-flex align-items-center ${isActive("/teacher/course-management") ? "active" : ""}`}
             >
-              <FaChalkboardTeacher className="nav-icon" style={{ width: "18px", height: "18px" }} />
+              <FaChalkboardTeacher className="nav-icon" />
               <span className="nav-text">Quản lí khoá học</span>
             </Nav.Item>
 
             <Nav.Item
               onClick={() => handleNavigation("/teacher/submission-management", true)}
-              className={`nav-item ${isActive("/teacher/submission-management") ? "active" : ""}`}
+              className={`nav-item d-flex align-items-center ${isActive("/teacher/submission-management") ? "active" : ""}`}
             >
-              <FaUserCog className="nav-icon" style={{ width: "18px", height: "18px" }} />
+              <FaUserCog className="nav-icon" />
               <span className="nav-text">Quản lí bài nộp</span>
             </Nav.Item>
           </Nav>

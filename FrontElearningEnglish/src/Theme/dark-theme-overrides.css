@@ -1,0 +1,164 @@
+/**
+ * Dark Theme Global Overrides
+ * File này sẽ override các màu hardcoded và đảm bảo tất cả components hỗ trợ dark theme
+ */
+
+/* =========================================================
+   GLOBAL OVERRIDES - Áp dụng cho tất cả elements
+========================================================= */
+
+[data-theme="dark"] {
+    /* Đảm bảo body và html có background tối */
+    background-color: var(--color-bg-primary, #1a1a1a);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] body {
+    background-color: var(--color-bg-primary, #1a1a1a);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+/* =========================================================
+   BOOTSTRAP OVERRIDES
+========================================================= */
+
+[data-theme="dark"] .card {
+    background-color: var(--color-bg-primary, #1a1a1a);
+    border-color: var(--color-border-medium, #4a4a4a);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] .modal-content {
+    background-color: var(--color-bg-primary, #1a1a1a);
+    border-color: var(--color-border-medium, #4a4a4a);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: var(--color-border-medium, #4a4a4a);
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: var(--color-border-medium, #4a4a4a);
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--color-bg-secondary, #2d2d2d);
+    border-color: var(--color-border-medium, #4a4a4a);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: var(--color-bg-secondary, #2d2d2d);
+    border-color: var(--color-secondary-cyan, #41d6e3);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--color-text-tertiary, #9ca3af);
+}
+
+[data-theme="dark"] .table {
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: var(--color-bg-secondary, #2d2d2d);
+}
+
+[data-theme="dark"] .table-hover > tbody > tr:hover > td {
+    background-color: var(--color-bg-light, #252525);
+}
+
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--color-bg-primary, #1a1a1a);
+    border-color: var(--color-border-medium, #4a4a4a);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus {
+    background-color: var(--color-bg-secondary, #2d2d2d);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] .list-group-item {
+    background-color: var(--color-bg-primary, #1a1a1a);
+    border-color: var(--color-border-medium, #4a4a4a);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] .list-group-item:hover {
+    background-color: var(--color-bg-secondary, #2d2d2d);
+}
+
+[data-theme="dark"] .alert {
+    background-color: var(--color-bg-secondary, #2d2d2d);
+    border-color: var(--color-border-medium, #4a4a4a);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+[data-theme="dark"] .badge {
+    background-color: var(--color-bg-secondary, #2d2d2d);
+    color: var(--color-text-primary, #f3f4f6);
+}
+
+/* =========================================================
+   COMMON PATTERNS - Override các pattern thường gặp
+========================================================= */
+
+/* Background patterns */
+[data-theme="dark"] [style*="background: #"],
+[data-theme="dark"] [style*="background-color: #"],
+[data-theme="dark"] [style*="background: rgb"],
+[data-theme="dark"] [style*="background-color: rgb"] {
+    /* Note: Inline styles sẽ override, cần xử lý trong JSX */
+}
+
+/* Text color patterns */
+[data-theme="dark"] [style*="color: #333"],
+[data-theme="dark"] [style*="color: #000"],
+[data-theme="dark"] [style*="color: rgb(51"] {
+    color: var(--color-text-primary, #f3f4f6) !important;
+}
+
+/* =========================================================
+   SCROLLBAR STYLING
+========================================================= */
+
+[data-theme="dark"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--color-bg-secondary, #2d2d2d);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--color-border-medium, #4a4a4a);
+    border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border-dark, #5a5a5a);
+}
+
+/* =========================================================
+   SELECTION STYLING
+========================================================= */
+
+[data-theme="dark"] ::selection {
+    background-color: var(--color-secondary-cyan, #41d6e3);
+    color: var(--color-text-white, #ffffff);
+}
+
+[data-theme="dark"] ::-moz-selection {
+    background-color: var(--color-secondary-cyan, #41d6e3);
+    color: var(--color-text-white, #ffffff);
+}

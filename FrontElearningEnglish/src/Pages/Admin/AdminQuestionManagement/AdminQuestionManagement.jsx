@@ -24,10 +24,6 @@ export default function AdminQuestionManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Bulk Mode states
-  const [isBulkMode, setIsBulkMode] = useState(false);
-  const [bulkQuestions, setBulkQuestions] = useState([]);
-
   // Question Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [questionToUpdate, setQuestionToUpdate] = useState(null);
@@ -130,41 +126,6 @@ export default function AdminQuestionManagement() {
       }
   };
 
-  const handleSaveDraft = (draftQuestion) => {
-      if (questionToUpdate) {
-          const updatedBulk = bulkQuestions.map(q => 
-              q.tempId === questionToUpdate.tempId ? { ...draftQuestion, tempId: q.tempId } : q
-          );
-          setBulkQuestions(updatedBulk);
-      } else {
-          setBulkQuestions([...bulkQuestions, { ...draftQuestion, tempId: Date.now() }]);
-      }
-  };
-
-  const handleDeleteDraft = (tempId) => {
-      setBulkQuestions(bulkQuestions.filter(q => q.tempId !== tempId));
-  };
-
-  const handleBulkSubmit = async () => {
-      if (bulkQuestions.length === 0) return;
-      try {
-          const payload = { questions: bulkQuestions.map(({ tempId, ...q }) => q) };
-          const res = await questionService.bulkCreateAdminQuestions(payload);
-          if (res.data?.success) {
-              setSuccessMessage(`Đã tạo thành công ${bulkQuestions.length} câu hỏi!`);
-              setShowSuccessModal(true);
-              setBulkQuestions([]);
-              setIsBulkMode(false);
-              fetchData();
-          } else {
-              alert(res.data?.message || "Tạo hàng loạt thất bại");
-          }
-      } catch (err) {
-          console.error(err);
-          alert("Lỗi khi tạo hàng loạt");
-      }
-  };
-
   const handleAddQuestion = (targetGroup = null) => {
       setTargetGroupId(targetGroup ? targetGroup.quizGroupId : null);
       setQuestionToUpdate(null);
@@ -256,18 +217,17 @@ export default function AdminQuestionManagement() {
       };
 
       return (
-        <Card key={isBulkMode ? q.tempId : q.questionId} className={`mb-3 border-0 shadow-sm question-card ${isBulkMode ? 'border-start border-4 border-warning' : ''}`}>
+        <Card key={q.questionId} className="mb-3 border-0 shadow-sm question-card">
             <Card.Body className="p-3">
                 <div className="d-flex justify-content-between">
                 <div className="d-flex gap-3 w-100">
                     <div className="question-index text-center pt-1">
-                        <span className={`badge rounded-pill ${isBulkMode ? 'bg-warning text-dark' : 'bg-secondary'}`}>#{index + 1}</span>
+                        <span className="badge rounded-pill bg-secondary">#{index + 1}</span>
                     </div>
                     <div className="flex-grow-1">
                         <div className="d-flex align-items-center gap-2 mb-2">
                             <Badge bg="info">{getQuestionTypeLabel(q.type)}</Badge>
                             <span className="text-muted small">Points: {q.points}</span>
-                            {isBulkMode && <Badge bg="warning" className="text-dark">Draft</Badge>}
                         </div>
                         <h6 className="question-stem mb-1 fw-bold text-break">{q.stemText}</h6>
                         {renderQuestionBody()}
@@ -278,7 +238,7 @@ export default function AdminQuestionManagement() {
                     <Button variant="light" size="sm" onClick={() => handleEditQuestion(q)} title="Sửa">
                     <FaEdit className="text-primary" />
                     </Button>
-                    <Button variant="light" size="sm" onClick={() => isBulkMode ? handleDeleteDraft(q.tempId) : handleDeleteQuestion(q)} title="Xóa">
+                    <Button variant="light" size="sm" onClick={() => handleDeleteQuestion(q)} title="Xóa">
                     <FaTrash className="text-danger" />
                     </Button>
                 </div>
@@ -303,18 +263,7 @@ export default function AdminQuestionManagement() {
           </div>
 
           <div className="d-flex gap-2 align-items-center">
-            {isBulkMode ? (
-              <>
-                <span className="text-muted small">Drafts: {bulkQuestions.length}</span>
-                <Button variant="success" onClick={handleBulkSubmit} disabled={bulkQuestions.length === 0}>Gửi tất cả</Button>
-                <Button variant="outline-secondary" onClick={() => { setIsBulkMode(false); setBulkQuestions([]); }}>Thoát</Button>
-              </>
-            ) : (
-              <>
-                <Button variant="outline-info" onClick={() => setIsBulkMode(true)}>Bulk Mode</Button>
-                <Button variant="primary" onClick={() => handleAddQuestion(null)}><FaPlus className="me-1"/> Thêm câu hỏi</Button>
-              </>
-            )}
+            <Button variant="primary" onClick={() => handleAddQuestion(null)}><FaPlus className="me-1"/> Thêm câu hỏi</Button>
           </div>
         </div>
 
@@ -369,14 +318,7 @@ export default function AdminQuestionManagement() {
                     );
                 })}
 
-                {isBulkMode && bulkQuestions.length > 0 && (
-                     <div className="mt-5 pt-3 border-top border-warning">
-                        <h5 className="text-warning fw-bold">Bản nháp ({bulkQuestions.length})</h5>
-                        {bulkQuestions.map((q, idx) => renderQuestionCard(q, idx))}
-                     </div>
-                )}
-
-                {!isBulkMode && questions.length === 0 && groups.length === 0 && (
+                {questions.length === 0 && groups.length === 0 && (
                     <div className="text-center py-5 text-muted bg-light rounded">
                         <p className="mb-3">Chưa có nội dung nào.</p>
                         <Button variant="primary" onClick={() => handleAddQuestion(null)}>Tạo nội dung đầu tiên</Button>
@@ -393,8 +335,6 @@ export default function AdminQuestionManagement() {
         sectionId={sectionId ? parseInt(sectionId) : null}
         groupId={targetGroupId}
         questionToUpdate={questionToUpdate}
-        isBulkMode={isBulkMode}
-        onSaveDraft={handleSaveDraft}
         isAdmin={true}
       />
       

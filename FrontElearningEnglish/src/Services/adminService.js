@@ -82,6 +82,9 @@ export const adminService = {
     // params: { searchTerm, pageNumber, pageSize, sortBy, sortDescending }
     return axiosClient.get(API_ENDPOINTS.ADMIN.USERS.GET_ALL, { params });
   },
+  getUserById: (userId) => {
+    return axiosClient.get(API_ENDPOINTS.ADMIN.USERS.GET_BY_ID(userId));
+  },
   getUserStats: () => {
     return axiosClient.get(API_ENDPOINTS.ADMIN.USERS.USER_STATS);
   },

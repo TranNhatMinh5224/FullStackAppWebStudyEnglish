@@ -122,12 +122,12 @@ export default function OrderingQuestion({ question, answer, onChange }) {
                             onDrop={(e) => handleDrop(e, index)}
                             style={{ cursor: "move" }}
                         >
-                            <Card.Body className="ordering-item-content p-2">
+                            <Card.Body className="ordering-item-content d-flex align-items-center p-2">
                                 <div className="d-flex align-items-center w-100 gap-3">
                                     <div className="ordering-item-handle text-muted">
                                         <FaGripVertical />
                                     </div>
-                                    <div className="ordering-item-number fw-bold text-primary">
+                                    <div className="ordering-item-number d-flex align-items-center justify-content-center fw-bold text-primary">
                                         {index + 1}
                                     </div>
                                     <div className="ordering-item-text flex-grow-1">
@@ -144,7 +144,7 @@ export default function OrderingQuestion({ question, answer, onChange }) {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="ordering-item-actions d-flex gap-1">
+                                    <div className="ordering-item-actions d-flex flex-column gap-1">
                                         <Button
                                             variant="light"
                                             size="sm"

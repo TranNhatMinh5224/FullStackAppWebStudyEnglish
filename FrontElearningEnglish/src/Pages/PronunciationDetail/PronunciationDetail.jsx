@@ -206,7 +206,7 @@ export default function PronunciationDetail() {
                 <Container>
                     <Row>
                         <Col>
-                            <div className="pronunciation-header">
+                            <div className="pronunciation-header d-flex align-items-center justify-content-center gap-3">
                                 <h1 className="pronunciation-title">Luyện Phát Âm</h1>
                             </div>
                         </Col>
@@ -235,32 +235,32 @@ export default function PronunciationDetail() {
                             <Col lg={8}>
                                 <div className="pronunciation-summary">
                                     <h2 className="summary-title">Kết quả luyện phát âm</h2>
-                                    <div className="summary-stats">
-                                        <div className="stat-item">
+                                    <Row className="summary-stats g-3">
+                                        <Col xs={6} md={4} lg={3} className="stat-item">
                                             <div className="stat-value">{summary.totalFlashCards || 0}</div>
                                             <div className="stat-label">Tổng số từ</div>
-                                        </div>
-                                        <div className="stat-item">
+                                        </Col>
+                                        <Col xs={6} md={4} lg={3} className="stat-item">
                                             <div className="stat-value">{summary.totalPracticed || 0}</div>
                                             <div className="stat-label">Đã luyện</div>
-                                        </div>
-                                        <div className="stat-item">
+                                        </Col>
+                                        <Col xs={6} md={4} lg={3} className="stat-item">
                                             <div className="stat-value">{summary.masteredCount || 0}</div>
                                             <div className="stat-label">Đã thuộc</div>
-                                        </div>
-                                        <div className="stat-item">
+                                        </Col>
+                                        <Col xs={6} md={4} lg={3} className="stat-item">
                                             <div className="stat-value">{summary.averageScore?.toFixed(1) || 0}</div>
                                             <div className="stat-label">Điểm trung bình</div>
-                                        </div>
-                                    </div>
-                                    <div className="summary-grade">
+                                        </Col>
+                                    </Row>
+                                    <div className="summary-grade d-flex align-items-center justify-content-center gap-3">
                                         <div className="grade-label">Xếp loại:</div>
                                         <div className="grade-value">{summary.grade || "N/A"}</div>
                                     </div>
                                     <div className="summary-message">
                                         <p>{summary.message || "Chúc mừng bạn đã hoàn thành!"}</p>
                                     </div>
-                                    <div className="summary-actions">
+                                    <div className="summary-actions d-flex justify-content-center">
                                         <Button
                                             variant="outline-primary"
                                             onClick={() => setShowSummary(false)}

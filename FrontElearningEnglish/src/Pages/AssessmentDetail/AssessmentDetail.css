@@ -1,5 +1,37 @@
 .assessment-detail-container {
-    padding: calc(2rem + 70px) 0 2rem 0; /* Add header height (70px) to top padding */
+    padding: 30px 250px;
+    padding-top: calc(70px + 50px);
+    background: var(--color-bg-secondary, #f6f8fb);
     min-height: calc(100vh - 70px);
-    background-color: #f8f9fa;
+}
+
+@media (max-width: 1600px) {
+    .assessment-detail-container {
+        padding: 30px 220px;
+    }
+}
+
+@media (max-width: 1400px) {
+    .assessment-detail-container {
+        padding: 30px 180px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .assessment-detail-container {
+        padding: 30px 150px;
+    }
+}
+
+@media (max-width: 992px) {
+    .assessment-detail-container {
+        padding: 30px 100px;
+    }
+}
+
+@media (max-width: 768px) {
+    .assessment-detail-container {
+        padding: 20px 30px;
+        padding-top: calc(70px + 20px);
+    }
 }

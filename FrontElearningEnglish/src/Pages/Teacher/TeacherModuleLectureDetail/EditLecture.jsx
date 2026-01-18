@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import "./TeacherModuleLectureDetail.css";
 import TeacherHeader from "../../../Components/Header/TeacherHeader";
+import Breadcrumb from "../../../Components/Common/Breadcrumb/Breadcrumb";
 import { useAuth } from "../../../Context/AuthContext";
 import { teacherService } from "../../../Services/teacherService";
 import { lectureService } from "../../../Services/lectureService";
@@ -167,30 +168,15 @@ export default function EditLecture() {
       <TeacherHeader />
       <div className="teacher-module-lecture-detail-container">
         <div className="breadcrumb-section">
-          <span className="breadcrumb-text">
-            <span
-              className="breadcrumb-link"
-              onClick={() => navigate(ROUTE_PATHS.TEACHER_COURSE_MANAGEMENT)}
-            >
-              Quản lý khoá học
-            </span>
-            {" / "}
-            <span
-              className="breadcrumb-link"
-              onClick={() => navigate(`/teacher/course/${courseId}`)}
-            >
-              {courseTitle}
-            </span>
-            {" / "}
-            <span
-              className="breadcrumb-link"
-              onClick={() => navigate(ROUTE_PATHS.TEACHER_LESSON_DETAIL(courseId, lessonId))}
-            >
-              {lessonTitle}
-            </span>
-            {" / "}
-            <span className="breadcrumb-current">Sửa Lecture</span>
-          </span>
+          <Breadcrumb
+            items={[
+              { label: "Quản lý khoá học", path: ROUTE_PATHS.TEACHER_COURSE_MANAGEMENT },
+              { label: courseTitle, path: `/teacher/course/${courseId}` },
+              { label: lessonTitle, path: ROUTE_PATHS.TEACHER_LESSON_DETAIL(courseId, lessonId) },
+              { label: "Sửa Lecture", isCurrent: true }
+            ]}
+            showHomeIcon={false}
+          />
         </div>
 
         <Container fluid className="create-lecture-content">

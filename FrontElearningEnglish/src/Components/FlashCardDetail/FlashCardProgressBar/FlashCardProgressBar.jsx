@@ -8,15 +8,15 @@ export default function FlashCardProgressBar({ current, total, onClose, variant 
 
     return (
         <div className={`flashcard-progress-bar ${isReviewVariant ? "review-variant" : ""}`}>
-            <div className="progress-container">
-                <div className="progress-top-row">
+            <div className="progress-container d-flex flex-column">
+                <div className="progress-top-row d-flex justify-content-between align-items-center">
                     {!isReviewVariant && <span className="progress-label">Số lượng</span>}
                     <span className="progress-count">{current}/{total}</span>
                 </div>
-                <div className="progress-bottom-row">
+                <div className="progress-bottom-row d-flex align-items-center">
                     {onClose && (
                         <button
-                            className="progress-close-btn"
+                            className="progress-close-btn d-flex align-items-center justify-content-center"
                             onClick={onClose}
                             title="Thoát"
                         >

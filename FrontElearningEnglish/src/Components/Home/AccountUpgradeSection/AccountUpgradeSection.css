@@ -2,13 +2,13 @@
     background: transparent;
     padding: 0;
     position: sticky;
-    top: calc(70px + 30px); /* Header height + padding */
+    top: calc(70px + var(--spacing-lg, clamp(1rem, 0.8rem + 1vw, 1.5rem))); /* Header height + responsive padding */
     align-self: flex-start;
     animation: fadeInUp 0.6s ease-out;
 }
 
 .account-upgrade-section h2 {
-    font-size: 26px;
+    font-size: var(--font-size-2xl, clamp(1.5rem, 1.3rem + 1vw, 1.875rem));
     font-weight: 700;
     margin-bottom: 8px;
     color: #7c3aed;
@@ -22,20 +22,14 @@
 }
 
 .account-upgrade-section p {
-    font-size: 12px;
+    font-size: var(--font-size-xs, clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem));
     color: var(--color-text-secondary, #6b7280);
     margin-bottom: 14px;
     line-height: 1.4;
     animation: fadeInUp 0.6s ease-out 0.2s both;
 }
 
-.package-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    align-items: stretch;
-}
-
+/* Bootstrap Row tự xử lý layout - chỉ thêm animations */
 .package-grid > * {
     animation: fadeInScale 0.5s ease-out both;
 }
@@ -89,6 +83,10 @@
     }
 }
 
+/* ===========================
+   RESPONSIVE - Professional Pattern
+=========================== */
+
 @media (max-width: 1024px) {
     .account-upgrade-section {
         position: static;
@@ -96,7 +94,15 @@
 }
 
 @media (max-width: 768px) {
-    .package-grid {
-        grid-template-columns: 1fr;
+    .account-upgrade-section h2 {
+        font-size: var(--font-size-2xl, clamp(1.5rem, 1.3rem + 1vw, 1.875rem));
+    }
+
+    /* Bootstrap utilities được sử dụng trong JSX - responsive tự động */
+}
+
+@media (max-width: 576px) {
+    .account-upgrade-section h2 {
+        font-size: var(--font-size-xl, clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem));
     }
 }

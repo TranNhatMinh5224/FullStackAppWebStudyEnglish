@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pagination } from "react-bootstrap";
+import { Container, Pagination, Row, Col } from "react-bootstrap";
 import "./MyCourses.css";
+import "../../Components/Home/WelcomeSection/WelcomeSection.css"; // Import WelcomeSection CSS
 import MainHeader from "../../Components/Header/MainHeader";
 import JoinClassModal from "../../Components/Common/JoinClassModal/JoinClassModal";
 import NotificationModal from "../../Components/Common/NotificationModal/NotificationModal";
+import SuccessModal from "../../Components/Common/SuccessModal/SuccessModal";
 import SuggestedCourseCard from "../../Components/Home/SuggestedCourseCard/SuggestedCourseCard";
 import AccountUpgradeSection from "../../Components/Home/AccountUpgradeSection/AccountUpgradeSection";
 import { FaPlus } from "react-icons/fa";
 import { enrollmentService } from "../../Services/enrollmentService";
 import { useAuth } from "../../Context/AuthContext";
-import { mochiKhoaHoc as mochiKhoaHocImage } from "../../Assets";
+import { useAssets } from "../../Context/AssetContext";
 import LoginRequiredModal from "../../Components/Common/LoginRequiredModal/LoginRequiredModal";
 
 export default function MyCourses() {
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuth();
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [showLoginModal, setShowLoginModal] = useState(false);
+    const { getDefaultCourseImage } = useAssets();
     const [selectedPackage, setSelectedPackage] = useState(null);
     
     // Enrolled courses state với pagination
@@ -30,11 +31,17 @@ export default function MyCourses() {
     const [totalPages, setTotalPages] = useState(0);
     const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger để refresh danh sách
     
-    const [notification, setNotification] = useState({
-        isOpen: false,
-        type: "info", // "success", "error", "info"
-        message: ""
-    });
+    // Modal states
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    
+    // Notification states
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
+    const [showInfoModal, setShowInfoModal] = useState(false);
+    const [infoMessage, setInfoMessage] = useState("");
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     // Fetch enrolled courses với pagination
     useEffect(() => {
@@ -63,7 +70,7 @@ export default function MyCourses() {
                             title: course.title || course.Title,
                             imageUrl: (course.imageUrl || course.ImageUrl) && (course.imageUrl || course.ImageUrl).trim() !== ""
                                 ? (course.imageUrl || course.ImageUrl)
-                                : mochiKhoaHocImage,
+                                : getDefaultCourseImage(),
                             price: course.price || course.Price || 0,
                         }));
                         
@@ -79,7 +86,7 @@ export default function MyCourses() {
                             title: course.title || course.Title,
                             imageUrl: (course.imageUrl || course.ImageUrl) && (course.imageUrl || course.ImageUrl).trim() !== ""
                                 ? (course.imageUrl || course.ImageUrl)
-                                : mochiKhoaHocImage,
+                                : getDefaultCourseImage(),
                             price: course.price || course.Price || 0,
                         }));
                         
@@ -129,13 +136,10 @@ export default function MyCourses() {
                     setCurrentPage(1);
                 }
 
-                // Hiển thị thông báo thành công sau khi danh sách đã cập nhật
+                // Hiển thị SuccessModal đẹp cho thông báo thành công sau khi danh sách đã cập nhật
                 setTimeout(() => {
-                    setNotification({
-                        isOpen: true,
-                        type: "success",
-                        message: "Đã tham gia lớp học thành công! Khóa học đã được thêm vào danh sách của bạn."
-                    });
+                    setSuccessMessage("Đã tham gia lớp học thành công! Khóa học đã được thêm vào danh sách của bạn.");
+                    setShowSuccessModal(true);
                 }, 300);
             } else {
                 // Join thất bại - kiểm tra xem có phải "đã đăng ký rồi" không
@@ -145,18 +149,12 @@ export default function MyCourses() {
                 if (isAlreadyEnrolled) {
                     // Nếu đã đăng ký rồi, chỉ thông báo
                     setIsModalOpen(false);
-                    setNotification({
-                        isOpen: true,
-                        type: "info",
-                        message: "Bạn đã tham gia khóa học này rồi! Kiểm tra trong danh sách bên dưới."
-                    });
+                    setInfoMessage("Bạn đã tham gia khóa học này rồi! Kiểm tra trong danh sách bên dưới.");
+                    setShowInfoModal(true);
                 } else {
                     // Các lỗi khác
-                    setNotification({
-                        isOpen: true,
-                        type: "error",
-                        message: errorMessage || "Không thể tham gia lớp học. Vui lòng kiểm tra lại mã lớp."
-                    });
+                    setErrorMessage(errorMessage || "Không thể tham gia lớp học. Vui lòng kiểm tra lại mã lớp.");
+                    setShowErrorModal(true);
                 }
             }
         } catch (error) {
@@ -168,17 +166,11 @@ export default function MyCourses() {
 
             if (isAlreadyEnrolled) {
                 setIsModalOpen(false);
-                setNotification({
-                    isOpen: true,
-                    type: "info",
-                    message: "Bạn đã tham gia khóa học này rồi! Kiểm tra trong danh sách bên dưới."
-                });
+                setInfoMessage("Bạn đã tham gia khóa học này rồi! Kiểm tra trong danh sách bên dưới.");
+                setShowInfoModal(true);
             } else {
-                setNotification({
-                    isOpen: true,
-                    type: "error",
-                    message: errorMessage
-                });
+                setErrorMessage(errorMessage);
+                setShowErrorModal(true);
             }
         }
     };
@@ -206,149 +198,171 @@ export default function MyCourses() {
         const isTeacher = teacherSubscription?.isTeacher || teacherSubscription?.IsTeacher;
         
         if (isTeacher === true) {
-            setNotification({
-                isOpen: true,
-                type: "info",
-                message: "Gói giáo viên hiện tại của bạn đang hoạt động, vui lòng chờ đến khi hết hạn để kích hoạt gói giáo viên mới!"
-            });
+            setInfoMessage("Gói giáo viên hiện tại của bạn đang hoạt động, vui lòng chờ đến khi hết hạn để kích hoạt gói giáo viên mới!");
+            setShowInfoModal(true);
             return;
         }
 
         navigate(`/payment?packageId=${teacherPackageId}&package=${packageType}`);
     };
 
+    const displayName = user?.fullName || "bạn";
+
     return (
         <>
             <MainHeader />
             <div className="my-courses-container">
-                <div className="my-courses-header">
-                    <div className="my-courses-welcome-section">
-                        <h1>
-                            Chào mừng {user?.fullName || "bạn"}!
-                        </h1>
-                        <p className="welcome-message">
-                            Hãy bắt đầu hành trình học tập của bạn ngay hôm nay!
-                        </p>
-                    </div>
-                    <div className="header-actions">
-                        <button
-                            className="join-class-btn"
-                            onClick={() => setIsModalOpen(true)}
-                        >
-                            <FaPlus />
-                            Nhập mã lớp học
-                        </button>
-                    </div>
-                </div>
+                <Container>
+                    {/* Welcome Section giống trang chủ */}
+                    <Row className="welcome-section g-3 g-md-4 align-items-center mb-4">
+                        <Col xs={12} lg={7} className="welcome-section__left d-flex flex-column justify-content-center align-items-start">
+                            <h1>Chào mừng trở lại, {displayName}</h1>
+                            <p>Hãy tiếp tục hành trình học tiếng Anh nào.</p>
+                        </Col>
+                        <Col xs={12} lg={5} className="welcome-section__right d-flex align-items-center justify-content-end">
+                            <button
+                                className="join-class-btn d-flex align-items-center"
+                                onClick={() => setIsModalOpen(true)}
+                            >
+                                <FaPlus />
+                                Nhập mã lớp học
+                            </button>
+                        </Col>
+                    </Row>
 
-                {/* Main Content: 2 columns layout */}
-                <div className="my-courses-main-content">
-                    {/* Left: Enrolled Courses Section */}
-                    <div className="suggested-courses-section">
-                        {loading ? (
-                            <div className="loading-message">Đang tải khóa học...</div>
-                        ) : error ? (
-                            <div className="error-message">{error}</div>
-                        ) : enrolledCourses.length > 0 ? (
-                            <>
-                                <div className="suggested-courses-grid">
-                                    {enrolledCourses.map((course, index) => (
-                                        <SuggestedCourseCard
-                                            key={course.id || index}
-                                            course={course}
-                                            isEnrolled={true} // Tất cả đều đã đăng ký
-                                            showEnrolledBadge={true} // Hiển thị badge "Đã tham gia"
-                                        />
-                                    ))}
-                                </div>
-                                
-                                {/* Pagination */}
-                                {totalPages > 1 && (
-                                    <div className="pagination-wrapper">
-                                        <div className="pagination-info">
-                                            Trang {currentPage} / {totalPages} ({totalCount} khóa học)
+                    {/* Main Content: 2 columns layout - Bootstrap Grid */}
+                    <Row className="g-4 mt-3">
+                        {/* Left: Enrolled Courses Section */}
+                        <Col xs={12} lg={8} className="suggested-courses-section">
+                            {loading ? (
+                                <div className="loading-message">Đang tải khóa học...</div>
+                            ) : error ? (
+                                <div className="error-message">{error}</div>
+                            ) : enrolledCourses.length > 0 ? (
+                                <>
+                                    <h2>Khóa học của tôi</h2>
+                                    <Row className="g-3 g-md-4">
+                                        {enrolledCourses.map((course, index) => (
+                                            <Col key={course.id || index} xs={12} sm={6} lg={4} xl={3}>
+                                                <SuggestedCourseCard
+                                                    course={course}
+                                                    isEnrolled={true} // Tất cả đều đã đăng ký
+                                                    showEnrolledBadge={true} // Hiển thị badge "Đã tham gia"
+                                                />
+                                            </Col>
+                                        ))}
+                                    </Row>
+                                    
+                                    {/* Pagination */}
+                                    {totalPages > 1 && (
+                                        <div className="d-flex justify-content-between align-items-center flex-column flex-md-row gap-3 gap-md-4 mt-4 mt-md-5 pt-4 pt-md-5 border-top">
+                                            <div className="pagination-info text-center text-md-start">
+                                                Trang {currentPage} / {totalPages} ({totalCount} khóa học)
+                                            </div>
+                                            <Pagination className="custom-pagination">
+                                                <Pagination.First 
+                                                    onClick={() => handlePageChange(1)}
+                                                    disabled={currentPage === 1}
+                                                />
+                                                <Pagination.Prev 
+                                                    onClick={() => handlePageChange(currentPage - 1)}
+                                                    disabled={currentPage === 1}
+                                                />
+                                                
+                                                {[...Array(totalPages)].map((_, index) => {
+                                                    const pageNumber = index + 1;
+                                                    // Chỉ hiển thị một số trang xung quanh trang hiện tại
+                                                    if (
+                                                        pageNumber === 1 ||
+                                                        pageNumber === totalPages ||
+                                                        (pageNumber >= currentPage - 2 && pageNumber <= currentPage + 2)
+                                                    ) {
+                                                        return (
+                                                            <Pagination.Item
+                                                                key={pageNumber}
+                                                                active={pageNumber === currentPage}
+                                                                onClick={() => handlePageChange(pageNumber)}
+                                                            >
+                                                                {pageNumber}
+                                                            </Pagination.Item>
+                                                        );
+                                                    } else if (
+                                                        pageNumber === currentPage - 3 ||
+                                                        pageNumber === currentPage + 3
+                                                    ) {
+                                                        return <Pagination.Ellipsis key={pageNumber} />;
+                                                    }
+                                                    return null;
+                                                })}
+                                                
+                                                <Pagination.Next 
+                                                    onClick={() => handlePageChange(currentPage + 1)}
+                                                    disabled={currentPage === totalPages}
+                                                />
+                                                <Pagination.Last 
+                                                    onClick={() => handlePageChange(totalPages)}
+                                                    disabled={currentPage === totalPages}
+                                                />
+                                            </Pagination>
                                         </div>
-                                        <Pagination className="custom-pagination">
-                                            <Pagination.First 
-                                                onClick={() => handlePageChange(1)}
-                                                disabled={currentPage === 1}
-                                            />
-                                            <Pagination.Prev 
-                                                onClick={() => handlePageChange(currentPage - 1)}
-                                                disabled={currentPage === 1}
-                                            />
-                                            
-                                            {[...Array(totalPages)].map((_, index) => {
-                                                const pageNumber = index + 1;
-                                                // Chỉ hiển thị một số trang xung quanh trang hiện tại
-                                                if (
-                                                    pageNumber === 1 ||
-                                                    pageNumber === totalPages ||
-                                                    (pageNumber >= currentPage - 2 && pageNumber <= currentPage + 2)
-                                                ) {
-                                                    return (
-                                                        <Pagination.Item
-                                                            key={pageNumber}
-                                                            active={pageNumber === currentPage}
-                                                            onClick={() => handlePageChange(pageNumber)}
-                                                        >
-                                                            {pageNumber}
-                                                        </Pagination.Item>
-                                                    );
-                                                } else if (
-                                                    pageNumber === currentPage - 3 ||
-                                                    pageNumber === currentPage + 3
-                                                ) {
-                                                    return <Pagination.Ellipsis key={pageNumber} />;
-                                                }
-                                                return null;
-                                            })}
-                                            
-                                            <Pagination.Next 
-                                                onClick={() => handlePageChange(currentPage + 1)}
-                                                disabled={currentPage === totalPages}
-                                            />
-                                            <Pagination.Last 
-                                                onClick={() => handlePageChange(totalPages)}
-                                                disabled={currentPage === totalPages}
-                                            />
-                                        </Pagination>
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <div className="no-courses-message">Chưa có khóa học đã đăng ký</div>
-                        )}
-                    </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="no-courses-message">Chưa có khóa học đã đăng ký</div>
+                            )}
+                        </Col>
 
-                    {/* Right: Account Upgrade Section */}
-                    <AccountUpgradeSection
-                        selectedPackage={selectedPackage}
-                        onPackageHover={handlePackageHover}
-                        onPackageLeave={handlePackageLeave}
-                        onUpgradeClick={handleUpgradeClick}
-                    />
-                </div>
+                        {/* Right: Account Upgrade Section */}
+                        <Col xs={12} lg={4}>
+                            <AccountUpgradeSection
+                                selectedPackage={selectedPackage}
+                                onPackageHover={handlePackageHover}
+                                onPackageLeave={handlePackageLeave}
+                                onUpgradeClick={handleUpgradeClick}
+                            />
+                        </Col>
+                    </Row>
+                </Container>
             </div>
 
+            {/* Modals */}
             <JoinClassModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onJoin={handleJoinClass}
             />
 
+            <LoginRequiredModal
+                isOpen={showLoginModal}
+                onClose={() => setShowLoginModal(false)}
+            />
+
+            {/* Notification Modals */}
+            <SuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+                title="Thành công"
+                message={successMessage}
+                autoClose={true}
+                autoCloseDelay={2000}
+            />
+
             <NotificationModal
-                isOpen={notification.isOpen}
-                onClose={() => setNotification({ ...notification, isOpen: false })}
-                type={notification.type}
-                message={notification.message}
+                isOpen={showInfoModal}
+                onClose={() => setShowInfoModal(false)}
+                type="info"
+                message={infoMessage}
                 autoClose={true}
                 autoCloseDelay={3000}
             />
 
-            <LoginRequiredModal
-                isOpen={showLoginModal}
-                onClose={() => setShowLoginModal(false)}
+            <NotificationModal
+                isOpen={showErrorModal}
+                onClose={() => setShowErrorModal(false)}
+                type="error"
+                message={errorMessage}
+                autoClose={true}
+                autoCloseDelay={3000}
             />
         </>
     );

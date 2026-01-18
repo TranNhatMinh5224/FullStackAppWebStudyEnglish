@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
+import { FaLock } from "react-icons/fa";
 import "./ForgotPassword.css";
 import { authService } from "../../Services/authService";
 import { useNavigate } from "react-router-dom";
 import { InputField } from "../../Components/Auth";
-import { iconLock } from "../../Assets";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -81,7 +81,7 @@ export default function ForgotPassword() {
           <Col xs={12} sm={10} md={8} lg={6} xl={5}>
             <div className="forgot-password-card">
               <div className="forgot-password-icon-wrapper">
-                <img src={iconLock} alt="Khóa - Quên mật khẩu" className="forgot-password-icon" />
+                <FaLock className="forgot-password-icon" />
               </div>
 
               <h1 className="forgot-password-title">Quên mật khẩu?</h1>

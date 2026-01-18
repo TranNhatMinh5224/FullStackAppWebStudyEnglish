@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
+import { FaLock } from "react-icons/fa";
 import "./ResetPassword.css";
 import { authService } from "../../Services/authService";
 import { useNavigate, useLocation } from "react-router-dom";
 import { InputField } from "../../Components/Auth";
-import { iconLock } from "../../Assets";
 import SuccessModal from "../../Components/Common/SuccessModal/SuccessModal";
 
 export default function ResetPassword() {
@@ -189,7 +189,7 @@ export default function ResetPassword() {
             <Col xs={12} sm={10} md={8} lg={6} xl={5}>
               <div className="reset-password-card">
                 <div className="reset-password-icon-wrapper">
-                  <img src={iconLock} alt="Lock" className="reset-password-icon" />
+                  <FaLock className="reset-password-icon" />
                 </div>
 
                 <h1 className="reset-password-title">Tạo mật khẩu mới</h1>

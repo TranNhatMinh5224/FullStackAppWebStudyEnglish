@@ -1,10 +1,15 @@
 .vocabulary-review-container {
     min-height: calc(100vh - 70px);
-    padding: 40px 20px;
-    padding-top: calc(70px + 20px);
-    background: #f5f5f5;
+    padding: clamp(2rem, 1.5rem + 2.5vw, 4rem) clamp(1rem, 0.75rem + 1.25vw, 2rem);
+    padding-top: calc(70px + clamp(2rem, 1.5rem + 2.5vw, 4rem));
+    background: var(--color-bg-secondary, #f5f5f5);
     position: relative;
     overflow: hidden;
+    transition: background-color 0.3s ease;
+}
+
+[data-theme="dark"] .vocabulary-review-container {
+    background: var(--color-bg-secondary-dark, #1a1a1a);
 }
 
 /* Background decorative elements */
@@ -19,6 +24,12 @@
     top: -100px;
     left: -100px;
     z-index: 0;
+    transition: opacity 0.3s ease;
+}
+
+[data-theme="dark"] .vocabulary-review-container::before {
+    background: rgba(217, 70, 239, 0.2);
+    opacity: 0.6;
 }
 
 .vocabulary-review-container::after {
@@ -32,53 +43,81 @@
     bottom: -150px;
     right: -150px;
     z-index: 0;
+    transition: opacity 0.3s ease;
+}
+
+[data-theme="dark"] .vocabulary-review-container::after {
+    background: rgba(65, 214, 227, 0.15);
+    opacity: 0.5;
 }
 
 .vocabulary-review-card {
     max-width: 600px;
     margin: 0 auto;
-    background: #ffffff;
+    background: var(--color-bg-primary, #ffffff);
     border-radius: 24px;
-    padding: 48px 40px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    padding: clamp(2.5rem, 2rem + 2.5vw, 3rem) clamp(2rem, 1.5rem + 2.5vw, 2.5rem);
+    box-shadow: 0 8px 24px var(--shadow-md, rgba(0, 0, 0, 0.08));
     text-align: center;
     position: relative;
     z-index: 1;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+[data-theme="dark"] .vocabulary-review-card {
+    background: var(--color-bg-primary-dark, #2d2d2d);
+    box-shadow: 0 8px 24px var(--shadow-lg, rgba(0, 0, 0, 0.5));
 }
 
 .vocabulary-review-title {
-    font-size: 32px;
+    font-size: clamp(1.75rem, 1.5rem + 1.25vw, 2rem);
     font-weight: 700;
-    color: #333;
-    margin: 0 0 32px 0;
+    color: var(--color-text-primary, #333);
+    margin: 0 0 clamp(1.5rem, 1.25rem + 1.25vw, 2rem) 0;
+    transition: color 0.3s ease;
 }
 
+[data-theme="dark"] .vocabulary-review-title {
+    color: var(--color-text-primary-dark, #ffffff);
+}
+
+/* Bootstrap utilities: d-flex, align-items-baseline, justify-content-center, flex-wrap, gap-3 */
 .vocabulary-count-section {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 12px;
     margin-bottom: 32px;
-    flex-wrap: wrap;
 }
 
 .vocabulary-count-label {
-    font-size: 18px;
-    color: #666;
+    font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+    color: var(--color-text-secondary, #666);
     font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] .vocabulary-count-label {
+    color: var(--color-text-secondary-dark, #9ca3af);
 }
 
 .vocabulary-count-number {
-    font-size: 48px;
+    font-size: clamp(2.5rem, 2rem + 2.5vw, 3rem);
     font-weight: 700;
-    color: #6fd5e0;
+    color: var(--color-secondary-cyan, #6fd5e0);
     line-height: 1;
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] .vocabulary-count-number {
+    color: var(--color-secondary-cyan-dark, #41d6e3);
 }
 
 .vocabulary-count-unit {
-    font-size: 18px;
-    color: #666;
+    font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+    color: var(--color-text-secondary, #666);
     font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] .vocabulary-count-unit {
+    color: var(--color-text-secondary-dark, #9ca3af);
 }
 
 .start-review-button {
@@ -112,27 +151,24 @@
 }
 
 .motivational-message {
-    font-size: 14px;
-    color: #999;
+    font-size: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+    color: var(--color-text-tertiary, #999);
     margin: 0;
     font-style: italic;
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] .motivational-message {
+    color: var(--color-text-tertiary-dark, #6b7280);
 }
 
 @media (max-width: 768px) {
+    .vocabulary-review-container {
+        padding: clamp(1.5rem, 1rem + 2.5vw, 2rem) clamp(0.75rem, 0.5rem + 1.25vw, 1rem);
+        padding-top: calc(70px + clamp(1.5rem, 1rem + 2.5vw, 2rem));
+    }
+
     .vocabulary-review-card {
-        padding: 32px 24px;
-    }
-
-    .vocabulary-review-title {
-        font-size: 24px;
-    }
-
-    .vocabulary-count-number {
-        font-size: 36px;
-    }
-
-    .vocabulary-count-label,
-    .vocabulary-count-unit {
-        font-size: 16px;
+        padding: clamp(1.5rem, 1rem + 2.5vw, 2rem) clamp(1rem, 0.75rem + 1.25vw, 1.5rem);
     }
 }

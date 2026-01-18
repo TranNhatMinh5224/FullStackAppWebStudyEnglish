@@ -1,21 +1,18 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Row, Col } from "react-bootstrap";
+import { FaUserCircle } from "react-icons/fa";
 import "./Profile.css";
 import MainHeader from "../../Components/Header/MainHeader";
 import { useAuth } from "../../Context/AuthContext";
 import { authService } from "../../Services/authService";
-import { fileService } from "../../Services/fileService";
-import { FaPencilAlt } from "react-icons/fa";
+import AvatarMenu from "../../Components/Header/AvatarMenu/AvatarMenu";
 
 export default function Profile() {
     const navigate = useNavigate();
     const { refreshUser } = useAuth();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState(false);
-    const fileInputRef = useRef(null);
-
-    const AVATAR_BUCKET = "avatars"; // Bucket name for avatar
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -42,60 +39,16 @@ export default function Profile() {
         navigate("/profile/change-password");
     };
 
-    const handleAvatarClick = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleAvatarChange = async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        // Validate file type
-        if (!file.type.startsWith("image/")) {
-            alert("Vui lòng chọn file ảnh");
-            return;
-        }
-
-        // Validate file size (max 2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            alert("Kích thước ảnh không được vượt quá 2MB");
-            return;
-        }
-
-        setUploading(true);
-
+    // Refresh user data after avatar update
+    const handleAvatarUpdate = async () => {
         try {
-            // 1. Upload file to temp
-            const uploadResponse = await fileService.uploadTempFile(file, AVATAR_BUCKET, "temp");
-            const tempKey = uploadResponse.data.data.tempKey;
-
-            if (!tempKey) {
-                throw new Error("Upload file thất bại");
-            }
-
-            // 2. Update avatar with temp key
-            const updateResponse = await authService.updateAvatar({
-                avatarTempKey: tempKey,
-            });
-
-            if (updateResponse.data.success) {
-                // Refresh profile to get new avatar URL
-                const profileResponse = await authService.getProfile();
-                const userData = profileResponse.data.data;
-                userData.fullName = userData.displayName || userData.fullName || `${userData.firstName} ${userData.lastName}`.trim();
-                setUser(userData);
-                // Refresh user in context (to update avatar in header)
-                await refreshUser();
-            }
+            const profileResponse = await authService.getProfile();
+            const userData = profileResponse.data.data;
+            userData.fullName = userData.displayName || userData.fullName || `${userData.firstName} ${userData.lastName}`.trim();
+            setUser(userData);
+            await refreshUser();
         } catch (error) {
-            console.error("Error uploading avatar:", error);
-            alert(error.response?.data?.message || "Có lỗi xảy ra khi upload avatar");
-        } finally {
-            setUploading(false);
-            // Reset file input
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
+            console.error("Error refreshing profile:", error);
         }
     };
 
@@ -131,77 +84,68 @@ export default function Profile() {
 
                 <div className="profile-card">
                     {/* Avatar Section */}
-                    <div className="avatar-section">
+                    <div className="avatar-section d-flex justify-content-center">
                         <div className="avatar-wrapper">
-                            <div
-                                className="avatar-inner"
-                                onClick={() => { if (!uploading) handleAvatarClick(); }}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!uploading) handleAvatarClick(); } }}
+                            <AvatarMenu
+                                avatarUrl={user.avatarUrl}
+                                fullName={user.fullName}
+                                onAvatarUpdate={handleAvatarUpdate}
+                                showAvatarOptions={true}
                             >
-                                {uploading ? (
-                                    <div className="avatar-placeholder avatar-loading">
-                                        <div className="spinner"></div>
-                                    </div>
-                                ) : user.avatarUrl ? (
-                                    <img src={user.avatarUrl} alt="Avatar" className="avatar-image" />
-                                ) : (
-                                    <div className="avatar-placeholder">
-                                        {user.fullName?.charAt(0) || "U"}
-                                    </div>
-                                )}
-
-                                {
-                                    !user.avatarUrl && (
-                                        <button
-                                            className="avatar-edit-overlay"
-                                            title="Chỉnh sửa avatar"
-                                            onClick={(e) => { e.stopPropagation(); handleAvatarClick(); }}
-                                            disabled={uploading}
-                                            aria-label="Chỉnh sửa avatar"
-                                        >
-                                            <span className="pencil-circle"><FaPencilAlt /></span>
-                                        </button>
-                                    )
-                                }
-                            </div>
-
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleAvatarChange}
-                                accept="image/*"
-                                style={{ display: "none" }}
-                            />
+                                <div className="avatar-inner">
+                                    {user.avatarUrl ? (
+                                        <img src={user.avatarUrl} alt="Avatar" className="avatar-image" />
+                                    ) : (
+                                        <div className="avatar-placeholder d-flex align-items-center justify-content-center">
+                                            <FaUserCircle className="avatar-default-icon-large" />
+                                        </div>
+                                    )}
+                                </div>
+                            </AvatarMenu>
                         </div>
                     </div>
 
                     {/* User Information */}
                     <div className="profile-info">
-                        <div className="info-row">
-                            <label>Last name:</label>
-                            <div className="info-value">{user.lastName || "-"}</div>
-                        </div>
+                        <Row className="info-row g-0">
+                            <Col xs={12} md={4} className="mb-2 mb-md-0">
+                                <label className="d-flex align-items-center">Last name:</label>
+                            </Col>
+                            <Col xs={12} md={8}>
+                                <div className="info-value d-flex align-items-center">{user.lastName || "-"}</div>
+                            </Col>
+                        </Row>
 
-                        <div className="info-row">
-                            <label>First name:</label>
-                            <div className="info-value">{user.firstName || "-"}</div>
-                        </div>
+                        <Row className="info-row g-0">
+                            <Col xs={12} md={4} className="mb-2 mb-md-0">
+                                <label>First name:</label>
+                            </Col>
+                            <Col xs={12} md={8}>
+                                <div className="info-value">{user.firstName || "-"}</div>
+                            </Col>
+                        </Row>
 
-                        <div className="info-row">
-                            <label>Email:</label>
-                            <div className="info-value">{user.email || "-"}</div>
-                        </div>
+                        <Row className="info-row g-0">
+                            <Col xs={12} md={4} className="mb-2 mb-md-0">
+                                <label>Email:</label>
+                            </Col>
+                            <Col xs={12} md={8}>
+                                <div className="info-value">{user.email || "-"}</div>
+                            </Col>
+                        </Row>
 
-                        <div className="info-row">
-                            <label>Số điện thoại:</label>
-                            <div className="info-value">{user.phoneNumber || "-"}</div>
-                        </div>
+                        <Row className="info-row g-0">
+                            <Col xs={12} md={4} className="mb-2 mb-md-0">
+                                <label>Số điện thoại:</label>
+                            </Col>
+                            <Col xs={12} md={8}>
+                                <div className="info-value">{user.phoneNumber || "-"}</div>
+                            </Col>
+                        </Row>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="profile-actions">
+                    <div className="profile-actions d-flex justify-content-end flex-column flex-md-row">
                         <button className="btn-change-password" onClick={handleChangePassword}>
                             Đổi mật khẩu
                         </button>

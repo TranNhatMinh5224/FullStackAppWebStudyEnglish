@@ -28,7 +28,7 @@
 }
 
 .lesson-detail-header-banner h1 {
-    font-size: 32px;
+    font-size: var(--font-size-3xl, clamp(1.875rem, 1.5rem + 1.875vw, 2.25rem));
     font-weight: 700;
     color: var(--color-text-white, white);
     margin: 0;
@@ -38,23 +38,16 @@
 }
 
 .lesson-description {
-    font-size: 16px;
+    font-size: var(--font-size-base, clamp(1rem, 0.95rem + 0.25vw, 1.125rem));
     color: var(--color-text-secondary, #6b7280);
     margin: 0 0 30px 0;
     line-height: 1.6;
 }
 
+/* Responsive typography tự động điều chỉnh với clamp() - không cần media query */
 @media (max-width: 768px) {
     .lesson-detail-header-banner {
-        padding: 20px 24px;
-    }
-
-    .lesson-detail-header-banner h1 {
-        font-size: 24px;
-    }
-
-    .lesson-description {
-        font-size: 14px;
+        padding: var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem)) var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
     }
 }
 

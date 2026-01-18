@@ -12,17 +12,8 @@ namespace LearningEnglish.Application.Validators.AssetFrontendValidators
                 .NotEmpty().WithMessage("Tên hình ảnh không được để trống")
                 .MaximumLength(200).WithMessage("Tên hình ảnh không được vượt quá 200 ký tự");
 
-            RuleFor(x => x.DescriptionImage)
-                .MaximumLength(500).WithMessage("Mô tả không được vượt quá 500 ký tự");
-
-            RuleFor(x => x.AssetType)
-                .IsInEnum().WithMessage("Loại Asset không hợp lệ");
-
-            RuleFor(x => x.Order)
-                .GreaterThanOrEqualTo(0).WithMessage("Thứ tự hiển thị không được nhỏ hơn 0");
-
-            RuleFor(x => x.ImageTempKey)
-                .NotEmpty().WithMessage("Vui lòng tải lên hình ảnh");
+         
+            
         }
     }
 
@@ -30,24 +21,19 @@ namespace LearningEnglish.Application.Validators.AssetFrontendValidators
     {
         public UpdateAssetFrontendDtoValidator()
         {
+            // Id có thể đến từ route parameter (controller sẽ set) hoặc từ body
+            // Validate Id nếu có giá trị, nhưng không bắt buộc vì controller sẽ set từ route
             RuleFor(x => x.Id)
-                .NotEmpty().WithMessage("ID không được để trống");
+                .GreaterThan(0).WithMessage("ID phải lớn hơn 0")
+                .When(x => x.Id > 0); // Chỉ validate khi có giá trị
 
             RuleFor(x => x.NameImage)
                 .MaximumLength(200).WithMessage("Tên hình ảnh không được vượt quá 200 ký tự")
-                .When(x => x.NameImage != null);
-
-            RuleFor(x => x.DescriptionImage)
-                .MaximumLength(500).WithMessage("Mô tả không được vượt quá 500 ký tự")
-                .When(x => x.DescriptionImage != null);
+                .When(x => x.NameImage != null && !string.IsNullOrWhiteSpace(x.NameImage));
 
             RuleFor(x => x.AssetType)
                 .IsInEnum().WithMessage("Loại Asset không hợp lệ")
                 .When(x => x.AssetType.HasValue);
-
-            RuleFor(x => x.Order)
-                .GreaterThanOrEqualTo(0).WithMessage("Thứ tự hiển thị không được nhỏ hơn 0")
-                .When(x => x.Order.HasValue);
         }
     }
 }

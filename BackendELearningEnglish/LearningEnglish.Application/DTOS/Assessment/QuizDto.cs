@@ -34,8 +34,8 @@ namespace LearningEnglish.Application.DTOs
         public bool? ShuffleQuestions { get; set; } = true;
         public bool? ShuffleAnswers { get; set; } = true;
 
-        public bool? AllowUnlimitedAttempts { get; set; } = false; // Cho phép làm lại không giới hạn
-        public int? MaxAttempts { get; set; } // Số lần làm tối đa
+        // Practice settings (for vocab exercises, grammar practice)
+        public int? MaxAttempts { get; set; } // Số lần làm tối đa (null = không giới hạn)
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -56,6 +56,7 @@ namespace LearningEnglish.Application.DTOs
         public QuizStatus Status { get; set; } = QuizStatus.Open;
         public int TotalQuestions { get; set; }
         public int? PassingScore { get; set; }
+        public decimal TotalPossibleScore { get; set; } // Tổng điểm tối đa của bài quiz (giáo viên nhập)
 
         // Thời gian làm bài
         public int? Duration { get; set; }
@@ -70,8 +71,7 @@ namespace LearningEnglish.Application.DTOs
         public bool? ShuffleAnswers { get; set; } = true;
 
         // Cài đặt practice
-        public bool? AllowUnlimitedAttempts { get; set; } = false;
-        public int? MaxAttempts { get; set; }
+        public int? MaxAttempts { get; set; } // Số lần làm tối đa (null = không giới hạn)
 
     }
     public class QuizUpdateDto : QuizCreateDto

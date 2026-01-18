@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaCalendarAlt, FaClock } from "react-icons/fa";
-import ScrollPicker from "../../Auth/ScrollPicker/ScrollPicker";
-import { Row, Col } from "react-bootstrap";
+import { FaCalendarAlt } from "react-icons/fa";
 import "./DateTimePicker.css";
 
 export default function DateTimePicker({ 
@@ -9,7 +7,7 @@ export default function DateTimePicker({
   onChange, 
   min, 
   max,
-  placeholder = "dd/mm/yyyy HH:mm",
+  placeholder = "dd/mm/yyyy",
   hasError = false,
   disabled = false,
   label = "",
@@ -17,11 +15,7 @@ export default function DateTimePicker({
   dateOnly = false
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [date, setDate] = useState("");
-  const [hour, setHour] = useState(""); // 1-12
-  const [minute, setMinute] = useState(""); // 0-59
-  const [ampm, setAmpm] = useState(""); // "AM" or "PM"
-  const [displayValue, setDisplayValue] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const pickerRef = useRef(null);
 
   // Initialize from value prop
@@ -34,45 +28,14 @@ export default function DateTimePicker({
         const month = String(dateObj.getMonth() + 1).padStart(2, "0");
         const year = dateObj.getFullYear();
         const formattedDate = `${day}/${month}/${year}`;
-        
-        if (dateOnly) {
-          // Date only mode
-          setDate(formattedDate);
-          setDisplayValue(formattedDate);
-          setHour("");
-          setMinute("");
-          setAmpm("");
-        } else {
-          // Format time: 12-hour format with AM/PM
-          let hours = dateObj.getHours();
-          const minutes = dateObj.getMinutes();
-          const isPM = hours >= 12;
-          if (hours === 0) hours = 12;
-          else if (hours > 12) hours = hours - 12;
-          
-          setDate(formattedDate);
-          setHour(hours.toString());
-          setMinute(String(minutes).padStart(2, "0"));
-          setAmpm(isPM ? "PM" : "AM");
-          
-          const formattedTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${isPM ? "PM" : "AM"}`;
-          setDisplayValue(`${formattedDate} ${formattedTime}`);
-        }
+        setInputValue(formattedDate);
       } else {
-        setDate("");
-        setHour("");
-        setMinute("");
-        setAmpm("");
-        setDisplayValue("");
+        setInputValue("");
       }
     } else {
-      setDate("");
-      setHour("");
-      setMinute("");
-      setAmpm("");
-      setDisplayValue("");
+      setInputValue("");
     }
-  }, [value, dateOnly]);
+  }, [value]);
 
   // Close picker when clicking outside
   useEffect(() => {
@@ -98,92 +61,226 @@ export default function DateTimePicker({
     if (parts.length !== 3) return null;
     const [day, month, year] = parts.map(Number);
     if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-    return new Date(year, month - 1, day);
-  };
-
-  // Combine date and time into DateTime
-  const combineDateTime = (dateStr, hourStr, minuteStr, ampmStr) => {
-    const dateObj = parseDate(dateStr);
-    if (!dateObj || !hourStr || !minuteStr || !ampmStr) return null;
     
-    let hours = parseInt(hourStr);
-    const minutes = parseInt(minuteStr);
-    
-    if (isNaN(hours) || isNaN(minutes)) return null;
-    
-    // Convert 12-hour to 24-hour format
-    if (ampmStr === "PM" && hours !== 12) {
-      hours += 12;
-    } else if (ampmStr === "AM" && hours === 12) {
-      hours = 0;
+    // Validate date
+    if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
+      return null;
     }
     
-    dateObj.setHours(hours, minutes, 0, 0);
+    const dateObj = new Date(year, month - 1, day);
+    if (isNaN(dateObj.getTime())) return null;
+    
+    // Set time to start of day for dateOnly mode
+    if (dateOnly) {
+      dateObj.setHours(0, 0, 0, 0);
+    }
+    
+    // Validate min/max
+    if (min && dateObj < min) return null;
+    if (max && dateObj > max) return null;
+    
     return dateObj;
   };
 
-  // Handle hour change
-  const handleHourChange = (newHour) => {
-    setHour(newHour);
-    if (date && newHour && minute && ampm) {
-      const dateTime = combineDateTime(date, newHour, minute, ampm);
-      if (dateTime) {
-        const formattedTime = `${String(newHour).padStart(2, "0")}:${minute} ${ampm}`;
-        setDisplayValue(`${date} ${formattedTime}`);
-        onChange(dateTime);
+  // Handle input change - user types directly
+  const handleInputChange = (e) => {
+    let input = e.target.value;
+    
+    // Remove all non-digit and non-slash characters
+    input = input.replace(/[^\d/]/g, '');
+    
+    // Limit to format: dd/mm/yyyy (max 10 chars: dd/mm/yyyy)
+    if (input.length > 10) {
+      input = input.slice(0, 10);
+    }
+    
+    // Extract digits only
+    const digits = input.replace(/\//g, '');
+    
+    // Build formatted string - don't auto-format numbers, just add slashes
+    let formatted = '';
+    
+    // Day part: allow 1-2 digits, don't auto-format yet
+    if (digits.length >= 1) {
+      formatted += digits[0];
+    }
+    if (digits.length >= 2) {
+      formatted += digits[1];
+    }
+    
+    // Add first slash: only if user typed it OR if we have 2 digits and more input
+    const hasFirstSlash = input.includes('/');
+    if (hasFirstSlash) {
+      // User typed slash - preserve it
+      if (!formatted.includes('/')) {
+        formatted += '/';
+      }
+    } else if (digits.length > 2) {
+      // Auto-add slash after 2 digits
+      formatted += '/';
+    }
+    
+    // Month part: allow 1-2 digits after first slash
+    const afterFirstSlash = digits.length > 2 ? digits.slice(2) : '';
+    if (afterFirstSlash.length >= 1) {
+      formatted += afterFirstSlash[0];
+    }
+    if (afterFirstSlash.length >= 2) {
+      formatted += afterFirstSlash[1];
+    }
+    
+    // Add second slash: only if user typed it OR if we have month digits and more input
+    const slashCount = (input.match(/\//g) || []).length;
+    if (slashCount >= 2) {
+      // User typed second slash - preserve it
+      if (!formatted.endsWith('/')) {
+        formatted += '/';
+      }
+    } else if (afterFirstSlash.length >= 2 && digits.length > 4) {
+      // Auto-add slash after 2 digit month
+      formatted += '/';
+    } else if (afterFirstSlash.length === 1 && digits.length > 3) {
+      // Auto-add slash after 1 digit month (user is typing year)
+      formatted += '/';
+    }
+    
+    // Year part: remaining digits (max 4)
+    if (digits.length > 4) {
+      const yearStart = afterFirstSlash.length >= 2 ? 4 : (afterFirstSlash.length === 1 ? 3 : 2);
+      const yearDigits = digits.slice(yearStart, yearStart + 4);
+      formatted += yearDigits;
+    }
+    
+    setInputValue(formatted);
+    
+    // Try to parse and set date if valid (complete date entered)
+    if (formatted.length === 10) {
+      const dateObj = parseDate(formatted);
+      if (dateObj) {
+        onChange(dateObj);
+      }
+    } else if (formatted.length < 10) {
+      // Clear date if incomplete
+      onChange(null);
+    }
+  };
+
+  // Handle input blur - validate and auto-format on blur
+  const handleInputBlur = () => {
+    // Auto-format: add leading zeros for day/month if needed
+    let formatted = inputValue.trim();
+    
+    // If empty, do nothing
+    if (!formatted) {
+      return;
+    }
+    
+    const parts = formatted.split('/');
+    
+    // Format day: add leading zero if single digit
+    if (parts.length > 0 && parts[0] && parts[0].length === 1 && /^\d$/.test(parts[0])) {
+      parts[0] = '0' + parts[0];
+    }
+    
+    // Format month: add leading zero if single digit
+    if (parts.length > 1 && parts[1] && parts[1].length === 1 && /^\d$/.test(parts[1])) {
+      parts[1] = '0' + parts[1];
+    }
+    
+    // Reconstruct formatted string
+    formatted = parts.join('/');
+    
+    // Ensure we have proper format: dd/mm/yyyy
+    if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+      // All parts exist, ensure proper format
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      formatted = `${day}/${month}/${year}`;
+    }
+    
+    // Update input value if changed
+    if (formatted !== inputValue) {
+      setInputValue(formatted);
+    }
+    
+    // Try to parse and set date if valid
+    if (formatted.length === 10) {
+      const dateObj = parseDate(formatted);
+      if (dateObj) {
+        onChange(dateObj);
       }
     }
   };
 
-  // Handle minute change
-  const handleMinuteChange = (newMinute) => {
-    setMinute(newMinute);
-    if (date && hour && newMinute && ampm) {
-      const dateTime = combineDateTime(date, hour, newMinute, ampm);
-      if (dateTime) {
-        const formattedTime = `${String(hour).padStart(2, "0")}:${newMinute} ${ampm}`;
-        setDisplayValue(`${date} ${formattedTime}`);
-        onChange(dateTime);
+  // Handle calendar icon click - open native date picker or calendar
+  const handleCalendarClick = (e) => {
+    e.stopPropagation();
+    if (!disabled) {
+      setIsOpen(!isOpen);
+    }
+  };
+
+  // Handle date selection from calendar (if using native input)
+  const handleDateSelect = (e) => {
+    const selectedDate = e.target.value;
+    if (selectedDate) {
+      const dateObj = new Date(selectedDate);
+      if (!isNaN(dateObj.getTime())) {
+        // Format to dd/mm/yyyy
+        const day = String(dateObj.getDate()).padStart(2, "0");
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const year = dateObj.getFullYear();
+        const formattedDate = `${day}/${month}/${year}`;
+        setInputValue(formattedDate);
+        onChange(dateObj);
+        setIsOpen(false);
       }
     }
   };
 
-  // Handle AM/PM change
-  const handleAmpmChange = (newAmpm) => {
-    setAmpm(newAmpm);
-    if (date && hour && minute && newAmpm) {
-      const dateTime = combineDateTime(date, hour, minute, newAmpm);
-      if (dateTime) {
-        const formattedTime = `${String(hour).padStart(2, "0")}:${minute} ${newAmpm}`;
-        setDisplayValue(`${date} ${formattedTime}`);
-        onChange(dateTime);
+  // Get today's date in YYYY-MM-DD format for native date input
+  const getTodayDate = () => {
+    const today = min || new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Get max date in YYYY-MM-DD format
+  const getMaxDate = () => {
+    if (!max) return null;
+    const year = max.getFullYear();
+    const month = String(max.getMonth() + 1).padStart(2, "0");
+    const day = String(max.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Get min date in YYYY-MM-DD format
+  const getMinDate = () => {
+    if (!min) return null;
+    const year = min.getFullYear();
+    const month = String(min.getMonth() + 1).padStart(2, "0");
+    const day = String(min.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Convert input value to YYYY-MM-DD for native date input
+  const getInputDateValue = () => {
+    if (inputValue.length === 10) {
+      const dateObj = parseDate(inputValue);
+      if (dateObj) {
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const day = String(dateObj.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
       }
     }
+    return "";
   };
 
-  // Generate hour options (1-12)
-  const generateHours = () => {
-    return Array.from({ length: 12 }, (_, i) => ({
-      value: (i + 1).toString(),
-      label: String(i + 1).padStart(2, "0"),
-    }));
-  };
-
-  // Generate minute options (0-59)
-  const generateMinutes = () => {
-    return Array.from({ length: 60 }, (_, i) => ({
-      value: String(i).padStart(2, "0"),
-      label: String(i).padStart(2, "0"),
-    }));
-  };
-
-  // Generate AM/PM options
-  const generateAmpm = () => {
-    return [
-      { value: "AM", label: "AM" },
-      { value: "PM", label: "PM" },
-    ];
-  };
+  const isDateValid = inputValue.length === 10 && parseDate(inputValue) !== null;
 
   return (
     <div className="datetime-picker-wrapper" ref={pickerRef}>
@@ -192,158 +289,58 @@ export default function DateTimePicker({
           {label}
         </label>
       )}
-      <div 
-        className={`datetime-picker-input-wrapper ${hasError ? "has-error" : ""} ${disabled ? "disabled" : ""} ${isOpen ? "open" : ""}`}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-      >
-        <div className="datetime-picker-display">
-          {displayValue ? (
-            <span className="datetime-picker-value">{displayValue}</span>
-          ) : (
-            <span className="datetime-picker-placeholder">{placeholder}</span>
-          )}
-        </div>
-        <div className="datetime-picker-icons">
+      <div className={`datetime-picker-input-container ${hasError ? "has-error" : ""} ${disabled ? "disabled" : ""} ${isDateValid ? "valid" : ""}`}>
+        <input
+          type="text"
+          className="datetime-picker-input"
+          value={inputValue}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+          onFocus={() => setIsOpen(false)} // Close calendar if open when focusing input
+          placeholder={placeholder}
+          maxLength={10}
+          disabled={disabled}
+        />
+        <button
+          type="button"
+          className="datetime-picker-icon-btn"
+          onClick={handleCalendarClick}
+          disabled={disabled}
+          title="Chọn ngày từ lịch"
+        >
           <FaCalendarAlt className="datetime-picker-icon" />
-          <FaClock className="datetime-picker-icon" />
-        </div>
+        </button>
       </div>
       
+      {/* Native date picker overlay (hidden, triggered by icon) */}
       {isOpen && !disabled && (
-        <div className="datetime-picker-dropdown">
-          <div className="datetime-picker-section">
-            <div className="datetime-picker-section-header">
-              <FaCalendarAlt />
+        <div className="datetime-picker-calendar-overlay">
+          <div className="datetime-picker-calendar-popup">
+            <div className="datetime-picker-calendar-header">
               <span>Chọn ngày</span>
+              <button
+                type="button"
+                className="datetime-picker-close-btn"
+                onClick={() => setIsOpen(false)}
+              >
+                ×
+              </button>
             </div>
             <input
-              type="text"
-              className="datetime-picker-date-input"
-              value={date}
-              onChange={(e) => {
-                const input = e.target.value;
-                // Auto-format as user types: dd/mm/yyyy
-                let formatted = input.replace(/[^\d]/g, ''); // Remove non-digits
-                
-                if (formatted.length >= 2) {
-                  formatted = formatted.slice(0, 2) + '/' + formatted.slice(2);
-                }
-                if (formatted.length >= 5) {
-                  formatted = formatted.slice(0, 5) + '/' + formatted.slice(5);
-                }
-                if (formatted.length > 10) {
-                  formatted = formatted.slice(0, 10);
-                }
-                
-                setDate(formatted);
-                
-                // Try to parse and set date if valid
-                if (formatted.length === 10) {
-                  const parts = formatted.split('/');
-                  if (parts.length === 3) {
-                    const [day, month, year] = parts.map(Number);
-                    if (!isNaN(day) && !isNaN(month) && !isNaN(year) && 
-                        day >= 1 && day <= 31 && 
-                        month >= 1 && month <= 12 && 
-                        year >= 1900 && year <= 2100) {
-                      const dateObj = new Date(year, month - 1, day);
-                      if (!isNaN(dateObj.getTime())) {
-                        if (dateOnly) {
-                          dateObj.setHours(0, 0, 0, 0);
-                          setDisplayValue(formatted);
-                          onChange(dateObj);
-                        } else {
-                          if (hour && minute && ampm) {
-                            const dateTime = combineDateTime(formatted, hour, minute, ampm);
-                            if (dateTime) {
-                              const formattedTime = `${String(hour).padStart(2, "0")}:${minute} ${ampm}`;
-                              setDisplayValue(`${formatted} ${formattedTime}`);
-                              onChange(dateTime);
-                            }
-                          } else {
-                            setDisplayValue(formatted);
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }}
-              placeholder="dd/mm/yyyy"
-              maxLength={10}
+              type="date"
+              className="datetime-picker-native-input"
+              value={getInputDateValue()}
+              onChange={handleDateSelect}
+              min={getMinDate() || undefined}
+              max={getMaxDate() || undefined}
+              autoFocus
             />
-            <div style={{ fontSize: "0.8em", color: "#6c757d", marginTop: "4px" }}>
-              Nhập theo định dạng: ngày/tháng/năm (ví dụ: 05/01/2026)
+            <div className="datetime-picker-hint">
+              Hoặc nhập trực tiếp: {placeholder}
             </div>
-          </div>
-          
-          {!dateOnly && (
-            <div className="datetime-picker-section">
-              <div className="datetime-picker-section-header">
-                <FaClock />
-                <span>Chọn giờ</span>
-              </div>
-            <Row className="datetime-picker-time-row">
-              <Col className="datetime-picker-time-col">
-                <ScrollPicker
-                  options={generateHours()}
-                  value={hour}
-                  onChange={handleHourChange}
-                  placeholder="Giờ"
-                  hasError={false}
-                />
-                <span className="datetime-picker-time-label">Giờ</span>
-              </Col>
-              <Col className="datetime-picker-time-col">
-                <ScrollPicker
-                  options={generateMinutes()}
-                  value={minute}
-                  onChange={handleMinuteChange}
-                  placeholder="Phút"
-                  hasError={false}
-                />
-                <span className="datetime-picker-time-label">Phút</span>
-              </Col>
-              <Col className="datetime-picker-time-col">
-                <ScrollPicker
-                  options={generateAmpm()}
-                  value={ampm}
-                  onChange={handleAmpmChange}
-                  placeholder="AM/PM"
-                  hasError={false}
-                />
-                <span className="datetime-picker-time-label">AM/PM</span>
-              </Col>
-            </Row>
-          </div>
-          )}
-          
-          <div className="datetime-picker-actions">
-            <button
-              type="button"
-              className="datetime-picker-clear-btn"
-              onClick={() => {
-                setDate("");
-                setHour("");
-                setMinute("");
-                setAmpm("");
-                setDisplayValue("");
-                onChange(null);
-              }}
-            >
-              Xóa
-            </button>
-            <button
-              type="button"
-              className="datetime-picker-close-btn"
-              onClick={() => setIsOpen(false)}
-            >
-              Đóng
-            </button>
           </div>
         </div>
       )}
     </div>
   );
 }
-

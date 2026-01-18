@@ -1,0 +1,40 @@
+/* =========================================================
+   Z-INDEX LAYERS - Centralized Management
+   Không dùng !important, chỉ dùng CSS variables
+   ========================================================= */
+
+:root {
+  /* Base layers */
+  --z-index-base: 1;
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  
+  /* Modal layers - Bootstrap Modal = 1050 */
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  
+  /* Custom modal layers - above Bootstrap */
+  --z-index-custom-modal: 2000;      /* JoinClassModal, EnrollmentModal */
+  --z-index-confirm-modal: 3000;     /* ConfirmModal */
+  --z-index-login-modal: 3000;       /* LoginRequiredModal */
+  
+  /* Notification layers - highest priority */
+  --z-index-notification: 4000;      /* NotificationModal */
+  --z-index-success: 4000;            /* SuccessModal */
+}
+
+/* Dark theme - same z-index values */
+[data-theme="dark"] {
+  --z-index-base: 1;
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-custom-modal: 2000;
+  --z-index-confirm-modal: 3000;
+  --z-index-login-modal: 3000;
+  --z-index-notification: 4000;
+  --z-index-success: 4000;
+}

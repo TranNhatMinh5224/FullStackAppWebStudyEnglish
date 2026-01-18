@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import MainHeader from "../../Components/Header/MainHeader";
+import Breadcrumb from "../../Components/Common/Breadcrumb/Breadcrumb";
 import LessonDetailHeader from "../../Components/LessonDetail/LessonDetailHeader/LessonDetailHeader";
 import ModuleCard from "../../Components/LessonDetail/ModuleCard/ModuleCard";
 import { moduleService } from "../../Services/moduleService";
@@ -230,28 +231,21 @@ export default function LessonDetail() {
             <MainHeader />
             <div className="lesson-detail-container">
                 <Container>
-                    <div className="lesson-detail-breadcrumb">
-                        <span onClick={() => navigate("/my-courses")} className="breadcrumb-link">
-                            Khóa học của tôi
-                        </span>
-                        <span className="breadcrumb-separator">/</span>
-                        <span onClick={() => navigate(`/course/${courseId}`)} className="breadcrumb-link">
-                            {course?.title || course?.Title || "Khóa học"}
-                        </span>
-                        <span className="breadcrumb-separator">/</span>
-                        <span onClick={() => navigate(`/course/${courseId}/learn`)} className="breadcrumb-link">
-                            Lesson
-                        </span>
-                        <span className="breadcrumb-separator">/</span>
-                        <span className="breadcrumb-current">{lessonTitle}</span>
-                    </div>
+                    <Breadcrumb
+                        items={[
+                            { label: "Khóa học của tôi", path: "/my-courses" },
+                            { label: course?.title || course?.Title || "Khóa học", path: `/course/${courseId}` },
+                            { label: "Lesson", path: `/course/${courseId}/learn` },
+                            { label: lessonTitle, isCurrent: true }
+                        ]}
+                    />
                     <LessonDetailHeader
                         title={lessonTitle}
                         description={lessonDescription}
                         onBackClick={handleBackClick}
                     />
 
-                    <div className="modules-list">
+                    <div className="modules-list d-flex flex-column">
                         {modules.length > 0 ? (
                             modules.map((module, index) => {
                                 const moduleId = module.moduleId || module.ModuleId;

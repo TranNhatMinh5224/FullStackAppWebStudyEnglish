@@ -1,163 +1,293 @@
+/* ============================================
+   MARKDOWN VIEWER COMPONENT
+   ============================================ */
+
 .markdown-viewer {
     width: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
-.lecture-header {
-    margin-bottom: 32px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid var(--color-border-light, #e5e7eb);
+/* Lecture Header */
+.markdown-viewer > .lecture-header {
+    margin: 0 !important;
+    padding: 0 !important;
+    margin-bottom: 24px !important;
 }
 
-.lecture-title {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--color-text-primary, #1f2937);
-    margin: 0;
-    line-height: 1.3;
+.markdown-viewer > .lecture-header > .lecture-title {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    color: #1f2937 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    padding-bottom: 16px !important;
+    border-bottom: 2px solid #e5e7eb !important;
+    line-height: 1.2 !important;
 }
 
+[data-theme="dark"] .markdown-viewer > .lecture-header > .lecture-title {
+    color: #ffffff !important;
+    border-bottom-color: #374151 !important;
+}
+
+/* Content */
 .lecture-content {
-    font-size: 16px;
-    line-height: 1.8;
-    color: var(--color-text-primary, #1f2937);
+    font-size: 1rem;
+    line-height: 1.75;
+    color: #212529;
+    flex: 1;
+    width: 100%;
+    min-height: 400px;
+}
+
+[data-theme="dark"] .lecture-content {
+    color: #e5e7eb;
 }
 
 .markdown-content,
 .markdown-html-content {
-    color: var(--color-text-primary, #1f2937);
+    color: #212529;
+    width: 100%;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+[data-theme="dark"] .markdown-content,
+[data-theme="dark"] .markdown-html-content {
+    color: #e5e7eb;
 }
 
 .no-content-message {
     text-align: center;
     padding: 60px 20px;
-    color: var(--color-text-tertiary, #9ca3af);
+    color: #9ca3af;
     font-size: 16px;
 }
 
-/* Markdown styles */
-.markdown-content h1,
-.markdown-html-content h1 {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--color-text-primary, #1f2937);
-    margin: 32px 0 16px 0;
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--color-border-light, #e5e7eb);
+[data-theme="dark"] .no-content-message {
+    color: #6b7280;
 }
 
-.markdown-content h1:first-child,
-.markdown-html-content h1:first-child {
+/* Typography */
+.markdown-content h1:not(.lecture-title),
+.markdown-html-content h1:not(.lecture-title) {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 2rem 0 1rem 0;
+    padding-bottom: 0.625rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+[data-theme="dark"] .markdown-content h1:not(.lecture-title),
+[data-theme="dark"] .markdown-html-content h1:not(.lecture-title) {
+    color: #ffffff;
+    border-bottom-color: #374151;
+}
+
+.markdown-content h1:not(.lecture-title):first-child,
+.markdown-html-content h1:not(.lecture-title):first-child {
     margin-top: 0;
 }
 
 .markdown-content h2,
 .markdown-html-content h2 {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--color-text-primary, #1f2937);
-    margin: 28px 0 14px 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #212529;
+    margin: 2.5rem 0 1rem 0;
+}
+
+[data-theme="dark"] .markdown-content h2,
+[data-theme="dark"] .markdown-html-content h2 {
+    color: #ffffff;
 }
 
 .markdown-content h3,
 .markdown-html-content h3 {
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 600;
-    color: var(--color-text-primary, #1f2937);
-    margin: 24px 0 12px 0;
+    color: #d63384;
+    margin: 1.5rem 0 0.75rem 0;
+}
+
+[data-theme="dark"] .markdown-content h3,
+[data-theme="dark"] .markdown-html-content h3 {
+    color: #ff6b9d;
 }
 
 .markdown-content h4,
 .markdown-html-content h4 {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 600;
-    color: var(--color-text-primary, #1f2937);
-    margin: 20px 0 10px 0;
+    color: #d63384;
+    margin: 1.25rem 0 0.625rem 0;
+}
+
+[data-theme="dark"] .markdown-content h4,
+[data-theme="dark"] .markdown-html-content h4 {
+    color: #ff6b9d;
 }
 
 .markdown-content p,
 .markdown-html-content p {
-    margin: 12px 0;
-    line-height: 1.8;
+    margin: 1.5rem 0;
+    line-height: 1.75;
+    color: #212529;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+[data-theme="dark"] .markdown-content p,
+[data-theme="dark"] .markdown-html-content p {
+    color: #e5e7eb;
 }
 
 .markdown-content ul,
 .markdown-content ol,
 .markdown-html-content ul,
 .markdown-html-content ol {
-    margin: 16px 0;
-    padding-left: 32px;
+    margin: 1.5rem 0;
+    padding-left: 2rem;
+    list-style-position: outside;
+}
+
+.markdown-content ul {
+    list-style-type: disc;
+}
+
+.markdown-content ol {
+    list-style-type: decimal;
 }
 
 .markdown-content li,
 .markdown-html-content li {
-    margin: 8px 0;
-    line-height: 1.8;
+    margin: 0.75rem 0;
+    padding-left: 0.5rem;
+    line-height: 1.75;
+    color: #212529;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
-/* Inline code - will be overridden by formula box styling if in formula context */
+[data-theme="dark"] .markdown-content li,
+[data-theme="dark"] .markdown-html-content li {
+    color: #e5e7eb;
+}
+
+/* Code */
 .markdown-content code:not(pre code),
 .markdown-html-content code:not(pre code) {
-    background: #f5f5f5;
+    background: rgba(214, 51, 132, 0.1);
     padding: 2px 6px;
     border-radius: 4px;
     font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
-    font-size: 14px;
+    font-size: 0.875rem;
     color: #d63384;
     font-weight: 600;
 }
 
+[data-theme="dark"] .markdown-content code:not(pre code),
+[data-theme="dark"] .markdown-html-content code:not(pre code) {
+    background: rgba(214, 51, 132, 0.2);
+    color: #ff6b9d;
+}
+
 .markdown-content pre,
 .markdown-html-content pre {
-    background: #f8f9fa;
-    padding: 16px;
+    background: #1e1e1e;
+    padding: 1.25rem;
     border-radius: 8px;
     overflow-x: auto;
-    margin: 20px 0;
-    border: 1px solid var(--color-border-light, #e5e7eb);
+    margin: 1.25rem 0;
+    border: 1px solid #e5e7eb;
+}
+
+[data-theme="dark"] .markdown-content pre,
+[data-theme="dark"] .markdown-html-content pre {
+    background: #0d1117;
+    border-color: #374151;
 }
 
 .markdown-content pre code,
 .markdown-html-content pre code {
     background: transparent;
     padding: 0;
-    color: var(--color-text-primary, #1f2937);
-    font-size: 14px;
+    color: #d4d4d4;
+    font-size: 0.875rem;
+    font-family: 'Courier New', 'Monaco', 'Consolas', 'Fira Code', monospace;
 }
 
+/* Blockquote */
 .markdown-content blockquote,
 .markdown-html-content blockquote {
-    border-left: 4px solid var(--color-secondary-cyan, #41d6e3);
-    padding: 12px 16px;
-    margin: 20px 0;
-    background: rgba(65, 214, 227, 0.05);
-    color: var(--color-text-secondary, #6b7280);
-    font-style: italic;
+    border-left: 4px solid #41d6e3;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+    background: #fff0f5;
+    color: #1f2937;
+    font-style: normal;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
+[data-theme="dark"] .markdown-content blockquote,
+[data-theme="dark"] .markdown-html-content blockquote {
+    background: rgba(255, 240, 245, 0.1);
+    border-left-color: #41d6e3;
+    color: #e5e7eb;
+}
+
+/* Table */
 .markdown-content table,
 .markdown-html-content table {
     width: 100%;
     border-collapse: collapse;
-    margin: 20px 0;
-    border: 1px solid var(--color-border-light, #e5e7eb);
-    border-radius: 8px;
+    margin: 1.25rem 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .markdown-content table,
+[data-theme="dark"] .markdown-html-content table {
+    border-color: #374151;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .markdown-content th,
 .markdown-content td,
 .markdown-html-content th,
 .markdown-html-content td {
-    border: 1px solid var(--color-border-light, #e5e7eb);
-    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    padding: 1rem 1.25rem;
     text-align: left;
+}
+
+[data-theme="dark"] .markdown-content th,
+[data-theme="dark"] .markdown-content td,
+[data-theme="dark"] .markdown-html-content th,
+[data-theme="dark"] .markdown-html-content td {
+    border-color: #374151;
 }
 
 .markdown-content th,
 .markdown-html-content th {
-    background: var(--color-bg-light, #e0f7fa);
+    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
     font-weight: 600;
-    color: var(--color-text-primary, #1f2937);
+    color: #1f2937;
+}
+
+[data-theme="dark"] .markdown-content th,
+[data-theme="dark"] .markdown-html-content th {
+    background: linear-gradient(135deg, rgba(65, 214, 227, 0.2) 0%, rgba(65, 214, 227, 0.1) 100%);
+    color: #ffffff;
 }
 
 .markdown-content tr:nth-child(even),
@@ -165,9 +295,15 @@
     background: rgba(0, 0, 0, 0.02);
 }
 
+[data-theme="dark"] .markdown-content tr:nth-child(even),
+[data-theme="dark"] .markdown-html-content tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Links */
 .markdown-content a,
 .markdown-html-content a {
-    color: var(--color-secondary-cyan, #41d6e3);
+    color: #41d6e3;
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition: all 0.2s ease;
@@ -175,88 +311,65 @@
 
 .markdown-content a:hover,
 .markdown-html-content a:hover {
-    border-bottom-color: var(--color-secondary-cyan, #41d6e3);
+    border-bottom-color: #41d6e3;
 }
 
+/* Images */
 .markdown-content img,
 .markdown-html-content img {
     max-width: 100%;
     height: auto;
-    border-radius: 8px;
-    margin: 20px 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    margin: 1.25rem 0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
+[data-theme="dark"] .markdown-content img,
+[data-theme="dark"] .markdown-html-content img {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Horizontal Rule */
 .markdown-content hr,
 .markdown-html-content hr {
     border: none;
-    border-top: 2px solid var(--color-border-light, #e5e7eb);
+    border-top: 2px solid #e5e7eb;
     margin: 32px 0;
 }
 
-/* Formula boxes - paragraphs containing only code/strong text (formulas) */
-.markdown-content p:has(> code:only-child),
-.markdown-html-content p:has(> code:only-child),
-.markdown-content p:has(> strong:only-child),
-.markdown-html-content p:has(> strong:only-child) {
-    background: #f5f5f5;
-    border-radius: 4px;
-    padding: 12px 16px;
-    margin: 16px 0;
-    text-align: center;
+[data-theme="dark"] .markdown-content hr,
+[data-theme="dark"] .markdown-html-content hr {
+    border-top-color: #374151;
 }
 
-/* Code in formula boxes - larger font size */
-.markdown-content p:has(> code:only-child) code,
-.markdown-html-content p:has(> code:only-child) code {
-    font-size: 16px;
-    background: transparent;
-    padding: 0;
-}
-
-/* Strong text styling */
+/* Strong */
 .markdown-content strong,
 .markdown-html-content strong {
     font-weight: 700;
-    color: var(--color-text-primary, #1f2937);
+    color: #1f2937;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
-/* Strong text in formula boxes (centered paragraphs) should be pink */
-.markdown-content p:has(> code:only-child) strong,
-.markdown-html-content p:has(> code:only-child) strong,
-.markdown-content p:has(> strong:only-child) strong,
-.markdown-html-content p:has(> strong:only-child) strong {
-    color: #d63384;
-    font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
-    font-weight: 600;
-    font-size: 16px;
+[data-theme="dark"] .markdown-content strong,
+[data-theme="dark"] .markdown-html-content strong {
+    color: #ffffff;
 }
 
-/* Where clause styling */
-.markdown-content .where-clause,
-.markdown-html-content .where-clause {
-    margin: 12px 0;
-    padding-left: 16px;
-    font-style: italic;
-    color: var(--color-text-secondary, #6b7280);
-}
-
+/* Em */
 .markdown-content em,
 .markdown-html-content em {
     font-style: italic;
 }
 
+/* Responsive */
 @media (max-width: 768px) {
-    .lecture-title {
-        font-size: 24px;
-    }
-
     .lecture-content {
         font-size: 14px;
     }
 
-    .markdown-content h1,
-    .markdown-html-content h1 {
+    .markdown-content h1:not(.lecture-title),
+    .markdown-html-content h1:not(.lecture-title) {
         font-size: 22px;
     }
 

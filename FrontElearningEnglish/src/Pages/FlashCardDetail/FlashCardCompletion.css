@@ -1,8 +1,5 @@
+/* Bootstrap utilities: d-flex, flex-column, align-items-center, justify-content-center */
 .flashcard-completion-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     min-height: 60vh;
     padding: 60px 40px;
     text-align: center;
@@ -57,18 +54,11 @@
     box-shadow: 0 4px 12px rgba(65, 214, 227, 0.4);
 }
 
+/* Responsive typography tự động điều chỉnh với clamp() - chỉ cần điều chỉnh padding */
 @media (max-width: 768px) {
     .flashcard-completion-screen {
-        padding: 40px 20px;
+        padding: var(--padding-container-md, clamp(1rem, 0.75rem + 1.25vw, 2rem)) var(--padding-container-sm, clamp(0.75rem, 0.5rem + 1.25vw, 1.5rem));
         min-height: 50vh;
-    }
-
-    .completion-title {
-        font-size: 24px;
-    }
-
-    .completion-message {
-        font-size: 16px;
     }
 }
 

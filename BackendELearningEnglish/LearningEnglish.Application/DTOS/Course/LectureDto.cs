@@ -13,7 +13,6 @@ namespace LearningEnglish.Application.DTOs
         public LectureType Type { get; set; }
         public string TypeName => Type.ToString();
         public string? MarkdownContent { get; set; }
-        public string RenderedHtml { get; set; } = string.Empty;
 
         public string? MediaUrl { get; set; }
         public string? MediaType { get; set; }

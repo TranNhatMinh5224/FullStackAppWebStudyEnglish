@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Pagination } from "react-bootstrap";
+import { Container, Pagination, Row, Col } from "react-bootstrap";
 import "./PaymentHistory.css";
 import MainHeader from "../../Components/Header/MainHeader";
 import { paymentService } from "../../Services/paymentService";
@@ -154,20 +154,20 @@ export default function PaymentHistory() {
                         </div>
                     ) : (
                         <div className="payment-list-container">
-                            <div className="payment-list-header">
-                                <div className="payment-header-column product-column">
+                            <Row className="payment-list-header g-0">
+                                <Col xs={12} md={5} lg={4} className="payment-header-column product-column d-flex align-items-center">
                                     <span>Sản phẩm</span>
-                                </div>
-                                <div className="payment-header-column amount-column">
+                                </Col>
+                                <Col xs={4} md={2} lg={2} className="payment-header-column amount-column d-none d-md-flex align-items-center">
                                     <span>Số tiền</span>
-                                </div>
-                                <div className="payment-header-column status-column">
+                                </Col>
+                                <Col xs={4} md={2} lg={2} className="payment-header-column status-column d-flex align-items-center">
                                     <span>Trạng thái</span>
-                                </div>
-                                <div className="payment-header-column date-column">
+                                </Col>
+                                <Col xs={4} md={3} lg={4} className="payment-header-column date-column d-none d-md-flex align-items-center">
                                     <span>Ngày thanh toán</span>
-                                </div>
-                            </div>
+                                </Col>
+                            </Row>
 
                             <div className="payment-list">
                                 {transactions.map((transaction) => {
@@ -186,7 +186,7 @@ export default function PaymentHistory() {
 
                             {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="pagination-wrapper">
+                                <div className="pagination-wrapper d-flex flex-column flex-md-row align-items-center gap-3">
                                     <Pagination>
                                         <Pagination.First 
                                             onClick={() => setCurrentPage(1)}

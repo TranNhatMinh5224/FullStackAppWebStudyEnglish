@@ -238,7 +238,7 @@ namespace LearningEnglish.Application.Mappings
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
                 .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.Roles.Select(r => r.Name).ToList()))
-                .ForMember(dest => dest.AvatarUrl, opt => opt.Ignore()); // Handled in service layer
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarKey)); // Map AvatarKey → AvatarUrl (giống ImageKey → ImageUrl)
 
             CreateMap<RegisterUserDto, User>()
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
@@ -535,10 +535,7 @@ namespace LearningEnglish.Application.Mappings
             // UpdateAssetFrontendDto -> AssetFrontend Entity
             CreateMap<UpdateAssetFrontendDto, AssetFrontend>()
                 .ForMember(dest => dest.NameImage, opt => opt.Condition(src => src.NameImage != null))
-                .ForMember(dest => dest.KeyImage, opt => opt.MapFrom(src => src.ImageTempKey ?? string.Empty)) // Use temp key if provided, otherwise keep existing (handled in service) 
-                .ForMember(dest => dest.DescriptionImage, opt => opt.Condition(src => src.DescriptionImage != null))
-                .ForMember(dest => dest.Order, opt => opt.Condition(src => src.Order.HasValue))
-                .ForMember(dest => dest.IsActive, opt => opt.Condition(src => src.IsActive.HasValue))
+                .ForMember(dest => dest.KeyImage, opt => opt.Ignore()) // Ignore KeyImage - handled separately in service to preserve existing value
                 .ForMember(dest => dest.AssetType, opt => opt.Condition(src => src.AssetType.HasValue)) // Only map if not null
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Preserve existing CreatedAt on update 
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow)); // Update timestamp on update
@@ -577,13 +574,13 @@ namespace LearningEnglish.Application.Mappings
         public AssetType Convert(string? sourceMember, ResolutionContext context)
         {
             if (string.IsNullOrEmpty(sourceMember))
-                return AssetType.Other;
+                return AssetType.Logo;
 
-            // Try to parse the string to enum, fallback to Other if invalid
+            // Try to parse the string to enum, fallback to Logo if invalid
             if (Enum.TryParse<AssetType>(sourceMember, true, out var result))
                 return result;
 
-            return AssetType.Other;
+            return AssetType.Logo;
         }
     }
 

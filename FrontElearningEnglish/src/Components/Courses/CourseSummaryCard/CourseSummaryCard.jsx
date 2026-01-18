@@ -46,7 +46,7 @@ export default function CourseSummaryCard({ course, onEnroll, onStartLearning })
     const progressData = course.isEnrolled ? getProgressData() : null;
 
     return (
-        <div className="course-summary-card">
+        <div className="course-summary-card d-flex flex-column">
             {course.isEnrolled && progressData && (
                 <div className="course-progress-section">
                     <ProgressBar
@@ -57,19 +57,19 @@ export default function CourseSummaryCard({ course, onEnroll, onStartLearning })
                 </div>
             )}
 
-            <div className="course-summary-stats">
-                <div className="course-stat-item">
+            <div className="course-summary-stats d-flex flex-column">
+                <div className="course-stat-item d-flex align-items-center">
                     <FaBook className="stat-icon" />
-                    <div className="stat-content">
+                    <div className="stat-content d-flex flex-column">
                         <span className="stat-label">Số lượng bài giảng</span>
                         <span className="stat-value">{course.totalLessons || course.TotalLessons || 0} bài giảng</span>
                     </div>
                 </div>
 
                 {course.enrollmentCount !== undefined && (
-                    <div className="course-stat-item">
+                    <div className="course-stat-item d-flex align-items-center">
                         <FaUsers className="stat-icon" />
-                        <div className="stat-content">
+                        <div className="stat-content d-flex flex-column">
                             <span className="stat-label">Số học viên</span>
                             <span className="stat-value">{course.enrollmentCount || 0} học viên</span>
                         </div>
@@ -77,9 +77,9 @@ export default function CourseSummaryCard({ course, onEnroll, onStartLearning })
                 )}
 
                 {priceDisplay !== null && (
-                    <div className="course-stat-item">
+                    <div className="course-stat-item d-flex align-items-center">
                         <FaTag className="stat-icon" />
-                        <div className="stat-content">
+                        <div className="stat-content d-flex flex-column">
                             <span className="stat-label">Giá khóa học</span>
                             <span className="stat-value">{priceDisplay}</span>
                         </div>
@@ -88,7 +88,7 @@ export default function CourseSummaryCard({ course, onEnroll, onStartLearning })
             </div>
 
             {course.isEnrolled ? (
-                <div className="course-enrolled-actions">
+                <div className="course-enrolled-actions d-flex flex-column">
                     <button className="course-enrolled-btn">
                         Đã đăng kí
                     </button>

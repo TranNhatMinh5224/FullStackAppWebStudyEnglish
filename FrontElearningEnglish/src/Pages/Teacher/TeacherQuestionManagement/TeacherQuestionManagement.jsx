@@ -10,12 +10,22 @@ import SuccessModal from "../../../Components/Common/SuccessModal/SuccessModal";
 import { questionService } from "../../../Services/questionService";
 import { quizService } from "../../../Services/quizService";
 import { useQuestionTypes } from "../../../hooks/useQuestionTypes";
+import { useAuth } from "../../../Context/AuthContext";
 import "./TeacherQuestionManagement.css";
 
 export default function TeacherQuestionManagement() {
   const { getQuestionTypeLabel } = useQuestionTypes();
   const { sectionId, groupId } = useParams();
   const navigate = useNavigate();
+  const { roles } = useAuth();
+  
+  // Auto-detect admin role from AuthContext
+  const isAdmin = roles && roles.some(role => {
+    const roleName = typeof role === 'string' ? role : (role?.name || '');
+    return roleName === "SuperAdmin" || 
+           roleName === "ContentAdmin" || 
+           roleName === "FinanceAdmin";
+  });
   
   const [questions, setQuestions] = useState([]);
   const [groups, setGroups] = useState([]); // Store groups list
@@ -23,9 +33,6 @@ export default function TeacherQuestionManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Bulk Mode states
-  const [isBulkMode, setIsBulkMode] = useState(false);
-  const [bulkQuestions, setBulkQuestions] = useState([]);
 
   // Question Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -60,7 +67,9 @@ export default function TeacherQuestionManagement() {
 
       if (groupId) {
         // [Legacy/Specific Group View] - though user wants unified view, keep this logic safe
-        const groupRes = await quizService.getQuizGroupById(groupId);
+        const groupRes = isAdmin
+          ? await quizService.getAdminQuizGroupById(groupId)
+          : await quizService.getQuizGroupById(groupId);
         if (groupRes.data?.success) {
            title = `Group: ${groupRes.data.data.name || "Untitled Group"}`;
            subtitle = groupRes.data.data.title;
@@ -68,7 +77,9 @@ export default function TeacherQuestionManagement() {
         questionsRes = await questionService.getQuestionsByGroup(groupId);
       } else if (sectionId) {
         // [Section View] - Fetch Section Info, Questions AND Groups
-        const sectionRes = await quizService.getQuizSectionById(sectionId);
+        const sectionRes = isAdmin
+          ? await quizService.getAdminQuizSectionById(sectionId)
+          : await quizService.getQuizSectionById(sectionId);
         if (sectionRes.data?.success) {
             title = `Section: ${sectionRes.data.data.title || "Untitled Section"}`;
         }
@@ -76,7 +87,9 @@ export default function TeacherQuestionManagement() {
         // Parallel fetch
         const [qRes, gRes] = await Promise.all([
             questionService.getQuestionsBySection(sectionId),
-            quizService.getQuizGroupsBySection(sectionId)
+            isAdmin
+              ? quizService.getAdminQuizGroupsBySection(sectionId)
+              : quizService.getQuizGroupsBySection(sectionId)
         ]);
 
         questionsRes = qRes;
@@ -120,7 +133,9 @@ export default function TeacherQuestionManagement() {
   const confirmDeleteGroup = async () => {
       if (!groupToDelete) return;
       try {
-          const res = await quizService.deleteQuizGroup(groupToDelete.quizGroupId);
+          const res = isAdmin
+            ? await quizService.deleteAdminQuizGroup(groupToDelete.quizGroupId)
+            : await quizService.deleteQuizGroup(groupToDelete.quizGroupId);
           if (res.data?.success) {
               setSuccessMessage("Xóa Group thành công!");
               setShowSuccessModal(true);
@@ -135,41 +150,6 @@ export default function TeacherQuestionManagement() {
       }
   };
 
-  // --- Bulk Mode Handlers ---
-  const handleSaveDraft = (draftQuestion) => {
-      if (questionToUpdate) {
-          const updatedBulk = bulkQuestions.map(q => 
-              q.tempId === questionToUpdate.tempId ? { ...draftQuestion, tempId: q.tempId } : q
-          );
-          setBulkQuestions(updatedBulk);
-      } else {
-          setBulkQuestions([...bulkQuestions, { ...draftQuestion, tempId: Date.now() }]);
-      }
-  };
-
-  const handleDeleteDraft = (tempId) => {
-      setBulkQuestions(bulkQuestions.filter(q => q.tempId !== tempId));
-  };
-
-  const handleBulkSubmit = async () => {
-      if (bulkQuestions.length === 0) return;
-      try {
-          const payload = { questions: bulkQuestions.map(({ tempId, ...q }) => q) };
-          const res = await questionService.bulkCreateQuestions(payload);
-          if (res.data?.success) {
-              setSuccessMessage(`Đã tạo thành công ${bulkQuestions.length} câu hỏi!`);
-              setShowSuccessModal(true);
-              setBulkQuestions([]);
-              setIsBulkMode(false);
-              fetchData();
-          } else {
-              alert(res.data?.message || "Tạo hàng loạt thất bại");
-          }
-      } catch (err) {
-          console.error(err);
-          alert("Lỗi khi tạo hàng loạt");
-      }
-  };
 
   // --- Common Handlers ---
   const handleAddQuestion = (targetGroup = null) => {
@@ -268,18 +248,17 @@ export default function TeacherQuestionManagement() {
       };
 
       return (
-        <Card key={isBulkMode ? q.tempId : q.questionId} className={`mb-3 border-0 shadow-sm question-card ${isBulkMode ? 'border-start border-4 border-warning' : ''}`}>
+        <Card key={q.questionId || q.tempId} className="mb-3 border-0 shadow-sm question-card">
             <Card.Body className="p-3">
                 <div className="d-flex justify-content-between">
                 <div className="d-flex gap-3 w-100">
                     <div className="question-index text-center pt-1">
-                        <span className={`badge rounded-pill ${isBulkMode ? 'bg-warning text-dark' : 'bg-secondary'}`}>#{index + 1}</span>
+                        <span className="badge rounded-pill bg-secondary">#{index + 1}</span>
                     </div>
                     <div className="flex-grow-1">
                         <div className="d-flex align-items-center gap-2 mb-2">
                             <Badge bg="info">{getQuestionTypeLabel(q.type)}</Badge>
                             <span className="text-muted small">Points: {q.points}</span>
-                            {isBulkMode && <Badge bg="warning" className="text-dark">Draft</Badge>}
                         </div>
                         <h6 className="question-stem mb-1 fw-bold text-break">{q.stemText}</h6>
                         {renderQuestionBody()}
@@ -290,7 +269,7 @@ export default function TeacherQuestionManagement() {
                     <Button variant="light" size="sm" onClick={() => handleEditQuestion(q)} title="Sửa">
                     <FaEdit className="text-primary" />
                     </Button>
-                    <Button variant="light" size="sm" onClick={() => isBulkMode ? handleDeleteDraft(q.tempId) : handleDeleteQuestion(q)} title="Xóa">
+                    <Button variant="light" size="sm" onClick={() => handleDeleteQuestion(q)} title="Xóa">
                     <FaTrash className="text-danger" />
                     </Button>
                 </div>
@@ -320,25 +299,9 @@ export default function TeacherQuestionManagement() {
                   </div>
               </div>
               <div>
-                  {/* Global Actions */}
-                  {!isBulkMode ? (
-                        <div className="d-flex gap-2">
-                            <Button variant="primary" onClick={() => handleAddQuestion(null)}>
-                                <FaPlus className="me-2" /> Tạo mới (Câu hỏi/Group)
-                            </Button>
-                            <Button variant="outline-primary" onClick={() => setIsBulkMode(true)}>
-                                ++ Soạn nhiều câu
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="d-flex gap-2">
-                            <Button variant="outline-secondary" onClick={() => setIsBulkMode(false)}>Hủy bỏ</Button>
-                            <Button variant="success" onClick={() => handleAddQuestion(null)}><FaPlus className="me-2" /> Thêm vào DS</Button>
-                            <Button variant="primary" onClick={handleBulkSubmit} disabled={bulkQuestions.length === 0}>
-                                Lưu tất cả ({bulkQuestions.length})
-                            </Button>
-                        </div>
-                    )}
+                  <Button variant="primary" onClick={() => handleAddQuestion(null)}>
+                      <FaPlus className="me-2" /> Thêm câu hỏi
+                  </Button>
               </div>
             </div>
           </div>
@@ -420,14 +383,7 @@ export default function TeacherQuestionManagement() {
                 })}
 
                 {/* Bulk Drafts */}
-                {isBulkMode && bulkQuestions.length > 0 && (
-                     <div className="mt-5 pt-3 border-top border-warning">
-                        <h5 className="text-warning fw-bold">Bản nháp ({bulkQuestions.length})</h5>
-                        {bulkQuestions.map((q, idx) => renderQuestionCard(q, idx))}
-                     </div>
-                )}
-
-                {!isBulkMode && questions.length === 0 && groups.length === 0 && (
+                {questions.length === 0 && groups.length === 0 && (
                     <div className="text-center py-5 text-muted bg-light rounded">
                         <p className="mb-3">Chưa có nội dung nào.</p>
                         <Button variant="primary" onClick={() => handleAddQuestion(null)}>Tạo nội dung đầu tiên</Button>
@@ -446,8 +402,7 @@ export default function TeacherQuestionManagement() {
         sectionId={sectionId ? parseInt(sectionId) : null}
         groupId={targetGroupId || (groupId ? parseInt(groupId) : null)}
         questionToUpdate={questionToUpdate}
-        isBulkMode={isBulkMode}
-        onSaveDraft={handleSaveDraft}
+        isAdmin={isAdmin}
       />
       
       {/* Group Modals */}
@@ -457,6 +412,7 @@ export default function TeacherQuestionManagement() {
           onSuccess={handleGroupEditSuccess}
           quizSectionId={sectionId}
           groupToUpdate={groupToUpdate}
+          isAdmin={isAdmin}
       />
 
       <ConfirmModal 

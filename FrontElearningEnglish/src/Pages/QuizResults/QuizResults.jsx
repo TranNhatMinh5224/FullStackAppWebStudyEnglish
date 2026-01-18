@@ -180,7 +180,7 @@ export default function QuizResults() {
                                         <h2 className="results-title">
                                             {isPassed ? "Chúc mừng! Bạn đã hoàn thành bài thi" : "Kết quả làm bài của bạn"}
                                         </h2>
-                                        <div className="results-score">
+                                        <div className="results-score d-flex flex-column align-items-center">
                                             <div className="score-display">
                                                 <span className="score-current">{totalScore.toFixed(1)}</span>
                                                 <span className="score-separator">/</span>
@@ -198,7 +198,7 @@ export default function QuizResults() {
                                     <div className="results-summary">
                                         <Row className="g-3">
                                             <Col md={4}>
-                                                <div className="summary-item border rounded p-3 h-100 bg-white shadow-sm">
+                                                <div className="summary-item border rounded p-3 h-100 bg-white shadow-sm d-flex align-items-center">
                                                     <FaClock className="summary-icon text-primary mb-2" size={24} />
                                                     <div className="summary-content">
                                                         <div className="summary-label text-muted small">Thời gian làm bài</div>
@@ -207,7 +207,7 @@ export default function QuizResults() {
                                                 </div>
                                             </Col>
                                             <Col md={4}>
-                                                <div className="summary-item border rounded p-3 h-100 bg-white shadow-sm">
+                                                <div className="summary-item border rounded p-3 h-100 bg-white shadow-sm d-flex align-items-center">
                                                     <FaCheckCircle className="summary-icon text-success mb-2" size={24} />
                                                     <div className="summary-content">
                                                         <div className="summary-label text-muted small">Điểm số đạt được</div>
@@ -216,7 +216,7 @@ export default function QuizResults() {
                                                 </div>
                                             </Col>
                                             <Col md={4}>
-                                                <div className="summary-item border rounded p-3 h-100 bg-white shadow-sm">
+                                                <div className="summary-item border rounded p-3 h-100 bg-white shadow-sm d-flex align-items-center">
                                                     <FaTrophy className="summary-icon text-warning mb-2" size={24} />
                                                     <div className="summary-content">
                                                         <div className="summary-label text-muted small">Nộp bài lúc</div>
@@ -231,7 +231,7 @@ export default function QuizResults() {
                                     {questions && questions.length > 0 && (
                                         <div className="correct-answers-section">
                                             <h3 className="section-title">Đáp án đúng</h3>
-                                            <div className="answers-list">
+                                            <div className="answers-list d-flex flex-column">
                                                 {questions.map((question, index) => {
                                                     // Parse correct answer
                                                     const correctAnswer = question.correctAnswer || question.CorrectAnswer;
@@ -277,7 +277,7 @@ export default function QuizResults() {
                                                                             </Badge>
                                                                         ) : correctAnswer ? (
                                                                             Array.isArray(correctAnswer) ? (
-                                                                                <div className="answer-list">
+                                                                                <div className="answer-list d-flex flex-wrap">
                                                                                     {correctAnswer.map((opt, idx) => (
                                                                                         <Badge key={idx} bg="success" className="answer-badge">
                                                                                             {typeof opt === 'object' ? JSON.stringify(opt) : String(opt)}
@@ -285,9 +285,9 @@ export default function QuizResults() {
                                                                                     ))}
                                                                                 </div>
                                                                             ) : typeof correctAnswer === 'object' ? (
-                                                                                <div className="answer-object">
+                                                                                <div className="answer-object d-flex flex-column">
                                                                                     {Object.entries(correctAnswer).map(([key, value], idx) => (
-                                                                                        <div key={idx} className="answer-pair">
+                                                                                        <div key={idx} className="answer-pair d-flex align-items-center">
                                                                                             <Badge bg="info">{key}</Badge>
                                                                                             <span className="arrow">→</span>
                                                                                             <Badge bg="success">{String(value)}</Badge>
@@ -313,7 +313,7 @@ export default function QuizResults() {
                                     )}
 
                                     {/* Actions */}
-                                    <div className="results-actions">
+                                    <div className="results-actions d-flex justify-content-center flex-column flex-md-row">
                                         <Button
                                             variant="outline-secondary"
                                             onClick={handleBack}

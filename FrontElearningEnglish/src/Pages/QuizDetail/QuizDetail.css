@@ -1,15 +1,33 @@
 .quiz-detail-container {
     padding: 30px 0;
     padding-top: calc(30px + 70px);
-    background: var(--color-bg-secondary, #f6f8fb);
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%);
     min-height: calc(100vh - 70px);
+    position: relative;
+}
+
+.quiz-detail-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .quiz-detail-container .container-fluid {
-    max-width: 1400px;
+    position: relative;
+    z-index: 1;
+}
+
+.quiz-detail-container .container-fluid {
+    max-width: 1200px;
     margin: 0 auto;
-    padding-left: 40px;
-    padding-right: 40px;
 }
 
 .quiz-content {
@@ -39,9 +57,8 @@
     margin: 0;
 }
 
+/* Bootstrap utilities: d-flex, justify-content-between */
 .quiz-navigation-buttons {
-    display: flex;
-    justify-content: space-between;
     gap: 16px;
     margin-top: 30px;
     padding-top: 20px;
@@ -81,11 +98,10 @@
     transform: none;
 }
 
+/* Bootstrap utilities: d-flex, flex-column */
 .quiz-sidebar {
     position: sticky;
     top: 90px;
-    display: flex;
-    flex-direction: column;
     gap: 20px;
 }
 
@@ -117,11 +133,6 @@
         position: static;
         margin-top: 20px;
     }
-
-    .quiz-detail-container .container-fluid {
-        padding-left: 20px;
-        padding-right: 20px;
-    }
 }
 
 @media (max-width: 768px) {
@@ -133,8 +144,6 @@
         font-size: 24px;
     }
 
-    .quiz-navigation-buttons {
-        flex-direction: column;
-    }
+    /* Bootstrap responsive tự xử lý - chỉ thêm styling */
 }
 

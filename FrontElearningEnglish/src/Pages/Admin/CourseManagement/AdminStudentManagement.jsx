@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Pagination } from "react-bootstrap";
+import { Container, Pagination, Row, Col } from "react-bootstrap";
 import "./AdminStudentManagement.css";
+import Breadcrumb from "../../../Components/Common/Breadcrumb/Breadcrumb";
 import { useAuth } from "../../../Context/AuthContext";
 import { adminService } from "../../../Services/adminService";
 import StudentDetailModal from "../../../Components/Teacher/StudentDetailModal/StudentDetailModal";
 import AddStudentModal from "../../../Components/Teacher/AddStudentModal/AddStudentModal";
 import SuccessModal from "../../../Components/Common/SuccessModal/SuccessModal";
-import { FaPlus, FaUser } from "react-icons/fa";
+import { FaPlus } from "react-icons/fa";
 
 export default function AdminStudentManagement() {
   const { courseId } = useParams();
@@ -123,30 +124,21 @@ export default function AdminStudentManagement() {
     <>
       <div className="admin-student-management-container">
         <div className="breadcrumb-section">
-          <span className="breadcrumb-text">
-            <span 
-              className="breadcrumb-link"
-              onClick={() => navigate("/admin/courses")}
-            >
-              Quản lý khoá học
-            </span>
-            {" / "}
-            <span 
-              className="breadcrumb-link"
-              onClick={() => navigate(`/admin/courses/${courseId}`)}
-            >
-              {courseTitle}
-            </span>
-            {" / "}
-            <span className="breadcrumb-current">Quản lý học viên</span>
-          </span>
+          <Breadcrumb
+            items={[
+              { label: "Quản lý khoá học", path: "/admin/courses" },
+              { label: courseTitle, path: `/admin/courses/${courseId}` },
+              { label: "Quản lý học viên", isCurrent: true }
+            ]}
+            showHomeIcon={false}
+          />
         </div>
 
         <Container fluid className="student-management-content">
-          <div className="student-management-header">
+          <div className="student-management-header d-flex justify-content-between align-items-center flex-column flex-md-row gap-3">
             <h2 className="page-title">Quản lý học viên</h2>
             <button 
-              className="add-student-btn"
+              className="add-student-btn d-flex align-items-center"
               onClick={() => setShowAddStudentModal(true)}
             >
               <FaPlus className="add-icon" />
@@ -160,7 +152,7 @@ export default function AdminStudentManagement() {
             <div className="error-message">{error}</div>
           ) : (
             <>
-              <div className="students-list">
+              <Row className="students-list g-4">
                 {students.length > 0 ? (
                   students.map((student) => {
                     const studentId = student.userId || student.UserId;
@@ -170,40 +162,39 @@ export default function AdminStudentManagement() {
                     const avatarUrl = student.avatarUrl || student.AvatarUrl;
                     
                     return (
-                      <div 
-                        key={studentId} 
-                        className="student-card"
-                        onClick={() => handleStudentClick(studentId)}
-                      >
-                        <div className="student-avatar">
-                          {avatarUrl ? (
-                            <img src={avatarUrl} alt={displayName} />
-                          ) : (
-                            <div className="avatar-placeholder">
-                              <FaUser />
+                      <Col key={studentId} xs={12} sm={6} md={4} lg={3}>
+                        <div 
+                          className="student-card d-flex align-items-center"
+                          onClick={() => handleStudentClick(studentId)}
+                        >
+                          {avatarUrl && avatarUrl.trim() && (
+                            <div className="student-avatar d-flex align-items-center justify-content-center">
+                              <img src={avatarUrl} alt={displayName} />
                             </div>
                           )}
+                          <div className="student-info">
+                            <h3 className="student-name">{displayName || "Chưa có tên"}</h3>
+                            <p className="student-email">{email}</p>
+                          </div>
+                          <div className="student-arrow">
+                            <span>›</span>
+                          </div>
                         </div>
-                        <div className="student-info">
-                          <h3 className="student-name">{displayName || "Chưa có tên"}</h3>
-                          <p className="student-email">{email}</p>
-                        </div>
-                        <div className="student-arrow">
-                          <span>›</span>
-                        </div>
-                      </div>
+                      </Col>
                     );
                   })
                 ) : (
-                  <div className="no-students-message">
-                    {searchTerm ? "Không tìm thấy học viên nào" : "Chưa có học viên nào trong khóa học"}
-                  </div>
+                  <Col xs={12}>
+                    <div className="no-students-message">
+                      {searchTerm ? "Không tìm thấy học viên nào" : "Chưa có học viên nào trong khóa học"}
+                    </div>
+                  </Col>
                 )}
-              </div>
+              </Row>
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="pagination-wrapper">
+                <div className="pagination-wrapper d-flex flex-column align-items-center">
                   <Pagination>
                     <Pagination.First 
                       onClick={() => handlePageChange(1)} 

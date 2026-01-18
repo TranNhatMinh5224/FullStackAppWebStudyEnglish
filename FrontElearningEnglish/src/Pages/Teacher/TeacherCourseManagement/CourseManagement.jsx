@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Pagination } from "react-bootstrap";
+import { Pagination, Row, Col } from "react-bootstrap";
 import "./CourseManagement.css";
 import TeacherHeader from "../../../Components/Header/TeacherHeader";
 import { useAuth } from "../../../Context/AuthContext";
 import { teacherService } from "../../../Services/teacherService";
 import { teacherPackageService } from "../../../Services/teacherPackageService";
 import { FaPlus } from "react-icons/fa";
-import { mochiCourseTeacher } from "../../../Assets/Logo";
 import { ROUTE_PATHS } from "../../../Routes/Paths";
 import CreateCourseModal from "../../../Components/Teacher/CreateCourseModal/CreateCourseModal";
 import CourseLimitModal from "../../../Components/Common/CourseLimitModal/CourseLimitModal";
 import SuccessModal from "../../../Components/Common/SuccessModal/SuccessModal";
+import TeacherCourseCard from "../../../Components/Teacher/TeacherCourseCard/TeacherCourseCard";
 
 export default function CourseManagement() {
   const { user, roles, isAuthenticated } = useAuth();
@@ -163,12 +163,12 @@ export default function CourseManagement() {
       <TeacherHeader />
 
       <div className="course-management-container">
-        <div className="course-management-header">
+        <div className="course-management-header d-flex justify-content-between align-items-center flex-column flex-md-row gap-4">
           <div className="welcome-section">
             <h1>Chào mừng giáo viên {displayName}!</h1>
           </div>
-          <button className="create-course-btn" onClick={handleCreateCourse}>
-            <FaPlus className="create-course-icon" />
+          <button className="create-course-btn d-flex align-items-center" onClick={handleCreateCourse}>
+            <FaPlus className="create-course-icon d-flex align-items-center justify-content-center" />
             <span>Tạo lớp học</span>
           </button>
         </div>
@@ -180,50 +180,24 @@ export default function CourseManagement() {
             <div className="error-message">{error}</div>
           ) : courses.length > 0 ? (
             <>
-              <div className="courses-grid">
+              <Row className="courses-grid g-4">
                 {courses.map((course) => (
-                  <div
-                    key={course.courseId}
-                    className="teacher-course-card"
+                  <Col
+                    key={course.courseId || course.id}
+                    xs={12}
+                    sm={6}
+                    md={4}
+                    lg={3}
+                    xl={2}
                   >
-                    <div className="teacher-course-card-image">
-                      <img 
-                        src={course.imageUrl || mochiCourseTeacher} 
-                        alt={course.title} 
-                      />
-                    </div>
-                    <div className="teacher-course-card-content">
-                      <h3 className="teacher-course-card-title">{course.title || "Khóa học"}</h3>
-                      <div className="teacher-course-card-stats">
-                        <span className="teacher-course-stat">
-                          {course.studentCount || 0}/{course.maxStudent || 0} học viên
-                        </span>
-                        <span className="teacher-course-stat">
-                          {course.lessonCount || 0} bài học
-                        </span>
-                        {course.classCode && (
-                          <span className="teacher-course-stat">
-                            Mã lớp: {course.classCode}
-                          </span>
-                        )}
-                      </div>
-                      <button 
-                        className="teacher-course-manage-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/teacher/course/${course.courseId}`);
-                        }}
-                      >
-                        Quản lý khóa học
-                      </button>
-                    </div>
-                  </div>
+                    <TeacherCourseCard course={course} />
+                  </Col>
                 ))}
-              </div>
+              </Row>
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="pagination-wrapper">
+                <div className="pagination-wrapper d-flex justify-content-center">
                   <Pagination>
                     <Pagination.Prev
                       disabled={currentPage === 1}
